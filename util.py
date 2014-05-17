@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -35,6 +34,7 @@ from math import tan, atan, degrees
 from . import bl_info
 
 thread_count = multiprocessing.cpu_count()
+EnableDebug = True
 
 version = str(bl_info['version'][1]) + "." + str(bl_info['version'][2])
 
@@ -49,30 +49,36 @@ def inscenelayer(object, scene):
             continue
         
 def do_export(obj, scene):
-    return not obj.hide_render and obj.type in ('MESH', 'SURFACE', 'META', 'TEXT', 'CURVE') and inscenelayer(obj, scene)
+    return not obj.hide_render and obj.type in ('MESH', 'SURFACE', 'META', 'TEXT', 'CURVE', 'LAMP') and inscenelayer(obj, scene)
+
+def debug( *args):
+    global EnableDebug
+    if EnableDebug:
+        msg = ' '.join(['%s'%a for a in args])
+        print( "DEBUG:" ,msg)
+    else:
+        pass
+
+def asUpdate( *args):
+    msg = ' '.join(['%s'%a for a in args])
+    print( "appleseed:" ,msg)
     
-class MatUtils:
-    @staticmethod
-    def compute_reflection_factor(material):
-        return material.raytrace_mirror.reflect_factor if material.raytrace_mirror.use else 0.0
+#--------------------------------------------------------------------------------------------------
+# Write a mesh object to disk in Wavefront OBJ format.
+#--------------------------------------------------------------------------------------------------
 
-    @staticmethod
-    def is_material_reflective(material):
-        return MatUtils.compute_reflection_factor(material) > 0.0
+def get_array2_key( v):
+    a = int( v[0] * 1000000)
+    b = int( v[1] * 1000000)
+    return a, b
 
-    @staticmethod
-    def compute_transparency_factor(material, index):
-        layer = material.appleseed.layers[index]
-        material_transp_factor = 0.0
-        if layer.bsdf_type == "specular_btdf":
-            material_transp_factor =  layer.spec_btdf_weight
-   
-                
-        return material_transp_factor
+def get_vector2_key( v):
+    w = v * 1000000
+    return int( w.x), int( w.y)
 
-    @staticmethod
-    def is_material_transparent(material):
-        return MatUtils.compute_transparency_factor(material, index) > 0.0
+def get_vector3_key( v):
+    w = v * 1000000
+    return w.x, w.y, w.z
 
 #--------------------------------------------------------------------------------------------------
 # Write a mesh object to disk in Wavefront OBJ format.
@@ -124,6 +130,7 @@ def write_mesh_to_disk( mesh, mesh_faces, mesh_uvtex, filepath):
                         vertex_normal_indices[vertex_index] = normal_indices[vn_key]
                     else:
                         output_file.write( "vn %.15f %.15f %.15f\n" % ( vn.x, vn.y, vn.z))
+
                         normal_indices[vn_key] = current_normal_index
                         vertex_normal_indices[vertex_index] = current_normal_index
                         current_normal_index += 1
@@ -185,6 +192,7 @@ def write_mesh_to_disk( mesh, mesh_faces, mesh_uvtex, filepath):
                     for vertex_index in face.vertices:
                         normal_index = vertex_normal_indices[vertex_index]
                         line += " %d//%d" % ( vertex_index + 1, normal_index + 1)
+
                 else:
                     normal_index = face_normal_indices[face_index]
                     for vertex_index in face.vertices:
@@ -192,24 +200,24 @@ def write_mesh_to_disk( mesh, mesh_faces, mesh_uvtex, filepath):
             output_file.write( line + "\n")
 
         return mesh_parts
+        
 
 def resolution(scene):
-	xr = scene.render.resolution_x * scene.render.resolution_percentage / 100.0
-	yr = scene.render.resolution_y * scene.render.resolution_percentage / 100.0
-	
-	return xr, yr
+    xr = scene.render.resolution_x * scene.render.resolution_percentage / 100.0
+    yr = scene.render.resolution_y * scene.render.resolution_percentage / 100.0
+    return xr, yr
 
 def get_instance_materials(ob):
-	obmats = []
-	# Grab materials attached to object instances ...
-	if hasattr(ob, 'material_slots'):
-		for ms in ob.material_slots:
-			obmats.append(ms.material)
-	# ... and to the object's mesh data
-	if hasattr(ob.data, 'materials'):
-		for m in ob.data.materials:
-			obmats.append(m)
-	return obmats
+    obmats = []
+    # Grab materials attached to object instances ...
+    if hasattr(ob, 'material_slots'):
+        for ms in ob.material_slots:
+            obmats.append(ms.material)
+    # ... and to the object's mesh data
+    if hasattr(ob.data, 'materials'):
+        for m in ob.data.materials:
+            obmats.append(m)
+    return obmats
 
 def is_proxy(ob, scene):
     if ob.type == 'MESH' and ob.corona.is_proxy:
@@ -255,16 +263,31 @@ def get_all_duplis( scene ):
             obs.add( ob)
     return obs
             
-def get_matrix(obj_parent, obj , as_matrix = True, grp=False):
+def get_matrix(obj):
     obj_mat = obj.matrix.copy()
     return obj_mat
 
-def get_instances(obj_parent, scene):
+def get_instances(obj_parent, scene, mblur = False):
+    asr_scn = scene.appleseed
     obj_parent.dupli_list_create(scene)
     dupli_list = []
-    for obj in obj_parent.dupli_list :
-        obj_matrix = get_matrix(obj_parent, obj, as_matrix=True , grp=(obj_parent.dupli_type == 'GROUP')) 
-        dupli_list.append([obj_matrix, obj.object])
+    if not mblur:
+        for obj in obj_parent.dupli_list :
+            obj_matrix = get_matrix( obj)
+            dupli_list.append( [obj.object, obj_matrix])
+    else:
+        current_frame = scene.frame_current
+        # Set frame for shutter open time
+        scene.frame_set( current_frame, subframe = asr_scn.shutter_open)
+        for obj in obj_parent.dupli_list:
+            obj_matrix = obj.matrix.copy()
+            dupli_list.append( [obj.object, obj_matrix])
+            # Move to next frame, collect matrices
+            scene.frame_set( current_frame, subframe = asr_scn.shutter_close)
+            for dupli in dupli_list:
+                dupli.append( obj.matrix.copy())
+            # Reset to current frame
+            scene.frame_set( current_frame)
     obj_parent.dupli_list_clear()
     return dupli_list
 

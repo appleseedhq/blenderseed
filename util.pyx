@@ -270,6 +270,7 @@ def get_matrix(obj):
     return obj_mat
 
 def get_instances(obj_parent, scene, mblur = False):
+    asr_scn = scene.appleseed
     obj_parent.dupli_list_create(scene)
     dupli_list = []
     if not mblur:
@@ -278,15 +279,17 @@ def get_instances(obj_parent, scene, mblur = False):
             dupli_list.append( [obj.object, obj_matrix])
     else:
         current_frame = scene.frame_current
+        # Set frame for shutter open time
+        scene.frame_set( current_frame, subframe = asr_scn.shutter_open)
         for obj in obj_parent.dupli_list:
             obj_matrix = obj.matrix.copy()
             dupli_list.append( [obj.object, obj_matrix])
             # Move to next frame, collect matrices
-            scene.frame_set(current_frame, scene.frame_step)
+            scene.frame_set( current_frame, subframe = asr_scn.shutter_close)
             for dupli in dupli_list:
                 dupli.append( obj.matrix.copy())
             # Reset to current frame
-            scene.frame_set(current_frame)
+            scene.frame_set( current_frame)
     obj_parent.dupli_list_clear()
     return dupli_list
 

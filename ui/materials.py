@@ -46,9 +46,8 @@ class AppleseedMaterialPreview(bpy.types.Panel):
         obj = context.object
         material = obj.active_material
         asr_mat = material.appleseed
-        
-        row = layout.row()
-        row.template_preview(context.material, show_buttons=False)
+
+        layout.template_preview(context.material, show_buttons = True)
         layout.prop(asr_mat, "preview_quality")
 
         
@@ -128,6 +127,56 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     diffuse_tex = bpy.data.textures[current_layer.lambertian_diffuse_tex]
                     box.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
                 box.prop(current_layer, "lambertian_multiplier")
+            
+            #-------------------------------------------------
+            #Oren-Nayar BRDF layout
+            if current_layer.bsdf_type == "orennayar_brdf":
+                box = layout.box()
+
+                # Weight
+                split = box.split(percentage = 0.65)
+                col = split.column()
+                col.prop(current_layer, "orennayar_weight", text = "Layer Weight")
+                if current_layer.orennayar_use_tex:
+                    col.prop_search( current_layer, "orennayar_mix_tex", material, "texture_slots")
+
+                col = split.column()
+                col.prop( current_layer, "orennayar_use_tex", toggle = True)
+                if current_layer.orennayar_mix_tex != '' and current_layer.orennayar_use_tex:
+                    mix_tex = bpy.data.textures[current_layer.orennayar_mix_tex]
+                    box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+
+                # Reflectance
+                box.label("Oren-Nayar Reflectance:")
+                
+                split = box.split(percentage = 0.65)
+                col = split.column()
+                col.prop(current_layer, "orennayar_reflectance", text = "")
+
+                if current_layer.orennayar_use_diff_tex:    
+                    col.prop_search(current_layer, "orennayar_diffuse_tex", material, "texture_slots")
+                
+                col = split.column()
+                col.prop(current_layer, "orennayar_use_diff_tex", text = "Use Texture", toggle = True)
+                if current_layer.orennayar_diffuse_tex != '' and current_layer.orennayar_use_diff_tex:
+                    diffuse_tex = bpy.data.textures[current_layer.orennayar_diffuse_tex]
+                    box.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
+                box.prop(current_layer, "orennayar_multiplier")
+
+                box.separator()
+
+                # Roughness
+                split = box.split(percentage = 0.65)
+                col = split.column()
+                col.prop(current_layer, "orennayar_roughness")
+                if current_layer.orennayar_use_rough_tex:    
+                    col.prop_search(current_layer, "orennayar_rough_tex", material, "texture_slots")
+                
+                col = split.column()
+                col.prop(current_layer, "orennayar_use_rough_tex", text = "Use Texture", toggle = True)
+                if current_layer.orennayar_rough_tex != '' and current_layer.orennayar_use_rough_tex:
+                    rough_tex = bpy.data.textures[current_layer.orennayar_diffuse_tex]
+                    box.prop(rough_tex.image.colorspace_settings, "name", text = "Color Space")
                 
             #-------------------------------------------------
             #Ashikhmin-Shirley BRDF layout    
@@ -191,31 +240,41 @@ class AppleseedMaterialShading(bpy.types.Panel):
                 # Weight
                 split = box.split(percentage = 0.65)
                 col = split.column()
-                col.prop(current_layer, "transmission_weight", text = "Layer Weight")
-                if current_layer.transmission_use_tex:
-                    col.prop_search( current_layer, "transmission_mix_tex", material, "texture_slots")
+                col.prop(current_layer, "transmittance_weight", text = "Layer Weight")
+                if current_layer.transmittance_use_tex:
+                    col.prop_search( current_layer, "transmittance_mix_tex", material, "texture_slots")
 
                 col = split.column()
-                col.prop( current_layer, "transmission_use_tex", toggle = True)
-                if current_layer.transmission_mix_tex != '' and current_layer.transmission_use_tex:
-                    mix_tex = bpy.data.textures[current_layer.transmission_mix_tex]
+                col.prop( current_layer, "transmittance_use_tex", toggle = True)
+                if current_layer.transmittance_mix_tex != '' and current_layer.transmittance_use_tex:
+                    mix_tex = bpy.data.textures[current_layer.transmittance_mix_tex]
                     box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                 
                 # Reflectance
                 box.label("Transmittance Color:")
                 split = box.split(percentage = 0.65)
                 col = split.column()
-                col.prop(current_layer, "transmission_color", text = "")
-                if current_layer.transmission_use_diff_tex:    
-                    col.prop_search(current_layer, "transmission_diff_tex", material, "texture_slots", text = "")
+                col.prop(current_layer, "transmittance_color", text = "")
+                if current_layer.transmittance_use_diff_tex:    
+                    col.prop_search(current_layer, "transmittance_diff_tex", material, "texture_slots", text = "")
                 col = split.column()
-                col.prop(current_layer, "transmission_use_diff_tex", text = "Use Texture", toggle = True)            
-                if current_layer.transmission_diff_tex!= '' and current_layer.transmission_use_diff_tex:
-                    diffuse_tex = bpy.data.textures[current_layer.transmission_diff_tex]
+                col.prop(current_layer, "transmittance_use_diff_tex", text = "Use Texture", toggle = True)            
+                if current_layer.transmittance_diff_tex!= '' and current_layer.transmittance_use_diff_tex:
+                    diffuse_tex = bpy.data.textures[current_layer.transmittance_diff_tex]
                     box.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
-                row = box.row()
-                row.prop(current_layer, "transmission_multiplier", text = "Transmittance Multiplier")
-            
+
+                # Transmittance
+                split = box.split(percentage = 0.65)
+                col = split.column()
+                col.prop(current_layer, "transmittance_multiplier", text = "Transmittance")
+                if current_layer.transmittance_use_mult_tex:    
+                    col.prop_search(current_layer, "transmittance_mult_tex", material, "texture_slots", text = "")
+                col = split.column()
+                col.prop(current_layer, "transmittance_use_mult_tex", text = "Use Texture", toggle = True)            
+                if current_layer.transmittance_mult_tex!= '' and current_layer.transmittance_use_mult_tex:
+                    mult_tex = bpy.data.textures[current_layer.transmittance_mult_tex]
+                    box.prop(mult_tex.image.colorspace_settings, "name", text = "Color Space")
+                    
             #-------------------------------------------------    
             #Kelemen BRDF layout    
             elif current_layer.bsdf_type == "kelemen_brdf":
@@ -460,56 +519,56 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(asr_mat, "light_color", text = "Light Color")
 
-class AppleseedMatSSSPanel(bpy.types.Panel):
-    bl_label = "appleseed FastSSS"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "material"
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    @classmethod
-    def poll( cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type == 'MESH' and context.object.active_material is not None
-    
-    def draw_header(self, context):
-        header = self.layout
-        asr_mat = context.object.active_material.appleseed
-        header.prop(asr_mat, "sss_use_shader")
-    
-    def draw(self, context):
-        layout = self.layout
-        material = context.object.active_material
-        asr_mat = material.appleseed
-        layout.active = asr_mat.sss_use_shader
-        
-        row = layout.row(align=True)
-        row.prop(asr_mat, "sss_power", text = "SSS Power")
-        row.prop(asr_mat, "sss_scale")
-        
-        layout.label("Albedo Color:")
-        row = layout.row()
-        row.prop(material.subsurface_scattering, "color", text = "")
-        row.prop(asr_mat, "sss_albedo_use_tex", text = "Use Texture", toggle = True)
-        if asr_mat.sss_albedo_use_tex:
-            layout.prop_search(asr_mat, "sss_albedo_tex", material, "texture_slots", text = "")
-            if asr_mat.sss_albedo_tex != '':
-                albedo_tex = bpy.data.textures[asr_mat.sss_albedo_tex]
-                layout.prop(albedo_tex.image.colorspace_settings, "name", text = "Color Space")
-        
-        layout.separator()
-        
-        row = layout.row(align=True)
-        row.prop(asr_mat, "sss_ambient")  
-        row.prop(asr_mat, "sss_view_dep")  
-        
-        row = layout.row(align=True)
-        row.prop(asr_mat, "sss_diffuse")    
-        row.prop(asr_mat, "sss_distortion")
-        
-        row = layout.row(align=True)
-        row.prop(asr_mat, "sss_light_samples")
-        row.prop(asr_mat, "sss_occlusion_samples")
+#class AppleseedMatSSSPanel(bpy.types.Panel):
+#    bl_label = "appleseed FastSSS"
+#    bl_space_type = "PROPERTIES"
+#    bl_region_type = "WINDOW"
+#    bl_context = "material"
+#    bl_options = {'DEFAULT_CLOSED'}
+#    
+#    @classmethod
+#    def poll( cls, context):
+#        renderer = context.scene.render
+#        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type == 'MESH' and context.object.active_material is not None
+#    
+#    def draw_header(self, context):
+#        header = self.layout
+#        asr_mat = context.object.active_material.appleseed
+#        header.prop(asr_mat, "sss_use_shader")
+#    
+#    def draw(self, context):
+#        layout = self.layout
+#        material = context.object.active_material
+#        asr_mat = material.appleseed
+#        layout.active = asr_mat.sss_use_shader
+#        
+#        row = layout.row(align=True)
+#        row.prop(asr_mat, "sss_power", text = "SSS Power")
+#        row.prop(asr_mat, "sss_scale")
+#        
+#        layout.label("Albedo Color:")
+#        row = layout.row()
+#        row.prop(material.subsurface_scattering, "color", text = "")
+#        row.prop(asr_mat, "sss_albedo_use_tex", text = "Use Texture", toggle = True)
+#        if asr_mat.sss_albedo_use_tex:
+#            layout.prop_search(asr_mat, "sss_albedo_tex", material, "texture_slots", text = "")
+#            if asr_mat.sss_albedo_tex != '':
+#                albedo_tex = bpy.data.textures[asr_mat.sss_albedo_tex]
+#                layout.prop(albedo_tex.image.colorspace_settings, "name", text = "Color Space")
+#        
+#        layout.separator()
+#        
+#        row = layout.row(align=True)
+#        row.prop(asr_mat, "sss_ambient")  
+#        row.prop(asr_mat, "sss_view_dep")  
+#        
+#        row = layout.row(align=True)
+#        row.prop(asr_mat, "sss_diffuse")    
+#        row.prop(asr_mat, "sss_distortion")
+#        
+#        row = layout.row(align=True)
+#        row.prop(asr_mat, "sss_light_samples")
+#        row.prop(asr_mat, "sss_occlusion_samples")
 
 def register():
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
@@ -518,12 +577,12 @@ def register():
     bpy.utils.register_class( MATERIAL_UL_BSDF_slots)
     bpy.utils.register_class( AppleseedMaterialShading)
     bpy.utils.register_class( AppleseedMatEmissionPanel)
-    bpy.utils.register_class( AppleseedMatSSSPanel)
+    #bpy.utils.register_class( AppleseedMatSSSPanel)
     
 
 def unregister():
     bpy.utils.unregister_class( AppleseedMaterialPreview)
     bpy.utils.unregister_class( MATERIAL_UL_BSDF_slots)
     bpy.utils.unregister_class( AppleseedMaterialShading)
-    bpy.utils.unregister_class( AppleseedMatEmissionPanel)
+    #bpy.utils.unregister_class( AppleseedMatEmissionPanel)
     bpy.utils.unregister_class( AppleseedMatSSSPanel)

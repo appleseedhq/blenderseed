@@ -36,7 +36,7 @@ try:
     max_threads = threads
 except:
     threads = 1
-    max_threads = 16
+    max_threads = 32
 
 def sun_enumerator( self, context):
     sun = []
@@ -75,7 +75,7 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
         cls.display_mode = bpy.props.EnumProperty(  name = "Display",
                                             description = "Select where rendered images will be displayed",
                                             items=(( 'NONE', "Keep UI", ""),
-                                                   ( 'WINDOWS', "New Window", ""),
+                                                   ( 'WINDOW', "New Window", ""),
                                                    ( 'AREA', "Image Editor", ""),
                                                    ( 'SCREEN', "Full Screen", ""),
                                                    ( 'STUDIO', "Appleseed Studio", "")),
@@ -136,14 +136,14 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             default = "uniform")
 
         cls.sampler_min_samples = bpy.props.IntProperty( name = "Min Samples",
-                                            description = "Min Samples",
+                                            description = "Minimum number of samples",
                                             min = 1,
                                             max = 1000000,
                                             default = 2,
                                             subtype = 'UNSIGNED')
 
         cls.sampler_max_samples = bpy.props.IntProperty( name = "Max Samples",
-                                            description = "Max Samples",
+                                            description = "Maximum number of samples",
                                             min = 1,
                                             max = 1000000,
                                             default = 16,
@@ -159,13 +159,13 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             max = 999999)
 
         cls.sampler_max_contrast = bpy.props.FloatProperty( name = "Max Contrast",
-                                            description = "Max contrast",
+                                            description = "Maximum contrast",
                                             min = 0,
                                             max = 1000,
                                             default = 1)
 
         cls.sampler_max_variation = bpy.props.FloatProperty( name = "Max Variation",
-                                            description = "Max variation",
+                                            description = "Maximum variation",
                                             min = 0,
                                             max = 1000,
                                             default = 1)
@@ -196,11 +196,17 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             default = True)
                                             
         cls.max_bounces = bpy.props.IntProperty( name = "Max Bounces",
-                                            description = "Max bounces - 0 = Unlimited",
+                                            description = "Maximum ray length: 0 = Unlimited",
                                             default = 0,
                                             min = 0,
                                             max = 512)
-                                                 
+                                            
+        cls.max_ray_intensity = bpy.props.FloatProperty( name = "Max Ray Intensity",
+                                            description = "Maximum ray intensity: 0 = Unlimited",
+                                            default = 0,
+                                            min = 0, 
+                                            max = 100)
+                                            
         cls.rr_start = bpy.props.IntProperty( name = "Russian Roulette Start Bounce",
                                             description = "Russian Roulette start bounce",
                                             default = 3,
@@ -228,7 +234,7 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
         
         # Photon tracing.
         cls.sppm_photon_max_length = bpy.props.IntProperty( name = "Max Bounces",
-                                            description = "Max path length for photons (0 is unlimited)",
+                                            description = "Maximum path length for photons (0 is unlimited)",
                                             default = 0,
                                             min = 0,
                                             max = 9999)
@@ -253,7 +259,7 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
 
         # Radiance estimation.
         cls.sppm_pt_max_length = bpy.props.IntProperty( name = "Max Bounces",
-                                            description = "Max path length for radiance estimation (0 is unlimited)",
+                                            description = "Maximum path length for radiance estimation (0 is unlimited)",
                                             default = 0,
                                             min = 0,
                                             max = 9999)
@@ -272,7 +278,7 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             precision = 3)
 
         cls.sppm_max_per_estimate = bpy.props.IntProperty( name = "Max Photons",
-                                            description = "Max photons per estimate",
+                                            description = "Maximum number of photons per estimate",
                                             default = 100,
                                             min = 8,
                                             max = 9999999)

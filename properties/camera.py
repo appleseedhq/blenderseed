@@ -43,7 +43,8 @@ class AppleseedCameraSettings( bpy.types.PropertyGroup):
                 type = cls)
 
         cls.camera_type = bpy.props.EnumProperty( items = [('pinhole', 'Pinhole', 'Pinhole camera - no DoF'),
-                                                           ('thinlens', 'Thin lens', 'Thin lens - enables DoF')],
+                                                           ('thinlens', 'Thin lens', 'Thin lens - enables DoF'),
+                                                           ('spherical', 'Spherical', '')],
                                             name = "Camera type",
                                             description = "Camera lens model",
                                             default = 'pinhole')

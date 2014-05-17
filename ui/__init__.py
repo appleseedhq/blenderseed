@@ -36,14 +36,10 @@ from . import objects
 from . import materials
 
 import bl_ui.properties_texture as properties_texture
-properties_texture.TEXTURE_PT_preview.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-properties_texture.TEXTURE_PT_image.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-properties_texture.TEXTURE_PT_image_mapping.COMPAT_ENGINES.add('APPLESEED_RENDER')
-properties_texture.TEXTURE_PT_mapping.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-properties_texture.TEXTURE_PT_preview.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-
+INCLUDE_TEXTURE = [ 'TEXTURE_MT_specials', 'TEXTURE_PT_context_texture', 'TEXTURE_PT_image', 'TEXTURE_UL_texslots', 'Panel', 'Object', 'Material', 'Texture', 'TextureSlotPanel', 'TextureButtonsPanel', 'UIList', 'id_tex_datablock', 'context_tex_datablock']
 for member in dir( properties_texture):
-        subclass = getattr( bl_ui.properties_texture, member)
+    if member in INCLUDE_TEXTURE:
+        subclass = getattr( properties_texture, member)
         try:
             subclass.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
         except:

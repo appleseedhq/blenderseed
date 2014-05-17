@@ -35,30 +35,35 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
                                      description = "BSDF layer name -- This must be a unique name per layer!", 
                                      default = "")
 
-    bsdf_type = bpy.props.EnumProperty( items = [("lambertian_brdf", "Lambertian BRDF", ""),
-                                                ("ashikhmin_brdf", "Ashikhmin-Shirley BRDF", ""),
-                                                ("diffuse_btdf", "Diffuse BTDF", ""),
-                                                ("kelemen_brdf", "Kelemen BRDF", ""),
-                                                ("microfacet_brdf", "Microfacet BRDF", ""),
-                                                ("specular_brdf", "Specular BRDF (mirror)", ""),
-                                                ("specular_btdf", "Specular BTDF (glass)", "")],
+    bsdf_type = bpy.props.EnumProperty( items = [('ashikhmin_brdf', "Ashikhmin-Shirley BRDF", ""),
+                                                ('diffuse_btdf', "Diffuse BTDF", ""),
+                                                ('kelemen_brdf', "Kelemen BRDF", ""),
+                                                ('lambertian_brdf', "Lambertian BRDF", ""),
+                                                ('microfacet_brdf', "Microfacet BRDF", ""),
+                                                ('orennayar_brdf', "Oren-Nayar BRDF", ""),
+                                                ('specular_brdf', "Specular BRDF (mirror)", ""),
+                                                ('specular_btdf', "Specular BTDF (glass)", "")],
                                                 name = "BSDF Model", 
                                                 description = "BSDF model for current material layer", 
                                                 default = "lambertian_brdf")
         
-    transmission_multiplier = bpy.props.FloatProperty( name = "Transmittance multiplier", description = "Multiplier for material transmission", default = 0.0, min = 0.0, max = 2.0)
-    
-    transmission_color = bpy.props.FloatVectorProperty(name = "Transmittance color", description = "Transmittance color", default = (0.8, 0.8, 0.8), subtype = 'COLOR',min = 0.0, max = 1.0)
-    
-    transmission_use_diff_tex = bpy.props.BoolProperty(name = "", description = "Use texture to influence diffuse color", default = False)
-    
-    transmission_diff_tex = bpy.props.StringProperty(name = "", description = "Texture to influence diffuse color", default = "")
-    
-    transmission_weight = bpy.props.FloatProperty(name = "Diffuse BTDF Blending Weight", description = "Blending weight of Diffuse BTDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0)
+    transmittance_multiplier = bpy.props.FloatProperty( name = "Transmittance multiplier", description = "Multiplier for material transmittance", default = 0.0, min = 0.0, max = 2.0)
 
-    transmission_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+    transmittance_use_mult_tex = bpy.props.BoolProperty(name = "", description = "Use texture to influence transmittance", default = False)
+    
+    transmittance_mult_tex = bpy.props.StringProperty(name = "", description = "Texture to influence transmittance", default = "")
+    
+    transmittance_color = bpy.props.FloatVectorProperty(name = "Transmittance color", description = "Transmittance color", default = (0.8, 0.8, 0.8), subtype = 'COLOR',min = 0.0, max = 1.0)
+    
+    transmittance_use_diff_tex = bpy.props.BoolProperty(name = "", description = "Use texture to influence diffuse color", default = False)
+    
+    transmittance_diff_tex = bpy.props.StringProperty(name = "", description = "Texture to influence diffuse color", default = "")
+    
+    transmittance_weight = bpy.props.FloatProperty(name = "Diffuse BTDF Blending Weight", description = "Blending weight of Diffuse BTDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0)
 
-    transmission_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
+    transmittance_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+
+    transmittance_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
 
     #-----------------------
     
@@ -144,8 +149,6 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     ashikhmin_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
     #--------------------------------
     
-
-    
     lambertian_reflectance = bpy.props.FloatVectorProperty(name = "Lambertian Reflectance", description = "Lambertian diffuse reflectance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
     
     lambertian_multiplier = bpy.props.FloatProperty(name = "Reflectance Multiplier", description = "Lambertian reflectance multiplier", default = 1.0, min = 0.0, max = 2.0)
@@ -159,6 +162,27 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     lambertian_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
 
     lambertian_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
+    #--------------------------------
+    
+    orennayar_reflectance = bpy.props.FloatVectorProperty(name = "Oren-Nayar Reflectance", description = "Oren-Nayar diffuse reflectance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
+    
+    orennayar_multiplier = bpy.props.FloatProperty(name = "Reflectance Multiplier", description = "Oren-Nayar reflectance multiplier", default = 1.0, min = 0.0, max = 2.0)
+
+    orennayar_roughness = bpy.props.FloatProperty(name = "Roughness", description = "Oren-Nayar roughness", default = 0.1, min = 0.0, max = 1.0)
+    
+    orennayar_weight = bpy.props.FloatProperty(name = "Oren-Nayar Blending Weight", description = "Blending weight of Oren-Nayar BRDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0)
+
+    orennayar_use_diff_tex = bpy.props.BoolProperty(name = "", description = "Use a texture to influence diffuse color", default = False)
+    
+    orennayar_diffuse_tex = bpy.props.StringProperty(name = "", description = "Diffuse color texture", default = "")
+
+    orennayar_use_rough_tex = bpy.props.BoolProperty(name = "", description = "Use a texture to influence roughness", default = False)
+    
+    orennayar_rough_tex = bpy.props.StringProperty(name = "", description = "Roughness texture", default = "")
+
+    orennayar_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+
+    orennayar_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
     #---------------------------------
     
     specular_reflectance = bpy.props.FloatVectorProperty(name = "Specular Reflectance", description = "Specular BRDF reflectance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
@@ -218,27 +242,27 @@ class AppleseedMatProps( bpy.types.PropertyGroup):
     
     light_color = bpy.props.FloatVectorProperty(name = "Emission Color", description = "Light emission color", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
     
-    sss_use_shader = bpy.props.BoolProperty(name = "", description = "Enable Appleseed FastSSS shader (experimental)", default = False)
-    
-    sss_albedo_use_tex = bpy.props.BoolProperty(name = "", description = "Use a texture to influence SSS color", default = False)
-    
-    sss_ambient = bpy.props.FloatProperty(name = "Ambient SSS", description = "Ambient SSS value", default = 1.0, min = 0.0, max = 10.0)
-    
-    sss_diffuse = bpy.props.FloatProperty(name = "Diffuse Lighting", description = "", default = 1.0, min = 0.0, max = 10.0)
-    
-    sss_distortion = bpy.props.FloatProperty(name = "Normal Distortion", description = "", default = 1.0, min = 0.0, max = 10.0)
-    
-    sss_light_samples = bpy.props.IntProperty(name = "Light Samples", description = "", default = 1, min = 0, max = 100)
-    
-    sss_occlusion_samples = bpy.props.IntProperty(name = "Occlusion Samples", description = "", default = 1, min = 0, max = 100)
-    
-    sss_power = bpy.props.FloatProperty(name = "Power", description = "", default = 1.0, min = 0.0, max = 10.0)
-    
-    sss_scale = bpy.props.FloatProperty(name = "Geometric Scale", description = "", default = 1.0, min = 0.0, max = 10.0)
-    
-    sss_view_dep = bpy.props.FloatProperty(name = "View-dependent SSS", description = "", default = 1.0, min = 0.0, max = 10.0)
-    
-    sss_albedo_tex = bpy.props.StringProperty(name = '', description = 'Texture to influence SSS albedo', default = "")
+#    sss_use_shader = bpy.props.BoolProperty(name = "", description = "Enable Appleseed FastSSS shader (experimental)", default = False)
+#    
+#    sss_albedo_use_tex = bpy.props.BoolProperty(name = "", description = "Use a texture to influence SSS color", default = False)
+#    
+#    sss_ambient = bpy.props.FloatProperty(name = "Ambient SSS", description = "Ambient SSS value", default = 1.0, min = 0.0, max = 10.0)
+#    
+#    sss_diffuse = bpy.props.FloatProperty(name = "Diffuse Lighting", description = "", default = 1.0, min = 0.0, max = 10.0)
+#    
+#    sss_distortion = bpy.props.FloatProperty(name = "Normal Distortion", description = "", default = 1.0, min = 0.0, max = 10.0)
+#    
+#    sss_light_samples = bpy.props.IntProperty(name = "Light Samples", description = "", default = 1, min = 0, max = 100)
+#    
+#    sss_occlusion_samples = bpy.props.IntProperty(name = "Occlusion Samples", description = "", default = 1, min = 0, max = 100)
+#    
+#    sss_power = bpy.props.FloatProperty(name = "Power", description = "", default = 1.0, min = 0.0, max = 10.0)
+#    
+#    sss_scale = bpy.props.FloatProperty(name = "Geometric Scale", description = "", default = 1.0, min = 0.0, max = 10.0)
+#    
+#    sss_view_dep = bpy.props.FloatProperty(name = "View-dependent SSS", description = "", default = 1.0, min = 0.0, max = 10.0)
+#    
+#    sss_albedo_tex = bpy.props.StringProperty(name = '', description = 'Texture to influence SSS albedo', default = "")
 
     material_use_bump_tex = bpy.props.BoolProperty(name = "", description = "Use a texture to influence bump / normal", default = False)
     

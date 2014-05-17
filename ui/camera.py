@@ -52,13 +52,16 @@ class AppleseedCameraDoF( bpy.types.Panel):
         if not asr_cam_props.camera_type == "thinlens":
             row.active = False
         row.prop(asr_cam_props, "camera_dof", text = "F-stop")
-        row.prop(context.active_object.data, "dof_object", text = 'Focal object')
-
-        row = layout.row()
+        
+        split = layout.split()
+        col = split.column()
+        col2 = split.column()
         if not asr_cam_props.camera_type == "thinlens":
-            row.active = False
-        row.prop(context.active_object.data, "dof_distance", text = "Focal distance")
-        row.active = context.active_object.data.dof_object is None
+            col.active = False
+            col2.active = False
+        col.prop(context.active_object.data, "dof_distance", text = "Focal distance")
+        col.active = context.active_object.data.dof_object is None
+        col2.prop(context.active_object.data, "dof_object", text = 'Focal object')
 
 def register():
     bpy.types.DATA_PT_camera.COMPAT_ENGINES.add( 'APPLESEED_RENDER')

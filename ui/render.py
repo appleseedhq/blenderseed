@@ -136,7 +136,8 @@ class AppleseedLightingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
                 row.prop( asr_scene_props, "direct_lighting")
                 if asr_scene_props.direct_lighting == True:
                     row.prop( asr_scene_props, "dl_light_samples")
-            layout.prop( asr_scene_props, "max_bounces")  
+            layout.prop( asr_scene_props, "max_bounces")
+            layout.prop( asr_scene_props, "max_ray_intensity")  
             layout.prop( asr_scene_props, "rr_start")
 
         # Direct Lighting UI.
@@ -195,15 +196,17 @@ class AppleseedMotionBlurPanel( bpy.types.Panel, AppleseedRenderPanelBase):
     def draw( self, context):
         layout = self.layout
         asr_scene_props = context.scene.appleseed
+
+
         layout.active = asr_scene_props.mblur_enable
 
         layout.prop( asr_scene_props, "ob_mblur")
         layout.prop( asr_scene_props, "def_mblur")
         layout.prop( asr_scene_props, "cam_mblur")
-        if asr_scene_props.cam_mblur:
-            row = layout.row( align = True)
-            row.prop( asr_scene_props, "shutter_open")
-            row.prop( asr_scene_props, "shutter_close")
+
+        row = layout.row( align = True)
+        row.prop( asr_scene_props, "shutter_open")
+        row.prop( asr_scene_props, "shutter_close")
 
 def register():
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
