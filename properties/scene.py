@@ -154,7 +154,7 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
 
         cls.renderer_passes = bpy.props.IntProperty( name = "Passes",
                                             description = "Number of antialiasing passes",
-                                            default = 16,
+                                            default = 1,
                                             min = 1,
                                             max = 999999)
 
