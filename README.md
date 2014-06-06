@@ -1,12 +1,10 @@
-blenderseed
-===========
+## blenderseed
 
 appleseed Blender integration.
 
 Contributors: Franz Beaune, Esteban Tovagliari, and Joel Daniels.
 
-TODO
-----
+### To Do
 
 - refactor project writing code
 - export uncompressed binary meshes, instead of objs
@@ -16,7 +14,6 @@ TODO
 - OS X / Linux support
 - compiled export for Win 32
 
-Future
-------
+### Future
 
 - optionally, use appleseed.python for deep integration (viewport rendering, ...)
