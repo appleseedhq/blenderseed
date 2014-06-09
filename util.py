@@ -33,11 +33,44 @@ from shutil import copyfile
 from math import tan, atan, degrees
 from . import bl_info
 
+#------------------------------------
+# Generic utilities and settings.
+#------------------------------------
+sep = os.sep
+
 thread_count = multiprocessing.cpu_count()
+
 EnableDebug = True
+
+# Addon directory.
+addon_paths = bpy.utils.script_paths( "addons")
+if 'blenderseed' in os.listdir( addon_paths[0]):
+    addon_dir = os.path.join( addon_paths[0], 'blenderseed')
+else:
+    addon_dir = os.path.join( addon_paths[1], 'blenderseed')
 
 version = str(bl_info['version'][1]) + "." + str(bl_info['version'][2])
 
+def strip_spaces( name):
+    return ('_').join( name.split(' '))
+
+def join_names_underscore( name1, name2):
+    return ('_').join( (strip_spaces( name1), strip_spaces( name2)))
+
+def join_params( params, directive):
+    return ('').join( (('').join( params), directive))
+
+def filter_params( params):
+    filter_list = []
+    for p in params:
+        if p not in filter_list:
+            filter_list.append( p)
+    return filter_list
+        
+def get_timestamp():
+    now = datetime.datetime.now()
+    return "%d-%d-%d %d:%d:%d\n" % (now.month, now.day, now.year, now.hour, now.minute, now.second)
+    
 def realpath(path):
     return os.path.realpath(efutil.filesystem_path(path))
 
@@ -52,33 +85,15 @@ def do_export(obj, scene):
     return not obj.hide_render and obj.type in ('MESH', 'SURFACE', 'META', 'TEXT', 'CURVE', 'LAMP') and inscenelayer(obj, scene)
 
 def debug( *args):
+    msg = ' '.join(['%s'%a for a in args])
     global EnableDebug
-    if EnableDebug:
-        msg = ' '.join(['%s'%a for a in args])
+    if EnableDebug:    
         print( "DEBUG:" ,msg)
-    else:
-        pass
 
 def asUpdate( *args):
     msg = ' '.join(['%s'%a for a in args])
     print( "appleseed:" ,msg)
-    
-#--------------------------------------------------------------------------------------------------
-# Write a mesh object to disk in Wavefront OBJ format.
-#--------------------------------------------------------------------------------------------------
 
-def get_array2_key( v):
-    a = int( v[0] * 1000000)
-    b = int( v[1] * 1000000)
-    return a, b
-
-def get_vector2_key( v):
-    w = v * 1000000
-    return int( w.x), int( w.y)
-
-def get_vector3_key( v):
-    w = v * 1000000
-    return w.x, w.y, w.z
 
 #--------------------------------------------------------------------------------------------------
 # Write a mesh object to disk in Wavefront OBJ format.
