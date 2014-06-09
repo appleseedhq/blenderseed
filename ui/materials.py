@@ -533,6 +533,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     box.prop(alpha_tex.image.colorspace_settings, "name", text = "Color Space")
             else:
                 col.prop(asr_mat, "material_alpha")
+            box.prop( asr_mat, "shade_alpha_cutouts")
 
 #---------------------------------------------
 # Material emission panel.
@@ -546,8 +547,12 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
     
     @classmethod
     def poll( cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type == 'MESH' and context.object.active_material is not None
+        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+        obj = context.object is not None
+        obj_type = context.object.type == 'MESH'
+        material = context.object.active_material is not None
+        is_not_nodemat = context.object.active_material.appleseed.node_tree == ''
+        return renderer and obj and obj_type and material and is_not_nodemat
     
     def draw_header(self, context):
         header = self.layout
@@ -560,13 +565,16 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         asr_mat = material.appleseed
               
         #Light emission properties                 
+        col = layout.column()
+        col.active = asr_mat.use_light_emission
+        col.prop(asr_mat, "cast_indirect")
+        col.prop(asr_mat, "light_emission", text = "Emission Strength")
+        col.prop(asr_mat, "light_color", text = "Light Color")
         row = layout.row()
         row.active = asr_mat.use_light_emission
-        row.prop(asr_mat, "light_emission", text = "Emission Strength")
-        row = layout.row()
-        row.prop(asr_mat, "light_color", text = "Light Color")
-
-
+        row.prop( asr_mat, "importance_multiplier")
+        row.prop( asr_mat, "light_near_start")
+        
 def register():
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.add( 'APPLESEED_RENDER')

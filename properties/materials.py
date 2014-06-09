@@ -269,10 +269,6 @@ class AppleseedMatProps( bpy.types.PropertyGroup):
 
     shade_alpha_cutouts = bpy.props.BoolProperty(name = "Shade Alpha Cutouts", description = "Shade alpha cutouts", default = False)
 
-    
-
-    
-    
     preview_quality = bpy.props.IntProperty(name = "Preview Quality", description = "Number of samples used for preview rendering", default = 2, min = 1, max = 16)
 
     # Nodes
