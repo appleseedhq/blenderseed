@@ -28,8 +28,9 @@
 
 import bpy
 
-from . import render_layers
-
+#------------------------------------
+# appleseed Material Layer Properties.
+#------------------------------------
 class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     name = bpy.props.StringProperty( name=  "BSDF Name", 
                                      description = "BSDF layer name -- This must be a unique name per layer!", 
@@ -102,9 +103,9 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
                                     ("blinn", "Blinn", "")],
                                     name = "Microfacet model", description = "Microfacet distribution function model", default = "beckmann")
                                     
-    microfacet_mdf_blinn = bpy.props.FloatProperty(name = "Distribution Function", description = "Blinn model microfacet distribution function", default = 1.0, min = 0.0)
-                                    
-    microfacet_mdf = bpy.props.FloatProperty(name = "Distribution Function", description = "Microfacet distribution function (glossiness: lower values = more glossy)", default = 0.5, min = 0.0, max = 1.0)
+    microfacet_mdf = bpy.props.FloatProperty(name = "Glossiness", description = "Microfacet glossiness", default = 0.5, min = 0.0, max = 1.0)
+
+    microfacet_mdf_multiplier = bpy.props.FloatProperty(name = "Glossiness Multiplier", description = "Microfacet glossiness multiplier", default = 1.0, min = 0.0, max = 1.0)
     
     microfacet_reflectance = bpy.props.FloatVectorProperty(name = "Microfacet Reflectance", description = "Microfacet reflectance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
     
@@ -226,6 +227,10 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
 
     spec_btdf_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
 
+
+#------------------------------------
+# appleseed Material Properties.
+#------------------------------------
 class AppleseedMatProps( bpy.types.PropertyGroup):
     
     #Per layer properties are stored in AppleseedMatLayerProps
@@ -241,29 +246,13 @@ class AppleseedMatProps( bpy.types.PropertyGroup):
     light_emission = bpy.props.FloatProperty(name = "Emission strength", description = "Light emission strength", default = 0.0, min = 0.0, max = 10000.0)
     
     light_color = bpy.props.FloatVectorProperty(name = "Emission Color", description = "Light emission color", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
-    
-#    sss_use_shader = bpy.props.BoolProperty(name = "", description = "Enable Appleseed FastSSS shader (experimental)", default = False)
-#    
-#    sss_albedo_use_tex = bpy.props.BoolProperty(name = "", description = "Use a texture to influence SSS color", default = False)
-#    
-#    sss_ambient = bpy.props.FloatProperty(name = "Ambient SSS", description = "Ambient SSS value", default = 1.0, min = 0.0, max = 10.0)
-#    
-#    sss_diffuse = bpy.props.FloatProperty(name = "Diffuse Lighting", description = "", default = 1.0, min = 0.0, max = 10.0)
-#    
-#    sss_distortion = bpy.props.FloatProperty(name = "Normal Distortion", description = "", default = 1.0, min = 0.0, max = 10.0)
-#    
-#    sss_light_samples = bpy.props.IntProperty(name = "Light Samples", description = "", default = 1, min = 0, max = 100)
-#    
-#    sss_occlusion_samples = bpy.props.IntProperty(name = "Occlusion Samples", description = "", default = 1, min = 0, max = 100)
-#    
-#    sss_power = bpy.props.FloatProperty(name = "Power", description = "", default = 1.0, min = 0.0, max = 10.0)
-#    
-#    sss_scale = bpy.props.FloatProperty(name = "Geometric Scale", description = "", default = 1.0, min = 0.0, max = 10.0)
-#    
-#    sss_view_dep = bpy.props.FloatProperty(name = "View-dependent SSS", description = "", default = 1.0, min = 0.0, max = 10.0)
-#    
-#    sss_albedo_tex = bpy.props.StringProperty(name = '', description = 'Texture to influence SSS albedo', default = "")
 
+    importance_multiplier = bpy.props.FloatProperty( name = "Importance Multiplier", description = "Multiple importance sampling multiplier", default = 1, min = 0, max = 10)
+
+    cast_indirect = bpy.props.BoolProperty(name = "Cast Indirect Light", description = "Emissive material casts indirect light", default = False)
+
+    light_near_start = bpy.props.FloatProperty( name = "Light Near Start", description = "Amount by which to extend the start of light's influence away from the emissive material", default = 0.0, min = 0, max = 10)
+    
     material_use_bump_tex = bpy.props.BoolProperty(name = "", description = "Use a texture to influence bump / normal", default = False)
     
     material_bump_tex = bpy.props.StringProperty(name = "", description = "Bump / normal texture", default = "")
@@ -278,7 +267,21 @@ class AppleseedMatProps( bpy.types.PropertyGroup):
 
     material_alpha = bpy.props.FloatProperty(name = "Alpha", description = "Alpha", default = 1.0, min = 0.0, max = 1.0)
 
+    shade_alpha_cutouts = bpy.props.BoolProperty(name = "Shade Alpha Cutouts", description = "Shade alpha cutouts", default = False)
+
+    
+
+    
+    
     preview_quality = bpy.props.IntProperty(name = "Preview Quality", description = "Number of samples used for preview rendering", default = 2, min = 1, max = 16)
+
+    # Nodes
+    node_tree = bpy.props.StringProperty( name = "Node Tree",
+                                description = "Material node tree to link to the current material")
+
+    node_output = bpy.props.StringProperty( name = "Output Node",
+                                description = "Material node tree output node to link to the current material")
+
     
 def register():
     bpy.utils.register_class( AppleseedMatLayerProps)

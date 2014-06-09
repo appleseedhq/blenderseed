@@ -40,7 +40,7 @@ class AppleseedRenderLayerProps( bpy.types.PropertyGroup):
                                          description = "", 
                                          default = 0, 
                                          min = 0, 
-                                         max = 16)
+                                         max = 32)
 
 def register():
     bpy.utils.register_class( AppleseedRenderLayers)

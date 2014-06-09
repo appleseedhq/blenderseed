@@ -27,7 +27,7 @@
 #
 
 import bpy
-import os, subprocess
+import os, subprocess, sys
 import time
 import multiprocessing, threading
 from shutil               import copyfile
@@ -92,8 +92,12 @@ def render_preview( engine, scene):
     if len(likely_materials) < 1:
         return
 
-    as_bin_path = util.realpath(bpy.context.user_preferences.addons['render_appleseed'].preferences.appleseed_bin_path)
+    as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
     appleseed_exe = os.path.join( as_bin_path, "appleseed.cli")
+    
+    # If running Linux/OSX, add the binary path to environment.
+    if 'win' not in sys.platform:
+        os.environ['LD_LIBRARY_PATH'] = as_bin_path
 
     # Get the addon path so we can use the files in the material preview directory.
     addon_prev_path = os.path.join(sep.join(util.realpath(__file__).split(sep)[:-1]), "mat_preview")
@@ -124,25 +128,14 @@ def render_preview( engine, scene):
         return;
     else:
         if not bpy.app.background:
-            # Check if version of appleseed.cli allows silencing of console: > 1.1.0-alpha-20
-            encoding = getdefaultlocale()[1]
-            if "alpha-21" in subprocess.Popen((appleseed_exe, "-v"), 
-                            stdout = subprocess.PIPE, 
-                            stderr = subprocess.STDOUT).communicate()[0].decode(encoding):
-                cmd = ( appleseed_exe, 
-                scene_file, 
-                '-o', img_file, 
-                '--threads', str( threads),
-                '--continuous-saving',
-                '--message-verbosity', 'fatal')
-            else:
-                cmd = ( appleseed_exe, 
-                scene_file, 
-                '-o', img_file, 
-                '--threads', str( threads),
-                '--continuous-saving')
+            cmd = ( appleseed_exe,
+            scene_file, 
+            '-o', img_file, 
+            '--threads', str( threads),
+            '--continuous-saving',
+            '--message-verbosity', 'fatal')
                
-            appleseed_proc = subprocess.Popen( cmd, stdout=subprocess.PIPE)
+            appleseed_proc = subprocess.Popen( cmd, env = os.environ.copy(), stdout=subprocess.PIPE)
             returncode = appleseed_proc.communicate()
                 
             if returncode[0] == b'':
@@ -203,12 +196,16 @@ def render_scene( engine, scene):
     filename = os.path.join( project_dir, filename)
     
     # Get the absolute path to the executable directory.
-    as_bin_path = util.realpath( bpy.context.user_preferences.addons['render_appleseed'].preferences.appleseed_bin_path)
+    as_bin_path = util.realpath( bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
     if as_bin_path == '':
         engine.report({'INFO'}, "The path to appleseed executable has not been specified. Set the path in the addon user preferences.")
         return
     appleseed_exe = os.path.join( as_bin_path, ("appleseed.studio" if scene.appleseed.display_mode == 'STUDIO' else "appleseed.cli"))
-
+    
+    # If running Linux/OSX, add the binary path to environment.
+    if 'win' not in sys.platform:
+        os.environ['LD_LIBRARY_PATH'] = as_bin_path
+        
     scale = scene.render.resolution_percentage / 100.0
     width = int(scene.render.resolution_x * scale)
     height = int(scene.render.resolution_y * scale)
@@ -223,31 +220,18 @@ def render_scene( engine, scene):
             y = height - int(scene.render.border_max_y * height)
             endX = int(scene.render.border_max_x * width)    
             endY = height - int(scene.render.border_min_y * height)
-            
-        # Check if version of appleseed.cli allows silencing of console: > 1.1.0-alpha-20
-        encoding = getdefaultlocale()[1]
-        if "alpha-21" in subprocess.Popen((appleseed_exe, "-v"), 
-                        stdout = subprocess.PIPE, 
-                        stderr = subprocess.STDOUT).communicate()[0].decode(encoding):
-            cmd = (appleseed_exe, 
-                    filename, 
-                    '-o', img_file, 
-                    '--threads', str(threads),
-                    '--continuous-saving',
-                    '--message-verbosity', 'fatal',
-                    '--resolution', str(width), str(height),
-                    '--window', str(x), str(y), str(endX), str(endY))
-        else:
-            cmd = ( appleseed_exe, 
-                    filename, 
-                    '-o', img_file, 
-                    '--threads', str( scene.appleseed.threads), 
-                    '--continuous-saving',
-                    '--resolution', str(width), str(height),
-                    '--window', str(x), str(y), str(endX), str(endY))
+
+        cmd = ( appleseed_exe,
+                filename, 
+                '-o', img_file, 
+                '--threads', str(threads),
+                '--continuous-saving',
+                '--message-verbosity', 'fatal',
+                '--resolution', str(width), str(height),
+                '--window', str(x), str(y), str(endX), str(endY))
 
         # Launch appleseed.cli.
-        process = subprocess.Popen( cmd, cwd = render_output)
+        process = subprocess.Popen( cmd, cwd = render_output, env = os.environ.copy())
         
         # Wait for the rendered image file to be created
         while not os.path.exists( img_file):
@@ -306,12 +290,12 @@ def render_scene( engine, scene):
     else:
         # If rendering with GUI, we have two options
         if scene.appleseed.studio_rendering_mode == "PROGRESSIVE":
-            cmd = os.path.join( as_bin_path, appleseed_exe) + ' ' + filename + " --render interactive"
+            cmd = (appleseed_exe, filename, " --render interactive")
         else:
-            cmd = os.path.join( as_bin_path, appleseed_exe) + ' ' + filename + " --render final"
+            cmd = (appleseed_exe, filename, " --render final")
 
         # Launch appleseed.studio.
-        process = subprocess.Popen( cmd, cwd = render_output)
+        process = subprocess.Popen( cmd, env = os.environ.copy(), cwd = render_output)
     
 
 class RenderAppleseed( bpy.types.RenderEngine):

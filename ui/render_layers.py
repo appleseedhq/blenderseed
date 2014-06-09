@@ -27,6 +27,7 @@
 #
 
 import bpy
+
 '''
 class AppleseedRenderPasses( bpy.types.Panel):
     bl_label = "Passes"
@@ -50,7 +51,7 @@ class AppleseedRenderPasses( bpy.types.Panel):
         col.prop( asr, "pass_z")
         col.prop( asr, "pass_normal")
         col.prop( asr, "pass_uv")
-
+'''
 
 class AppleseedRenderLayers( bpy.types.Panel):
     bl_label = "Render Layers"
@@ -81,17 +82,13 @@ class AppleseedRenderLayers( bpy.types.Panel):
         if appleseed_layers.layers:
             current_layer = appleseed_layers.layers[appleseed_layers.layer_index]   
             layout.prop( current_layer, "name", text = "Layer Name")
-'''
+
 def register():
-    pass
-    '''
     bpy.utils.register_class( AppleseedRenderLayers)
-    bpy.utils.register_class( AppleseedRenderPasses)
-    '''
+#    bpy.utils.register_class( AppleseedRenderPasses)
+
     
 def unregister():
-    pass
-    '''
     bpy.utils.unregister_class( AppleseedRenderLayers)
-    bpy.utils.unregister_class( AppleseedRenderPasses)
-    '''
+#    bpy.utils.unregister_class( AppleseedRenderPasses)
+

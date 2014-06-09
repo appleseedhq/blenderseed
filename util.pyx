@@ -29,18 +29,57 @@
 import bpy
 import os
 import multiprocessing
+import datetime
 from extensions_framework import util as efutil
 from shutil import copyfile
 from math import tan, atan, degrees
 from . import bl_info
 cdef extern from "objUtil.h":
-    void objWriter(const char *header, const char *verts, const char *vn, const char *vt, const char *faces, const char *filepath)
+    void objWriter(const char *header, 
+                   const char *verts, 
+                   const char *vn, 
+                   const char *vt, 
+                   const char *faces, 
+                   const char *filepath)
+
+#------------------------------------
+# Generic utilities and settings.
+#------------------------------------
+sep = os.sep
 
 thread_count = multiprocessing.cpu_count()
+
 EnableDebug = True
+
+# Addon directory.
+addon_paths = bpy.utils.script_paths( "addons")
+if 'blenderseed' in os.listdir( addon_paths[0]):
+    addon_dir = os.path.join( addon_paths[0], 'blenderseed')
+else:
+    addon_dir = os.path.join( addon_paths[1], 'blenderseed')
 
 version = str(bl_info['version'][1]) + "." + str(bl_info['version'][2])
 
+def strip_spaces( name):
+    return ('_').join( name.split(' '))
+
+def join_names_underscore( name1, name2):
+    return ('_').join( (strip_spaces( name1), strip_spaces( name2)))
+
+def join_params( params, directive):
+    return ('').join( (('').join( params), directive))
+
+def filter_params( params):
+    filter_list = []
+    for p in params:
+        if p not in filter_list:
+            filter_list.append( p)
+    return filter_list
+        
+def get_timestamp():
+    now = datetime.datetime.now()
+    return "%d-%d-%d %d:%d:%d\n" % (now.month, now.day, now.year, now.hour, now.minute, now.second)
+    
 def realpath(path):
     return os.path.realpath(efutil.filesystem_path(path))
 
@@ -55,17 +94,16 @@ def do_export(obj, scene):
     return not obj.hide_render and obj.type in ('MESH', 'SURFACE', 'META', 'TEXT', 'CURVE', 'LAMP') and inscenelayer(obj, scene)
 
 def debug( *args):
+    msg = ' '.join(['%s'%a for a in args])
     global EnableDebug
-    if EnableDebug:
-        msg = ' '.join(['%s'%a for a in args])
+    if EnableDebug:    
         print( "DEBUG:" ,msg)
-    else:
-        pass
 
 def asUpdate( *args):
     msg = ' '.join(['%s'%a for a in args])
     print( "appleseed:" ,msg)
-    
+
+
 #--------------------------------------------------------------------------------------------------
 # Write a mesh object to disk in Wavefront OBJ format.
 #--------------------------------------------------------------------------------------------------

@@ -33,6 +33,7 @@ from . import world
 from . import objects
 from . import materials
 from . import camera
+from . import nodes
 
 
 def register():
@@ -42,7 +43,8 @@ def register():
     objects.register()
     materials.register()
     camera.register()
-
+    nodes.register()
+    
 def unregister():
     render_layers.unregister()
     scene.unregister()
@@ -50,4 +52,4 @@ def unregister():
     objects.unregister()
     materials.unregister()
     camera.unregister()
-
+    nodes.unregister()

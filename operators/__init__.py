@@ -32,7 +32,9 @@ import subprocess
 from .. import project_file_writer
 from .. import util
 
-#Operator for adding material layers
+#-------------------------------
+# Operator for adding material layers.
+#-------------------------------
 class AppleseedAddMatLayer( bpy.types.Operator):
     bl_label = "Add Layer"
     bl_description = "Add new BSDF layer"
@@ -48,10 +50,11 @@ class AppleseedAddMatLayer( bpy.types.Operator):
         num = collection.__len__()
         collection[num-1].name = "BSDF Layer " + str(num)
         
-            
         return {'FINISHED'}
-    
-#Operator for removing material layers
+
+#-------------------------------    
+# Operator for removing material layers.
+#-------------------------------
 class AppleseedRemoveMatLayer( bpy.types.Operator):
     bl_label = "Remove Layer"
     bl_description = "Remove BSDF layer"
@@ -108,9 +111,26 @@ class AppleseedRemoveRenderLayer( bpy.types.Operator):
         return {'FINISHED'}
 
 #-------------------------------
-# Appleseed export operator
-#--------------------------------
+# appleseed material node tree generator.
+#-------------------------------
+class AppleseedNewNodeTree( bpy.types.Operator):
+    bl_idname = "appleseed.add_material_nodetree"
+    bl_label = "Add appleseed Material Node Tree"
+    bl_description = "Create an appleseed material node tree and link it to the current material"
 
+    def execute( self, context):
+        material = context.object.active_material
+        nodetree = bpy.data.node_groups.new( '%s appleseed Nodetree' % material.name, 'AppleseedNodeTree')
+        nodetree.use_fake_user = True
+        node = nodetree.nodes.new( 'AppleseedMaterialNode')
+        material.appleseed.node_tree = nodetree.name
+        material.appleseed.node_output = node.name
+
+        return {'FINISHED'}
+        
+#-------------------------------
+# appleseed export operator.
+#--------------------------------
 class AppleseedExportOperator( bpy.types.Operator):
     bl_idname = "appleseed.export"
     bl_label = "Export"
