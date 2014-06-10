@@ -514,7 +514,7 @@ class write_project_file( object):
             
             for node in node_list:
                 if node.node_type not in {'texture', 'normal'}:
-                    bsdf_name = node.get_node_name()
+                    bsdf_name = material_name + node.get_node_name()
                 if node.node_type == 'ashikhmin':
                     self.__emit_ashikhmin_brdf( material, bsdf_name, 'front', None, node)
                 if node.node_type == 'bsdf_blend':
@@ -534,7 +534,7 @@ class write_project_file( object):
                 if node.node_type == 'specular_brdf':
                     self.__emit_specular_brdf( material, bsdf_name, 'front', None, node)
                 if node.node_type == 'texture':
-                    self.__emit_texture( None, False, scene, node)
+                    self.__emit_texture( None, False, scene, node, material_name)
             return bsdf_name
             
         else:
@@ -1275,10 +1275,10 @@ class write_project_file( object):
     # Export textures, if any exist on the material
     #----------------------------------------------------------------------------------------------
     # Write texture.
-    def __emit_texture(self, tex, bump_bool, scene, node = None):
+    def __emit_texture(self, tex, bump_bool, scene, node = None, material_name = None):
             # Nodes.
             if node is not None:
-                texture_name = node.get_node_name()
+                texture_name = material_name + node.get_node_name()
                 filepath = util.realpath( node.tex_path)
                 color_space = node.color_space
             else:        
@@ -1298,12 +1298,12 @@ class write_project_file( object):
             self.__close_element("texture")
             
             # Now create texture instance
-            self.__emit_texture_instance(tex, bump_bool, node)
+            self.__emit_texture_instance(tex, bump_bool, node, material_name)
 
     # Write texture instance.
-    def __emit_texture_instance(self, texture, bump_bool, node = None):
+    def __emit_texture_instance(self, texture, bump_bool, node = None, material_name = None):
         if node is not None:
-            texture_name = node.get_node_name()
+            texture_name = material_name + node.get_node_name()
             mode = node.mode
         else:
             texture_name = texture.name if bump_bool == False else texture.name + "_bump"
@@ -1335,7 +1335,7 @@ class write_project_file( object):
                 material_alpha_map = inputs[1].get_socket_value( True)
                 bump_map = inputs[2].get_socket_value( False)
                 if bump_map != "":
-                    bump_map += "_inst"
+                    bump_map = material_name + bump_map + "_inst"
                     material_bump_amplitude, use_normalmap = inputs[2].get_normal_params()
                     method = "normal" if use_normalmap else "bump"
             else:
