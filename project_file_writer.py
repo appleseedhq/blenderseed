@@ -518,7 +518,7 @@ class write_project_file( object):
                 if node.node_type == 'ashikhmin':
                     self.__emit_ashikhmin_brdf( material, bsdf_name, 'front', None, node)
                 if node.node_type == 'bsdf_blend':
-                    self.__emit_bsdf_blend( bsdf_name, node)
+                    self.__emit_bsdf_blend( bsdf_name, material_name, node)
                 if node.node_type == 'diffuse_btdf':
                     self.__emit_diffuse_btdf( material, bsdf_name, 'front', None, node)
                 if node.node_type == 'kelemen':
@@ -1204,15 +1204,15 @@ class write_project_file( object):
     # ---------------------
     # Write BSDF Blend.
     # ---------------------
-    def __emit_bsdf_blend(self, bsdf_name, node = None):
+    def __emit_bsdf_blend(self, bsdf_name, material_name, node = None):
         '''
         Emit BSDF blend to project file.
         '''
         if node is not None:
             inputs = node.inputs
             weight = inputs[0].get_socket_value( True)
-            bsdf0_name = inputs[1].get_socket_value( False)
-            bsdf1_name = inputs[2].get_socket_value( False)
+            bsdf0_name = material_name + inputs[1].get_socket_value( False)
+            bsdf1_name = material_name + inputs[2].get_socket_value( False)
 
             if isinstance(weight, float):
                 weight = 1 - weight
