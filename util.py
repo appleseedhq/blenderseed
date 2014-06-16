@@ -43,11 +43,9 @@ thread_count = multiprocessing.cpu_count()
 EnableDebug = True
 
 # Addon directory.
-addon_paths = bpy.utils.script_paths( "addons")
-if 'blenderseed' in os.listdir( addon_paths[0]):
-    addon_dir = os.path.join( addon_paths[0], 'blenderseed')
-else:
-    addon_dir = os.path.join( addon_paths[1], 'blenderseed')
+for addon_path in bpy.utils.script_paths("addons"):
+    if "blenderseed" in os.listdir(addon_path):
+        addon_dir = os.path.join(addon_path, "blenderseed")
 
 version = str(bl_info['version'][1]) + "." + str(bl_info['version'][2])
 
