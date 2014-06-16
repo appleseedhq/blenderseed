@@ -106,7 +106,7 @@ def register():
     bpy.utils.register_class( AppleseedSpecBRDFNode)
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedSpecBRDF)
+    bpy.utils.unregister_class( AppleseedSpecBRDFNode)
     bpy.utils.unregister_class( AppleseedSpecBRDFMultiplierSocket)
     bpy.utils.unregister_class( AppleseedSpecBRDFReflectanceSocket)
     
