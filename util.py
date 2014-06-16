@@ -40,7 +40,7 @@ sep = os.sep
 
 thread_count = multiprocessing.cpu_count()
 
-EnableDebug = True
+EnableDebug = False
 
 # Addon directory.
 for addon_path in bpy.utils.script_paths("addons"):
