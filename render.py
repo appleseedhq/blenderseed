@@ -231,7 +231,7 @@ def render_scene( engine, scene):
                 '--window', str(x), str(y), str(endX), str(endY))
 
         # Launch appleseed.cli.
-        process = subprocess.Popen( cmd, cwd = render_output, env = os.environ.copy())
+        process = subprocess.Popen( cmd, env = os.environ.copy())
         
         # Wait for the rendered image file to be created
         while not os.path.exists( img_file):
@@ -295,7 +295,7 @@ def render_scene( engine, scene):
             cmd = (appleseed_exe, filename, " --render final")
 
         # Launch appleseed.studio.
-        process = subprocess.Popen( cmd, env = os.environ.copy(), cwd = render_output)
+        process = subprocess.Popen( cmd, env = os.environ.copy())
     
 
 class RenderAppleseed( bpy.types.RenderEngine):
