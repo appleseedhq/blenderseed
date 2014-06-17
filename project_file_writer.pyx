@@ -32,6 +32,11 @@ import os, subprocess, time
 from shutil   import copyfile
 from datetime import datetime
 from .        import util
+import sys
+if sys.platform == 'win32':
+    from . import mesh_writer
+else:
+    from . import mesh_writer_unix as mesh_writer
 
 identity_matrix = mathutils.Matrix(((1.0, 0.0, 0.0, 0.0),
                                     (0.0, 0.0, -1.0, 0.0),
@@ -306,7 +311,7 @@ class write_project_file( object):
             mesh_filepath = os.path.join(os.path.dirname( util.realpath( scene.appleseed.project_path) + os.path.sep  + scene.name), mesh_filename)
 
             try:
-                mesh_parts = util.write_mesh_to_disk( mesh, mesh_faces, mesh_uvtex, mesh_filepath)
+                mesh_parts = mesh_writer.write_mesh_to_disk( mesh, mesh_faces, mesh_uvtex, mesh_filepath)
             except IOError:
                 self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
                 return []
@@ -342,7 +347,7 @@ class write_project_file( object):
             mesh_filepath = os.path.join(util.realpath( scene.appleseed.project_path), mesh_filename)
 
             try:
-                util.write_mesh_to_disk( mesh, mesh_faces, mesh_uvtex, mesh_filepath)
+                mesh_writer.write_mesh_to_disk( mesh, mesh_faces, mesh_uvtex, mesh_filepath)
             except IOError:
                 self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
                 
