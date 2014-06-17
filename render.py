@@ -96,7 +96,7 @@ def render_preview( engine, scene):
     appleseed_exe = os.path.join( as_bin_path, "appleseed.cli")
     
     # If running Linux/OSX, add the binary path to environment.
-    if 'win' not in sys.platform:
+    if sys.platform != "win32":
         os.environ['LD_LIBRARY_PATH'] = as_bin_path
 
     # Get the addon path so we can use the files in the material preview directory.
@@ -203,7 +203,7 @@ def render_scene( engine, scene):
     appleseed_exe = os.path.join( as_bin_path, ("appleseed.studio" if scene.appleseed.display_mode == 'STUDIO' else "appleseed.cli"))
     
     # If running Linux/OSX, add the binary path to environment.
-    if 'win' not in sys.platform:
+    if sys.platform != "win32":
         os.environ['LD_LIBRARY_PATH'] = as_bin_path
         
     scale = scene.render.resolution_percentage / 100.0
