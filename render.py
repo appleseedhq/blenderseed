@@ -99,10 +99,6 @@ def render_preview( engine, scene):
     if sys.platform != "win32":
         os.environ['LD_LIBRARY_PATH'] = as_bin_path
 
-    # If running OSX change to the bin directory, to avoid libappleseed.dylib not found error
-    if sys.platform == 'darwin':
-        os.chdir(as_bin_path)
-
     # Get the addon path so we can use the files in the material preview directory.
     addon_prev_path = os.path.join(sep.join(util.realpath(__file__).split(sep)[:-1]), "mat_preview")
     tempdir = efutil.temp_directory()
@@ -139,7 +135,7 @@ def render_preview( engine, scene):
             '--continuous-saving',
             '--message-verbosity', 'fatal')
                
-            appleseed_proc = subprocess.Popen( cmd, env = os.environ.copy(), stdout=subprocess.PIPE)
+            appleseed_proc = subprocess.Popen( cmd, cwd=as_bin_path, env = os.environ.copy(), stdout=subprocess.PIPE)
             returncode = appleseed_proc.communicate()
                 
             if returncode[0] == b'':
@@ -210,10 +206,6 @@ def render_scene( engine, scene):
     if sys.platform != "win32":
         os.environ['LD_LIBRARY_PATH'] = as_bin_path
 
-    # If running OSX change to the bin directory, to avoid libappleseed.dylib not found error
-    if sys.platform == 'darwin':
-        os.chdir(as_bin_path)
-
     scale = scene.render.resolution_percentage / 100.0
     width = int(scene.render.resolution_x * scale)
     height = int(scene.render.resolution_y * scale)
@@ -239,7 +231,7 @@ def render_scene( engine, scene):
                 '--window', str(x), str(y), str(endX), str(endY))
 
         # Launch appleseed.cli.
-        process = subprocess.Popen( cmd, env = os.environ.copy())
+        process = subprocess.Popen( cmd, cwd=as_bin_path, env = os.environ.copy())
         
         # Wait for the rendered image file to be created
         while not os.path.exists( img_file):
@@ -303,7 +295,7 @@ def render_scene( engine, scene):
             cmd = (appleseed_exe, filename, " --render final")
 
         # Launch appleseed.studio.
-        process = subprocess.Popen( cmd, env = os.environ.copy())
+        process = subprocess.Popen( cmd, cwd=as_bin_path, env = os.environ.copy())
     
 
 class RenderAppleseed( bpy.types.RenderEngine):
