@@ -33,6 +33,7 @@ import datetime
 from extensions_framework import util as efutil
 from shutil import copyfile
 from math import tan, atan, degrees
+import mathutils
 from . import bl_info
 
 #------------------------------------
@@ -112,11 +113,11 @@ def get_instance_materials(ob):
     return obmats
 
 def is_proxy(ob, scene):
-    if ob.type == 'MESH' and ob.corona.is_proxy:
-        if ob.corona.use_external:
-            return ob.corona.external_instance_mesh != ''
+    if ob.type == 'MESH' and ob.appleseed.is_proxy:
+        if ob.appleseed.use_external:
+            return ob.appleseed.external_instance_mesh != ''
         else:
-            return ob.corona.instance_mesh is not None and scene.objects[ob.corona.instance_mesh].type == 'MESH'
+            return ob.appleseed.instance_mesh is not None and scene.objects[ob.appleseed.instance_mesh].type == 'MESH'
 
 def get_particle_matrix(ob):
     object_matrix = ob.matrix.copy()
@@ -203,6 +204,65 @@ def is_psys_emitter( ob):
                 emitter = True
                 break
     return emitter
+
+def has_hairsys( ob):
+    has_hair = False
+    for mod in ob.modifiers:
+        if mod.type == 'PARTICLE_SYSTEM' and mod.show_render:
+            psys = mod.particle_system
+            if psys.settings.type == 'HAIR' and psys.settings.render_type == 'PATH':
+                has_hair = True
+                break
+    return has_hair
+
+cdef calc_decrement( double first, double last, int segments):
+    return (( 1 - (last / first)) / segments)
+    
+def get_hairs( obj, scene, psys, crv_ob, crv_data, mat_name):
+    cdef int p, steps, num_parents, num_children, step
+    cdef double p_rad, rad_decrement
+    cdef double root_size, tip_size
+    root_size = psys.settings.appleseed.root_size
+    tip_size = psys.settings.appleseed.tip_size
+    # Set the render resolution of the particle system
+    psys.set_resolution( scene, obj, 'RENDER')
+    steps = 2 ** psys.settings.render_step + 1
+    num_parents = len( psys.particles)
+    num_children = len( psys.child_particles)
+    transform = obj.matrix_world.inverted()      
+    crv = bpy.data.curves.new( 'appleseed_hair_curve', 'CURVE') 
+    for p in range( 0, num_parents + num_children):   
+        crv.splines.new( 'NURBS')
+        points = crv.splines[p].points
+        crv.splines[p].points.add( steps - 1)
+        crv.splines[p].use_endpoint_u = True
+        crv.splines[p].order_u = 4
+        p_rad = 1.0
+        rad_decrement = calc_decrement( root_size, tip_size, steps)
+        for step in range(0, steps):
+            co = psys.co_hair( obj, p, step)
+            points[step].co = mathutils.Vector( ( co.x, co.y, co.z, 1.0)) 
+            points[step].radius = p_rad
+            p_rad -= rad_decrement
+    # Transform the curve.
+    crv.transform( transform)
+    crv.dimensions = '3D'
+    crv.fill_mode = 'FULL'
+    if psys.settings.appleseed.shape == 'thick':
+        crv.bevel_depth = psys.settings.appleseed.scaling
+        crv.bevel_resolution = psys.settings.appleseed.resolution
+    else: 
+        crv.extrude = psys.settings.appleseed.scaling
+    crv.resolution_u = 1   
+    # Create an object for the curve, add the material, then convert to mesh
+    crv_ob.data = bpy.data.curves[crv.name]
+    crv_ob.data.materials.append( bpy.data.materials[mat_name])
+    mesh = crv_ob.to_mesh( scene, True, 'RENDER', calc_tessface = True)
+    crv_ob.data = crv_data
+    # Remove the curve.
+    bpy.data.curves.remove( crv)
+    psys.set_resolution( scene, obj, 'PREVIEW')
+    return mesh
     
 def get_camera_matrix( camera, global_matrix):
     camera_mat = global_matrix * camera.matrix_world

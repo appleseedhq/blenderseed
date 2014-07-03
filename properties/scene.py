@@ -63,7 +63,7 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                 description = "Appleseed render settings",
                 type = cls)
 
-        # Scene render settings.
+        # Scene render settings.      
         cls.selected_scene = bpy.props.EnumProperty( name="Scene",
                                             description="Select the scene to export",
                                             items=scene_enumerator)
@@ -102,10 +102,22 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             min = 0.1, 
                                             max = 30)
 
-        cls.generate_mesh_files = bpy.props.BoolProperty( name="Write Meshes to Disk",
-                                            description="If unchecked, the mesh files (.obj files) won't be regenerated",
+        cls.generate_mesh_files = bpy.props.BoolProperty( name="Export Geometry",
+                                            description = "Write geometry to disk as .obj files",
                                             default = True)
 
+        cls.export_mode = bpy.props.EnumProperty( name = "", 
+                                            description = "Geometry export mode",
+                                            items = [
+                                            ( 'all', "All", "Export all geometry, overwriting existing .obj files"),
+                                            ( 'partial', "Partial", "Only export geometry that has not been written to disk"),
+                                            ( 'selected', "Selected", "Only export selected geometry")],
+                                            default = 'all')
+                                            
+        cls.export_hair = bpy.props.BoolProperty( name = "Export Hair", 
+                                        description = "Export hair particle systems as renderable geometry", 
+                                        default = False)
+                                        
         cls.img_extension = bpy.props.EnumProperty( name = "Image Format", 
                                             description = "File format of rendered image", 
                                             items = [( ".png", "PNG", "PNG: Output image in .png format"),

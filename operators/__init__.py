@@ -134,14 +134,34 @@ class AppleseedNewNodeTree( bpy.types.Operator):
 class AppleseedExportOperator( bpy.types.Operator):
     bl_idname = "appleseed.export"
     bl_label = "Export"
+
+    inst_set = set()
+    psysob_set = set()
+    exported_obs = set()
     
     def execute( self, context):
         scene = context.scene
-        if context.scene.appleseed.project_path == '':
+        if scene.appleseed.project_path == '':
             return {'CANCELLED'}  
-        file_path = os.path.join( util.realpath(scene.appleseed.project_path), scene.name + ".appleseed")
-        appleseed_proj = project_file_writer.write_project_file()
-        appleseed_proj.export( scene, file_path)
+        
+        # If exporting hair enabled, there's a good chance there will 
+        #   actually be particle systems to export.
+        # A hair object placeholder is needed before iterating through 
+        #   scene objects. It is not renderable.
+        placeholders = []
+        if scene.appleseed.export_hair: 
+            crv = bpy.data.curves.new( 'appleseed_hair_tmp_curve', 'CURVE')
+            crv_ob = bpy.data.objects.new("%s_ob" % crv.name, crv)
+            crv_ob.hide_render = True
+            placeholders = [crv, crv_ob]
+
+        appleseed_proj = project_file_writer.write_project_file( placeholders)
+        appleseed_proj.export( scene)
+
+        if scene.appleseed.export_hair:
+            bpy.data.curves['appleseed_hair_tmp_curve'].user_clear()
+            bpy.data.curves.remove( bpy.data.curves['appleseed_hair_tmp_curve'])
+            
         return {'FINISHED'}
 
 

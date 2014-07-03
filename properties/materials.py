@@ -207,7 +207,7 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     spec_btdf_spec_tex = bpy.props.StringProperty(name= "", description = "Texture to influence specular reflectance", default = "")
     
-    spec_btdf_ref_mult = bpy.props.FloatProperty(name = "Specular Reflectance Multiplier", description = "Specular BTDF reflectance multiplier", default = 1.0, min = 0.0, max = 1.0)
+    spec_btdf_refl_mult = bpy.props.FloatProperty(name = "Specular Reflectance Multiplier", description = "Specular BTDF reflectance multiplier", default = 1.0, min = 0.0, max = 1.0)
     
     spec_btdf_transmittance = bpy.props.FloatVectorProperty(name = "Specular Transmittance", description = "Specular BTDF transmittance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
     

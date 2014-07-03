@@ -34,6 +34,7 @@ from . import world
 from . import camera
 from . import objects
 from . import materials
+from . import particles
 
 import bl_ui.properties_texture as properties_texture
 INCLUDE_TEXTURE = [ 'TEXTURE_MT_specials', 'TEXTURE_PT_context_texture', 'TEXTURE_PT_image', 'TEXTURE_UL_texslots', 'Panel', 'Object', 'Material', 'Texture', 'TextureSlotPanel', 'TextureButtonsPanel', 'UIList', 'id_tex_datablock', 'context_tex_datablock']
@@ -87,6 +88,7 @@ def register():
     materials.register()
     camera.register()
     objects.register()
+    particles.register()
 
 def unregister():
     render.unregister()
@@ -96,3 +98,4 @@ def unregister():
     materials.unregister()
     camera.unregister()
     objects.unregister()
+    particles.unregister()

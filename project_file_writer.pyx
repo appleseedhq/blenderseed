@@ -62,6 +62,9 @@ def object_enumerator( type):
     
 class write_project_file( object):
     # Transformation matrix applied to all entities of the scene.
+    def __init__( self, placeholders):
+        self.curves = placeholders
+        
     global_scale = 0.1
     global_matrix = mathutils.Matrix.Scale(global_scale, 4)
     
@@ -70,12 +73,14 @@ class write_project_file( object):
     # Collect objects being rendered with motion blur
     def_mblur_obs = {}
     dupli_objects = []
+    selected_objects = []
     
-    def export(self, scene, file_path):
+    def export(self, scene):
         '''Write the .appleseed project file for rendering'''
-        
+        file_path = os.path.join( util.realpath(scene.appleseed.project_path), scene.name + ".appleseed")
         self.textures_set.clear()
         self.def_mblur_obs = {ob.name: '' for ob in scene.objects if ob.appleseed.mblur_enable and ob.appleseed.mblur_type == 'deformation'}
+        self.selected_objects = [ ob.name for ob in scene.objects if ob.select]
         
         if scene is None:
             self.__error("No scene to export.")
@@ -191,6 +196,7 @@ class write_project_file( object):
                 # Skipping objects marked as non-renderable.
                 if object.type == 'LAMP':
                     self.__emit_light( scene, object)
+
                 else:
                     self.dupli_objects.clear()
                     if util.ob_mblur_enabled( object, scene):
@@ -256,102 +262,157 @@ class write_project_file( object):
             pass
         else:
             try:    
-                # If deformation motion blur is enabled
+                export_mesh = True
+                # Convert hair geometry to mesh and export, if enabled in settings.
+                export_hair = scene.appleseed.export_hair and util.has_hairsys( object)
+                if export_hair:
+                    crv = self.curves[0]
+                    crv_ob = self.curves[1]
+                    if not util.render_emitter( object):
+                        export_mesh = False
+                    
+                # If deformation motion blur is enabled.
                 if util.def_mblur_enabled( object, scene):
                     scene.frame_set( current_frame, subframe = asr_scn.shutter_close)
                     # Tessellate the object at the next frame to export mesh for deformation motion blur.
-                    def_mesh = object.to_mesh( scene, True, 'RENDER', calc_tessface = True)
+                    if export_mesh:
+                        def_mesh = object.to_mesh( scene, True, 'RENDER', calc_tessface = True)
+                        mesh_faces = def_mesh.tessfaces
+                        mesh_uvtex = def_mesh.tessface_uv_textures
+                        # Write the deformation motion blur mesh to disk.
+                        self.__emit_def_mesh_object( scene, object, def_mesh, mesh_faces, mesh_uvtex)
+                        # Delete the mesh.
+                        bpy.data.meshes.remove( def_mesh)
+                        
+                    if export_hair:
+                        for mod in object.modifiers:
+                            if mod.type == 'PARTICLE_SYSTEM' and mod.show_render:
+                                psys = mod.particle_system
+                                if psys.settings.type == 'HAIR' and psys.settings.render_type == 'PATH':
+                                    mat_index = psys.settings.material - 1
+                                    material = object.material_slots[mat_index].name
+                                    def_hair_mesh = util.get_hairs(object, scene, psys, crv_ob, crv, material)
+                                    mesh_faces = def_hair_mesh.tessfaces
+                                    mesh_uvtex = def_hair_mesh.tessface_uv_textrues
+                                    # Write the deformation motion blur hair mesh to disk.
+                                    self.__emit_def_mesh_object( scene, object, def_hair_mesh, mesh_faces, mesh_uvtex, True, psys.name)
+                                    # Delete the mesh.
+                                    bpy.data.meshes.remove( def_hair_mesh)
+
+                    # Reset the timeline to current frame
                     scene.frame_set( current_frame) 
-                    def_mesh_faces = def_mesh.tessfaces
-                    def_mesh_uvtex = def_mesh.tessface_uv_textures
-
-                    # Write the deformation motion blur mesh to disk.
-                    self.__emit_def_mesh_object(scene, object, def_mesh, def_mesh_faces, def_mesh_uvtex)
-
-                    bpy.data.meshes.remove( def_mesh)
-                    
-
-                # Tessellate the object.
+                
+                # Tessellate the object at shutter open.
                 scene.frame_set( current_frame, subframe = shutter_open)
-                mesh = object.to_mesh(scene, True, 'RENDER', calc_tessface = True)
+                if export_mesh:
+                    mesh = object.to_mesh(scene, True, 'RENDER', calc_tessface = True)
+                    mesh_faces = mesh.tessfaces
+                    mesh_uvtex = mesh.tessface_uv_textures
+                    # Write the geometry to disk and emit a mesh object element.
+                    self._mesh_parts[object.name] = self.__emit_mesh_object(scene, object, mesh, mesh_faces, mesh_uvtex)
+                    # Delete the mesh
+                    bpy.data.meshes.remove( mesh)
+                    
+                if export_hair:
+                    for mod in object.modifiers:
+                        if mod.type == 'PARTICLE_SYSTEM' and mod.show_render:
+                            psys = mod.particle_system
+                            if psys.settings.type == 'HAIR' and psys.settings.render_type == 'PATH':
+                                mat_index = psys.settings.material - 1
+                                material = object.material_slots[mat_index].name
+                                hair_mesh = util.get_hairs(object, scene, psys, crv_ob, crv, material)
+                                mesh_faces = hair_mesh.tessfaces
+                                mesh_uvtex = hair_mesh.tessface_uv_textures
+                                # Write the geometry to disk and emit a mesh object element.
+                                self._mesh_parts["_".join( [object.name, psys.name, "hair"])] = self.__emit_mesh_object(scene, object, hair_mesh, mesh_faces, mesh_uvtex, True, psys.name)
+                                # Delete the mesh
+                                bpy.data.meshes.remove( hair_mesh)
+                                # Emit the object instance.
+                                self.__emit_mesh_object_instance(object, object_matrix, scene, True, material, psys.name)
+
                 # Reset timeline.
                 scene.frame_set( current_frame)
-                mesh_faces = mesh.tessfaces
-                mesh_uvtex = mesh.tessface_uv_textures
-
-                # Write the geometry to disk and emit a mesh object element.
-                self._mesh_parts[object.name] = self.__emit_mesh_object(scene, object, mesh, mesh_faces, mesh_uvtex)
-
-                # Delete the tessellation.
-                bpy.data.meshes.remove(mesh)
 
             except RuntimeError:
                 self.__info("Skipping object '{0}' of type '{1}' because it could not be converted to a mesh.".format(object.name, object.type))
                 return
 
-        # ---------------------
         # Emit the object instance.
-        # ---------------------
         self.__emit_mesh_object_instance(object, object_matrix, scene)
             
-    def __emit_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex):
-        if len(mesh_faces) == 0:
+    def __emit_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex, hair = False, psys_name = None):
+        if len( mesh_faces) == 0:
             self.__info("Skipping object '{0}' since it has no faces once converted to a mesh.".format(object.name))
             return []
 
-        mesh_filename = object.name + ".obj"
-        
-        if scene.appleseed.generate_mesh_files:
-            # Recalculate vertex normals.
-            if scene.appleseed.recompute_vertex_normals:
-                mesh.calc_normals()
-
-            # Export the mesh to disk.
-            self.__progress("Exporting object '{0}' to {1}...".format( object.name, mesh_filename))
-            mesh_filepath = os.path.join(os.path.dirname( util.realpath( scene.appleseed.project_path) + os.path.sep  + scene.name), mesh_filename)
-
-            try:
-                mesh_parts = mesh_writer.write_mesh_to_disk( mesh, mesh_faces, mesh_uvtex, mesh_filepath)
-            except IOError:
-                self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
-                return []
+        if hair:
+            object_name = "_".join( [object.name, psys_name, "hair"])
         else:
+            object_name = object.name
+            
+        mesh_filename = object_name + ".obj"
+        meshes_path = os.path.join( util.realpath( scene.appleseed.project_path), "meshes")
+        export_mesh = False
+        if scene.appleseed.generate_mesh_files:
+            mesh_filepath = os.path.join( meshes_path, mesh_filename)
+            if not os.path.exists( meshes_path):
+                os.mkdir( meshes_path)
+            if scene.appleseed.export_mode == 'all':
+                export_mesh = True
+            if scene.appleseed.export_mode == 'partial' and not os.path.exists( mesh_filepath):
+                export_mesh = True
+            if scene.appleseed.export_mode == 'selected' and object.name in self.selected_objects:
+                export_mesh = True
+            if export_mesh:
+                # Export the mesh to disk.
+                self.__progress("Exporting object '{0}' to {1}...".format( object_name, mesh_filename))
+                try:
+                    mesh_parts = mesh_writer.write_mesh_to_disk( object, scene, mesh, mesh_filepath, hair)
+                except IOError:
+                    self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
+                    return []
+        if scene.appleseed.generate_mesh_files == False or export_mesh == False:
             # Build a list of mesh parts just as if we had exported the mesh to disk.
             material_indices = set()
             for face in mesh_faces:
-                material_indices.add(face.material_index)
-            mesh_parts = map(lambda material_index : (material_index, "part_%d" % material_index), material_indices)
+                material_indices.add( face.material_index)
+            mesh_parts = map(lambda material_index : ( material_index, "part_%d" % material_index), material_indices)
 
         # Emit object.
-        self.__emit_object_element(object.name, mesh_filename, object, scene)
+        self.__emit_object_element( object_name, mesh_filename, object, scene)
 
         return mesh_parts
 
     # ---------------------
     # Emit object mesh for deformation mblur evaluation.
     # ---------------------
-    def __emit_def_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex):
-        if len(mesh_faces) == 0:
+    def __emit_def_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex, hair = False, psys_name = None):
+        if len( mesh_faces) == 0:
             self.__info("Skipping object '{0}' since it has no faces once converted to a mesh.".format(object.name))
             return []
 
-        mesh_filename = object.name + "_deform.obj"
-        self.def_mblur_obs[object.name] = mesh_filename
-        if scene.appleseed.generate_mesh_files:
-            # Recalculate vertex normals.
-            if scene.appleseed.recompute_vertex_normals:
-                mesh.calc_normals()
+        if hair:
+            object_name = "_".join( [object.name, psys_name, "hair"])
+        else:
+            object_name = object.name
+            
+        mesh_filename = object_name + "_deform.obj"
 
+        self.def_mblur_obs[object_name] = mesh_filename
+        
+        if scene.appleseed.generate_mesh_files:
             # Export the mesh to disk.
             self.__progress("Exporting deform object to {0}...".format( mesh_filename))
-            mesh_filepath = os.path.join(util.realpath( scene.appleseed.project_path), mesh_filename)
+            mesh_filepath = os.path.join( util.realpath( scene.appleseed.project_path), mesh_filename)
 
             try:
-                mesh_writer.write_mesh_to_disk( mesh, mesh_faces, mesh_uvtex, mesh_filepath)
+                mesh_writer.write_mesh_to_disk( object, scene, mesh, mesh_filepath, hair)
             except IOError:
-                self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
+                self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object_name, mesh_filepath))
                 
-    def __emit_mesh_object_instance(self, object, object_matrix, scene):
+    def __emit_mesh_object_instance( self, object, object_matrix, scene, hair = False, hair_material = None, psys_name = None):
+        object_name = "_".join( [object.name, psys_name, "hair"]) if hair else object.name
+        
         # Emit BSDFs and materials if they are encountered for the first time.
         for material_slot_index, material_slot in enumerate(object.material_slots):
             material = material_slot.material
@@ -361,35 +422,38 @@ class write_project_file( object):
             if material not in self._emitted_materials:
                 self._emitted_materials[material] = self.__emit_material(material, scene)
 
-
         # Figure out the instance number of this object.
-        if object.name in self._instance_count:
-            instance_index = self._instance_count[object.name] + 1
+        if object_name in self._instance_count:
+            instance_index = self._instance_count[object_name] + 1
         else:
             instance_index = 0
-        self._instance_count[object.name] = instance_index
+        self._instance_count[object_name] = instance_index
 
         # Emit object parts instances.
-        for (material_index, mesh_name) in self._mesh_parts[object.name]:
-            part_name = "{0}.{1}".format(object.name, mesh_name)
+        for (material_index, mesh_name) in self._mesh_parts[object_name]:
+            part_name = "{0}.{1}".format(object_name, mesh_name)
             instance_name = "{0}.instance_{1}".format(part_name, instance_index)
             front_material_name = "__default_material"
             back_material_name = "__default_material"
             if material_index < len(object.material_slots):
-                material = object.material_slots[material_index].material
+                if not hair:
+                    material = object.material_slots[material_index].material
+                else:
+                    material = bpy.data.materials[hair_material]
                 if material:
                     front_material_name, back_material_name = self._emitted_materials[material]
             self.__emit_object_instance_element(part_name, instance_name, self.global_matrix * object_matrix, front_material_name, back_material_name, object, scene)
 
-    def __emit_object_element(self, object_name, mesh_filepath, object, scene):
+    def __emit_object_element(self, object_name, mesh_file, object, scene):
+        mesh_filename = "meshes" + os.path.sep + mesh_file
         self.__open_element('object name="' + object_name + '" model="mesh_object"')
         if util.def_mblur_enabled( object, scene):
             self.__open_element('parameters name="filename"')
-            self.__emit_parameter("0", mesh_filepath)
+            self.__emit_parameter("0", mesh_filename)
             self.__emit_parameter("1", self.def_mblur_obs[object_name])
             self.__close_element("parameters")
         else:
-            self.__emit_parameter("filename", mesh_filepath)
+            self.__emit_parameter("filename", mesh_filename)
         self.__close_element("object")
 
     def __emit_object_instance_element(self, object_name, instance_name, instance_matrix, front_material_name, back_material_name, object, scene):
@@ -1283,7 +1347,7 @@ class write_project_file( object):
     def __emit_texture(self, tex, bump_bool, scene, node = None, material_name = None):
             # Nodes.
             if node is not None:
-                texture_name = material_name + node.get_node_name()
+                texture_name = node.get_node_name()
                 filepath = util.realpath( node.tex_path)
                 color_space = node.color_space
             else:        
@@ -1308,7 +1372,7 @@ class write_project_file( object):
     # Write texture instance.
     def __emit_texture_instance(self, texture, bump_bool, node = None, material_name = None):
         if node is not None:
-            texture_name = material_name + node.get_node_name()
+            texture_name = node.get_node_name()
             mode = node.mode
         else:
             texture_name = texture.name if bump_bool == False else texture.name + "_bump"
@@ -1340,7 +1404,7 @@ class write_project_file( object):
                 material_alpha_map = inputs[1].get_socket_value( True)
                 bump_map = inputs[2].get_socket_value( False)
                 if bump_map != "":
-                    bump_map = material_name + bump_map + "_inst"
+                    bump_map =  bump_map + "_inst"
                     material_bump_amplitude, use_normalmap = inputs[2].get_normal_params()
                     method = "normal" if use_normalmap else "bump"
             else:

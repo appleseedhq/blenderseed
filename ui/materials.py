@@ -482,7 +482,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     if current_layer.spec_btdf_spec_tex != '' and current_layer.spec_btdf_use_spec_tex:
                         spec_tex = bpy.data.textures[current_layer.spec_btdf_spec_tex]
                         box.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space:")
-                    box.prop(current_layer, "spec_btdf_ref_mult")
+                    box.prop(current_layer, "spec_btdf_refl_mult")
                    
                     box.separator()
                     
@@ -551,8 +551,10 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         obj = context.object is not None
         obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
-        is_not_nodemat = context.object.active_material.appleseed.node_tree == ''
-        return renderer and obj and obj_type and material and is_not_nodemat
+        if material:
+            is_not_nodemat = context.object.active_material.appleseed.node_tree == ''
+            return renderer and obj and obj_type and material and is_not_nodemat
+        return False
     
     def draw_header(self, context):
         header = self.layout
