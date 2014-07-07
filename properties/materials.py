@@ -35,7 +35,7 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     name = bpy.props.StringProperty( name=  "BSDF Name", 
                                      description = "BSDF layer name -- This must be a unique name per layer!", 
                                      default = "")
-
+                                     
     bsdf_type = bpy.props.EnumProperty( items = [('ashikhmin_brdf', "Ashikhmin-Shirley BRDF", ""),
                                                 ('diffuse_btdf', "Diffuse BTDF", ""),
                                                 ('kelemen_brdf', "Kelemen BRDF", ""),
@@ -247,7 +247,7 @@ class AppleseedMatProps( bpy.types.PropertyGroup):
     
     light_color = bpy.props.FloatVectorProperty(name = "Emission Color", description = "Light emission color", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
 
-    importance_multiplier = bpy.props.FloatProperty( name = "Importance Multiplier", description = "Multiple importance sampling multiplier", default = 1, min = 0, max = 10)
+    importance_multiplier = bpy.props.FloatProperty( name = "Importance Multiplier", description = "Multiple importance sampling multiplier", default = 1, min = 0, soft_max = 10, max = 100)
 
     cast_indirect = bpy.props.BoolProperty(name = "Cast Indirect Light", description = "Emissive material casts indirect light", default = False)
 

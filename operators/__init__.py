@@ -143,7 +143,8 @@ class AppleseedExportOperator( bpy.types.Operator):
         scene = context.scene
         if scene.appleseed.project_path == '':
             return {'CANCELLED'}  
-        
+
+        file_path = os.path.join( util.realpath( scene.appleseed.project_path), scene.name + ".appleseed")
         # If exporting hair enabled, there's a good chance there will 
         #   actually be particle systems to export.
         # A hair object placeholder is needed before iterating through 
@@ -156,7 +157,7 @@ class AppleseedExportOperator( bpy.types.Operator):
             placeholders = [crv, crv_ob]
 
         appleseed_proj = project_file_writer.write_project_file( placeholders)
-        appleseed_proj.export( scene)
+        appleseed_proj.export( scene, file_path)
 
         if scene.appleseed.export_hair:
             bpy.data.curves['appleseed_hair_tmp_curve'].user_clear()

@@ -35,6 +35,7 @@ from . import materials
 from . import camera
 from . import nodes
 from . import particles
+from . import lamps
 
 
 def register():
@@ -46,6 +47,7 @@ def register():
     camera.register()
     nodes.register()
     particles.register()
+    lamps.register()
     
 def unregister():
     render_layers.unregister()
@@ -56,3 +58,4 @@ def unregister():
     camera.unregister()
     nodes.unregister()
     particles.unregister()
+    lamps.unregister()

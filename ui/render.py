@@ -186,7 +186,7 @@ class AppleseedLightingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
         layout.separator()
         layout.prop( asr_scene_props, "export_emitting_obj_as_lights")     
         if asr_scene_props.export_emitting_obj_as_lights:
-            layout.prop( asr_scene_props, "light_mats_exitance_mult")  
+            layout.prop( asr_scene_props, "light_mats_radiance_multiplier")  
 
 class AppleseedMotionBlurPanel( bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}

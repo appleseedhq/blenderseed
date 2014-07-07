@@ -47,8 +47,8 @@ class ExportAppleseedScene( bpy.types.Operator, ExportHelper):
         
     def execute( self, context):
         scene = context.scene
-        appleseed_proj = project_file_writer.write_project_file()
-        appleseed_proj.export( scene, self.filepath)
+        appleseed_proj = project_file_writer.write_project_file( None)
+        appleseed_proj.export( scene, util.realpath( self.filepath))
         return {'FINISHED'}
 
 def menu_func_export_scene( self, context):

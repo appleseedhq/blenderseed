@@ -35,6 +35,7 @@ from . import camera
 from . import objects
 from . import materials
 from . import particles
+from . import lamps
 
 import bl_ui.properties_texture as properties_texture
 INCLUDE_TEXTURE = [ 'TEXTURE_MT_specials', 'TEXTURE_PT_context_texture', 'TEXTURE_PT_image', 'TEXTURE_UL_texslots', 'Panel', 'Object', 'Material', 'Texture', 'TextureSlotPanel', 'TextureButtonsPanel', 'UIList', 'id_tex_datablock', 'context_tex_datablock']
@@ -46,12 +47,6 @@ for member in dir( properties_texture):
         except:
             pass
 del properties_texture
-
-import bl_ui.properties_data_lamp as properties_data_lamp
-properties_data_lamp.DATA_PT_context_lamp.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-properties_data_lamp.DATA_PT_spot.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-properties_data_lamp.DATA_PT_lamp.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-del properties_data_lamp
 
 import bl_ui.properties_material as properties_material
 properties_material.MATERIAL_PT_context_material.COMPAT_ENGINES.add( 'CORONA')
@@ -89,6 +84,7 @@ def register():
     camera.register()
     objects.register()
     particles.register()
+    lamps.register()
 
 def unregister():
     render.unregister()
@@ -99,3 +95,4 @@ def unregister():
     camera.unregister()
     objects.unregister()
     particles.unregister()
+    lamps.unregister()
