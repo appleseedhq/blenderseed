@@ -122,24 +122,11 @@ def get_particle_matrix(ob):
     object_matrix = ob.matrix.copy()
     return object_matrix
 
-def get_psys_instances(ob, scene):
-    dupli_list = []
-    if not hasattr(ob, 'modifiers'):
-        return dupli_list
-    for modifier in ob.modifiers:
-        if modifier.type == 'PARTICLE_SYSTEM':
-            psys = modifier.particle_system
-            if not psys.settings.render_type in {'OBJECT', 'GROUP'}:
-                continue
-            ob.dupli_list_create(scene)
-            for obj in ob.dupli_list:
-                obj_matrix = get_particle_matrix( obj)
-                # Append a list containing the matrix, and the object
-                dupli_list.append([obj_matrix, obj.object])
-            ob.dupli_list_clear()
-    return dupli_list
 
 def get_all_psysobs():
+    '''
+    Return a set of all the objects being instanced in particle systems
+    '''
     obs = set()
     for settings in bpy.data.particles:
         if settings.render_type == 'OBJECT' and settings.dupli_object is not None:
@@ -159,35 +146,10 @@ def get_matrix(obj):
     obj_mat = obj.matrix.copy()
     return obj_mat
 
-'''
-def get_instances(obj_parent, scene, mblur = False):
-    asr_scn = scene.appleseed
-    obj_parent.dupli_list_create(scene)
-    dupli_list = []
-    if not mblur:
-        for obj in obj_parent.dupli_list :
-            obj_matrix = get_matrix( obj)
-            dupli_list.append( [obj.object, obj_matrix])
-    else:
-        current_frame = scene.frame_current
-        # Set frame for shutter open time
-        scene.frame_set( current_frame, subframe = asr_scn.shutter_open)
-        for obj in obj_parent.dupli_list:
-            obj_matrix = obj.matrix.copy()
-            dupli_list.append( [obj.object, obj_matrix])
-            # Move to next frame, collect matrices
-            scene.frame_set( current_frame, subframe = asr_scn.shutter_close)
-            for dupli in dupli_list:
-                dupli.append( obj.matrix.copy())
-            # Reset to current frame
-            scene.frame_set( current_frame)
-    obj_parent.dupli_list_clear()
-    return dupli_list
-'''
 
 def get_instances(obj_parent, scene):
     '''
-    Get the instanced objects on the parent object.
+    Get the instanced objects on the parent object (dupli-faces / dupli-verts).
     If motion blur is not enabled, returns list of lists [ [dupli_object.object, dupli matrix]]
     If motion blur is enabled, returns a nested list: [ [dupli_object.object, [dupli matrices]]]
     '''
@@ -232,16 +194,21 @@ def sample_mblur( ob, scene, dupli = False):
     frame_set( frame_orig)
     return matrices
 
+
 def get_psys_instances(ob, scene):
     ''' 
     Return a dictionary of 
     particle: [dupli.object, [matrices]] 
-    pairs
+    pairs. This function assumes particle systems and 
+    face / verts duplication aren't being used on the same object.
     '''
-    dupli_dict = {}
-    i = 0
+    all_duplis = {}
+    current_total = 0
     if not hasattr(ob, 'modifiers'):
-        return dupli_dict
+        return {}
+    if not ob_mblur_enabled( ob, scene):   
+        # If no motion blur
+        ob.dupli_list_create(scene, settings = 'RENDER')
     for modifier in ob.modifiers:
         if modifier.type == 'PARTICLE_SYSTEM' and modifier.show_render:
             psys = modifier.particle_system
@@ -251,10 +218,18 @@ def get_psys_instances(ob, scene):
                 particles = [p for p in psys.particles if p.alive_state == 'ALIVE']
             else:
                 particles = [p for p in psys.particles]
+            start = current_total
+            current_total += len( particles)
+            
             if not ob_mblur_enabled( ob, scene):   
-                # If no motion blur
-                ob.dupli_list_create(scene)
-                duplis = [dupli.object for dupli in ob.dupli_list]  # Store dupli objects
+                # No motion blur.
+                duplis = []
+                for index in range( start, current_total):
+                    # Store the dupli.objects for the current particle system only
+                    # ob.dupli_list is created in descending order of particle systems
+                    # So it should be reliable to match them this way.
+                    duplis.append( ob.dupli_list[index].object)
+                    
                 p_duplis_pairs = list( zip( particles, duplis))     # Match the particles to the duplis
                 dupli_dict = {p[0]:[ p[1], []] for p in p_duplis_pairs}  # Create particle:[dupli.object, [matrix]] pairs
                 if psys.settings.type == 'EMITTER':
@@ -267,17 +242,23 @@ def get_psys_instances(ob, scene):
                         mat = transl * scale
                         dupli_dict[particle][1].append(mat)
                 else:
-                    # 'HAIR' type is not supported yet.
-                    # Can't get right matrices from location/size alone, it won't take rotation into account
+                    index = 0
                     for particle in dupli_dict.keys():
-                        mat = ob.dupli_list[i].matrix.copy()
+                        mat = ob.dupli_list[index].matrix.copy()
                         dupli_dict[particle][1].append(mat)
-                        i += 1
-                ob.dupli_list_clear()
-            else:   
+                        index += 1
+            else:
                 # Using motion blur       
-                dupli_dict = sample_psys_mblur( ob, scene, psys)                
-    return dupli_dict
+                dupli_dict = sample_psys_mblur( ob, scene, psys)
+                     
+            # Add current particle system to the collection.
+            all_duplis.update( dupli_dict)  
+            
+    if not ob_mblur_enabled( ob, scene):   
+        # If no motion blur
+        ob.dupli_list_clear()               
+    return all_duplis
+
 
 def sample_psys_mblur( ob, scene, psys):
     '''
@@ -354,6 +335,42 @@ def has_hairsys( ob):
                 break
     return has_hair
 
+
+def get_camera_matrix( camera, global_matrix):
+    '''
+    Get the camera transformation decomposed as origin, forward, up and target.
+    '''
+    camera_mat = global_matrix * camera.matrix_world
+    origin = camera_mat.col[3]
+    forward = -camera_mat.col[2]
+    up = camera_mat.col[1]
+    target = origin + forward
+    return origin, forward, up, target
+
+def is_uv_img( tex):
+    if tex and tex.type == 'IMAGE' and tex.image:
+        return True
+
+    return False
+
+def ob_mblur_enabled( object, scene):
+    return object.appleseed.mblur_enable and object.appleseed.mblur_type == 'object' and scene.appleseed.mblur_enable and scene.appleseed.ob_mblur
+
+def def_mblur_enabled( object, scene):
+    return object.appleseed.mblur_enable and object.appleseed.mblur_type == 'deformation' and scene.appleseed.mblur_enable and scene.appleseed.def_mblur
+
+def calc_fov(camera_ob, width, height):
+    ''' 
+    Calculate horizontal FOV if rendered height is greater than rendered with
+    Thanks to NOX exporter developers for this solution.
+    '''
+    camera_angle = degrees(camera_ob.data.angle)
+    if width < height:
+        length = 18.0/tan(camera_ob.data.angle/2)
+        camera_angle = 2*atan(18.0*width/height/length)
+        camera_angle = degrees(camera_angle)
+    return camera_angle
+
 cdef calc_decrement( double first, double last, int segments):
     return (( 1 - (last / first)) / segments)
     
@@ -405,39 +422,4 @@ def get_hairs( obj, scene, psys, crv_ob, crv_data, mat_name):
     bpy.data.curves.remove( crv)
     psys.set_resolution( scene, obj, 'PREVIEW')
     return mesh
-    
-def get_camera_matrix( camera, global_matrix):
-    '''
-    Get the camera transformation decomposed as origin, forward, up and target.
-    '''
-    camera_mat = global_matrix * camera.matrix_world
-    origin = camera_mat.col[3]
-    forward = -camera_mat.col[2]
-    up = camera_mat.col[1]
-    target = origin + forward
-    return origin, forward, up, target
-
-def is_uv_img( tex):
-    if tex and tex.type == 'IMAGE' and tex.image:
-        return True
-
-    return False
-
-def ob_mblur_enabled( object, scene):
-    return object.appleseed.mblur_enable and object.appleseed.mblur_type == 'object' and scene.appleseed.mblur_enable and scene.appleseed.ob_mblur
-
-def def_mblur_enabled( object, scene):
-    return object.appleseed.mblur_enable and object.appleseed.mblur_type == 'deformation' and scene.appleseed.mblur_enable and scene.appleseed.def_mblur
-
-def calc_fov(camera_ob, width, height):
-    ''' 
-    Calculate horizontal FOV if rendered height is greater than rendered with
-    Thanks to NOX exporter developers for this solution.
-    '''
-    camera_angle = degrees(camera_ob.data.angle)
-    if width < height:
-        length = 18.0/tan(camera_ob.data.angle/2)
-        camera_angle = 2*atan(18.0*width/height/length)
-        camera_angle = degrees(camera_angle)
-    return camera_angle
 
