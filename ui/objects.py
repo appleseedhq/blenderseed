@@ -30,7 +30,7 @@ import bpy
 import bl_ui
 
 class AppleseedObjRenderLayerPanel( bpy.types.Panel):
-    bl_label = "appleseed Render Layer"
+    bl_label = "Render Layer"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -50,7 +50,7 @@ class AppleseedObjRenderLayerPanel( bpy.types.Panel):
         layout.prop_search( asr_obj, "render_layer", appleseed_layers, "layers", text = "")
 
 class AppleseedObjMBlurPanel( bpy.types.Panel):
-    bl_label = "appleseed Motion Blur"
+    bl_label = "Motion Blur"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"

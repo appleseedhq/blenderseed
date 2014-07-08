@@ -4,7 +4,7 @@ import bpy
 # Particle settings UI
 #---------------------------------------
 class AppleseedPsysPanel( bpy.types.Panel):
-    bl_label = "appleseed Hair Rendering"
+    bl_label = "Hair Rendering"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "particle"

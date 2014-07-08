@@ -1,2 +1,6 @@
 __pycache__/
 *.py[cod]
+# Cython tmp files
+build/
+*.c
+*.so

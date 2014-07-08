@@ -100,7 +100,7 @@ class MATERIAL_UL_BSDF_slots(bpy.types.UIList):
 # Material shading panel.
 #---------------------------------------------
 class AppleseedMaterialShading(bpy.types.Panel):
-    bl_label = 'appleseed Surface Shading'
+    bl_label = 'Surface Shading'
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -539,7 +539,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 # Material emission panel.
 #---------------------------------------------
 class AppleseedMatEmissionPanel(bpy.types.Panel):
-    bl_label = "appleseed Light Emission"
+    bl_label = "Light Emission"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"

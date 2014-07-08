@@ -32,7 +32,7 @@ import bpy
 #------------------------------------
 
 class AppleseedLampPanel( bpy.types.Panel):
-    bl_label = "appleseed Lamp"
+    bl_label = "Lamp"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "data"
