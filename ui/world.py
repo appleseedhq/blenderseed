@@ -29,7 +29,7 @@
 import bpy
 
 class AppleseedWorldPanelOld( bpy.types.Panel):
-    bl_label = "Appleseed Environment"
+    bl_label = "Environment"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
