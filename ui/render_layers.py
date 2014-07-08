@@ -28,31 +28,6 @@
 
 import bpy
 
-'''
-class AppleseedRenderPasses( bpy.types.Panel):
-    bl_label = "Passes"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render_layer"    
-    COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    
-    @classmethod
-    def poll( cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER'
-    
-    def draw( self, context):
-        layout = self.layout
-        col = layout.column()
-        scene = context.scene
-        asr = scene.appleseed
-
-        col.prop( asr, "pass_main")
-        col.prop( asr, "pass_z")
-        col.prop( asr, "pass_normal")
-        col.prop( asr, "pass_uv")
-'''
-
 class AppleseedRenderLayers( bpy.types.Panel):
     bl_label = "Render Layers"
     bl_space_type = "PROPERTIES"
@@ -83,6 +58,10 @@ class AppleseedRenderLayers( bpy.types.Panel):
             current_layer = appleseed_layers.layers[appleseed_layers.layer_index]   
             layout.prop( current_layer, "name", text = "Layer Name")
 
+            row = layout.row( align = True)
+            row.operator( "appleseed.add_to_renderlayer", icon = "ZOOMIN")
+            row.operator( "appleseed.remove_from_renderlayer", icon = "ZOOMOUT")
+            
 def register():
     bpy.utils.register_class( AppleseedRenderLayers)
 #    bpy.utils.register_class( AppleseedRenderPasses)

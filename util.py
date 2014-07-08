@@ -245,7 +245,7 @@ def get_psys_instances(ob, scene):
                     index = 0
                     for particle in dupli_dict.keys():
                         mat = ob.dupli_list[index].matrix.copy()
-                        dupli_dict[particle][1].append(mat)
+                        dupli_dict[particle][1].append(mat * ob.matrix_world.inverted().copy())
                         index += 1
             else:
                 # Using motion blur       

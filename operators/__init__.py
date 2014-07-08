@@ -32,9 +32,9 @@ import subprocess
 from .. import project_file_writer
 from .. import util
 
-#-------------------------------
+#---------------------------------------
 # Operator for adding material layers.
-#-------------------------------
+#---------------------------------------
 class AppleseedAddMatLayer( bpy.types.Operator):
     bl_label = "Add Layer"
     bl_description = "Add new BSDF layer"
@@ -52,9 +52,9 @@ class AppleseedAddMatLayer( bpy.types.Operator):
         
         return {'FINISHED'}
 
-#-------------------------------    
+#---------------------------------------  
 # Operator for removing material layers.
-#-------------------------------
+#---------------------------------------
 class AppleseedRemoveMatLayer( bpy.types.Operator):
     bl_label = "Remove Layer"
     bl_description = "Remove BSDF layer"
@@ -76,6 +76,9 @@ class AppleseedRemoveMatLayer( bpy.types.Operator):
             
         return {'FINISHED'}
 
+#--------------------------------------- 
+# Operator for adding render layers.
+#---------------------------------------
 class AppleseedAddRenderLayer( bpy.types.Operator):
     bl_label = "Add Layer"
     bl_idname = "appleseed.add_renderlayer"
@@ -91,6 +94,9 @@ class AppleseedAddRenderLayer( bpy.types.Operator):
             
         return {'FINISHED'}
 
+#--------------------------------------- 
+# Operator for removing render layers.
+#---------------------------------------
 class AppleseedRemoveRenderLayer( bpy.types.Operator):
     bl_label = "Remove Layer"
     bl_idname = "appleseed.remove_renderlayer"
@@ -110,9 +116,38 @@ class AppleseedRemoveRenderLayer( bpy.types.Operator):
         
         return {'FINISHED'}
 
-#-------------------------------
+#--------------------------------------- 
+# Operator for adding objects to render layers.
+#---------------------------------------
+class AppleseedAddToRenderLayer( bpy.types.Operator):
+    bl_label = "Add Selected To Layer"
+    bl_idname = "appleseed.add_to_renderlayer"
+
+    def execute( self, context):
+        scene = context.scene
+        layers = scene.appleseed_layers.layers
+        index = scene.appleseed_layers.layer_index
+        for ob in context.selected_objects:
+            ob.appleseed.render_layer = layers[ index].name
+
+        return {'FINISHED'}
+
+#--------------------------------------- 
+# Operator for removing objects from render layers.
+#---------------------------------------
+class AppleseedRemoveFromRenderLayer( bpy.types.Operator):
+    bl_label = "Remove Selected From Layer"
+    bl_idname = "appleseed.remove_from_renderlayer"
+
+    def execute( self, context):
+        for ob in context.selected_objects:
+            ob.appleseed.render_layer = ''
+
+        return {'FINISHED'}
+        
+#---------------------------------------
 # appleseed material node tree generator.
-#-------------------------------
+#---------------------------------------
 class AppleseedNewNodeTree( bpy.types.Operator):
     bl_idname = "appleseed.add_material_nodetree"
     bl_label = "Add appleseed Material Node Tree"
@@ -128,9 +163,9 @@ class AppleseedNewNodeTree( bpy.types.Operator):
 
         return {'FINISHED'}
         
-#-------------------------------
+#---------------------------------------
 # appleseed export operator.
-#--------------------------------
+#---------------------------------------
 class AppleseedExportOperator( bpy.types.Operator):
     bl_idname = "appleseed.export"
     bl_label = "Export"
@@ -170,12 +205,16 @@ def register():
     bpy.utils.register_class( AppleseedAddMatLayer)
     bpy.utils.register_class( AppleseedRemoveMatLayer)
     bpy.utils.register_class( AppleseedAddRenderLayer)
+    bpy.utils.register_class( AppleseedAddToRenderLayer)
     bpy.utils.register_class( AppleseedRemoveRenderLayer)
+    bpy.utils.register_class( AppleseedRemoveFromRenderLayer)
     bpy.utils.register_class( AppleseedExportOperator)
 
 def unregister():
     bpy.utils.unregister_class( AppleseedAddMatLayer)
     bpy.utils.unregister_class( AppleseedRemoveMatLayer)
     bpy.utils.unregister_class( AppleseedAddRenderLayer)
+    bpy.utils.unregister_class( AppleseedAddToRenderLayer)
     bpy.utils.unregister_class( AppleseedRemoveRenderLayer)
+    bpy.utils.unregister_class( AppleseedRemoveFromRenderLayer)
     bpy.utils.unregister_class( AppleseedExportOperator)

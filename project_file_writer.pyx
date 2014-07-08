@@ -61,32 +61,35 @@ def object_enumerator( type):
 
     
 class write_project_file( object):
-    # Transformation matrix applied to all entities of the scene.
     def __init__( self, placeholders):
-        self.curves = placeholders
-        
-    global_scale = 1
-    global_matrix = mathutils.Matrix.Scale(global_scale, 4)
-    
-    # Store textures as they are exported
-    textures_set = set()    
-    # Collect objects being rendered with motion blur
-    def_mblur_obs = {}
-    dupli_objects = []
-    selected_objects = []
-    
+        self._curves = placeholders
+
+    # Primary export function.
     def export(self, scene, file_path):
         '''
         Write the .appleseed project file for rendering.
         '''
-        self.textures_set.clear()
-        self.def_mblur_obs = {ob.name: '' for ob in scene.objects if ob.appleseed.mblur_enable and ob.appleseed.mblur_type == 'deformation'}
-        self.selected_objects = [ ob.name for ob in scene.objects if ob.select]
-        
         if scene is None:
             self.__error("No scene to export.")
             return
 
+        # Transformation matrix applied to all entities of the scene.
+        self._global_scale = 1
+        self._global_matrix = mathutils.Matrix.Scale(self._global_scale, 4)
+        
+        # Store textures as they are exported.
+        self._textures_set = set()    
+        
+        # Collect objects with motion blur.
+        self._def_mblur_obs = {ob.name: '' for ob in scene.objects if ob.appleseed.mblur_enable and ob.appleseed.mblur_type == 'deformation'}
+        self._selected_objects = [ ob.name for ob in scene.objects if ob.select]
+        self._dupli_objects = []
+        
+        # Render layer rules. Pattern is the object name.
+        # Object name - > render layer.
+        self._rules = {}
+        self._rule_index = 1
+        
         # Blender material -> front material name, back material name.
         self._emitted_materials = {}
 
@@ -95,7 +98,6 @@ class write_project_file( object):
         self._assembly_count = {}
         self._assembly_instance_count = {}
         
-
         # Object name -> (material index, mesh name).
         self._mesh_parts = {}
 
@@ -133,6 +135,7 @@ class write_project_file( object):
     def __emit_project( self, scene):
         self.__open_element( "project")
         self.__emit_scene( scene)
+        self.__emit_rules( scene)
         self.__emit_output( scene)
         self.__emit_configurations( scene)
         self.__close_element( "project")
@@ -176,11 +179,11 @@ class write_project_file( object):
 
             # Advance to shutter open, collect matrix.
             scene.frame_set( current_frame, subframe = shutter_open)
-            instance_matrix = self.global_matrix * obj.matrix_world
+            instance_matrix = self._global_matrix * obj.matrix_world
 
             # Advance to next frame, collect matrix.
             scene.frame_set( current_frame, subframe = shutter_close)
-            next_matrix = self.global_matrix * obj.matrix_world
+            next_matrix = self._global_matrix * obj.matrix_world
 
             # Reset timeline.
             scene.frame_set( current_frame)
@@ -242,8 +245,8 @@ class write_project_file( object):
         
         self.__open_element( 'assembly_instance name="%s.instance_%d" assembly="%s"' % (assembly_name, instance_index, assembly_name))
 
-        instance_matrix = self.global_matrix * matrices[0].copy()
-        next_matrix = self.global_matrix * matrices[1].copy()
+        instance_matrix = self._global_matrix * matrices[0].copy()
+        next_matrix = self._global_matrix * matrices[1].copy()
         
         # Emit transformation matrices with their respective times.
         self.__emit_transform_element( instance_matrix, 0)
@@ -260,12 +263,12 @@ class write_project_file( object):
                 if object.type == 'LAMP':
                     self.__emit_light( scene, object)
                 else:
-                    self.dupli_objects.clear()
+                    self._dupli_objects.clear()
                     if util.ob_mblur_enabled( object, scene):
                         if object.is_duplicator and object.dupli_type in {'VERTS', 'FACES'}:
                             # Motion blur enabled on a dupli parent 
-                            self.dupli_objects = util.get_instances( object, scene)
-                            for dupli_obj in self.dupli_objects:
+                            self._dupli_objects = util.get_instances( object, scene)
+                            for dupli_obj in self._dupli_objects:
                                 # Each "dupli" in dupli_objects is a nested list: [dupli.object, [object.matrix1, object.matrix2]]
                                 inst_mats = dupli_obj[1]
                                 self.__emit_dupli_assembly( scene, dupli_obj[0], inst_mats )
@@ -301,27 +304,27 @@ class write_project_file( object):
         Dupli- objects with object motion blur are handled separately.
         '''
         if not ob_mblur:
-            self.dupli_objects.clear()
+            self._dupli_objects.clear()
 
             if object.parent and object.parent.dupli_type in { 'VERTS', 'FACES' }:  
                 # todo: what about dupli type 'GROUP'?
                 return
 
             if object.is_duplicator:
-                self.dupli_objects.extend( util.get_instances( object, scene))
+                self._dupli_objects.extend( util.get_instances( object, scene))
                 if util.is_psys_emitter( object) and util.render_emitter( object):
-                    self.dupli_objects.append( [object, object.matrix_world])
+                    self._dupli_objects.append( [object, object.matrix_world])
                     
             # No duplis or particle systems.
             else:
-                self.dupli_objects = [ (object, object.matrix_world) ]
+                self._dupli_objects = [ (object, object.matrix_world) ]
             
         # Motion blur is enabled
         else:
-            self.dupli_objects = [ (object, identity_matrix)]
+            self._dupli_objects = [ (object, identity_matrix)]
             
         # Emit the dupli objects.
-        for dupli_object in self.dupli_objects:
+        for dupli_object in self._dupli_objects:
             self.__emit_dupli_object(scene, dupli_object[0], dupli_object[1], ob_mblur)
 
 
@@ -340,8 +343,8 @@ class write_project_file( object):
                 # Convert hair geometry to mesh and export, if enabled in settings.
                 export_hair = scene.appleseed.export_hair and util.has_hairsys( object)
                 if export_hair:
-                    crv = self.curves[0]
-                    crv_ob = self.curves[1]
+                    crv = self._curves[0]
+                    crv_ob = self._curves[1]
                     if not util.render_emitter( object):
                         export_mesh = False
                     
@@ -441,7 +444,7 @@ class write_project_file( object):
                 export_mesh = True
             if scene.appleseed.export_mode == 'partial' and not os.path.exists( mesh_filepath):
                 export_mesh = True
-            if scene.appleseed.export_mode == 'selected' and object.name in self.selected_objects:
+            if scene.appleseed.export_mode == 'selected' and object.name in self._selected_objects:
                 export_mesh = True
             if new_assembly and object.name in self._instance_count:
                 export_mesh = False
@@ -476,7 +479,7 @@ class write_project_file( object):
         if util.def_mblur_enabled( object, scene):
             self.__open_element('parameters name="filename"')
             self.__emit_parameter("0", mesh_filename)
-            self.__emit_parameter("1", self.def_mblur_obs[object_name])
+            self.__emit_parameter("1", self._def_mblur_obs[object_name])
             self.__close_element("parameters")
         else:
             self.__emit_parameter("filename", mesh_filename)
@@ -500,7 +503,7 @@ class write_project_file( object):
             
         mesh_filename = object_name + "_deform.obj"
 
-        self.def_mblur_obs[object_name] = mesh_filename
+        self._def_mblur_obs[object_name] = mesh_filename
 
         meshes_path = os.path.join( util.realpath( scene.appleseed.project_path), "meshes")
         export_mesh = False
@@ -513,7 +516,7 @@ class write_project_file( object):
             if scene.appleseed.export_mode == 'partial' and not os.path.exists( mesh_filepath):
 
                 export_mesh = True
-            if scene.appleseed.export_mode == 'selected' and object.name in self.selected_objects:
+            if scene.appleseed.export_mode == 'selected' and object.name in self._selected_objects:
                 export_mesh = True
             if export_mesh:
                 # Export the mesh to disk.
@@ -531,9 +534,9 @@ class write_project_file( object):
         '''
         object_name = "_".join( [object.name, psys_name, "hair"]) if hair else object.name
         if new_assembly:
-            object_matrix = self.global_matrix * identity_matrix 
+            object_matrix = self._global_matrix * identity_matrix 
         else:
-            object_matrix = self.global_matrix * object_matrix
+            object_matrix = self._global_matrix * object_matrix
         
         # Emit BSDFs and materials if they are encountered for the first time.
         for material_slot_index, material_slot in enumerate(object.material_slots):
@@ -580,9 +583,8 @@ class write_project_file( object):
             self.__emit_transform_element( instance_matrix, None)
         self.__emit_line('<assign_material slot="0" side="front" material="{0}" />'.format(front_material_name))
         self.__emit_line('<assign_material slot="0" side="back" material="{0}" />'.format(back_material_name))
-        #if bool(object.appleseed.render_layer):
-        #    render_layer = object.appleseed.render_layer
-        #    self.__emit_parameter("render_layer", render_layer)
+        if bool(object.appleseed.render_layer):
+            self._rules[ object.name] = object.appleseed.render_layer
         self.__close_element("object_instance")
 
     #----------------------------------------------------------------------------------------------
@@ -1611,12 +1613,12 @@ class write_project_file( object):
 
         current_frame = scene.frame_current
         scene.frame_set( current_frame, subframe = shutter_open)
-        origin_1, forward_1, up_1, target_1 = util.get_camera_matrix( camera, self.global_matrix)
+        origin_1, forward_1, up_1, target_1 = util.get_camera_matrix( camera, self._global_matrix)
         
         # Write respective transforms if using camera motion blur.
         if scene.appleseed.mblur_enable and scene.appleseed.cam_mblur:
             scene.frame_set(current_frame, subframe = asr_scn.shutter_close)
-            origin_2, forward_2, up_2, target_2 = util.get_camera_matrix( camera, self.global_matrix)
+            origin_2, forward_2, up_2, target_2 = util.get_camera_matrix( camera, self._global_matrix)
             # Return the timeline to original frame.
             scene.frame_set(current_frame)
             
@@ -1796,15 +1798,14 @@ class write_project_file( object):
         
         self.__open_element('light name="{0}" model="sun_light"'.format(lamp.name))
         if bool(lamp.appleseed.render_layer):
-            render_layer = lamp.appleseed.render_layer
-            self.__emit_parameter("render_layer", render_layer)
+            self._rules[ lamp.name] = lamp.appleseed.render_layer
         if use_sunsky:    
             self.__emit_parameter("environment_edf", environment_edf)
         self.__emit_parameter("radiance_multiplier", sunsky.radiance_multiplier if use_sunsky else asr_light.radiance_multiplier)
         self.__emit_parameter("turbidity", asr_light.turbidity)
         self.__emit_parameter("cast_indirect_light", str( asr_light.cast_indirect).lower())
         self.__emit_parameter("importance_multiplier", asr_light.importance_multiplier)
-        self.__emit_transform_element(self.global_matrix * lamp.matrix_world, None)
+        self.__emit_transform_element(self._global_matrix * lamp.matrix_world, None)
         self.__close_element("light")
 
         
@@ -1816,14 +1817,13 @@ class write_project_file( object):
         self.__emit_solid_linear_rgb_color_element(radiance_name, asr_light.radiance, 1)
 
         self.__open_element('light name="{0}" model="point_light"'.format(lamp.name))
-        if bool(lamp.appleseed.render_layer):
-            render_layer = lamp.appleseed.render_layer
-            self.__emit_parameter("render_layer", render_layer)
+        if bool( lamp.appleseed.render_layer):
+            self._rules[ lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_mutliplier", asr_light.radiance_multiplier)
         self.__emit_parameter("cast_indirect_light", str( asr_light.cast_indirect).lower())
         self.__emit_parameter("importance_multiplier", asr_light.importance_multiplier)
-        self.__emit_transform_element(self.global_matrix * lamp.matrix_world, None)
+        self.__emit_transform_element(self._global_matrix * lamp.matrix_world, None)
         self.__close_element("light")
 
 
@@ -1855,15 +1855,14 @@ class write_project_file( object):
 
         self.__open_element('light name="{0}" model="spot_light"'.format(lamp.name))
         if bool(lamp.appleseed.render_layer):
-            render_layer = lamp.appleseed.render_layer
-            self.__emit_parameter("render_layer", render_layer)
+            self._rules[ lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_multiplier", radiance_multiplier)
         self.__emit_parameter("inner_angle", inner_angle)
         self.__emit_parameter("outer_angle", outer_angle)
         self.__emit_parameter("cast_indirect_light", str( asr_light.cast_indirect).lower())
         self.__emit_parameter("importance_multiplier", asr_light.importance_multiplier)
-        self.__emit_transform_element(self.global_matrix * lamp.matrix_world, None)
+        self.__emit_transform_element(self._global_matrix * lamp.matrix_world, None)
         self.__close_element("light")
 
     def __emit_directional_light(self, scene, lamp):
@@ -1875,13 +1874,12 @@ class write_project_file( object):
 
         self.__open_element('light name="{0}" model="directional_light"'.format(lamp.name))
         if bool(lamp.appleseed.render_layer):
-            render_layer = lamp.appleseed.render_layer
-            self.__emit_parameter("render_layer", render_layer)
+            self._rules[ lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_multiplier", asr_light.radiance_multiplier)
         self.__emit_parameter("cast_indirect_light", str( asr_light.cast_indirect).lower())
         self.__emit_parameter("importance_multiplier", asr_light.importance_multiplier)
-        self.__emit_transform_element(self.global_matrix * lamp.matrix_world, None)
+        self.__emit_transform_element(self._global_matrix * lamp.matrix_world, None)
         self.__close_element("light")
         
     #----------------------------------------------------------------------------------------------
@@ -1923,6 +1921,27 @@ class write_project_file( object):
         endX = int(scene.render.border_max_x * width)    
         endY = height - int(scene.render.border_min_y * height)
         return X, Y, endX, endY
+
+    #----------------------------------------------------------------------------------------------
+    # Render layer assignments.
+    #----------------------------------------------------------------------------------------------
+    def __emit_rules( self, scene):
+        if len( self._rules.keys()) > 0:
+            self.__open_element( "rules")
+            for ob_name in self._rules.keys():
+                render_layer = self._rules[ ob_name]
+                rule_name = "rule_%d" % self._rule_index
+                self._emit_render_layer_assignment( rule_name, ob_name, render_layer)
+                self._rule_index += 1
+            self.__close_element( "rules")            
+                        
+    def _emit_render_layer_assignment( self, rule_name, ob_name, render_layer):
+        # For now, all assignments are to "All" entity types
+        self.__open_element( 'render_layer_assignment name="%s" model="regex"' % rule_name)
+        self.__emit_parameter( "render_layer", render_layer)
+        self.__emit_parameter( "order", 1)
+        self.__emit_parameter( "pattern", ob_name)
+        self.__close_element( "render_layer_assignment")
     #----------------------------------------------------------------------------------------------
     # Configurations.
     #----------------------------------------------------------------------------------------------
@@ -2134,7 +2153,7 @@ class write_project_file( object):
     def export_preview(self, scene, file_path, addon_path, mat, mesh, width, height):
         '''Write the .appleseed project file for preview rendering'''
         
-        self.textures_set.clear()
+        self._textures_set = set()
         asr_mat = mat.appleseed
         sphere_a = True if mesh == 'sphere_a' else False
         mesh = 'sphere' if mesh in {'sphere', 'sphere_a'} else mesh

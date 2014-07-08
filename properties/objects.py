@@ -37,7 +37,7 @@ class AppleseedObjSettings( bpy.types.PropertyGroup):
                 type = cls)
 
         cls.render_layer = bpy.props.StringProperty( name = "Render Layer", 
-                                        description = "The object's contribution to the scene lighting will be constrained to this render layer", 
+                                        description = "AOV containing this object", 
                                         default = '')
 
         cls.mblur_enable = bpy.props.BoolProperty( name = "",
