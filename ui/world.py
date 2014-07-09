@@ -52,7 +52,7 @@ class AppleseedWorldPanelOld( bpy.types.Panel):
         if asr_sky_props.env_type == "sunsky":
             layout.label("Sun to export:")
             layout.prop(asr_sky_props, "sun_lamp", text = '')
-            layout.prop(asr_sky_props, "sun_model")
+            layout.prop(asr_sky_props, "sun_model", text = "Sky Model")
             
             layout.prop(asr_sky_props, "luminance_multiplier")
             layout.prop(asr_sky_props, "radiance_multiplier")

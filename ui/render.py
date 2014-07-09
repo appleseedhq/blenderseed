@@ -109,6 +109,8 @@ class AppleseedSamplingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
             row.prop( asr_scene_props, "decorrelate_pixels")
             row.prop( asr_scene_props, "force_aa")
             layout.prop( asr_scene_props, "sampler_max_samples")
+
+        layout.prop( asr_scene_props, "tile_ordering")
         
 class AppleseedLightingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -150,6 +152,7 @@ class AppleseedLightingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
             row.prop( asr_scene_props, "ibl_enable")
             if asr_scene_props.ibl_enable == True:
                 row.prop( asr_scene_props, "ibl_env_samples")
+            layout.prop( asr_scene_props, "dl_light_samples")
             layout.prop( asr_scene_props, "decorrelate_pixels")
             layout.prop( asr_scene_props, "max_bounces")  
             layout.prop( asr_scene_props, "rr_start")
@@ -213,8 +216,8 @@ class AppleseedMotionBlurPanel( bpy.types.Panel, AppleseedRenderPanelBase):
         row.prop( asr_scene_props, "shutter_close")
 
 def register():
-    bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
     bpy.utils.register_class( AppleseedRenderButtons)
+    bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
     bpy.utils.register_class( AppleseedRenderSettingsPanel)
     bpy.utils.register_class( AppleseedSamplingPanel)
     bpy.utils.register_class( AppleseedLightingPanel)

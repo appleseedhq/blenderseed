@@ -1988,6 +1988,7 @@ class write_project_file( object):
 
         self.__open_element('parameters name="generic_frame_renderer"')
         self.__emit_parameter("passes", scene.appleseed.renderer_passes)
+        self.__emit_parameter("tile_ordering", scene.appleseed.tile_ordering)
         self.__close_element("parameters")
         
         self.__open_element('parameters name="{0}"'.format(scene.appleseed.lighting_engine))

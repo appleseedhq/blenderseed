@@ -162,6 +162,15 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             min = 1,
                                             max = 999999)
 
+        cls.tile_ordering = bpy.props.EnumProperty( name = "Tile Ordering",
+                                            description = "Tile ordering",
+                                            items = [
+                                            ('linear', "Linear", "Linear"),
+                                            ('spiral', "Spiral", "Spiral"),
+                                            ('hilbert', "Hilbert", "Hilbert"),
+                                            ('random', "Random", "Random")],
+                                            default = 'hilbert')
+        
         cls.sampler_max_contrast = bpy.props.FloatProperty( name = "Max Contrast",
                                             description = "Maximum contrast",
                                             min = 0,
@@ -179,7 +188,7 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             description = "Select the lighting engine to use",
                                             items = [( 'pt', "Path Tracing", "Full Global Illumination"),
                                                ( 'sppm', "SPPM", "Full Global Illumination Using Stochastic Progressive Photon Mapping"), 
-                                               ( 'drt', "Distributed Ray Tracing", "Direct Lighting Only")],
+                                               ( 'drt', "Distribution Ray Tracer", "Direct Lighting Only")],
                                             default = 'pt')
 
         # DRT.
@@ -392,23 +401,6 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             step = 3,
                                             precision = 3)
                                     
-        # Passes.
-        cls.pass_main = bpy.props.BoolProperty( name = "Main",
-                                            description = "Main pass",
-                                            default = True)
-
-        cls.pass_z = bpy.props.BoolProperty( name = "Z",
-                                            description = "Deliver Z values pass",
-                                            default = False)
-
-        cls.pass_normal = bpy.props.BoolProperty( name = "Normal",
-                                            description = "Deliver normal pass",
-                                            default = False)
-
-        cls.pass_uv = bpy.props.BoolProperty( name = "UV",
-                                            description = "Deliver texture UV pass",
-                                            default = False)
-
         
     @classmethod
     def unregister( cls):
