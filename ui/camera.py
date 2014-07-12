@@ -50,12 +50,12 @@ class AppleseedCameraDoF( bpy.types.Panel):
         
         row = layout.row()
         if asr_cam_props.camera_type == "thinlens":
-            row.prop(asr_cam_props, "camera_dof", text = "F-stop")
+            row.prop(asr_cam_props, "camera_dof", text = "F-top")
             
             split = layout.split()
             col = split.column()
             col2 = split.column()
-            col.prop(context.active_object.data, "dof_distance", text = "Focal distance")
+            col.prop(context.active_object.data, "dof_distance", text = "Focal Distance")
             col.active = context.active_object.data.dof_object is None
             col2.prop(context.active_object.data, "dof_object", text = 'Target')
 

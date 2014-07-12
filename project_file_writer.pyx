@@ -101,6 +101,10 @@ class write_project_file( object):
         # Object name -> (material index, mesh name).
         self._mesh_parts = {}
 
+        # Instanced particle objects.
+        # Write mesh files but do not write to appleseed file.
+        self._no_export = {ob.name for ob in util.get_all_psysobs()}
+
         self.__info("")
         self.__info("Starting export of scene '{0}' to {1}...".format(scene.name, file_path))
 
@@ -739,9 +743,9 @@ class write_project_file( object):
                         if layer.spec_btdf_use_tex and layer.spec_btdf_mix_tex != '':   
                             bsdfs.append( [ transp_bsdf_name, layer.spec_btdf_mix_tex + "_inst"])
                             mix_tex_name = layer.spec_btdf_mix_tex + "_inst"
-                            if mix_tex_name not in self.textures_set:
+                            if mix_tex_name not in self._textures_set:
                                 self.__emit_texture( bpy.data.textures[ layer.spec_btdf_mix_tex], False, scene)
-                                self.textures_set.add( mix_tex_name)
+                                self._textures_set.add( mix_tex_name)
                         else:
                             bsdfs.append([ transp_bsdf_name, layer.spec_btdf_weight ])
 
@@ -753,9 +757,9 @@ class write_project_file( object):
                         if layer.specular_use_tex and layer.specular_mix_tex != '':   
                             bsdfs.append( [ mirror_bsdf_name, layer.specular_mix_tex + "_inst"])
                             mix_tex_name = layer.specular_mix_tex + "_inst"
-                            if mix_tex_name not in self.textures_set:
+                            if mix_tex_name not in self._textures_set:
                                 self.__emit_texture( bpy.data.textures[ layer.specular_mix_tex], False, scene)
-                                self.textures_set.add( mix_tex_name)
+                                self._textures_set.add( mix_tex_name)
                         else:
                             bsdfs.append([ mirror_bsdf_name, layer.specular_weight ])
 
@@ -768,9 +772,9 @@ class write_project_file( object):
                             bsdfs.append( [ dt_bsdf_name, layer.transmittance_mix_tex + "_inst"])
                             mix_tex_name = layer.transmittance_mix_tex + "_inst"
 
-                            if mix_tex_name not in self.textures_set:
+                            if mix_tex_name not in self._textures_set:
                                 self.__emit_texture( bpy.data.textures[ layer.transmittance_mix_tex], False, scene)
-                                self.textures_set.add( mix_tex_name)
+                                self._textures_set.add( mix_tex_name)
                         else:
                             bsdfs.append([ dt_bsdf_name, layer.transmittance_weight])
 
@@ -782,9 +786,9 @@ class write_project_file( object):
                         if layer.lambertian_use_tex and layer.lambertian_mix_tex != '':   
                             bsdfs.append( [ lbrt_bsdf_name, layer.lambertian_mix_tex + "_inst"])
                             mix_tex_name = layer.lambertian_mix_tex + "_inst"
-                            if mix_tex_name not in self.textures_set:
+                            if mix_tex_name not in self._textures_set:
                                 self.__emit_texture( bpy.data.textures[ layer.lambertian_mix_tex], False, scene)
-                                self.textures_set.add( mix_tex_name)
+                                self._textures_set.add( mix_tex_name)
                         else:
                             bsdfs.append([ lbrt_bsdf_name, layer.lambertian_weight])
 
@@ -797,9 +801,9 @@ class write_project_file( object):
                         if layer.orennayar_use_tex and layer.orennayar_mix_tex != '':   
                             bsdfs.append( [ lbrt_bsdf_name, layer.orennayar_mix_tex + "_inst"])
                             mix_tex_name = layer.orennayar_mix_tex + "_inst"
-                            if mix_tex_name not in self.textures_set:
+                            if mix_tex_name not in self._textures_set:
                                 self.__emit_texture( bpy.data.textures[ layer.orennayar_mix_tex], False, scene)
-                                self.textures_set.add( mix_tex_name)
+                                self._textures_set.add( mix_tex_name)
                         else:
                             bsdfs.append([ lbrt_bsdf_name, layer.orennayar_weight])
 
@@ -811,9 +815,9 @@ class write_project_file( object):
                         if layer.ashikhmin_use_tex and layer.ashikhmin_mix_tex != '':   
                             bsdfs.append( [ ashk_bsdf_name, layer.ashikhmin_mix_tex + "_inst"])
                             mix_tex_name = layer.ashikhmin_mix_tex + "_inst"
-                            if mix_tex_name not in self.textures_set:
+                            if mix_tex_name not in self._textures_set:
                                 self.__emit_texture( bpy.data.textures[ layer.ashikhmin_mix_tex], False, scene)
-                                self.textures_set.add( mix_tex_name)
+                                self._textures_set.add( mix_tex_name)
                         else:
                             bsdfs.append([ ashk_bsdf_name, layer.ashikhmin_weight ])
 
@@ -825,9 +829,9 @@ class write_project_file( object):
                         if layer.microfacet_use_tex and layer.microfacet_mix_tex != '':   
                             bsdfs.append( [ mfacet_bsdf_name, layer.microfacet_mix_tex + "_inst"])
                             mix_tex_name = layer.microfacet_mix_tex + "_inst"
-                            if mix_tex_name not in self.textures_set:
+                            if mix_tex_name not in self._textures_set:
                                 self.__emit_texture( bpy.data.textures[ layer.microfacet_mix_tex], False, scene)
-                                self.textures_set.add( mix_tex_name)
+                                self._textures_set.add( mix_tex_name)
                         else:
                             bsdfs.append([ mfacet_bsdf_name, layer.microfacet_weight])
 
@@ -840,9 +844,9 @@ class write_project_file( object):
                             bsdfs.append( [ kelemen_bsdf_name, layer.kelemen_mix_tex + "_inst"])
 
                             mix_tex_name = layer.kelemen_mix_tex + "_inst"
-                            if mix_tex_name not in self.textures_set:
+                            if mix_tex_name not in self._textures_set:
                                 self.__emit_texture( bpy.data.textures[ layer.kelemen_mix_tex], False, scene)
-                                self.textures_set.add( mix_tex_name)
+                                self._textures_set.add( mix_tex_name)
                         else:
                             bsdfs.append([ kelemen_bsdf_name, layer.kelemen_weight])
                       
@@ -931,9 +935,9 @@ class write_project_file( object):
             if layer.lambertian_use_diff_tex and layer.lambertian_diffuse_tex != '':
                 if util.is_uv_img(bpy.data.textures[layer.lambertian_diffuse_tex]):
                     reflectance_name = layer.lambertian_diffuse_tex + "_inst"
-                    if reflectance_name not in self.textures_set:
+                    if reflectance_name not in self._textures_set:
                         self.__emit_texture(bpy.data.textures[layer.lambertian_diffuse_tex], False, scene)
-                        self.textures_set.add(reflectance_name)
+                        self._textures_set.add(reflectance_name)
             # TODO: add texture support for multiplier
             reflectance_multiplier = layer.lambertian_multiplier
                         
@@ -975,16 +979,16 @@ class write_project_file( object):
             if layer.orennayar_use_diff_tex and layer.orennayar_diffuse_tex != '':
                 if util.is_uv_img(bpy.data.textures[layer.orennayar_diffuse_tex]):
                     reflectance_name = layer.orennayar_diffuse_tex + "_inst"
-                    if reflectance_name not in self.textures_set:
+                    if reflectance_name not in self._textures_set:
                         self.__emit_texture(bpy.data.textures[layer.orennayar_diffuse_tex], False, scene)
-                        self.textures_set.add(reflectance_name)
+                        self._textures_set.add(reflectance_name)
             
             if layer.orennayar_use_rough_tex and layer.orennayar_rough_tex != '':
                 if util.is_uv_img(bpy.data.textures[layer.orennayar_rough_tex]):
                     roughness = layer.orennayar_rough_tex + "_inst"
-                    if roughness not in self.textures_set:
+                    if roughness not in self._textures_set:
                         self.__emit_texture(bpy.data.textures[layer.orennayar_rough_tex], False, scene)
-                        self.textures_set.add(roughness)
+                        self._textures_set.add(roughness)
                         
             # TODO: add texture support for multiplier
             reflectance_multiplier = layer.orennayar_multiplier
@@ -1026,15 +1030,15 @@ class write_project_file( object):
             if layer.transmittance_use_diff_tex and layer.transmittance_diff_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.transmittance_diff_tex]):    
                     transmittance_name = layer.transmittance_diff_tex + "_inst"
-                    if transmittance_name not in self.textures_set:
-                        self.textures_set.add(transmittance_name)
+                    if transmittance_name not in self._textures_set:
+                        self._textures_set.add(transmittance_name)
                         self.__emit_texture(bpy.data.textures[layer.transmittance_diff_tex], False, scene)
 
             if layer.transmittance_use_mult_tex and layer.transmittance_mult_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.transmittance_mult_tex]):    
                     transmittance = layer.transmittance_mult_tex + "_inst"
-                    if transmittance not in self.textures_set:
-                        self.textures_set.add(transmittance)
+                    if transmittance not in self._textures_set:
+                        self._textures_set.add(transmittance)
                         self.__emit_texture(bpy.data.textures[layer.transmittance_mult_tex], False, scene)
                         
             if transmittance_name == "":
@@ -1086,16 +1090,16 @@ class write_project_file( object):
             if layer.ashikhmin_use_diff_tex and layer.ashikhmin_diffuse_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.ashikhmin_diffuse_tex]):    
                     diffuse_reflectance_name = layer.ashikhmin_diffuse_tex + "_inst"
-                    if diffuse_reflectance_name not in self.textures_set:
-                        self.textures_set.add(diffuse_reflectance_name)
+                    if diffuse_reflectance_name not in self._textures_set:
+                        self._textures_set.add(diffuse_reflectance_name)
                         self.__emit_texture(bpy.data.textures[layer.ashikhmin_diffuse_tex], False, scene)
                     
             if layer.ashikhmin_use_gloss_tex and layer.ashikhmin_gloss_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.ashikhmin_gloss_tex]):    
                     glossy_reflectance_name = layer.ashikhmin_gloss_tex + "_inst"
-                    if glossy_reflectance_name not in self.textures_set:
+                    if glossy_reflectance_name not in self._textures_set:
                         self.__emit_texture(bpy.data.textures[layer.ashikhmin_gloss_tex], False, scene)
-                        self.textures_set.add(glossy_reflectance_name)
+                        self._textures_set.add(glossy_reflectance_name)
                 
             #Make sure we found some textures. If not, default to material color.
             if diffuse_reflectance_name == "":
@@ -1149,9 +1153,9 @@ class write_project_file( object):
                 if util.is_uv_img(bpy.data.textures[layer.specular_gloss_tex]):    
 
                     reflectance_name = layer.specular_gloss_tex + "_inst"
-                    if reflectance_name not in self.textures_set:
+                    if reflectance_name not in self._textures_set:
 
-                        self.textures_set.add(reflectance_name)
+                        self._textures_set.add(reflectance_name)
                         self.__emit_texture(bpy.data.textures[layer.specular_gloss_tex], False, scene)
             if reflectance_name == "":
                 reflectance_name = "{0}_specular_reflectance".format(bsdf_name)
@@ -1205,8 +1209,8 @@ class write_project_file( object):
             if layer.spec_btdf_use_spec_tex and layer.spec_btdf_spec_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.spec_btdf_spec_tex]):    
                     reflectance_name = layer.spec_btdf_spec_tex + "_inst"
-                    if reflectance_name not in self.textures_set:
-                        self.textures_set.add(reflectance_name)
+                    if reflectance_name not in self._textures_set:
+                        self._textures_set.add(reflectance_name)
                         self.__emit_texture(bpy.data.textures[layer.spec_btdf_spec_tex], False, scene)
             if reflectance_name == "":        
                 reflectance_name = "{0}_transp_reflectance".format(bsdf_name)
@@ -1217,8 +1221,8 @@ class write_project_file( object):
             if layer.spec_btdf_use_trans_tex and layer.spec_btdf_trans_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.spec_btdf_trans_tex]):    
                     transmittance_name = layer.spec_btdf_trans_tex + "_inst"
-                    if transmittance_name not in self.textures_set:
-                        self.textures_set.add(transmittance_name)
+                    if transmittance_name not in self._textures_set:
+                        self._textures_set.add(transmittance_name)
                         self.__emit_texture(bpy.data.textures[layer.spec_btdf_trans_tex], False, scene)
             
             if transmittance_name == "":            
@@ -1273,9 +1277,9 @@ class write_project_file( object):
             if layer.microfacet_use_diff_tex and layer.microfacet_diff_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.microfacet_diff_tex]):
                     reflectance_name = layer.microfacet_diff_tex + "_inst"
-                    if reflectance_name not in self.textures_set:
+                    if reflectance_name not in self._textures_set:
                         self.__emit_texture(bpy.data.textures[layer.microfacet_diff_tex], False, scene)
-                        self.textures_set.add(reflectance_name)
+                        self._textures_set.add(reflectance_name)
             
             if reflectance_name == "":
                 reflectance_name = "{0}_microfacet_reflectance".format(bsdf_name)
@@ -1286,9 +1290,9 @@ class write_project_file( object):
             if layer.microfacet_use_spec_tex and layer.microfacet_spec_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.microfacet_spec_tex]):    
                     mdf_refl = layer.microfacet_spec_tex + "_inst"
-                    if mdf_refl not in self.textures_set:
+                    if mdf_refl not in self._textures_set:
                         self.__emit_texture(bpy.data.textures[layer.microfacet_spec_tex], False, scene)
-                        self.textures_set.add(mdf_refl)
+                        self._textures_set.add(mdf_refl)
             if mdf_refl == "":
                 #This changes to a float, if it's not a texture
                 mdf_refl = layer.microfacet_mdf
@@ -1341,8 +1345,8 @@ class write_project_file( object):
                 if layer.kelemen_diff_tex != "":
                     if util.is_uv_img(bpy.data.textures[layer.kelemen_diff_tex]):
                         reflectance_name = layer.kelemen_diff_tex + "_inst"
-                        if reflectance_name not in self.textures_set:
-                            self.textures_set.add(reflectance_name)
+                        if reflectance_name not in self._textures_set:
+                            self._textures_set.add(reflectance_name)
                             self.__emit_texture(bpy.data.textures[layer.kelemen_diff_tex], False, scene)
             
             if reflectance_name == "":
@@ -1353,8 +1357,8 @@ class write_project_file( object):
             if layer.kelemen_use_spec_tex and layer.kelemen_spec_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.kelemen_spec_tex]):    
                     spec_refl_name = layer.kelemen_spec_tex + "_inst"
-                    if spec_refl_name not in self.textures_set:
-                        self.textures_set.add(spec_refl_name)
+                    if spec_refl_name not in self._textures_set:
+                        self._textures_set.add(spec_refl_name)
                         self.__emit_texture(bpy.data.textures[layer.kelemen_spec_tex], False, scene)
             if spec_refl_name == "":
                 spec_refl_name = "{0}_kelemen_specular".format(bsdf_name)
@@ -1532,18 +1536,18 @@ class write_project_file( object):
                             bump_map = asr_mat.material_bump_tex + "_bump"
                                     
                 if bump_map != "":
-                    if bump_map not in self.textures_set:
+                    if bump_map not in self._textures_set:
                         self.__emit_texture(bpy.data.textures[asr_mat.material_bump_tex], True, scene)
-                        self.textures_set.add(bump_map)    
+                        self._textures_set.add(bump_map)    
                     material_bump_amplitude = asr_mat.material_bump_amplitude
                     bump_map += "_inst"
                     method = "normal" if asr_mat.material_use_normalmap else "bump"
    
                 if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
                     material_alpha_map = asr_mat.material_alpha_map + "_inst"
-                    if asr_mat.material_alpha_map + "_inst" not in self.textures_set:
+                    if asr_mat.material_alpha_map + "_inst" not in self._textures_set:
                         self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
-                        self.textures_set.add(asr_mat.material_alpha_map + "_inst")
+                        self._textures_set.add(asr_mat.material_alpha_map + "_inst")
                 else:
                     material_alpha_map = asr_mat.material_alpha
                 
@@ -1593,9 +1597,9 @@ class write_project_file( object):
         # Test if using focal object, get focal distance.
         if camera.data.dof_object is not None:
             cam_target = bpy.data.objects[camera.data.dof_object.name]
-            focal_distance = (cam_target.location - camera.location).magnitude * 0.1
+            focal_distance = (cam_target.location - camera.location).magnitude
         else:
-            focal_distance = camera.data.dof_distance * 0.1
+            focal_distance = camera.data.dof_distance 
 
         asr_cam = camera.data.appleseed
         cam_model = asr_cam.camera_type
@@ -1835,9 +1839,9 @@ class write_project_file( object):
         radiance_name = "{0}_radiance".format(lamp.name)
         if asr_light.radiance_use_tex and asr_light.radiance_tex != '':
             radiance_name = asr_light.radiance_tex + "_inst"
-            if radiance_name not in self.textures_set:
+            if radiance_name not in self._textures_set:
                 self.__emit_texture( bpy.data.textures[ asr_light.radiance_tex], False, scene)
-                self.textures_set.add( radiance_name)
+                self._textures_set.add( radiance_name)
         else:
             self.__emit_solid_linear_rgb_color_element(radiance_name, asr_light.radiance, 1)
 
@@ -1845,9 +1849,9 @@ class write_project_file( object):
         radiance_multiplier = asr_light.radiance_multiplier
         if asr_light.radiance_multiplier_use_tex and asr_light.radiance_multiplier_tex != '':
             radiance_multiplier = asr_light.radiance_multiplier_tex + "_inst"
-            if radiance_multiplier not in self.textures_set:
+            if radiance_multiplier not in self._textures_set:
                 self.__emit_texture( bpy.data.textures[ asr_light.radiance_multiplier_tex], False, scene)
-                self.textures_set.add( radiance_multiplier)
+                self._textures_set.add( radiance_multiplier)
 
         # Spot cone.
         outer_angle = math.degrees(lamp.data.spot_size)

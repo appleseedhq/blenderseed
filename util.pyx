@@ -118,10 +118,6 @@ def is_proxy(ob, scene):
         else:
             return ob.appleseed.instance_mesh is not None and scene.objects[ob.appleseed.instance_mesh].type == 'MESH'
 
-def get_particle_matrix(ob):
-    object_matrix = ob.matrix.copy()
-    return object_matrix
-
 
 def get_all_psysobs():
     '''
@@ -141,10 +137,6 @@ def get_all_duplis( scene ):
         if ob.parent and ob.parent.dupli_type in {'FACES', 'VERTS', 'GROUP'}:
             obs.add( ob)
     return obs
-            
-def get_matrix(obj):
-    obj_mat = obj.matrix.copy()
-    return obj_mat
 
 
 def get_instances(obj_parent, scene):
@@ -204,6 +196,7 @@ def get_psys_instances(ob, scene):
     '''
     all_duplis = {}
     current_total = 0
+    index = 0
     if not hasattr(ob, 'modifiers'):
         return {}
     if not ob_mblur_enabled( ob, scene):   
@@ -224,11 +217,11 @@ def get_psys_instances(ob, scene):
             if not ob_mblur_enabled( ob, scene):   
                 # No motion blur.
                 duplis = []
-                for index in range( start, current_total):
+                for dupli_index in range( start, current_total):
                     # Store the dupli.objects for the current particle system only
                     # ob.dupli_list is created in descending order of particle systems
                     # So it should be reliable to match them this way.
-                    duplis.append( ob.dupli_list[index].object)
+                    duplis.append( ob.dupli_list[dupli_index].object)
                     
                 p_duplis_pairs = list( zip( particles, duplis))     # Match the particles to the duplis
                 dupli_dict = {p[0]:[ p[1], []] for p in p_duplis_pairs}  # Create particle:[dupli.object, [matrix]] pairs
@@ -242,14 +235,13 @@ def get_psys_instances(ob, scene):
                         mat = transl * scale
                         dupli_dict[particle][1].append(mat)
                 else:
-                    index = 0
                     for particle in dupli_dict.keys():
                         mat = ob.dupli_list[index].matrix.copy()
                         dupli_dict[particle][1].append(mat)
                         index += 1
             else:
                 # Using motion blur       
-                dupli_dict = sample_psys_mblur( ob, scene, psys)
+                dupli_dict, index = sample_psys_mblur( ob, scene, psys, index, start, current_total)
                      
             # Add current particle system to the collection.
             all_duplis.update( dupli_dict)  
@@ -260,7 +252,7 @@ def get_psys_instances(ob, scene):
     return all_duplis
 
 
-def sample_psys_mblur( ob, scene, psys):
+def sample_psys_mblur( ob, scene, psys, index, start, current_total):
     '''
     Return a dictionary of 
     particle: [dupli.object, [matrices]] 
@@ -278,30 +270,50 @@ def sample_psys_mblur( ob, scene, psys):
         particles = [p for p in psys.particles]
     if len(particles) == 0:
         return False
-    ob.dupli_list_create( scene)
-    duplis = [dupli.object for dupli in ob.dupli_list]
-    p_duplis_pairs = list( zip( particles, duplis))
-    dupli_dict = {p[0]:[ p[1], []] for p in p_duplis_pairs}
 
-    for frame in {asr_scn.shutter_open, asr_scn.shutter_close}:
-        frame_set( frame_orig, subframe = frame)
-        for particle in dupli_dict.keys():
-            size = particle.size 
-            transl = particle.location
-            scale = dupli_dict[particle][0].scale * size
-            transl = mathutils.Matrix.Translation(( transl))
-            scale = mathutils.Matrix.Scale(scale.x, 4, (1,0,0)) * mathutils.Matrix.Scale(scale.y, 4, (0,1,0)) * mathutils.Matrix.Scale(scale.z, 4, (0,0,1))
-            mat = transl * scale
-            if psys.settings.type == 'HAIR':
-                mat *= ob.matrix_world.inverted().copy()
-            dupli_dict[particle][1].append(mat)
-
+    if psys.settings.type == 'EMITTER':
+        # Emitter particle system.
+        ob.dupli_list_create( scene, 'RENDER')
+        duplis = [dupli.object for dupli in ob.dupli_list]
+        p_duplis_pairs = list( zip( particles, duplis))
+        dupli_dict = {p[0]:[ p[1], []] for p in p_duplis_pairs}
+        for frame in {asr_scn.shutter_open, asr_scn.shutter_close}:
+            frame_set( frame_orig, subframe = frame)
+            for particle in dupli_dict.keys():
+                size = particle.size 
+                transl = particle.location
+                scale = dupli_dict[particle][0].scale * size
+                transl = mathutils.Matrix.Translation(( transl))
+                scale = mathutils.Matrix.Scale(scale.x, 4, (1,0,0)) * mathutils.Matrix.Scale(scale.y, 4, (0,1,0)) * mathutils.Matrix.Scale(scale.z, 4, (0,0,1))
+                mat = transl * scale
+                dupli_dict[particle][1].append(mat)
+    else:
+        # Hair particle system.
+        duplis = []
+        ob.dupli_list_create( scene, 'RENDER')
+        for dupli_index in range( start, current_total):
+            duplis.append( ob.dupli_list[dupli_index].object)
+        p_duplis_pairs = list( zip( particles, duplis))
+        dupli_dict = {p[0]:[ p[1], []] for p in p_duplis_pairs}
+        ob.dupli_list_clear()
+        new_index = index
+        for frame in {asr_scn.shutter_open, asr_scn.shutter_close}:
+            new_index = index
+            frame_set( frame_orig, subframe = frame)
+            ob.dupli_list_create( scene, 'RENDER')
+            for particle in dupli_dict.keys():
+                mat = ob.dupli_list[new_index].matrix.copy()
+                dupli_dict[particle][1].append(mat)
+                new_index += 1
+            ob.dupli_list_clear()
+        index += new_index
+        
     # Clean up and return
     if psys.settings.type == 'EMITTER':
         del scale, transl, mat
-    ob.dupli_list_clear()
+        ob.dupli_list_clear()
     frame_set( frame_orig)
-    return dupli_dict
+    return dupli_dict, index
 
     
 def render_emitter(ob):
@@ -334,8 +346,7 @@ def has_hairsys( ob):
                 has_hair = True
                 break
     return has_hair
-
-
+    
 def get_camera_matrix( camera, global_matrix):
     '''
     Get the camera transformation decomposed as origin, forward, up and target.

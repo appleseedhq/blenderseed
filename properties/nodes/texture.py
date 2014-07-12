@@ -51,7 +51,7 @@ class AppleseedTexNode( Node, AppleseedNode):
     color_space = bpy.props.EnumProperty( name = "",
                                          description = "Image color space",
                                          items = [
-                                         ( 'linear', 'Linear', ''),
+                                         ( 'linear_rgb', 'Linear', ''),
                                          ( 'srgb', 'sRGB', ''),
                                          ( 'ciexyz', 'CIE-XYZ', '')],
                                          default = 'srgb')
