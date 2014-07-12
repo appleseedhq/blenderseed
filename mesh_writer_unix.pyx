@@ -77,7 +77,7 @@ def write_mesh_to_disk( ob, scene, mesh, filepath, export_hair = False):
         verts.append( "v %.15f %.15f %.15f\n" % ( v.x, v.y, v.z))
 
     
-    fw.write( ('').join( verts))
+    fw( ('').join( verts))
         
     # Deduplicate and write normals.
     normal_indices = {}
@@ -108,7 +108,7 @@ def write_mesh_to_disk( ob, scene, mesh, filepath, export_hair = False):
                 current_normal_index += 1
 
     
-    fw.write( ('').join( verts_n))
+    fw( ('').join( verts_n))
         
     # Deduplicate and write texture coordinates.
     if uvset:
@@ -129,7 +129,7 @@ def write_mesh_to_disk( ob, scene, mesh, filepath, export_hair = False):
                     current_vt_index += 1
 
     
-    fw.write( ('').join( verts_t))
+    fw( ('').join( verts_t))
         
     # Write faces.
     current_material_index = -1
@@ -163,7 +163,7 @@ def write_mesh_to_disk( ob, scene, mesh, filepath, export_hair = False):
         faces_w.append( line + "\n")
         
     
-    fw.write( ('').join( faces_w))
+    fw( ('').join( faces_w))
         
     obj_file.close()
         
