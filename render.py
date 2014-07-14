@@ -290,9 +290,9 @@ def render_scene( engine, scene):
     else:
         # If rendering with GUI, we have two options
         if scene.appleseed.studio_rendering_mode == "PROGRESSIVE":
-            cmd = (appleseed_exe, filename, " --render interactive")
+            cmd = (appleseed_exe, filename, "--render", "interactive")
         else:
-            cmd = (appleseed_exe, filename, " --render final")
+            cmd = (appleseed_exe, filename, "--render", "final")
 
         # Launch appleseed.studio.
         process = subprocess.Popen( cmd, cwd=as_bin_path, env = os.environ.copy())
