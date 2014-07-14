@@ -483,7 +483,7 @@ class write_project_file( object):
         if util.def_mblur_enabled( object, scene):
             self.__open_element('parameters name="filename"')
             self.__emit_parameter("0", mesh_filename)
-            self.__emit_parameter("1", self._def_mblur_obs[object_name])
+            self.__emit_parameter("1", "meshes" + os.path.sep + self._def_mblur_obs[object_name])
             self.__close_element("parameters")
         else:
             self.__emit_parameter("filename", mesh_filename)
