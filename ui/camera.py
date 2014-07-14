@@ -50,7 +50,7 @@ class AppleseedCameraDoF( bpy.types.Panel):
         
         row = layout.row()
         if asr_cam_props.camera_type == "thinlens":
-            row.prop(asr_cam_props, "camera_dof", text = "F-top")
+            row.prop(asr_cam_props, "camera_dof", text = "F-stop")
             
             split = layout.split()
             col = split.column()
