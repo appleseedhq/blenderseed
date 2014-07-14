@@ -98,7 +98,6 @@ class AppleseedWorldPanelOld( bpy.types.Panel):
 def register():
     bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
     bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.WORLD_PT_preview.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
 
 def unregister():
     pass
