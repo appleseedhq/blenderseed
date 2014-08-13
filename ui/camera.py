@@ -63,6 +63,8 @@ class AppleseedCameraDoF( bpy.types.Panel):
             row.prop( asr_cam_props, "diaphragm_blades")
             row.prop( asr_cam_props, "diaphragm_angle")
 
+            layout.prop( asr_cam_props, "diaphragm_map")
+
 def register():
     bpy.types.DATA_PT_camera.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
     bpy.types.DATA_PT_camera_display.COMPAT_ENGINES.add( 'APPLESEED_RENDER')

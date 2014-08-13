@@ -115,7 +115,7 @@ def render_preview( engine, scene):
         
     prev_mat = likely_materials[0]
     prev_type = prev_mat.preview_render_type.lower()
-    exporter = project_file_writer.write_project_file( None)
+    exporter = project_file_writer.write_project_file()
     file_written = exporter.export_preview(scene, 
                                            scene_file, 
                                            addon_prev_path, 

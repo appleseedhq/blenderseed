@@ -70,6 +70,11 @@ class AppleseedCameraSettings( bpy.types.PropertyGroup):
                                             max = 360, 
                                             precision = 3)
 
+        cls.diaphragm_map = bpy.props.StringProperty( name = "Diaphragm Map",
+                                            description = "Image texture to influence bokeh",
+                                            default = '',
+                                            subtype = 'FILE_PATH')
+                                            
     @classmethod
     def unregister( cls):
         del bpy.types.Camera.appleseed

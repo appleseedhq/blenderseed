@@ -3,11 +3,31 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import sys
 
+modules = set()
+
 if sys.platform == 'win32':
-    modules = [ 'util', 'project_file_writer', 'mesh_writer']
+    mesh_writer = 'mesh_writer'
 else:
-    modules = [ 'util', 'project_file_writer', 'mesh_writer_unix']
- 
+    mesh_writer = 'mesh_writer_unix'
+
+# Test for selective compiling
+args = sys.argv
+if 'mesh_writer' in args:
+    modules.update( mesh_writer)
+    print( "Compiling %s module" % mesh_writer)
+    
+elif 'project_file_writer' in args:
+    modules.update( 'project_file_writer')
+    print( "Compiling project_file_writer module")
+    
+elif 'util' in args:
+    modules.update( 'util')    
+    print( "Compiling util module")
+    
+else:
+    modules = { mesh_writer, 'project_file_writer', 'util'}
+    print( "Compiling all modules")
+    
 for module in modules:
     ext_module = Extension(
         "%s" % module,

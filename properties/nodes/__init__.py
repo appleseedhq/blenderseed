@@ -115,6 +115,7 @@ appleseed_node_categories = [
     AppleseedNodeCategory("BSDF", "BSDF", items = [
         nodeitems_utils.NodeItem( "AppleseedAshikhminNode"),
         nodeitems_utils.NodeItem( "AppleseedDiffuseBTDFNode"),
+        nodeitems_utils.NodeItem( "AppleseedDisneyNode"),
         nodeitems_utils.NodeItem( "AppleseedKelemenNode"),
         nodeitems_utils.NodeItem( "AppleseedLambertianNode"),
         nodeitems_utils.NodeItem( "AppleseedMicrofacetNode"),
@@ -161,6 +162,7 @@ def appleseed_scene_loaded(dummy):
 from .          import ashikhmin_brdf
 from .          import bsdf_blend
 from .          import diffuse_btdf
+from .          import disney_brdf
 from .          import kelemen_brdf
 from .          import lambertian_brdf
 from .          import microfacet_brdf
@@ -179,6 +181,7 @@ def register():
     ashikhmin_brdf.register()
     bsdf_blend.register()
     diffuse_btdf.register()
+    disney_brdf.register()
     kelemen_brdf.register()
     lambertian_brdf.register()
     microfacet_brdf.register()
@@ -195,6 +198,7 @@ def unregister():
     bpy.utils.unregister_class( AppleseedNodeTree)
     ashikhmin_brdf.unregister()
     bsdf_blend.unregister()
+    disney_brdf.unregister()
     diffuse_btdf.unregister()
     kelemen_brdf.unregister()
     lambertian_brdf.unregister()

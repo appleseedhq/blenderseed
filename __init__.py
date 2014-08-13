@@ -27,7 +27,7 @@ SOFTWARE.
 bl_info = {
     "name": "appleseed",
     "author": "Franz Beaune, Joel Daniels, Esteban Tovagliari, Jasper van Nieuwenhuizen",
-    "version": (0, 3, 5),
+    "version": (0, 3, 6),
     "blender": (2, 7, 1),
     "location": "Info Header (engine dropdown)",
     "description": "appleseed integration",
