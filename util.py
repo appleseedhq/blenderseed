@@ -290,7 +290,6 @@ def get_all_psysobs():
 def get_psys_instances(ob, scene):
     ''' 
     Return a dictionary of 
-
     particle: [dupli.object, [matrices]] 
     pairs. This function assumes particle systems and 
     face / verts duplication aren't being used on the same object.
@@ -324,23 +323,21 @@ def get_psys_instances(ob, scene):
                     # So it should be reliable to match them this way.
                     duplis.append( ob.dupli_list[dupli_index].object)
                     
-                p_duplis_pairs = list( zip( particles, duplis))     # Match the particles to the duplis
-                dupli_dict = {p[0]:[ p[1], []] for p in p_duplis_pairs}  # Create particle:[dupli.object, [matrix]] pairs
                 if psys.settings.type == 'EMITTER':
+                    p_duplis_pairs = list( zip( particles, duplis))     # Match the particles to the duplis
+                    dupli_dict = {p[0]:[ p[1], []] for p in p_duplis_pairs}  # Create particle:[dupli.object, [matrix]] pairs
                     for particle in dupli_dict.keys():
                         size = particle.size
                         loc = particle.location
                         scale = dupli_dict[particle][0].scale * size
                         transl = mathutils.Matrix.Translation(( loc))
                         scale = mathutils.Matrix.Scale(scale.x, 4, (1,0,0)) * mathutils.Matrix.Scale(scale.y, 4, (0,1,0)) * mathutils.Matrix.Scale(scale.z, 4, (0,0,1))
-
                         mat = transl * scale
                         dupli_dict[particle][1].append(mat)
                 else:
-                    for particle in dupli_dict.keys():
-                        mat = ob.dupli_list[index].matrix.copy()
-                        dupli_dict[particle][1].append(mat)
-                        index += 1
+                    dupli_mat_list = [ dupli.matrix.copy() for dupli in ob.dupli_list]
+                    p_duplis_pairs = list( zip( particles, duplis, dupli_mat_list))
+                    dupli_dict = {p[0]:[ p[1], [p[2]]] for p in p_duplis_pairs}
             else:
                 # Using motion blur       
                 dupli_dict, index = sample_psys_mblur( ob, scene, psys, index, start, current_total)
