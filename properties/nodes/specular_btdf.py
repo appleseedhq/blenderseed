@@ -36,8 +36,7 @@ from .           import AppleseedNode, AppleseedSocket
 # multiplier
 # transmittance
 # transmittance multiplier
-# from ior
-# to ior
+# ior
 
 #--------------------------------
 # Specular diffuse color socket.
@@ -123,8 +122,8 @@ class AppleseedSpecBTDFNode( Node, AppleseedNode):
     node_type = 'specular_btdf'
 
     from_ior = AppleseedMatLayerProps.spec_btdf_from_ior
-    to_ior = AppleseedMatLayerProps.spec_btdf_to_ior
-
+    to_ior =   AppleseedMatLayerProps.spec_btdf_to_ior
+    
     def init( self, context):
         self.inputs.new( 'AppleseedSpecBTDFReflectance', "Reflectance")
         self.inputs.new( 'AppleseedSpecBTDFMultiplier', "Multiplier")

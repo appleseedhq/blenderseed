@@ -376,7 +376,9 @@ def sample_psys_mblur( ob, scene, psys, index, start, current_total):
         duplis = [dupli.object for dupli in ob.dupli_list]
         p_duplis_pairs = list( zip( particles, duplis))
         dupli_dict = {p[0]:[ p[1], []] for p in p_duplis_pairs}
+        new_index = index
         for frame in {asr_scn.shutter_open, asr_scn.shutter_close}:
+            new_index = index
             frame_set( frame_orig, subframe = frame)
             for particle in dupli_dict.keys():
                 size = particle.size 
@@ -386,6 +388,8 @@ def sample_psys_mblur( ob, scene, psys, index, start, current_total):
                 scale = mathutils.Matrix.Scale(scale.x, 4, (1,0,0)) * mathutils.Matrix.Scale(scale.y, 4, (0,1,0)) * mathutils.Matrix.Scale(scale.z, 4, (0,0,1))
                 mat = transl * scale
                 dupli_dict[particle][1].append(mat)
+                new_index += 1
+        index += new_index
     else:
         # Hair particle system.
         duplis = []

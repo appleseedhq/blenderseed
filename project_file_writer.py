@@ -1432,11 +1432,11 @@ class write_project_file( object):
             transmittance_name = inputs[2].get_socket_value( True)
             transmittance_multiplier = inputs[3].get_socket_value( True)
             if side == 'front':
-                from_ior = 1.0
+                from_ior = node.from_ior
                 to_ior = node.to_ior
             else:
-                from_ior = node.from_ior
-                to_ior = 1.0
+                from_ior = node.to_ior
+                to_ior = node.from_ior
 
             if not inputs[0].is_linked:
                 spec_btdf_reflectance = reflectance_name
@@ -1480,11 +1480,12 @@ class write_project_file( object):
             transmittance_multiplier = layer.spec_btdf_trans_mult
             
             if side == 'front':
-                from_ior = 1.0
+                from_ior = layer.spec_btdf_from_ior
                 to_ior = layer.spec_btdf_to_ior
             else:
-                from_ior = layer.spec_btdf_from_ior
-                to_ior = 1.0
+                from_ior = layer.spec_btdf_to_ior
+                to_ior = layer.spec_btdf_from_ior
+
 
         self.__open_element('bsdf name="{0}" model="specular_btdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance_name)
@@ -1802,7 +1803,8 @@ class write_project_file( object):
                     material_alpha_map = asr_mat.material_alpha
                 
         self.__open_element( 'material name="{0}" model="generic_material"'.format(material_name))
-        self.__emit_parameter( "alpha_map", material_alpha_map)
+        if material_alpha_map != 1.0:
+            self.__emit_parameter( "alpha_map", material_alpha_map)
         if len( bsdf_name) > 0:
             self.__emit_parameter( "bsdf", bsdf_name)
         if len( edf_name) > 0:
@@ -1828,6 +1830,7 @@ class write_project_file( object):
         camera = scene.camera
         width = scene.render.resolution_x
         height = scene.render.resolution_y
+        emit_diaphragm_map = False
         
         if camera is None:
             self.__warning("No camera in the scene, exporting a default camera.")
@@ -1921,55 +1924,54 @@ class write_project_file( object):
     #----------------------------------------------------------------------------------------------
 
     def __emit_environment(self, scene):    
-        horizon_exitance = [ 0.0, 0.0, 0.0 ]
-        zenith_exitance = [ 0.0, 0.0, 0.0 ]
+        horizon_radiance = [ 0.0, 0.0, 0.0 ]
+        zenith_radiance = [ 0.0, 0.0, 0.0 ]
 
         # Add the contribution of the first hemi light found in the scene.
         found_hemi_light = False
         for object in scene.objects:
-            if object.hide_render:
-                continue
-            if object.type == 'LAMP' and object.data.type == 'HEMI':
-                if not found_hemi_light:
-                    self.__info("Using hemi light '{0}' for environment lighting.".format(object.name))
-                    hemi_exitance = mul(object.data.color, object.data.energy)
-                    horizon_exitance = add(horizon_exitance, hemi_exitance)
-                    zenith_exitance = add(zenith_exitance, hemi_exitance)
-                    found_hemi_light = True
-                else:
-                    self.__warning("Ignoring hemi light '{0}', multiple hemi lights are not supported yet.".format(object.name))
+            if util.do_export( object, scene):
+                if object.type == 'LAMP' and object.data.type == 'HEMI':
+                    if not found_hemi_light:
+                        self.__info("Using hemi light '{0}' for environment lighting.".format(object.name))
+                        hemi_radiance = mul(object.data.color, object.data.energy)
+                        horizon_radiance = add(horizon_radiance, hemi_radiance)
+                        zenith_radiance = add(zenith_radiance, hemi_radiance)
+                        found_hemi_light = True
+                    else:
+                        self.__warning("Ignoring hemi light '{0}', multiple hemi lights are not supported yet.".format(object.name))
 
         # Add the contribution of the sky.
         if scene.world is not None:
-            horizon_exitance = add(horizon_exitance, scene.world.horizon_color)
-            zenith_exitance = add(zenith_exitance, scene.world.zenith_color)
+            horizon_radiance = add(horizon_radiance, scene.world.horizon_color)
+            zenith_radiance = add(zenith_radiance, scene.world.zenith_color)
 
         # Write the environment EDF and environment shader if necessary.
-        if is_black(horizon_exitance) and is_black(zenith_exitance) and not scene.appleseed_sky.env_type == "sunsky":
+        if is_black(horizon_radiance) and is_black(zenith_radiance) and not scene.appleseed_sky.env_type == "sunsky":
             env_edf_name = ""
             env_shader_name = ""
         else:
-            # Write the exitances.
-            self.__emit_solid_linear_rgb_color_element("horizon_exitance", horizon_exitance, scene.appleseed_sky.env_radiance_multiplier)
-            self.__emit_solid_linear_rgb_color_element("zenith_exitance", zenith_exitance, scene.appleseed_sky.env_radiance_multiplier)
+            # Write the radiances.
+            self.__emit_solid_linear_rgb_color_element("horizon_radiance", horizon_radiance, scene.appleseed_sky.env_radiance_multiplier)
+            self.__emit_solid_linear_rgb_color_element("zenith_radiance", zenith_radiance, scene.appleseed_sky.env_radiance_multiplier)
 
             # Write the environment EDF.
             env_edf_name = "environment_edf"
             if scene.appleseed_sky.env_type == "gradient":
                 self.__open_element('environment_edf name="{0}" model="gradient_environment_edf"'.format(env_edf_name))
-                self.__emit_parameter("horizon_exitance", "horizon_exitance")
-                self.__emit_parameter("zenith_exitance", "zenith_exitance")
+                self.__emit_parameter("horizon_radiance", "horizon_radiance")
+                self.__emit_parameter("zenith_radiance", "zenith_radiance")
                 self.__close_element('environment_edf')
                 
             elif scene.appleseed_sky.env_type == "constant":
                 self.__open_element('environment_edf name="{0}" model="constant_environment_edf"'.format(env_edf_name))
-                self.__emit_parameter("radiance", "horizon_exitance")
+                self.__emit_parameter("radiance", "horizon_radiance")
                 self.__close_element('environment_edf')
                 
             elif scene.appleseed_sky.env_type == "constant_hemisphere":
                 self.__open_element('environment_edf name="{0}" model="constant_hemisphere_environment_edf"'.format(env_edf_name))
-                self.__emit_parameter("lower_hemi_radiance", "horizon_exitance")
-                self.__emit_parameter("upper_hemi_radiance", "zenith_exitance")
+                self.__emit_parameter("lower_hemi_radiance", "horizon_radiance")
+                self.__emit_parameter("upper_hemi_radiance", "zenith_radiance")
                 self.__close_element('environment_edf')
                 
             elif scene.appleseed_sky.env_type == "mirrorball_map":
@@ -1982,8 +1984,8 @@ class write_project_file( object):
                 else:
                     self.__warning("Mirror Ball environment texture is enabled, but no texture is assigned. Using gradient environment.")
                     self.__open_element('environment_edf name="{0}" model="gradient_environment_edf"'.format(env_edf_name))
-                    self.__emit_parameter("horizon_exitance", "horizon_exitance")
-                    self.__emit_parameter("zenith_exitance", "zenith_exitance")
+                    self.__emit_parameter("horizon_radiance", "horizon_radiance")
+                    self.__emit_parameter("zenith_radiance", "zenith_radiance")
                     self.__close_element('environment_edf')
                     
             elif scene.appleseed_sky.env_type == "latlong_map":
@@ -1996,8 +1998,8 @@ class write_project_file( object):
                 else:
                     self.__warning("Latitude-Longitude environment texture is enabled, but no texture is assigned. Using gradient environment.")
                     self.__open_element('environment_edf name="{0}" model="gradient_environment_edf"'.format(env_edf_name))
-                    self.__emit_parameter("horizon_exitance", "horizon_exitance")
-                    self.__emit_parameter("zenith_exitance", "zenith_exitance")
+                    self.__emit_parameter("horizon_radiance", "horizon_radiance")
+                    self.__emit_parameter("zenith_radiance", "zenith_radiance")
                     self.__close_element('environment_edf')
                     
             elif scene.appleseed_sky.env_type == "sunsky":
@@ -2442,36 +2444,36 @@ class write_project_file( object):
                 # Environment EDF.
                 if not sphere_a:
                     self._output_file.write("""
-        <color name="horizon_exitance">
+        <color name="horizon_radiance">
             <parameter name="color_space" value="linear_rgb" />
             <parameter name="multiplier" value="1.0" />
             <values>0.4 0.4 0.4</values>
         </color>
-        <color name="zenith_exitance">
+        <color name="zenith_radiance">
             <parameter name="color_space" value="linear_rgb" />
             <parameter name="multiplier" value="1.0" />
             <values>0.0 0.0 0.0</values>
         </color>
         <environment_edf name="environment_edf" model="constant_environment_edf">
-            <parameter name="radiance" value="horizon_exitance" />
+            <parameter name="radiance" value="horizon_radiance" />
         </environment_edf>
         <environment_shader name="environment_shader" model="edf_environment_shader">""")
                 
                 else:
                     self._output_file.write("""
-        <color name="horizon_exitance">
+        <color name="horizon_radiance">
             <parameter name="color_space" value="linear_rgb" />
             <parameter name="multiplier" value="1.0" />
             <values>0.8 0.77 0.7</values>
         </color>
-        <color name="zenith_exitance">
+        <color name="zenith_radiance">
             <parameter name="color_space" value="linear_rgb" />
             <parameter name="multiplier" value="1.0" />
             <values>0.5 0.5 0.9</values>
         </color>
         <environment_edf name="environment_edf" model="gradient_environment_edf">
-            <parameter name="horizon_radiance" value="horizon_exitance" />
-            <parameter name="zenith_radiance" value="zenith_exitance" />
+            <parameter name="horizon_radiance" value="horizon_radiance" />
+            <parameter name="zenith_radiance" value="zenith_radiance" />
         </environment_edf>
         <environment_shader name="environment_shader" model="edf_environment_shader">""")
                 
@@ -2520,14 +2522,14 @@ class write_project_file( object):
                 <parameter name="reflectance" value="material_preview_lamp_material|BSDF Layer 1_lambertian_reflectance" />
             </bsdf>
 
-            <color name="material_preview_lamp_material_edf_exitance">
+            <color name="material_preview_lamp_material_edf_radiance">
                 <parameter name="color_space" value="linear_rgb" />
                 <parameter name="multiplier" value="5.0" />
                 <values>0.8 0.8 0.8</values>
             </color>
             <edf name="material_preview_lamp_material_edf" model="diffuse_edf">
 
-                <parameter name="exitance" value="material_preview_lamp_material_edf_exitance" />
+                <parameter name="radiance" value="material_preview_lamp_material_edf_radiance" />
             </edf>
 
             <material name="material_preview_lamp_material" model="generic_material">

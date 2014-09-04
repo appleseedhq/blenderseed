@@ -210,7 +210,7 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     spec_btdf_refl_mult = bpy.props.FloatProperty(name = "Specular Reflectance Multiplier", description = "Specular BTDF reflectance multiplier", default = 1.0, min = 0.0, max = 1.0)
     
-    spec_btdf_transmittance = bpy.props.FloatVectorProperty(name = "Specular Transmittance", description = "Specular BTDF transmittance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
+    spec_btdf_transmittance = bpy.props.FloatVectorProperty(name = "Specular Transmittance", description = "Specular BTDF transmittance", default = (1, 1, 1), subtype = "COLOR", min = 0.0, max = 1.0)
     
     spec_btdf_use_trans_tex = bpy.props.BoolProperty(name= "Use Texture", description = "Use a texture to influence specular transmittance", default = False)
     
@@ -218,9 +218,9 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     spec_btdf_trans_mult = bpy.props.FloatProperty(name = "Specular Transmittance Multiplier", description = "Specular BTDF transmittance multiplier", default = 1.0, min = 0.0, max = 1.0)
     
-    spec_btdf_from_ior = bpy.props.FloatProperty(name = "From IOR", description = "From index of refraction", default = 1.0, min = 1.0, max = 4.01)
-    
-    spec_btdf_to_ior = bpy.props.FloatProperty(name = "To IOR", description = "To index of refraction", default = 1.0, min = 1.0, max = 4.01)
+    spec_btdf_from_ior = bpy.props.FloatProperty(name = "From IOR", description = "Outside index of refraction", default = 1.0, min = 1.0, max = 5)
+
+    spec_btdf_to_ior = bpy.props.FloatProperty(name = "To IOR", description = "Inside index of refraction", default = 1.0, min = 1.0, max = 5)
     
     spec_btdf_weight = bpy.props.FloatProperty(name = "Specular BTDF Blending Weight", description = "Blending weight of Specular BTDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0) 
 
