@@ -338,8 +338,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         mix_tex = bpy.data.textures[current_layer.disney_mix_tex]
                         box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
-                    # Base Coat.
-                    box.label("Base Coat:")
+                    # Base Color.
+                    box.label("Base Color:")
                     
                     split = box.split(percentage = 0.65)
                     col = split.column()
