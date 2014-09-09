@@ -34,7 +34,7 @@ from . import world
 from . import camera
 from . import objects
 from . import materials
-from . import particles
+#from . import particles
 from . import lamps
 
 import bl_ui.properties_texture as properties_texture
@@ -83,7 +83,7 @@ def register():
     materials.register()
     camera.register()
     objects.register()
-    particles.register()
+#    particles.register()
     lamps.register()
 
 def unregister():
@@ -94,5 +94,5 @@ def unregister():
     materials.unregister()
     camera.unregister()
     objects.unregister()
-    particles.unregister()
+#    particles.unregister()
     lamps.unregister()

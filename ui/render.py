@@ -79,7 +79,7 @@ class AppleseedRenderSettingsPanel( bpy.types.Panel, AppleseedRenderPanelBase):
         row.prop( asr_scene_props, "generate_mesh_files")
         if asr_scene_props.generate_mesh_files:
             row.prop( asr_scene_props, "export_mode")
-            layout.prop( asr_scene_props, "export_hair")
+#            layout.prop( asr_scene_props, "export_hair")
             
 class AppleseedSamplingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
