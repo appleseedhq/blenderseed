@@ -355,6 +355,32 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     
                     box.separator()
 
+                    # Subsurface.
+                    split = box.split(percentage = 0.65)
+                    col = split.column()
+                    col.prop(current_layer, "disney_subsurface")
+                    if current_layer.disney_use_subsurface_tex:
+                        col.prop_search(current_layer, "disney_subsurface_tex", material, "texture_slots", text = "")
+                    
+                    col = split.column()
+                    col.prop(current_layer, "disney_use_subsurface_tex", text = "Use Texture", toggle = True)
+                    if current_layer.disney_subsurface_tex != '' and current_layer.disney_use_subsurface_tex:
+                        subsurface_tex = bpy.data.textures[current_layer.disney_subsurface_tex]
+                        box.prop(subsurface_tex.image.colorspace_settings, "name", text = "Color Space")
+
+                    # Metallic.
+                    split = box.split(percentage = 0.65)
+                    col = split.column()
+                    col.prop(current_layer, "disney_metallic")
+                    if current_layer.disney_use_metallic_tex:
+                        col.prop_search(current_layer, "disney_metallic_tex", material, "texture_slots", text = "")
+                    
+                    col = split.column()
+                    col.prop(current_layer, "disney_use_metallic_tex", text = "Use Texture", toggle = True)
+                    if current_layer.disney_metallic_tex != '' and current_layer.disney_use_metallic_tex:
+                        metal_tex = bpy.data.textures[current_layer.disney_metallic_tex]
+                        box.prop(metal_tex.image.colorspace_settings, "name", text = "Color Space")
+
                     # Specular.
                     split = box.split(percentage = 0.65)
                     col = split.column()
@@ -381,18 +407,18 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         spec_tint_tex = bpy.data.textures[current_layer.disney_spec_tint_tex]
                         box.prop(spec_tint_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Metallic.
+                    # Anisotropy.
                     split = box.split(percentage = 0.65)
                     col = split.column()
-                    col.prop(current_layer, "disney_metallic")
-                    if current_layer.disney_use_metallic_tex:
-                        col.prop_search(current_layer, "disney_metallic_tex", material, "texture_slots", text = "")
+                    col.prop(current_layer, "disney_aniso")
+                    if current_layer.disney_use_aniso_tex:
+                        col.prop_search(current_layer, "disney_aniso_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_metallic_tex", text = "Use Texture", toggle = True)
-                    if current_layer.disney_metallic_tex != '' and current_layer.disney_use_metallic_tex:
-                        metal_tex = bpy.data.textures[current_layer.disney_metallic_tex]
-                        box.prop(metal_tex.image.colorspace_settings, "name", text = "Color Space")
+                    col.prop(current_layer, "disney_use_aniso_tex", text = "Use Texture", toggle = True)
+                    if current_layer.disney_aniso_tex != '' and current_layer.disney_use_aniso_tex:
+                        aniso_tex = bpy.data.textures[current_layer.disney_aniso_tex]
+                        box.prop(aniso_tex.image.colorspace_settings, "name", text = "Color Space")
 
                     # Roughness.
                     split = box.split(percentage = 0.65)
@@ -406,45 +432,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     if current_layer.disney_roughness_tex != '' and current_layer.disney_use_roughness_tex:
                         rough_tex = bpy.data.textures[current_layer.disney_roughness_tex]
                         box.prop(rough_tex.image.colorspace_settings, "name", text = "Color Space")
-
-                    # Anisotropy.
-                    split = box.split(percentage = 0.65)
-                    col = split.column()
-                    col.prop(current_layer, "disney_aniso")
-                    if current_layer.disney_use_aniso_tex:
-                        col.prop_search(current_layer, "disney_aniso_tex", material, "texture_slots", text = "")
-                    
-                    col = split.column()
-                    col.prop(current_layer, "disney_use_aniso_tex", text = "Use Texture", toggle = True)
-                    if current_layer.disney_aniso_tex != '' and current_layer.disney_use_aniso_tex:
-                        aniso_tex = bpy.data.textures[current_layer.disney_aniso_tex]
-                        box.prop(aniso_tex.image.colorspace_settings, "name", text = "Color Space")
-                        
-                    # Clear Coat.
-                    split = box.split(percentage = 0.65)
-                    col = split.column()
-                    col.prop(current_layer, "disney_clearcoat")
-                    if current_layer.disney_use_clearcoat_tex:
-                        col.prop_search(current_layer, "disney_clearcoat_tex", material, "texture_slots", text = "")
-                    
-                    col = split.column()
-                    col.prop(current_layer, "disney_use_clearcoat_tex", text = "Use Texture", toggle = True)
-                    if current_layer.disney_clearcoat_tex != '' and current_layer.disney_use_clearcoat_tex:
-                        clearcoat_tex = bpy.data.textures[current_layer.disney_clearcoat_tex]
-                        box.prop(clearcoat_tex.image.colorspace_settings, "name", text = "Color Space")
-
-                    # Clear Coat Gloss.
-                    split = box.split(percentage = 0.65)
-                    col = split.column()
-                    col.prop(current_layer, "disney_clearcoat_gloss")
-                    if current_layer.disney_use_clearcoat_gloss_tex:
-                        col.prop_search(current_layer, "disney_clearcoat_gloss_tex", material, "texture_slots", text = "")
-                    
-                    col = split.column()
-                    col.prop(current_layer, "disney_use_clearcoat_gloss_tex", text = "Use Texture", toggle = True)
-                    if current_layer.disney_clearcoat_gloss_tex != '' and current_layer.disney_use_clearcoat_gloss_tex:
-                        clearcoat_gloss_tex = bpy.data.textures[current_layer.disney_clearcoat_gloss_tex]
-                        box.prop(clearcoat_gloss_tex.image.colorspace_settings, "name", text = "Color Space")
 
                     # Sheen.
                     split = box.split(percentage = 0.65)
@@ -471,21 +458,34 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     if current_layer.disney_sheen_tint_tex != '' and current_layer.disney_use_sheen_tint_tex:
                         sheen_tint_tex = bpy.data.textures[current_layer.disney_sheen_tint_tex]
                         box.prop(sheen_tint_tex.image.colorspace_settings, "name", text = "Color Space")
-
-                    # Subsurface.
+ 
+                    # Clear Coat.
                     split = box.split(percentage = 0.65)
                     col = split.column()
-                    col.prop(current_layer, "disney_subsurface")
-                    if current_layer.disney_use_subsurface_tex:
-                        col.prop_search(current_layer, "disney_subsurface_tex", material, "texture_slots", text = "")
+                    col.prop(current_layer, "disney_clearcoat")
+                    if current_layer.disney_use_clearcoat_tex:
+                        col.prop_search(current_layer, "disney_clearcoat_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_subsurface_tex", text = "Use Texture", toggle = True)
-                    if current_layer.disney_subsurface_tex != '' and current_layer.disney_use_subsurface_tex:
-                        subsurface_tex = bpy.data.textures[current_layer.disney_subsurface_tex]
-                        box.prop(subsurface_tex.image.colorspace_settings, "name", text = "Color Space")
+                    col.prop(current_layer, "disney_use_clearcoat_tex", text = "Use Texture", toggle = True)
+                    if current_layer.disney_clearcoat_tex != '' and current_layer.disney_use_clearcoat_tex:
+                        clearcoat_tex = bpy.data.textures[current_layer.disney_clearcoat_tex]
+                        box.prop(clearcoat_tex.image.colorspace_settings, "name", text = "Color Space")
+
+                    # Clear Coat Gloss.
+                    split = box.split(percentage = 0.65)
+                    col = split.column()
+                    col.prop(current_layer, "disney_clearcoat_gloss")
+                    if current_layer.disney_use_clearcoat_gloss_tex:
+                        col.prop_search(current_layer, "disney_clearcoat_gloss_tex", material, "texture_slots", text = "")
                     
-                #-------------------------------------------------    
+                    col = split.column()
+                    col.prop(current_layer, "disney_use_clearcoat_gloss_tex", text = "Use Texture", toggle = True)
+                    if current_layer.disney_clearcoat_gloss_tex != '' and current_layer.disney_use_clearcoat_gloss_tex:
+                        clearcoat_gloss_tex = bpy.data.textures[current_layer.disney_clearcoat_gloss_tex]
+                        box.prop(clearcoat_gloss_tex.image.colorspace_settings, "name", text = "Color Space")
+
+                #-------------------------------------------------
                 #Kelemen BRDF layout    
                 elif current_layer.bsdf_type == "kelemen_brdf":
                     box = layout.box()

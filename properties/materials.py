@@ -229,13 +229,13 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     spec_btdf_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
     #---------------------------------
 
-    disney_base = bpy.props.FloatVectorProperty(name = "Base Coat", description = "Base coat color", default = (0.8, 0.8, 0.8), subtype = 'COLOR', min = 0.0, max = 1.0)
+    disney_base = bpy.props.FloatVectorProperty(name = "Base Coat", description = "Base coat color", default = (0.5, 0.5, 0.5), subtype = 'COLOR', min = 0.0, max = 1.0)
 
     disney_use_base_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence base coat color", default = False)
 
     disney_base_tex = bpy.props.StringProperty( name = "", description = "Texture to influence base coat color", default = "")
     
-    disney_aniso = bpy.props.FloatProperty( name = "Anisotropic", description = "Anisotropy", default = 0, min = 0, soft_max = 1.0)
+    disney_aniso = bpy.props.FloatProperty( name = "Anisotropic", description = "Anisotropic", default = 0, min = 0, soft_max = 1.0)
 
     disney_use_aniso_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence anisotropy", default = False)
 
@@ -259,7 +259,7 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
 
     disney_metallic_tex = bpy.props.StringProperty( name = "", description = "Texture to influence metalness", default = "")
     
-    disney_roughness = bpy.props.FloatProperty( name = "Roughness", description = "Specular / metallic roughness", default = 0.3, min = 0, soft_max = 1.0)
+    disney_roughness = bpy.props.FloatProperty( name = "Roughness", description = "Specular / metallic roughness", default = 0.5, min = 0, soft_max = 1.0)
 
     disney_use_roughness_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence roughness", default = False)
 
@@ -271,13 +271,13 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
 
     disney_sheen_tex = bpy.props.StringProperty( name = "", description = "Texture to influence sheen", default = "")
     
-    disney_sheen_tint = bpy.props.FloatProperty( name = "Sheen Tint", description = "Sheen tint", default = 0, min = 0, soft_max = 1.0)
+    disney_sheen_tint = bpy.props.FloatProperty( name = "Sheen Tint", description = "Sheen tint", default = 0.5, min = 0, soft_max = 1.0)
 
     disney_use_sheen_tint_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence sheen tint", default = False)
 
     disney_sheen_tint_tex = bpy.props.StringProperty( name = "", description = "Texture to influence sheen tint", default = "")
     
-    disney_spec = bpy.props.FloatProperty( name = "Specular", description = "Specular", default = 0, min = 0, soft_max = 1.0)
+    disney_spec = bpy.props.FloatProperty( name = "Specular", description = "Specular", default = 0.5, min = 0, soft_max = 1.0)
 
     disney_use_spec_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence specular", default = False)
 
