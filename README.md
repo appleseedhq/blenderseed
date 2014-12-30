@@ -1,8 +1,10 @@
 ![](https://dl.dropboxusercontent.com/u/28450367/blenderseed_screens/blenderseed.png)  
-# Welcome to the home of **blenderseed** on GitHub!  
 
-[Get blenderseed for your OS](https://github.com/appleseedhq/blenderseed/releases)  
-[Installation Instructions](https://github.com/appleseedhq/blenderseed/wiki/Installation)
+blenderseed
+===========
+
+* [Get blenderseed for your OS](https://github.com/appleseedhq/blenderseed/releases)  
+* [Installation Instructions](https://github.com/appleseedhq/blenderseed/wiki/Installation)
 
 **blenderseed** is a Blender-to-[appleseed](http://appleseedhq.net) exporter.  **blenderseed** includes support for the following features of appleseed:  
 * Pinhole, thin lens (supports physically correct depth of field), and spherical camera models
