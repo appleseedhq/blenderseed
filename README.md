@@ -1,7 +1,7 @@
-![](https://dl.dropboxusercontent.com/u/28450367/blenderseed_screens/blenderseed.png)  
-
 blenderseed
 ===========
+
+![](https://dl.dropboxusercontent.com/u/28450367/blenderseed_screens/blenderseed.png)  
 
 * [Get blenderseed for your OS](https://github.com/appleseedhq/blenderseed/releases)  
 * [Installation Instructions](https://github.com/appleseedhq/blenderseed/wiki/Installation)
@@ -27,4 +27,4 @@ blenderseed
 * Selective geometry export (for faster re-export and re-rendering of scenes)
 * Material preview rendering
 
-Note that at the time of this writing only Blender 2.71 is supported, and only 64-bit operating systems are supported by compiled versions of the addon (Windows, OSX and Linux).  
+Note that at the time of this writing only Blender 2.71 is supported, and only 64-bit operating systems are supported by compiled versions of the addon (Windows, OS X and Linux).  
