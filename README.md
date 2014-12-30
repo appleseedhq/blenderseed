@@ -3,6 +3,7 @@ blenderseed
 
 ![](https://dl.dropboxusercontent.com/u/28450367/blenderseed_screens/blenderseed.png)  
 
+Quick Links:
 * [Get blenderseed for your OS](https://github.com/appleseedhq/blenderseed/releases)  
 * [Installation Instructions](https://github.com/appleseedhq/blenderseed/wiki/Installation)
 
