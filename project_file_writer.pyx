@@ -1720,9 +1720,9 @@ class write_project_file( object):
             filepath = texture
 
             if texture.endswith('.exr'):
-                color_space = 'srgb'
-            else:
                 color_space = 'linear_rgb'
+            else:
+                color_space = 'srgb'
         elif node is not None:
             texture_name = node.get_node_name()
             filepath = util.realpath( node.tex_path)
