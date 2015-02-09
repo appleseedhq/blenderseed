@@ -163,7 +163,7 @@ def update_scene( engine, data, scene):
 def render_scene( engine, scene):
     # Write project file and export meshes.
     bpy.ops.appleseed.export()
-    DELAY = 1.0
+    DELAY = 1.0 # seconds
 
     if scene.appleseed.project_path == '':
         engine.report( {'INFO'}, "No project path has been specified!")
@@ -229,6 +229,10 @@ def render_scene( engine, scene):
             '--resolution', str(width), str(height),
             '--window', str(x), str(y), str(endX), str(endY))
 
+    # Remove previous renders.
+    if os.path.exists( img_file):
+        os.remove( img_file)
+
     # Launch appleseed.cli.
     process = subprocess.Popen( cmd, cwd=as_bin_path, env = os.environ.copy())
         
@@ -280,9 +284,9 @@ def render_scene( engine, scene):
             # check if the file updated
             new_size = os.path.getsize( img_file)
 
-            #if new_size != prev_size:
-            update_image()
-            #    prev_size = new_size
+            if new_size != prev_size:
+                update_image()
+                prev_size = new_size
 
             time.sleep( DELAY)
     
