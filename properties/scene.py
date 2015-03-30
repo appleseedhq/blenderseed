@@ -63,16 +63,6 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
         cls.selected_camera = bpy.props.EnumProperty( name="Camera",
                                              description="Select the camera to export",
                                              items=camera_enumerator)
-
-        cls.display_mode = bpy.props.EnumProperty(  name = "Display",
-                                            description = "Select where rendered images will be displayed",
-                                            items=(( 'NONE', "Keep UI", ""),
-                                                   ( 'WINDOW', "New Window", ""),
-                                                   ( 'AREA', "Image Editor", ""),
-                                                   ( 'SCREEN', "Full Screen", ""),
-                                                   ( 'STUDIO', "Appleseed Studio", "")),
-                                            default = 'AREA')
-
         
         cls.studio_rendering_mode = bpy.props.EnumProperty( name = "Mode",
                                             description = "Rendering mode to be used after launching appleseed.studio",
@@ -87,12 +77,6 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             default = threads, 
                                             min = 1, 
                                             max = max_threads)
-
-        cls.refresh_time = bpy.props.FloatProperty( name = "Refresh Time", 
-                                            description = "Refresh rate of the rendered image into the image editor (in seconds)", 
-                                            default = 1.0, 
-                                            min = 0.1, 
-                                            max = 30)
 
         cls.generate_mesh_files = bpy.props.BoolProperty( name="Export Geometry",
                                             description = "Write geometry to disk as .obj files",
@@ -109,13 +93,6 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
         cls.export_hair = bpy.props.BoolProperty( name = "Export Hair", 
                                         description = "Export hair particle systems as renderable geometry", 
                                         default = False)
-                                        
-        cls.img_extension = bpy.props.EnumProperty( name = "Image Format", 
-                                            description = "File format of rendered image", 
-                                            items = [( ".png", "PNG", "PNG: Output image in .png format"),
-                                            ( ".exr", "EXR", "EXR: Output image in .exr format")],
-                                            default = ".png")
-        
         # Sampling.
         cls.decorrelate_pixels = bpy.props.BoolProperty( name = "Decorrelate Pixels", description = '', default = True)
         

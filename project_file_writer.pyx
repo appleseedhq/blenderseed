@@ -1718,7 +1718,11 @@ class write_project_file( object):
             # Assume the path ends with '.png' or '.exr'.
             texture_name = texture.split( util.sep)[-1][:-4]
             filepath = texture
-            color_space = 'srgb'
+
+            if texture.endswith('.exr'):
+                color_space = 'linear_rgb'
+            else:
+                color_space = 'srgb'
         elif node is not None:
             texture_name = node.get_node_name()
             filepath = util.realpath( node.tex_path)
@@ -2161,7 +2165,7 @@ class write_project_file( object):
         self.__open_element("frame name=\"beauty\"")
         self.__emit_parameter("camera", "camera" if camera is None else camera.name)
         self.__emit_parameter("resolution", "{0} {1}".format(width, height))
-        self.__emit_custom_prop(scene, "color_space", "srgb")
+        self.__emit_custom_prop(scene, "color_space", "linear_rgb")
         if scene.render.use_border:
             X, Y, endX, endY = self.__get_border_limits(scene, width, height)
             self.__emit_parameter("crop_window", "{0} {1} {2} {3}".format(X, Y, endX, endY))

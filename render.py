@@ -163,7 +163,7 @@ def update_scene( engine, data, scene):
 def render_scene( engine, scene):
     # Write project file and export meshes.
     bpy.ops.appleseed.export()
-    DELAY = scene.appleseed.refresh_time
+    DELAY = 1.0 # seconds
 
     if scene.appleseed.project_path == '':
         engine.report( {'INFO'}, "No project path has been specified!")
@@ -179,7 +179,7 @@ def render_scene( engine, scene):
             return            
     render_output = os.path.join( project_dir, "render")
     img_file = os.path.join( render_output,  
-                           ( scene.name + '_' + str( scene.frame_current) + scene.appleseed.img_extension))
+                           ( scene.name + '_' + str( scene.frame_current) + '.exr'))
     
     # Make the render directory, if it doesn't exist yet
     if not os.path.exists( render_output):
@@ -200,7 +200,7 @@ def render_scene( engine, scene):
     if as_bin_path == '':
         engine.report({'INFO'}, "The path to appleseed executable has not been specified. Set the path in the addon user preferences.")
         return
-    appleseed_exe = os.path.join( as_bin_path, ("appleseed.studio" if scene.appleseed.display_mode == 'STUDIO' else "appleseed.cli"))
+    appleseed_exe = os.path.join( as_bin_path, "appleseed.cli")
     
     # If running Linux/OSX, add the binary path to environment.
     if sys.platform != "win32":
@@ -211,30 +211,69 @@ def render_scene( engine, scene):
     height = int(scene.render.resolution_y * scale)
     
     # Start the appleseed.cli executable.
-    if scene.appleseed.display_mode != "STUDIO":      
-        scene.render.display_mode = scene.appleseed.display_mode  
-        # Border rendering (rectangle = resolution).
-        x, y, endX, endY = 0, 0, width, height
-        if scene.render.use_border:
-            x = int(scene.render.border_min_x * width)
-            y = height - int(scene.render.border_max_y * height)
-            endX = int(scene.render.border_max_x * width)    
-            endY = height - int(scene.render.border_min_y * height)
 
-        cmd = ( appleseed_exe,
-                filename, 
-                '-o', img_file, 
-                '--threads', str(threads),
-                '--continuous-saving',
-                '--message-verbosity', 'fatal',
-                '--resolution', str(width), str(height),
-                '--window', str(x), str(y), str(endX), str(endY))
+    # Border rendering (rectangle = resolution).
+    x, y, endX, endY = 0, 0, width, height
+    if scene.render.use_border:
+        x = int(scene.render.border_min_x * width)
+        y = height - int(scene.render.border_max_y * height)
+        endX = int(scene.render.border_max_x * width)    
+        endY = height - int(scene.render.border_min_y * height)
 
-        # Launch appleseed.cli.
-        process = subprocess.Popen( cmd, cwd=as_bin_path, env = os.environ.copy())
+    cmd = ( appleseed_exe,
+            filename, 
+            '-o', img_file, 
+            '--threads', str(threads),
+            '--continuous-saving',
+            '--message-verbosity', 'fatal',
+            '--resolution', str(width), str(height),
+            '--window', str(x), str(y), str(endX), str(endY))
+
+    # Remove previous renders.
+    if os.path.exists( img_file):
+        os.remove( img_file)
+
+    # Launch appleseed.cli.
+    process = subprocess.Popen( cmd, cwd=as_bin_path, env = os.environ.copy())
         
-        # Wait for the rendered image file to be created
-        while not os.path.exists( img_file):
+    # Wait for the rendered image file to be created
+    while not os.path.exists( img_file):
+        if engine.test_break():
+            try:
+                process.kill()
+            except:
+                pass
+            break
+
+        if process.poll() != None:
+            engine.update_stats( "", "Appleseed: Error")
+            break
+
+        time.sleep( DELAY)
+
+    if os.path.exists( img_file):
+        engine.update_stats( "", "Appleseed: Rendering")
+
+        prev_size = -1
+
+        def update_image():
+            result = engine.begin_result( 0, 0, width, height)
+            lay = result.layers[0]
+            # it's possible the image wont load early on.
+            try:
+                lay.load_from_file( img_file)
+            except:
+                pass
+
+            engine.end_result( result)
+
+        # Update while rendering
+        while True:
+            if process.poll() != None:
+                update_image()
+                break
+
+            # user exit
             if engine.test_break():
                 try:
                     process.kill()
@@ -242,60 +281,14 @@ def render_scene( engine, scene):
                     pass
                 break
 
-            if process.poll() != None:
-                engine.update_stats( "", "Appleseed: Error")
-                break
+            # check if the file updated
+            new_size = os.path.getsize( img_file)
+
+            if new_size != prev_size:
+                update_image()
+                prev_size = new_size
 
             time.sleep( DELAY)
-
-        if os.path.exists( img_file):
-            engine.update_stats( "", "Appleseed: Rendering")
-
-            prev_size = -1
-
-            def update_image():
-                result = engine.begin_result( 0, 0, width, height)
-                lay = result.layers[0]
-                # it's possible the image wont load early on.
-                try:
-                    lay.load_from_file( img_file)
-                except:
-                    pass
-
-                engine.end_result( result)
-
-            # Update while rendering
-            while True:
-                if process.poll() != None:
-                    update_image()
-                    break
-
-                # user exit
-                if engine.test_break():
-                    try:
-                        process.kill()
-                    except:
-                        pass
-                    break
-
-                # check if the file updated
-                new_size = os.path.getsize( img_file)
-
-                #if new_size != prev_size:
-                update_image()
-                #    prev_size = new_size
-
-                time.sleep( DELAY)
-
-    else:
-        # If rendering with GUI, we have two options
-        if scene.appleseed.studio_rendering_mode == "PROGRESSIVE":
-            cmd = (appleseed_exe, filename, "--render", "interactive")
-        else:
-            cmd = (appleseed_exe, filename, "--render", "final")
-
-        # Launch appleseed.studio.
-        process = subprocess.Popen( cmd, cwd=as_bin_path, env = os.environ.copy())
     
 
 class RenderAppleseed( bpy.types.RenderEngine):
