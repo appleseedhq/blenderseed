@@ -28,9 +28,6 @@
 
 import bpy
 
-#---------------------------------------------
-# Node tree selector UI.
-#---------------------------------------------
 def node_tree_selector_draw( layout, mat, output_type):
 	try:
 		layout.prop_search( mat.appleseed, "node_tree", bpy.data, "node_groups")
@@ -61,9 +58,6 @@ def find_node( material, nodetype):
 			return node
 	return None
 	
-#---------------------------------------------
-# appleseed material preview panel.
-#---------------------------------------------
 class AppleseedMaterialPreview(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -84,10 +78,7 @@ class AppleseedMaterialPreview(bpy.types.Panel):
 
         layout.template_preview(context.material, show_buttons = True)
         layout.prop(asr_mat, "preview_quality")
-
-#---------------------------------------------
-# Material BSDF Slots.
-#---------------------------------------------        
+    
 class MATERIAL_UL_BSDF_slots(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         BSDF = item
@@ -96,9 +87,6 @@ class MATERIAL_UL_BSDF_slots(bpy.types.UIList):
         if 'DEFAULT' in self.layout_type:            
             layout.label(text = BSDF.name + "  |  " + bsdf_type_name, translate=False, icon_value=icon)
 
-#---------------------------------------------
-# Material shading panel.
-#---------------------------------------------
 class AppleseedMaterialShading(bpy.types.Panel):
     bl_label = 'Surface Shader'
     bl_space_type = "PROPERTIES"
@@ -122,7 +110,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
             node_tree = bpy.data.node_groups[ asr_mat.node_tree]
             layout.prop_search( asr_mat, "node_output", node_tree, "nodes")
 
-        if asr_mat.node_tree == '':        
+        if asr_mat.node_tree == '':
+           
             row = layout.row()
             row.template_list("MATERIAL_UL_BSDF_slots", "appleseed_material_layers", asr_mat, "layers", asr_mat, "layer_index", rows=1, maxrows = 16, type = "DEFAULT")
             
@@ -136,12 +125,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
                 layout.prop(current_layer, "bsdf_type")
                 layout.separator()
 
-                # layout.label("BSDF Layer Settings:")
-                
-                #Lambertian BRDF layout
                 if current_layer.bsdf_type == "lambertian_brdf":
 
-                    # Weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "lambertian_weight", text = "Layer")
@@ -153,8 +138,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     if current_layer.lambertian_mix_tex != '' and current_layer.lambertian_use_tex:
                         mix_tex = bpy.data.textures[current_layer.lambertian_mix_tex]
                         layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
-
-                    # Reflectance
+                    
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "lambertian_reflectance", text = "")
@@ -168,12 +152,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         layout.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
                     layout.prop(current_layer, "lambertian_multiplier")
                 
-                #-------------------------------------------------
-		
-                #Oren-Nayar BRDF layout
                 if current_layer.bsdf_type == "orennayar_brdf":
 
-                    # Weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "orennayar_weight", text = "Layer")
@@ -185,8 +165,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     if current_layer.orennayar_mix_tex != '' and current_layer.orennayar_use_tex:
                         mix_tex = bpy.data.textures[current_layer.orennayar_mix_tex]
                         layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
-
-                    # Reflectance
+                    
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "orennayar_reflectance", text = "")
@@ -201,7 +180,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         layout.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
                     layout.prop(current_layer, "orennayar_multiplier")
 
-                    # Roughness
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "orennayar_roughness")
@@ -213,13 +191,9 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     if current_layer.orennayar_rough_tex != '' and current_layer.orennayar_use_rough_tex:
                         rough_tex = bpy.data.textures[current_layer.orennayar_diffuse_tex]
                         layout.prop(rough_tex.image.colorspace_settings, "name", text = "Color Space")
-                    
-                #-------------------------------------------------
-		
-                #Ashikhmin-Shirley BRDF layout    
+                     
                 elif current_layer.bsdf_type == "ashikhmin_brdf":
 
-                    # Weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "ashikhmin_weight", text = "Layer")
@@ -232,7 +206,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         mix_tex = bpy.data.textures[current_layer.ashikhmin_mix_tex]
                         layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
-                    # Reflectance
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "ashikhmin_reflectance", text = "")
@@ -266,12 +239,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     layout.prop(current_layer, "ashikhmin_shininess_u")
                     layout.prop(current_layer, "ashikhmin_shininess_v")
                 
-                #-------------------------------------------------
-		
-                #Diffuse BTDF layout
                 elif current_layer.bsdf_type == "diffuse_btdf":
-			
-		    # Weight
+					
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "transmittance_weight", text = "Layer")
@@ -284,38 +253,32 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         mix_tex = bpy.data.textures[current_layer.transmittance_mix_tex]
                         layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
-                    # Reflectance
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "transmittance_color", text = "")
                     if current_layer.transmittance_use_diff_tex:    
                         layout.prop_search(current_layer, "transmittance_diff_tex", material, "texture_slots", text = "")
-			
+						
                     col = split.column()
                     col.prop(current_layer, "transmittance_use_diff_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)            
                     if current_layer.transmittance_diff_tex!= '' and current_layer.transmittance_use_diff_tex:
                         diffuse_tex = bpy.data.textures[current_layer.transmittance_diff_tex]
                         layout.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Transmittance
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "transmittance_multiplier", text = "Transmittance")
                     if current_layer.transmittance_use_mult_tex:    
                         layout.prop_search(current_layer, "transmittance_mult_tex", material, "texture_slots", text = "")
-			
+						
                     col = split.column()
                     col.prop(current_layer, "transmittance_use_mult_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)            
                     if current_layer.transmittance_mult_tex!= '' and current_layer.transmittance_use_mult_tex:
                         mult_tex = bpy.data.textures[current_layer.transmittance_mult_tex]
                         layout.prop(mult_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                #-------------------------------------------------
-		
-                #Disney BRDF layout
                 elif current_layer.bsdf_type == "disney_brdf":
-
-                    # Weight
+					
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_weight", text = "Layer")
@@ -328,7 +291,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         mix_tex = bpy.data.textures[current_layer.disney_mix_tex]
                         layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
-                    # Base Color
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_base", text = "")
@@ -341,7 +303,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         base_tex = bpy.data.textures[current_layer.disney_base_tex]
                         layout.prop(base_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Subsurface
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_subsurface")
@@ -354,7 +315,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         subsurface_tex = bpy.data.textures[current_layer.disney_subsurface_tex]
                         layout.prop(subsurface_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Metallic
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_metallic")
@@ -367,7 +327,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         metal_tex = bpy.data.textures[current_layer.disney_metallic_tex]
                         layout.prop(metal_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Specular
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_spec")
@@ -380,7 +339,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         spec_tex = bpy.data.textures[current_layer.disney_spec_tex]
                         layout.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Specular Tint
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_spec_tint")
@@ -393,7 +351,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         spec_tint_tex = bpy.data.textures[current_layer.disney_spec_tint_tex]
                         layout.prop(spec_tint_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Anisotropy
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_aniso")
@@ -406,7 +363,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         aniso_tex = bpy.data.textures[current_layer.disney_aniso_tex]
                         layout.prop(aniso_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Roughness
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_roughness")
@@ -419,7 +375,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         rough_tex = bpy.data.textures[current_layer.disney_roughness_tex]
                         layout.prop(rough_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Sheen
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_sheen")
@@ -432,7 +387,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         sheen_tex = bpy.data.textures[current_layer.disney_sheen_tex]
                         layout.prop(sheen_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Sheen Tint
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_sheen_tint")
@@ -445,7 +399,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         sheen_tint_tex = bpy.data.textures[current_layer.disney_sheen_tint_tex]
                         layout.prop(sheen_tint_tex.image.colorspace_settings, "name", text = "Color Space")
  
-                    # Clear Coat
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_clearcoat")
@@ -458,7 +411,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         clearcoat_tex = bpy.data.textures[current_layer.disney_clearcoat_tex]
                         layout.prop(clearcoat_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Clear Coat Gloss
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_clearcoat_gloss")
@@ -471,12 +423,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         clearcoat_gloss_tex = bpy.data.textures[current_layer.disney_clearcoat_gloss_tex]
                         layout.prop(clearcoat_gloss_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                #-------------------------------------------------
-		
-                #Kelemen BRDF layout    
                 elif current_layer.bsdf_type == "kelemen_brdf":
 
-                    # Weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "kelemen_weight", text = "Layer")
@@ -489,7 +437,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         mix_tex = bpy.data.textures[current_layer.kelemen_mix_tex]
                         layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
-                    # Reflectance
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "kelemen_matte_reflectance", text = "")
@@ -504,7 +451,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     row = layout.row()
                     row.prop(current_layer, "kelemen_matte_multiplier")
                     
-                    # Specular Reflectance
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "kelemen_specular_reflectance", text = "")    
@@ -519,12 +465,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     layout.prop(current_layer, "kelemen_specular_multiplier")
                     layout.prop(current_layer, "kelemen_roughness")
                     
-                #-------------------------------------------------
-		
-                #Microfacet BRDF layout
                 elif current_layer.bsdf_type == "microfacet_brdf":
-
-                    # Weight
+					
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "microfacet_weight", text = "Layer")
@@ -537,7 +479,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         mix_tex = bpy.data.textures[current_layer.microfacet_mix_tex]
                         layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
-                    # Reflectance
                     layout.prop(current_layer, "microfacet_model", text= "Model")
                     
                     split = layout.split(percentage = 0.90)
@@ -552,7 +493,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         diff_tex = bpy.data.textures[current_layer.microfacet_diff_tex]
                         layout.prop(diff_tex.image.colorspace_settings, "name", text = "Color Space")
                     layout.prop(current_layer, "microfacet_multiplier")
-                    
+					
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "microfacet_mdf")
@@ -569,12 +510,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         
                     layout.prop(current_layer, "microfacet_fresnel")
                 
-                #-------------------------------------------------
-		
-                #Specular BRDF layout
                 elif current_layer.bsdf_type == "specular_brdf":
 
-                    # Weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "specular_weight", text = "Layer")
@@ -587,7 +524,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         mix_tex = bpy.data.textures[current_layer.specular_mix_tex]
                         layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
-                    # Reflectance
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "specular_reflectance", text = "")
@@ -600,13 +536,9 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         spec_tex = bpy.data.textures[current_layer.specular_gloss_tex]
                         layout.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
                     layout.prop(current_layer, "specular_multiplier")
-                
-                #----------------------------------------------
-		
-                # Specular BTDF
+                 
                 elif current_layer.bsdf_type == "specular_btdf":
 
-                    # Weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "spec_btdf_weight", text = "Layer")
@@ -619,7 +551,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         mix_tex = bpy.data.textures[current_layer.spec_btdf_mix_tex]
                         layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
-                    # Reflectance
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "spec_btdf_reflectance", text = "")
@@ -632,8 +563,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         spec_tex = bpy.data.textures[current_layer.spec_btdf_spec_tex]
                         layout.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
                     layout.prop(current_layer, "spec_btdf_refl_mult")
-                    
-                    # Transmittance Reflectance
+					
                     split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "spec_btdf_transmittance", text = "")
@@ -651,9 +581,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     row.prop(current_layer, "spec_btdf_from_ior")
                     row.prop(current_layer, "spec_btdf_to_ior")
             
-            # Alpha / Bump Map
             layout.separator()
-	
             split = layout.split(percentage = 0.50)
             col = split.column()
             col.prop(asr_mat, "material_use_bump_tex", text = "Bump Map", icon = "POTATO", toggle= True)
@@ -680,11 +608,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
                 col.prop(asr_mat, "material_alpha")
             layout.prop( asr_mat, "shade_alpha_cutouts")
 
-#---------------------------------------------
-# Material emission panel.
-#---------------------------------------------
 class AppleseedMatEmissionPanel(bpy.types.Panel):
-    bl_label = "Light Material"
+    bl_label = "Light Emission"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -710,19 +635,17 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         layout = self.layout
         material = context.object.active_material
         asr_mat = material.appleseed
-        
-	# Light Material
+                            
         col = layout.column()
         col.active = asr_mat.use_light_emission
+        col.prop(asr_mat, "light_emission", text = "Emission")
         col.prop(asr_mat, "light_color", text = "")
-        col.prop(asr_mat, "light_emission", text = "Radiance Multiplier")
-               
+        
         layout.active = asr_mat.use_light_emission
         row = layout.row(align=True)
+        row.prop( asr_mat, "light_near_start", text="Light Near")
+        row.prop( asr_mat, "importance_multiplier")
         layout.prop(asr_mat, "cast_indirect")
-        layout.prop( asr_mat, "importance_multiplier")
-        layout.prop( asr_mat, "light_near_start", text="Light Near Start")
-        
         
 def register():
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
@@ -738,4 +661,6 @@ def unregister():
     bpy.utils.unregister_class( MATERIAL_UL_BSDF_slots)
     bpy.utils.unregister_class( AppleseedMaterialShading)
     bpy.utils.unregister_class( AppleseedMatEmissionPanel)
+    
+
     
