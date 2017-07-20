@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ def node_tree_selector_draw( layout, mat, output_type):
 	node = find_node( mat, output_type)
 	if not node:
 		if mat.appleseed.node_tree == '':
-			layout.operator( 'appleseed.add_material_nodetree', icon='NODETREE')
+			layout.operator( 'appleseed.add_material_nodetree', text="Appleseed Node", icon='NODETREE')
 			return False
 	return True
     
@@ -100,7 +100,7 @@ class MATERIAL_UL_BSDF_slots(bpy.types.UIList):
 # Material shading panel.
 #---------------------------------------------
 class AppleseedMaterialShading(bpy.types.Panel):
-    bl_label = 'Surface Shading'
+    bl_label = 'Surface Shader'
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -122,16 +122,13 @@ class AppleseedMaterialShading(bpy.types.Panel):
             node_tree = bpy.data.node_groups[ asr_mat.node_tree]
             layout.prop_search( asr_mat, "node_output", node_tree, "nodes")
 
-        if asr_mat.node_tree == '':
-            layout.label("BSDF Layers:", icon = 'MATERIAL')
-
-           
+        if asr_mat.node_tree == '':        
             row = layout.row()
-            row.template_list("MATERIAL_UL_BSDF_slots", "appleseed_material_layers", asr_mat, "layers", asr_mat, "layer_index", maxrows = 16, type = "DEFAULT")
+            row.template_list("MATERIAL_UL_BSDF_slots", "appleseed_material_layers", asr_mat, "layers", asr_mat, "layer_index", rows=1, maxrows = 16, type = "DEFAULT")
             
             row = layout.row(align=True)
-            row.operator("appleseed.add_matlayer", icon = "ZOOMIN")
-            row.operator("appleseed.remove_matlayer", icon = "ZOOMOUT")
+            row.operator("appleseed.add_matlayer", text = "Add Layer", icon = "ZOOMIN")
+            row.operator("appleseed.remove_matlayer", text = "Remove", icon = "ZOOMOUT")
                     
             if asr_mat.layers:
                 current_layer = asr_mat.layers[asr_mat.layer_index]   
@@ -139,571 +136,555 @@ class AppleseedMaterialShading(bpy.types.Panel):
                 layout.prop(current_layer, "bsdf_type")
                 layout.separator()
 
-                layout.label("BSDF Layer Settings:")
+                # layout.label("BSDF Layer Settings:")
                 
                 #Lambertian BRDF layout
                 if current_layer.bsdf_type == "lambertian_brdf":
-                    box = layout.box()
 
                     # Weight
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "lambertian_weight", text = "Layer Weight")
+                    col.prop(current_layer, "lambertian_weight", text = "Layer")
                     if current_layer.lambertian_use_tex:
-                        col.prop_search( current_layer, "lambertian_mix_tex", material, "texture_slots")
+                        layout.prop_search( current_layer, "lambertian_mix_tex", material, "texture_slots")
 
                     col = split.column()
-                    col.prop( current_layer, "lambertian_use_tex", toggle = True)
+                    col.prop( current_layer, "lambertian_use_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.lambertian_mix_tex != '' and current_layer.lambertian_use_tex:
                         mix_tex = bpy.data.textures[current_layer.lambertian_mix_tex]
-                        box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
 
                     # Reflectance
-                    box.label("Lambertian Reflectance:")
-                    
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "lambertian_reflectance", text = "")
                     if current_layer.lambertian_use_diff_tex:    
-                        col.prop_search(current_layer, "lambertian_diffuse_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "lambertian_diffuse_tex", material, "texture_slots")
                     
                     col = split.column()
-                    col.prop(current_layer, "lambertian_use_diff_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "lambertian_use_diff_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.lambertian_diffuse_tex != '' and current_layer.lambertian_use_diff_tex:
                         diffuse_tex = bpy.data.textures[current_layer.lambertian_diffuse_tex]
-                        box.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
-                    box.prop(current_layer, "lambertian_multiplier")
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
+                    layout.prop(current_layer, "lambertian_multiplier")
                 
                 #-------------------------------------------------
+		
                 #Oren-Nayar BRDF layout
                 if current_layer.bsdf_type == "orennayar_brdf":
-                    box = layout.box()
 
                     # Weight
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "orennayar_weight", text = "Layer Weight")
+                    col.prop(current_layer, "orennayar_weight", text = "Layer")
                     if current_layer.orennayar_use_tex:
-                        col.prop_search( current_layer, "orennayar_mix_tex", material, "texture_slots")
+                        layout.prop_search( current_layer, "orennayar_mix_tex", material, "texture_slots")
 
                     col = split.column()
-                    col.prop( current_layer, "orennayar_use_tex", toggle = True)
+                    col.prop( current_layer, "orennayar_use_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.orennayar_mix_tex != '' and current_layer.orennayar_use_tex:
                         mix_tex = bpy.data.textures[current_layer.orennayar_mix_tex]
-                        box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
 
                     # Reflectance
-                    box.label("Oren-Nayar Reflectance:")
-                    
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "orennayar_reflectance", text = "")
 
                     if current_layer.orennayar_use_diff_tex:    
-                        col.prop_search(current_layer, "orennayar_diffuse_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "orennayar_diffuse_tex", material, "texture_slots")
                     
                     col = split.column()
-                    col.prop(current_layer, "orennayar_use_diff_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "orennayar_use_diff_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.orennayar_diffuse_tex != '' and current_layer.orennayar_use_diff_tex:
                         diffuse_tex = bpy.data.textures[current_layer.orennayar_diffuse_tex]
-                        box.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
-                    box.prop(current_layer, "orennayar_multiplier")
-
-                    box.separator()
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
+                    layout.prop(current_layer, "orennayar_multiplier")
 
                     # Roughness
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "orennayar_roughness")
                     if current_layer.orennayar_use_rough_tex:    
-                        col.prop_search(current_layer, "orennayar_rough_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "orennayar_rough_tex", material, "texture_slots")
                     
                     col = split.column()
-                    col.prop(current_layer, "orennayar_use_rough_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "orennayar_use_rough_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.orennayar_rough_tex != '' and current_layer.orennayar_use_rough_tex:
                         rough_tex = bpy.data.textures[current_layer.orennayar_diffuse_tex]
-                        box.prop(rough_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(rough_tex.image.colorspace_settings, "name", text = "Color Space")
                     
                 #-------------------------------------------------
+		
                 #Ashikhmin-Shirley BRDF layout    
                 elif current_layer.bsdf_type == "ashikhmin_brdf":
-                    box = layout.box()
 
                     # Weight
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "ashikhmin_weight", text = "Layer Weight")
+                    col.prop(current_layer, "ashikhmin_weight", text = "Layer")
                     if current_layer.ashikhmin_use_tex:
-                        col.prop_search( current_layer, "ashikhmin_mix_tex", material, "texture_slots")
+                        layout.prop_search( current_layer, "ashikhmin_mix_tex", material, "texture_slots")
 
                     col = split.column()
-                    col.prop( current_layer, "ashikhmin_use_tex", toggle = True)
+                    col.prop( current_layer, "ashikhmin_use_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.ashikhmin_mix_tex != '' and current_layer.ashikhmin_use_tex:
                         mix_tex = bpy.data.textures[current_layer.ashikhmin_mix_tex]
-                        box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
                     # Reflectance
-                    box.label("Diffuse Reflectance:")
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "ashikhmin_reflectance", text = "")
                     if current_layer.ashikhmin_use_diff_tex:
-                        col.prop_search(current_layer, "ashikhmin_diffuse_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "ashikhmin_diffuse_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "ashikhmin_use_diff_tex", text = "Use Texture", toggle = True)    
+                    col.prop(current_layer, "ashikhmin_use_diff_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)    
                     if current_layer.ashikhmin_diffuse_tex != '' and current_layer.ashikhmin_use_diff_tex:
                         diffuse_tex = bpy.data.textures[current_layer.ashikhmin_diffuse_tex]
-                        box.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
-                    row = box.row()
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
+                    row = layout.row()
                     row.prop(current_layer, "ashikhmin_multiplier")
                     
-                    box.label("Glossy Reflectance:")
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()    
                     col.prop(current_layer, "ashikhmin_glossy", text = "")
                     if current_layer.ashikhmin_use_gloss_tex:
-                        col.prop_search(current_layer, "ashikhmin_gloss_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "ashikhmin_gloss_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "ashikhmin_use_gloss_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "ashikhmin_use_gloss_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.ashikhmin_gloss_tex != '' and current_layer.ashikhmin_use_gloss_tex:
                         gloss_tex = bpy.data.textures[current_layer.ashikhmin_gloss_tex]
-                        box.prop(gloss_tex.image.colorspace_settings, "name", text = "Color Space")
-                    row = box.row()
+                        layout.prop(gloss_tex.image.colorspace_settings, "name", text = "Color Space")
+                    row = layout.row()
                     row.prop(current_layer, "ashikhmin_glossy_multiplier")
                     
-                    col = box.column()
+                    col = layout.column()
                     col.prop(current_layer, "ashikhmin_fresnel")
-                    row = box.row(align=True)
-                    row.prop(current_layer, "ashikhmin_shininess_u")
-                    row.prop(current_layer, "ashikhmin_shininess_v")
+                    layout.prop(current_layer, "ashikhmin_shininess_u")
+                    layout.prop(current_layer, "ashikhmin_shininess_v")
                 
                 #-------------------------------------------------
+		
                 #Diffuse BTDF layout
                 elif current_layer.bsdf_type == "diffuse_btdf":
-                    box = layout.box()
-                    # Weight
-                    split = box.split(percentage = 0.65)
+			
+		    # Weight
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "transmittance_weight", text = "Layer Weight")
+                    col.prop(current_layer, "transmittance_weight", text = "Layer")
                     if current_layer.transmittance_use_tex:
-                        col.prop_search( current_layer, "transmittance_mix_tex", material, "texture_slots")
+                        layout.prop_search( current_layer, "transmittance_mix_tex", material, "texture_slots")
 
                     col = split.column()
-                    col.prop( current_layer, "transmittance_use_tex", toggle = True)
+                    col.prop( current_layer, "transmittance_use_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.transmittance_mix_tex != '' and current_layer.transmittance_use_tex:
                         mix_tex = bpy.data.textures[current_layer.transmittance_mix_tex]
-                        box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
                     # Reflectance
-                    box.label("Transmittance Color:")
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "transmittance_color", text = "")
                     if current_layer.transmittance_use_diff_tex:    
-                        col.prop_search(current_layer, "transmittance_diff_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "transmittance_diff_tex", material, "texture_slots", text = "")
+			
                     col = split.column()
-                    col.prop(current_layer, "transmittance_use_diff_tex", text = "Use Texture", toggle = True)            
+                    col.prop(current_layer, "transmittance_use_diff_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)            
                     if current_layer.transmittance_diff_tex!= '' and current_layer.transmittance_use_diff_tex:
                         diffuse_tex = bpy.data.textures[current_layer.transmittance_diff_tex]
-                        box.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
 
                     # Transmittance
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "transmittance_multiplier", text = "Transmittance")
                     if current_layer.transmittance_use_mult_tex:    
-                        col.prop_search(current_layer, "transmittance_mult_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "transmittance_mult_tex", material, "texture_slots", text = "")
+			
                     col = split.column()
-                    col.prop(current_layer, "transmittance_use_mult_tex", text = "Use Texture", toggle = True)            
+                    col.prop(current_layer, "transmittance_use_mult_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)            
                     if current_layer.transmittance_mult_tex!= '' and current_layer.transmittance_use_mult_tex:
                         mult_tex = bpy.data.textures[current_layer.transmittance_mult_tex]
-                        box.prop(mult_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(mult_tex.image.colorspace_settings, "name", text = "Color Space")
 
                 #-------------------------------------------------
+		
                 #Disney BRDF layout
                 elif current_layer.bsdf_type == "disney_brdf":
-                    box = layout.box()
+
                     # Weight
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "disney_weight", text = "Layer Weight")
+                    col.prop(current_layer, "disney_weight", text = "Layer")
                     if current_layer.disney_use_tex:
-                        col.prop_search( current_layer, "disney_mix_tex", material, "texture_slots")
+                        layout.prop_search( current_layer, "disney_mix_tex", material, "texture_slots")
 
                     col = split.column()
-                    col.prop( current_layer, "disney_use_tex", toggle = True)
+                    col.prop( current_layer, "disney_use_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_mix_tex != '' and current_layer.disney_use_tex:
                         mix_tex = bpy.data.textures[current_layer.disney_mix_tex]
-                        box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
-                    # Base Color.
-                    box.label("Base Color:")
-                    
-                    split = box.split(percentage = 0.65)
+                    # Base Color
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_base", text = "")
                     if current_layer.disney_use_base_tex:
-                        col.prop_search(current_layer, "disney_base_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_base_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_base_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_base_tex", text = "", icon ="TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_base_tex != '' and current_layer.disney_use_base_tex:
                         base_tex = bpy.data.textures[current_layer.disney_base_tex]
-                        box.prop(base_tex.image.colorspace_settings, "name", text = "Color Space")
-                    
-                    box.separator()
+                        layout.prop(base_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Subsurface.
-                    split = box.split(percentage = 0.65)
+                    # Subsurface
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_subsurface")
                     if current_layer.disney_use_subsurface_tex:
-                        col.prop_search(current_layer, "disney_subsurface_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_subsurface_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_subsurface_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_subsurface_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_subsurface_tex != '' and current_layer.disney_use_subsurface_tex:
                         subsurface_tex = bpy.data.textures[current_layer.disney_subsurface_tex]
-                        box.prop(subsurface_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(subsurface_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Metallic.
-                    split = box.split(percentage = 0.65)
+                    # Metallic
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_metallic")
                     if current_layer.disney_use_metallic_tex:
-                        col.prop_search(current_layer, "disney_metallic_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_metallic_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_metallic_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_metallic_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_metallic_tex != '' and current_layer.disney_use_metallic_tex:
                         metal_tex = bpy.data.textures[current_layer.disney_metallic_tex]
-                        box.prop(metal_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(metal_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Specular.
-                    split = box.split(percentage = 0.65)
+                    # Specular
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_spec")
                     if current_layer.disney_use_spec_tex:
-                        col.prop_search(current_layer, "disney_spec_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_spec_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_spec_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_spec_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_spec_tex != '' and current_layer.disney_use_spec_tex:
                         spec_tex = bpy.data.textures[current_layer.disney_spec_tex]
-                        box.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Specular Tint.
-                    split = box.split(percentage = 0.65)
+                    # Specular Tint
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_spec_tint")
                     if current_layer.disney_use_spec_tint_tex:
-                        col.prop_search(current_layer, "disney_spec_tint_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_spec_tint_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_spec_tint_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_spec_tint_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_spec_tint_tex != '' and current_layer.disney_use_spec_tint_tex:
                         spec_tint_tex = bpy.data.textures[current_layer.disney_spec_tint_tex]
-                        box.prop(spec_tint_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(spec_tint_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Anisotropy.
-                    split = box.split(percentage = 0.65)
+                    # Anisotropy
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_aniso")
                     if current_layer.disney_use_aniso_tex:
-                        col.prop_search(current_layer, "disney_aniso_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_aniso_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_aniso_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_aniso_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_aniso_tex != '' and current_layer.disney_use_aniso_tex:
                         aniso_tex = bpy.data.textures[current_layer.disney_aniso_tex]
-                        box.prop(aniso_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(aniso_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Roughness.
-                    split = box.split(percentage = 0.65)
+                    # Roughness
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_roughness")
                     if current_layer.disney_use_roughness_tex:
-                        col.prop_search(current_layer, "disney_roughness_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_roughness_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_roughness_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_roughness_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_roughness_tex != '' and current_layer.disney_use_roughness_tex:
                         rough_tex = bpy.data.textures[current_layer.disney_roughness_tex]
-                        box.prop(rough_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(rough_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Sheen.
-                    split = box.split(percentage = 0.65)
+                    # Sheen
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_sheen")
                     if current_layer.disney_use_sheen_tex:
-                        col.prop_search(current_layer, "disney_sheen_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_sheen_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_sheen_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_sheen_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_sheen_tex != '' and current_layer.disney_use_sheen_tex:
                         sheen_tex = bpy.data.textures[current_layer.disney_sheen_tex]
-                        box.prop(sheen_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(sheen_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Sheen Tint.
-                    split = box.split(percentage = 0.65)
+                    # Sheen Tint
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_sheen_tint")
                     if current_layer.disney_use_sheen_tint_tex:
-                        col.prop_search(current_layer, "disney_sheen_tint_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_sheen_tint_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_sheen_tint_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_sheen_tint_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_sheen_tint_tex != '' and current_layer.disney_use_sheen_tint_tex:
                         sheen_tint_tex = bpy.data.textures[current_layer.disney_sheen_tint_tex]
-                        box.prop(sheen_tint_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(sheen_tint_tex.image.colorspace_settings, "name", text = "Color Space")
  
-                    # Clear Coat.
-                    split = box.split(percentage = 0.65)
+                    # Clear Coat
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_clearcoat")
                     if current_layer.disney_use_clearcoat_tex:
-                        col.prop_search(current_layer, "disney_clearcoat_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_clearcoat_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_clearcoat_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_clearcoat_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_clearcoat_tex != '' and current_layer.disney_use_clearcoat_tex:
                         clearcoat_tex = bpy.data.textures[current_layer.disney_clearcoat_tex]
-                        box.prop(clearcoat_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(clearcoat_tex.image.colorspace_settings, "name", text = "Color Space")
 
-                    # Clear Coat Gloss.
-                    split = box.split(percentage = 0.65)
+                    # Clear Coat Gloss
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "disney_clearcoat_gloss")
                     if current_layer.disney_use_clearcoat_gloss_tex:
-                        col.prop_search(current_layer, "disney_clearcoat_gloss_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "disney_clearcoat_gloss_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "disney_use_clearcoat_gloss_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "disney_use_clearcoat_gloss_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.disney_clearcoat_gloss_tex != '' and current_layer.disney_use_clearcoat_gloss_tex:
                         clearcoat_gloss_tex = bpy.data.textures[current_layer.disney_clearcoat_gloss_tex]
-                        box.prop(clearcoat_gloss_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(clearcoat_gloss_tex.image.colorspace_settings, "name", text = "Color Space")
 
                 #-------------------------------------------------
+		
                 #Kelemen BRDF layout    
                 elif current_layer.bsdf_type == "kelemen_brdf":
-                    box = layout.box()
 
                     # Weight
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "kelemen_weight", text = "Layer Weight")
+                    col.prop(current_layer, "kelemen_weight", text = "Layer")
                     if current_layer.kelemen_use_tex:
-                        col.prop_search( current_layer, "kelemen_mix_tex", material, "texture_slots")
+                        layout.prop_search( current_layer, "kelemen_mix_tex", material, "texture_slots")
 
                     col = split.column()
-                    col.prop( current_layer, "kelemen_use_tex", toggle = True)
+                    col.prop( current_layer, "kelemen_use_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.kelemen_mix_tex != '' and current_layer.kelemen_use_tex:
                         mix_tex = bpy.data.textures[current_layer.kelemen_mix_tex]
-                        box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
                     # Reflectance
-                    box.label("Matte Reflectance:")
-                    
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "kelemen_matte_reflectance", text = "")
                     if current_layer.kelemen_use_diff_tex:
-                        col.prop_search(current_layer, "kelemen_diff_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "kelemen_diff_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "kelemen_use_diff_tex", text = "Use Texture", toggle = True)            
+                    col.prop(current_layer, "kelemen_use_diff_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)            
                     if current_layer.kelemen_diff_tex != '' and current_layer.kelemen_use_diff_tex:
                         diffuse_tex = bpy.data.textures[current_layer.kelemen_diff_tex]
-                        box.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
-                    row = box.row()
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text = "Color Space")
+                    row = layout.row()
                     row.prop(current_layer, "kelemen_matte_multiplier")
                     
-                    box.label("Specular Reflectance:")
-                    split = box.split(percentage = 0.65)
+                    # Specular Reflectance
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "kelemen_specular_reflectance", text = "")    
                     if current_layer.kelemen_use_spec_tex:
-                        col.prop_search(current_layer, "kelemen_spec_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "kelemen_spec_tex", material, "texture_slots", text = "")
+						
                     col = split.column()
-                    col.prop(current_layer, "kelemen_use_spec_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "kelemen_use_spec_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.kelemen_spec_tex != '' and current_layer.kelemen_use_spec_tex:
                         spec_tex = bpy.data.textures[current_layer.kelemen_spec_tex]
-                        box.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
-                    box.prop(current_layer, "kelemen_specular_multiplier")
-                    box.prop(current_layer, "kelemen_roughness")
+                        layout.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
+                    layout.prop(current_layer, "kelemen_specular_multiplier")
+                    layout.prop(current_layer, "kelemen_roughness")
                     
                 #-------------------------------------------------
+		
                 #Microfacet BRDF layout
                 elif current_layer.bsdf_type == "microfacet_brdf":
-                    box = layout.box()
+
                     # Weight
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "microfacet_weight", text = "Layer Weight")
+                    col.prop(current_layer, "microfacet_weight", text = "Layer")
                     if current_layer.microfacet_use_tex:
-                        col.prop_search( current_layer, "microfacet_mix_tex", material, "texture_slots")
+                        layout.prop_search( current_layer, "microfacet_mix_tex", material, "texture_slots")
 
                     col = split.column()
-                    col.prop( current_layer, "microfacet_use_tex", toggle = True)
+                    col.prop( current_layer, "microfacet_use_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.microfacet_mix_tex != '' and current_layer.microfacet_use_tex:
                         mix_tex = bpy.data.textures[current_layer.microfacet_mix_tex]
-                        box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
                     # Reflectance
-                    box.prop(current_layer, "microfacet_model", text= "Model")
-                    box.label("Microfacet Reflectance:")
+                    layout.prop(current_layer, "microfacet_model", text= "Model")
                     
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "microfacet_reflectance", text = "")
                     if current_layer.microfacet_use_diff_tex:
-                        col.prop_search(current_layer, "microfacet_diff_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "microfacet_diff_tex", material, "texture_slots", text = "")
                     
                     col = split.column()
-                    col.prop(current_layer, "microfacet_use_diff_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "microfacet_use_diff_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.microfacet_diff_tex != '' and current_layer.microfacet_use_diff_tex:
                         diff_tex = bpy.data.textures[current_layer.microfacet_diff_tex]
-                        box.prop(diff_tex.image.colorspace_settings, "name", text = "Color Space")
-                    box.prop(current_layer, "microfacet_multiplier")
+                        layout.prop(diff_tex.image.colorspace_settings, "name", text = "Color Space")
+                    layout.prop(current_layer, "microfacet_multiplier")
                     
-                    box.separator()
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "microfacet_mdf")
-                    col.prop(current_layer, "microfacet_mdf_multiplier")
+                    layout.prop(current_layer, "microfacet_mdf_multiplier")
                                         
                     if current_layer.microfacet_use_spec_tex:
-                        col.prop_search(current_layer, "microfacet_spec_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "microfacet_spec_tex", material, "texture_slots", text = "")
+						
                     col = split.column()
-                    col.prop(current_layer, "microfacet_use_spec_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "microfacet_use_spec_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.microfacet_spec_tex != '' and current_layer.microfacet_use_spec_tex:
                         spec_tex = bpy.data.textures[current_layer.microfacet_spec_tex]
-                        box.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
                         
-                    box.prop(current_layer, "microfacet_fresnel")
+                    layout.prop(current_layer, "microfacet_fresnel")
                 
                 #-------------------------------------------------
+		
                 #Specular BRDF layout
                 elif current_layer.bsdf_type == "specular_brdf":
-                    box = layout.box()
 
                     # Weight
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "specular_weight", text = "Layer Weight")
+                    col.prop(current_layer, "specular_weight", text = "Layer")
                     if current_layer.specular_use_tex:
-                        col.prop_search( current_layer, "specular_mix_tex", material, "texture_slots")
+                        layout.prop_search( current_layer, "specular_mix_tex", material, "texture_slots")
 
                     col = split.column()
-                    col.prop( current_layer, "specular_use_tex", toggle = True)
+                    col.prop( current_layer, "specular_use_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.specular_mix_tex != '' and current_layer.specular_use_tex:
                         mix_tex = bpy.data.textures[current_layer.specular_mix_tex]
-                        box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
                     # Reflectance
-                    box.label("Specular Reflectance:")
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "specular_reflectance", text = "")
                     if current_layer.specular_use_gloss_tex:
-                        col.prop_search(current_layer, "specular_gloss_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "specular_gloss_tex", material, "texture_slots", text = "")
+						
                     col = split.column()
-                    col.prop(current_layer, "specular_use_gloss_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "specular_use_gloss_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.specular_gloss_tex != '' and current_layer.specular_use_gloss_tex:
                         spec_tex = bpy.data.textures[current_layer.specular_gloss_tex]
-                        box.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
-                    box.prop(current_layer, "specular_multiplier")
+                        layout.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
+                    layout.prop(current_layer, "specular_multiplier")
                 
                 #----------------------------------------------
-                #Specular BTDF layout    
+		
+                # Specular BTDF
                 elif current_layer.bsdf_type == "specular_btdf":
-                    box = layout.box()
 
                     # Weight
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "spec_btdf_weight", text = "Layer Weight")
+                    col.prop(current_layer, "spec_btdf_weight", text = "Layer")
                     if current_layer.spec_btdf_use_tex:
-                        col.prop_search( current_layer, "spec_btdf_mix_tex", material, "texture_slots")
+                        layout.prop_search( current_layer, "spec_btdf_mix_tex", material, "texture_slots")
 
                     col = split.column()
-                    col.prop( current_layer, "spec_btdf_use_tex", toggle = True)
+                    col.prop( current_layer, "spec_btdf_use_tex", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.spec_btdf_mix_tex != '' and current_layer.spec_btdf_use_tex:
                         mix_tex = bpy.data.textures[current_layer.spec_btdf_mix_tex]
-                        box.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
+                        layout.prop( mix_tex.image.colorspace_settings, "name", text = "Color Space")
                     
                     # Reflectance
-                    box.label("Specular Reflectance:")
-                    split = box.split(percentage = 0.65)
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "spec_btdf_reflectance", text = "")
                     if current_layer.spec_btdf_use_spec_tex:
-                        col.prop_search(current_layer, "spec_btdf_spec_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "spec_btdf_spec_tex", material, "texture_slots", text = "")
+						
                     col = split.column()
-                    col.prop(current_layer, "spec_btdf_use_spec_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "spec_btdf_use_spec_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.spec_btdf_spec_tex != '' and current_layer.spec_btdf_use_spec_tex:
                         spec_tex = bpy.data.textures[current_layer.spec_btdf_spec_tex]
-                        box.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
-                    box.prop(current_layer, "spec_btdf_refl_mult")
-                   
-                    box.separator()
+                        layout.prop(spec_tex.image.colorspace_settings, "name", text = "Color Space")
+                    layout.prop(current_layer, "spec_btdf_refl_mult")
                     
-                    box.label("Transmittance Reflectance:")
-                    split = box.split(percentage = 0.65)
+                    # Transmittance Reflectance
+                    split = layout.split(percentage = 0.90)
                     col = split.column()
                     col.prop(current_layer, "spec_btdf_transmittance", text = "")
                     if current_layer.spec_btdf_use_trans_tex:
-                        col.prop_search(current_layer, "spec_btdf_trans_tex", material, "texture_slots", text = "")
+                        layout.prop_search(current_layer, "spec_btdf_trans_tex", material, "texture_slots", text = "")
+						
                     col = split.column()
-                    col.prop(current_layer, "spec_btdf_use_trans_tex", text = "Use Texture", toggle = True)
+                    col.prop(current_layer, "spec_btdf_use_trans_tex", text = "", icon = "TEXTURE_SHADED", toggle = True)
                     if current_layer.spec_btdf_trans_tex != '':
                         trans_tex = bpy.data.textures[current_layer.spec_btdf_trans_tex]
-                        box.prop(trans_tex.image.colorspace_settings, "name", text = "Color Space")
-                    box.prop(current_layer, "spec_btdf_trans_mult")
+                        layout.prop(trans_tex.image.colorspace_settings, "name", text = "Color Space")
+                    layout.prop(current_layer, "spec_btdf_trans_mult")
 
-                    row = box.row( align = True)
+                    row = layout.row( align = True)
                     row.prop(current_layer, "spec_btdf_from_ior")
                     row.prop(current_layer, "spec_btdf_to_ior")
             
-            # Per material alpha/bump
+            # Alpha / Bump Map
             layout.separator()
-            layout.separator()
-            layout.label("Per-material Alpha / Bump Mapping", icon = "TEXTURE_SHADED")
-            box = layout.box()
-            split = box.split(percentage = 0.65)
+	
+            split = layout.split(percentage = 0.50)
             col = split.column()
-            col.prop(asr_mat, "material_use_bump_tex", text = "Use Bump Texture", toggle= True)
+            col.prop(asr_mat, "material_use_bump_tex", text = "Bump Map", icon = "POTATO", toggle= True)
             col = split.column()
             if asr_mat.material_use_bump_tex:
                 col.prop(asr_mat, "material_use_normalmap", text = "Normal Map", toggle = True)            
-                box.prop_search(asr_mat, "material_bump_tex", material, "texture_slots", text = "")
+                layout.prop_search(asr_mat, "material_bump_tex", material, "texture_slots", text = "")
                 
                 if asr_mat.material_bump_tex != '':
                     bump_tex = bpy.data.textures[asr_mat.material_bump_tex]
-                    box.prop(bump_tex.image.colorspace_settings, "name",  text = "Color Space")
-                box.prop(asr_mat, "material_bump_amplitude")
+                    layout.prop(bump_tex.image.colorspace_settings, "name",  text = "Color Space")
+                layout.prop(asr_mat, "material_bump_amplitude", text="Bump")
                 
-            box.separator()    
-            split = box.split(percentage = 0.65)
+            split = layout.split(percentage = 0.50)
             col = split.column()
-            col.prop(asr_mat, "material_use_alpha", text = "Use Alpha Texture", toggle = True)
+            col.prop(asr_mat, "material_use_alpha", text = "Alpha Map", icon = "POTATO", toggle = True)
             col = split.column()
             if asr_mat.material_use_alpha:    
                 col.prop_search(asr_mat, "material_alpha_map", material, "texture_slots", text = "")        
                 if asr_mat.material_alpha_map != '':
                     alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
-                    box.prop(alpha_tex.image.colorspace_settings, "name", text = "Color Space")
+                    layout.prop(alpha_tex.image.colorspace_settings, "name", text = "Color Space")
             else:
                 col.prop(asr_mat, "material_alpha")
-            box.prop( asr_mat, "shade_alpha_cutouts")
+            layout.prop( asr_mat, "shade_alpha_cutouts")
 
 #---------------------------------------------
 # Material emission panel.
 #---------------------------------------------
 class AppleseedMatEmissionPanel(bpy.types.Panel):
-    bl_label = "Light Emission"
+    bl_label = "Light Material"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -729,17 +710,19 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         layout = self.layout
         material = context.object.active_material
         asr_mat = material.appleseed
-              
-        #Light emission properties                 
+        
+	# Light Material
         col = layout.column()
         col.active = asr_mat.use_light_emission
-        col.prop(asr_mat, "cast_indirect")
-        col.prop(asr_mat, "light_emission", text = "Emission Strength")
-        col.prop(asr_mat, "light_color", text = "Light Color")
-        row = layout.row()
-        row.active = asr_mat.use_light_emission
-        row.prop( asr_mat, "importance_multiplier")
-        row.prop( asr_mat, "light_near_start")
+        col.prop(asr_mat, "light_color", text = "")
+        col.prop(asr_mat, "light_emission", text = "Radiance Multiplier")
+               
+        layout.active = asr_mat.use_light_emission
+        row = layout.row(align=True)
+        layout.prop(asr_mat, "cast_indirect")
+        layout.prop( asr_mat, "importance_multiplier")
+        layout.prop( asr_mat, "light_near_start", text="Light Near Start")
+        
         
 def register():
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
