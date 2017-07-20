@@ -43,8 +43,8 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
                                                 ('lambertian_brdf', "Lambertian BRDF", ""),
                                                 ('microfacet_brdf', "Microfacet BRDF", ""),
                                                 ('orennayar_brdf', "Oren-Nayar BRDF", ""),
-                                                ('specular_brdf', "Specular BRDF", ""),
-                                                # ('specular_btdf', "Specular BTDF", "")],
+                                                # ('specular_btdf', "Specular BTDF", ""),
+                                                ('specular_brdf', "Specular BRDF", "")],                                              
                                                 name = "BSDF Model", 
                                                 description = "BSDF model for current material layer", 
                                                 default = "lambertian_brdf")
