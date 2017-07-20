@@ -3,7 +3,7 @@ The MIT License (MIT)
 
 Copyright (c) 2014 appleseedhq
 
-Contributors: Franz Beaune, Joel Daniels, Esteban Tovagliari.
+Contributors: Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,11 +26,11 @@ SOFTWARE.
 
 bl_info = {
     "name": "appleseed",
-    "author": "Franz Beaune, Joel Daniels, Esteban Tovagliari, Jasper van Nieuwenhuizen",
+    "author": "Franz Beaune, Joel Daniels, Esteban Tovagliari, Jasper van Nieuwenhuizen, Luke Kliber",
     "version": (0, 3, 6),
     "blender": (2, 7, 1),
-    "location": "Info Header (engine dropdown)",
-    "description": "appleseed integration",
+    "location": "Info Header (Render Engine Menu)",
+    "description": "appleseed Render Engine",
     "warning": "",
     "wiki_url": "https://github.com/appleseedhq/blenderseed/wiki",
     "tracker_url": "https://github.com/appleseedhq/blenderseed/issues",
