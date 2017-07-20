@@ -44,7 +44,7 @@ class AppleseedObjSettings( bpy.types.PropertyGroup):
                                         description = "Enable rendering of motion blur",
                                         default = False)
 
-        cls.mblur_type = bpy.props.EnumProperty( name = "Motion Blur Type",
+        cls.mblur_type = bpy.props.EnumProperty( name = "Type",
                                         items = [('object', 'Object', 'Object motion blur'),
                                                  ('deformation', 'Deformation', 'Deformation motion blur. Warning - this will increase export time')],
                                         description = "Type of motion blur to render",
