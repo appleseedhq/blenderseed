@@ -644,8 +644,9 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         layout.active = asr_mat.use_light_emission
         row = layout.row(align=True)
         layout.prop(asr_mat, "cast_indirect")
-	layout.prop( asr_mat, "importance_multiplier")
-	layout.prop( asr_mat, "light_near_start", text="Light Near Start")
+	layout.prop(asr_mat, "importance_multiplier")
+	layout.prop(asr_mat, "light_near_start", text="Light Near Start")
+	
         
 def register():
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
