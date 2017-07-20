@@ -71,12 +71,11 @@ class AppleseedWorldPanelOld( bpy.types.Panel):
             layout.prop(scene.world, "zenith_color", text = "")
         
         elif asr_sky_props.env_type == "constant":
-            col = layout.column()
-            col.prop(scene.world, "horizon_color", text = "")
+            layout.prop(scene.world, "horizon_color", text = "")
         
         elif asr_sky_props.env_type == "constant_hemisphere":
-            col.prop(scene.world, "horizon_color", text = "")
-            col.prop(scene.world, "zenith_color", text = "")
+            layout.prop(scene.world, "horizon_color", text = "")
+            layout.prop(scene.world, "zenith_color", text = "")
             
         elif asr_sky_props.env_type == "mirrorball_map":
             layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text = "")
