@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,7 @@ class ExportAppleseedScene( bpy.types.Operator, ExportHelper):
         
     def execute( self, context):
         scene = context.scene
-        appleseed_proj = project_file_writer.write_project_file( None)
+        appleseed_proj = project_file_writer.write_project_file()
         appleseed_proj.export( scene, util.realpath( self.filepath))
         return {'FINISHED'}
 
