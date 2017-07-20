@@ -76,7 +76,7 @@ class AppleseedMaterialPreview(bpy.types.Panel):
         material = obj.active_material
         asr_mat = material.appleseed
 
-        layout.template_preview(context.material, show_buttons = True)
+        layout.template_preview(context.material, show_buttons = False)
         layout.prop(asr_mat, "preview_quality")
     
 class MATERIAL_UL_BSDF_slots(bpy.types.UIList):
