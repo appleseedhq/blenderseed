@@ -57,20 +57,20 @@ class AppleseedCameraSettings( bpy.types.PropertyGroup):
                                             step = 3, 
                                             precision = 1)
                                             
-        cls.diaphragm_blades = bpy.props.IntProperty( name = "Blades",
+        cls.diaphragm_blades = bpy.props.IntProperty( name = "Diaphragm Blades",
                                             description = "Number of diaphragm blades. Use minimum of 3 for geometric bokeh",
                                             default = 3,
                                             max = 32,
                                             min = 0)
 
-        cls.diaphragm_angle = bpy.props.FloatProperty( name = "Tilt Angle", 
+        cls.diaphragm_angle = bpy.props.FloatProperty( name = "Diaphragm Tilt Angle", 
                                             description = "Diaphragm tilt angle", 
                                             default = 0, 
                                             min = -360, 
                                             max = 360, 
                                             precision = 3)
 
-        cls.diaphragm_map = bpy.props.StringProperty( name = "Bokeh Map",
+        cls.diaphragm_map = bpy.props.StringProperty( name = "Diaphragm",
                                             description = "Image texture to influence bokeh",
                                             default = '',
                                             subtype = 'FILE_PATH')
