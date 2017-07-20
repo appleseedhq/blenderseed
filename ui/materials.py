@@ -593,7 +593,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                 if asr_mat.material_bump_tex != '':
                     bump_tex = bpy.data.textures[asr_mat.material_bump_tex]
                     layout.prop(bump_tex.image.colorspace_settings, "name",  text = "Color Space")
-                layout.prop(asr_mat, "material_bump_amplitude", text="Bump")
+                layout.prop(asr_mat, "material_bump_amplitude", text="Bump Amplitude")
                 
             split = layout.split(percentage = 0.50)
             col = split.column()
@@ -609,7 +609,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
             layout.prop( asr_mat, "shade_alpha_cutouts")
 
 class AppleseedMatEmissionPanel(bpy.types.Panel):
-    bl_label = "Light Emission"
+    bl_label = "Light Material"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -637,15 +637,15 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         asr_mat = material.appleseed
                             
         col = layout.column()
-        col.active = asr_mat.use_light_emission
-        col.prop(asr_mat, "light_emission", text = "Emission")
+        col.active = asr_mat.use_light_emission 
         col.prop(asr_mat, "light_color", text = "")
+	col.prop(asr_mat, "light_emission", text = "Radiance Multiplier")
         
         layout.active = asr_mat.use_light_emission
         row = layout.row(align=True)
-        row.prop( asr_mat, "light_near_start", text="Light Near")
-        row.prop( asr_mat, "importance_multiplier")
         layout.prop(asr_mat, "cast_indirect")
+	layout.prop( asr_mat, "importance_multiplier")
+	layout.prop( asr_mat, "light_near_start", text="Light Near Start")
         
 def register():
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
