@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -43,13 +43,13 @@ class AppleseedCameraSettings( bpy.types.PropertyGroup):
                 type = cls)
 
         cls.camera_type = bpy.props.EnumProperty( items = [('pinhole', 'Pinhole', 'Pinhole camera - no DoF'),
-                                                           ('thinlens', 'Thin lens', 'Thin lens - enables DoF'),
+                                                           ('thinlens', 'Thin Lens', 'Thin lens - enables DoF'),
                                                            ('spherical', 'Spherical', '')],
-                                            name = "Camera type",
+                                            name = "Camera Type",
                                             description = "Camera lens model",
                                             default = 'pinhole')
                                             
-        cls.camera_dof = bpy.props.FloatProperty( name = "F-stop", 
+        cls.camera_dof = bpy.props.FloatProperty( name = "F-Stop", 
                                             description = "Thin lens camera f-stop value", 
                                             default = 32.0, 
                                             min = 0.0, 
@@ -57,7 +57,7 @@ class AppleseedCameraSettings( bpy.types.PropertyGroup):
                                             step = 3, 
                                             precision = 1)
                                             
-        cls.diaphragm_blades = bpy.props.IntProperty( name = "Diaphragm Blades",
+        cls.diaphragm_blades = bpy.props.IntProperty( name = "Blades",
                                             description = "Number of diaphragm blades. Use minimum of 3 for geometric bokeh",
                                             default = 3,
                                             max = 32,
@@ -70,7 +70,7 @@ class AppleseedCameraSettings( bpy.types.PropertyGroup):
                                             max = 360, 
                                             precision = 3)
 
-        cls.diaphragm_map = bpy.props.StringProperty( name = "Diaphragm Map",
+        cls.diaphragm_map = bpy.props.StringProperty( name = "Bokeh Map",
                                             description = "Image texture to influence bokeh",
                                             default = '',
                                             subtype = 'FILE_PATH')
