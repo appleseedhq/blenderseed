@@ -95,10 +95,8 @@ class AppleseedLampPanel( bpy.types.Panel):
                 layout.prop( asr_lamp, "turbidity")
                 
         if lamp_data.type != 'AREA':
-            # Various.
-            row = layout.row()
-            row.prop( asr_lamp, "cast_indirect")
-            row.prop( asr_lamp, "importance_multiplier")
+            layout.prop( asr_lamp, "cast_indirect")
+            layout.prop( asr_lamp, "importance_multiplier")
 
         else:
             layout.label( "Area lights are unsupported.")
