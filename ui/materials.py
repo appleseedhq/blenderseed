@@ -143,7 +143,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 		    # layer weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "lambertian_weight", text = "Layer")
+                    col.prop(current_layer, "lambertian_weight", text = "Layer Weight")
                     if current_layer.lambertian_use_tex:
                         layout.prop_search( current_layer, "lambertian_mix_tex", material, "texture_slots")
 
@@ -175,7 +175,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 		    # layer weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "orennayar_weight", text = "Layer")
+                    col.prop(current_layer, "orennayar_weight", text = "Layer Weight")
                     if current_layer.orennayar_use_tex:
                         layout.prop_search( current_layer, "orennayar_mix_tex", material, "texture_slots")
 
@@ -221,7 +221,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 		    # layer weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "ashikhmin_weight", text = "Layer")
+                    col.prop(current_layer, "ashikhmin_weight", text = "Layer Weight")
                     if current_layer.ashikhmin_use_tex:
                         layout.prop_search( current_layer, "ashikhmin_mix_tex", material, "texture_slots")
 
@@ -277,7 +277,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 		    # layer weight		
                     split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "transmittance_weight", text = "Layer")
+                    col.prop(current_layer, "transmittance_weight", text = "Layer Weight")
                     if current_layer.transmittance_use_tex:
                         layout.prop_search( current_layer, "transmittance_mix_tex", material, "texture_slots")
 
@@ -321,7 +321,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 		    # layer weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "disney_weight", text = "Layer")
+                    col.prop(current_layer, "disney_weight", text = "Layer Weight")
                     if current_layer.disney_use_tex:
                         layout.prop_search( current_layer, "disney_mix_tex", material, "texture_slots")
 
@@ -482,7 +482,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 		    # layer weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "kelemen_weight", text = "Layer")
+                    col.prop(current_layer, "kelemen_weight", text = "Layer Weight")
                     if current_layer.kelemen_use_tex:
                         layout.prop_search( current_layer, "kelemen_mix_tex", material, "texture_slots")
 
@@ -531,7 +531,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 		    # layer weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "microfacet_weight", text = "Layer")
+                    col.prop(current_layer, "microfacet_weight", text = "Layer Weight")
                     if current_layer.microfacet_use_tex:
                         layout.prop_search( current_layer, "microfacet_mix_tex", material, "texture_slots")
 
@@ -584,7 +584,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 	            # layer weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "specular_weight", text = "Layer")
+                    col.prop(current_layer, "specular_weight", text = "Layer Weight")
                     if current_layer.specular_use_tex:
                         layout.prop_search( current_layer, "specular_mix_tex", material, "texture_slots")
 
@@ -617,7 +617,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 		    # layer weight
                     split = layout.split(percentage = 0.90)
                     col = split.column()
-                    col.prop(current_layer, "spec_btdf_weight", text = "Layer")
+                    col.prop(current_layer, "spec_btdf_weight", text = "Layer Weight")
                     if current_layer.spec_btdf_use_tex:
                         layout.prop_search( current_layer, "spec_btdf_mix_tex", material, "texture_slots")
 
