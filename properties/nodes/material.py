@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -167,7 +167,7 @@ class AppleseedEmissionStrengthSocket( NodeSocket, AppleseedSocket):
 class AppleseedMaterialNode( Node, AppleseedNode):
     '''Appleseed Material Output Node'''
     bl_idname = "AppleseedMaterialNode"
-    bl_label = "appleseed Material"
+    bl_label = "Material"
     bl_icon = 'SMOOTH'
 
     node_type = 'material'
@@ -189,7 +189,7 @@ class AppleseedMaterialNode( Node, AppleseedNode):
         img = bpy.data.images.get('APPLESEED32')
         if img is not None:
             icon = layout.icon(img)
-            layout.label( text="Material Output", icon_value=icon)
+            layout.label( text="Appleseed", icon_value=icon)
         if self.inputs["Emission Strength"].socket_value > 0.0 or self.inputs["Emission Strength"].is_linked:
             layout.prop( self, "cast_indirect")
             layout.prop( self, "importance_multiplier")
