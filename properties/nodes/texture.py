@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -66,8 +66,7 @@ class AppleseedTexNode( Node, AppleseedNode):
     def init( self, context):
         self.outputs.new( 'NodeSocketColor', "Color")
         
-    def draw_buttons( self, context, layout):
-        layout.label("Image:")    
+    def draw_buttons( self, context, layout):  
         layout.prop( self, "tex_path", text = "")
         layout.prop( self, "color_space")
         layout.prop( self, "mode")
