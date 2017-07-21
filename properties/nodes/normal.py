@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -61,9 +61,9 @@ class AppleseedNormalInputSocket( NodeSocket, AppleseedSocket):
 # Normal / bump node.
 #--------------------------------
 class AppleseedNormalNode( Node, AppleseedNode):
-    '''Appleseed Normal / Bump Node'''
+    '''Appleseed Bump / Normal Node'''
     bl_idname = "AppleseedNormalNode"
-    bl_label = "Normal / Bump"
+    bl_label = "Bump / Normal"
     bl_icon = 'SMOOTH'
 
     node_type = 'normal'
