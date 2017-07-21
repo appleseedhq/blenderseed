@@ -27,7 +27,7 @@ SOFTWARE.
 bl_info = {
     "name": "appleseed",
     "author": "Franz Beaune, Joel Daniels, Esteban Tovagliari, Jasper van Nieuwenhuizen",
-    "version": (0, 3, 6),
+    "version": (0, 3, 7),
     "blender": (2, 7, 1),
     "location": "Info Header (engine dropdown)",
     "description": "appleseed integration",
@@ -46,7 +46,7 @@ if "bpy" in locals():
     imp.reload( util)
     imp.reload( preferences)
     imp.reload( project_file_writer)
-    
+
 else:
     import bpy
     from . import properties
