@@ -35,7 +35,7 @@ class AppleseedRenderLayers(bpy.types.PropertyGroup):
 
 class AppleseedRenderLayerProps(bpy.types.PropertyGroup):
     layers = bpy.props.CollectionProperty(type=AppleseedRenderLayers,
-                                          name="Appleseed Render Layers",
+                                          name="appleseed Render Layers",
                                           description="")
 
     layer_index = bpy.props.IntProperty(name="Layer Index",

@@ -39,9 +39,9 @@ import os
 
 
 class AppleseedNodeTree(NodeTree):
-    '''Appleseed Node Editor'''
+    '''appleseed Node Editor'''
     bl_idname = 'AppleseedNodeTree'
-    bl_label = 'Appleseed Node Tree'
+    bl_label = 'appleseed Node Tree'
     bl_icon = 'NODETREE'
 
     @classmethod

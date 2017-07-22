@@ -38,7 +38,7 @@ from . import AppleseedNode, AppleseedSocket
 
 
 class AppleseedTexNode(Node, AppleseedNode):
-    '''Appleseed Image Texture Node'''
+    '''appleseed Image Texture Node'''
     bl_idname = "AppleseedTexNode"
     bl_label = "Image Texture"
     bl_icon = 'TEXTURE'

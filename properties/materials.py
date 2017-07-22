@@ -352,7 +352,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
 
     # Per layer properties are stored in AppleseedMatLayerProps
     layers = bpy.props.CollectionProperty(type=AppleseedMatLayerProps,
-                                          name="Appleseed Material Layers",
+                                          name="appleseed Material Layers",
                                           description="")
 
     layer_index = bpy.props.IntProperty(name="Layer Index", description="", default=0, min=0, max=16)

@@ -162,7 +162,7 @@ class AppleseedAshikhminFresnelSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedAshikhminNode(Node, AppleseedNode):
-    '''Appleseed Ashikhmin-Shirley BRDF Node'''
+    '''appleseed Ashikhmin-Shirley BRDF Node'''
     bl_idname = "AppleseedAshikhminNode"
     bl_label = "Ashikhmin-Shirley BRDF"
     bl_icon = 'SMOOTH'

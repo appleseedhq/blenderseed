@@ -35,7 +35,7 @@ from ..materials import AppleseedMatProps
 
 
 class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
-    '''Appleseed Normal Input Socket'''
+    '''appleseed Normal Input Socket'''
     bl_idname = "AppleseedNormalInput"
     bl_label = "Image"
 
@@ -64,7 +64,7 @@ class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedNormalNode(Node, AppleseedNode):
-    '''Appleseed Bump / Normal Node'''
+    '''appleseed Bump / Normal Node'''
     bl_idname = "AppleseedNormalNode"
     bl_label = "Bump / Normal"
     bl_icon = 'SMOOTH'

@@ -42,7 +42,7 @@ def node_tree_selector_draw(layout, mat, output_type):
     node = find_node(mat, output_type)
     if not node:
         if mat.appleseed.node_tree == '':
-            layout.operator('appleseed.add_material_nodetree', text="Appleseed Node", icon='NODETREE')
+            layout.operator('appleseed.add_material_nodetree', text="appleseed Node", icon='NODETREE')
             return False
     return True
 

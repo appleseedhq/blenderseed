@@ -29,8 +29,8 @@ import bpy
 class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
     bl_idname = __package__
 
-    appleseed_path = bpy.props.StringProperty(name="Appleseed binary dir",
-                                              description="Path to Appleseed binary dir",
+    appleseed_path = bpy.props.StringProperty(name="appleseed binary dir",
+                                              description="Path to appleseed binary dir",
                                               subtype='DIR_PATH',
                                               default="")
 

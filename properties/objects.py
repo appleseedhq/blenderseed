@@ -34,8 +34,8 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
     @classmethod
     def register(cls):
         bpy.types.Object.appleseed = bpy.props.PointerProperty(
-            name="Appleseed Object Settings",
-            description="Appleseed object settings",
+            name="appleseed Object Settings",
+            description="appleseed object settings",
             type=cls)
 
         cls.render_layer = bpy.props.StringProperty(name="Render Layer",

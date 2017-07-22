@@ -36,7 +36,7 @@ from . import util
 class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
     """Saves an appleseed scene"""
     bl_idname = "appleseed.export_scene"
-    bl_label = "Export Appleseed Scene"
+    bl_label = "Export appleseed Scene"
 
     filename_ext = ".appleseed"
     filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'},)
@@ -54,7 +54,7 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
 
 
 def menu_func_export_scene(self, context):
-    self.layout.operator(ExportAppleseedScene.bl_idname, text="Appleseed (.appleseed)")
+    self.layout.operator(ExportAppleseedScene.bl_idname, text="appleseed (.appleseed)")
 
 
 def register():

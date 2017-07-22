@@ -42,8 +42,8 @@ class AppleseedCameraSettings(bpy.types.PropertyGroup):
     @classmethod
     def register(cls):
         bpy.types.Camera.appleseed = bpy.props.PointerProperty(
-            name="Appleseed Camera Settings",
-            description="Appleseed camera settings",
+            name="appleseed Camera Settings",
+            description="appleseed camera settings",
             type=cls)
 
         cls.camera_type = bpy.props.EnumProperty(items=[('pinhole', 'Pinhole', 'Pinhole camera - no DoF'),

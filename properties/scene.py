@@ -55,8 +55,8 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     @classmethod
     def register(cls):
         bpy.types.Scene.appleseed = bpy.props.PointerProperty(
-            name="Appleseed Render Settings",
-            description="Appleseed render settings",
+            name="appleseed Render Settings",
+            description="appleseed render settings",
             type=cls)
 
         # Scene render settings.

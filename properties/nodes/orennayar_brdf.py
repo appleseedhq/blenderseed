@@ -98,7 +98,7 @@ class AppleseedOrenNayarRoughnessSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedOrenNayarNode(Node, AppleseedNode):
-    '''Appleseed Oren-Nayar BRDF Node'''
+    '''appleseed Oren-Nayar BRDF Node'''
     bl_idname = "AppleseedOrenNayarNode"
     bl_label = "Oren-Nayar BRDF"
     bl_icon = 'SMOOTH'

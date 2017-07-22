@@ -256,13 +256,13 @@ def render_scene(engine, scene):
             break
 
         if process.poll() != None:
-            engine.update_stats("", "Appleseed: Error")
+            engine.update_stats("", "appleseed: Error")
             break
 
         time.sleep(DELAY)
 
     if os.path.exists(img_file):
-        engine.update_stats("", "Appleseed: Rendering")
+        engine.update_stats("", "appleseed: Rendering")
 
         prev_size = -1
 
