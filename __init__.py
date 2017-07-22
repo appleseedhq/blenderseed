@@ -28,7 +28,7 @@
 
 bl_info = {
     "name": "appleseed",
-    "author": "Franz Beaune, Joel Daniels, Esteban Tovagliari, Jasper van Nieuwenhuizen, Luke Kliber",
+    "author": "The appleseedhq Organization",
     "version": (0, 3, 7),
     "blender": (2, 7, 1),
     "location": "Info Header (Render Engine Menu)",
