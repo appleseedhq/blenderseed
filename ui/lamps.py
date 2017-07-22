@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -53,13 +53,13 @@ class AppleseedLampPanel( bpy.types.Panel):
 
         if lamp_data.type == 'SPOT':
             # Lamp radiance.
-            layout.label( "Radiance:")
-            split = layout.split( percentage = 0.65)
+            # layout.label( "Intensity:")
+            split = layout.split( percentage = 0.90)
             col = split.column()
             col.prop( asr_lamp, "radiance", text = "")
 
             col = split.column()
-            col.prop( asr_lamp, "radiance_use_tex", toggle = True)
+            col.prop( asr_lamp, "radiance_use_tex", icon = "TEXTURE_SHADED", toggle = True)
 
             if asr_lamp.radiance_use_tex:
                 layout.prop_search( asr_lamp, "radiance_tex", lamp_data, "texture_slots")
@@ -68,12 +68,12 @@ class AppleseedLampPanel( bpy.types.Panel):
                         layout.prop( radiance_tex.image.colorspace_settings, "name", text = "Color Space")
 
             # Radiance multiplier.
-            split = layout.split( percentage = 0.65)
+            split = layout.split( percentage = 0.90)
             col = split.column()
             col.prop( asr_lamp, "radiance_multiplier")
 
             col = split.column()
-            col.prop( asr_lamp, "radiance_multiplier_use_tex", toggle = True)
+            col.prop( asr_lamp, "radiance_multiplier_use_tex", icon = "TEXTURE_SHADED", toggle = True)
 
             if asr_lamp.radiance_multiplier_use_tex:
                 layout.prop_search( asr_lamp, "radiance_multiplier_tex", lamp_data, "texture_slots")
@@ -81,13 +81,13 @@ class AppleseedLampPanel( bpy.types.Panel):
                     radiance_multiplier_tex = bpy.data.textures[ asr_lamp.radiance_multiplier_tex]
                     layout.prop( radiance_multiplier_tex.image.colorspace_settings, "name", text = "Color Space")
 
-            row = layout.row( align = True)
-            row.prop( lamp_data, "spot_size", text = "Outer Angle")
-            row.prop( lamp_data, "spot_blend", text = "Inner Angle")
+            layout.prop( lamp_data, "spot_blend", text = "Inner Angle")
+            layout.prop( lamp_data, "spot_size", text = "Outer Angle")
             layout.prop( asr_lamp, "tilt_angle")
             layout.prop( lamp_data, "show_cone")
 
         elif lamp_data.type in {'POINT', 'SUN', 'HEMI'}:
+            # layout.label("Intensity:")
             layout.prop( asr_lamp, "radiance")
             layout.prop( asr_lamp, "radiance_multiplier")
 
@@ -95,14 +95,11 @@ class AppleseedLampPanel( bpy.types.Panel):
                 layout.prop( asr_lamp, "turbidity")
                 
         if lamp_data.type != 'AREA':
-            # Various.
-            row = layout.row()
-            row.prop( asr_lamp, "cast_indirect")
-            row.prop( asr_lamp, "importance_multiplier")
+            layout.prop( asr_lamp, "cast_indirect")
+            layout.prop( asr_lamp, "importance_multiplier")
 
         else:
-            layout.label( "Area lights are currently unsupported.")
-            layout.label( "Use planes with emissive materials instead.")
+            layout.label( "Area lights are unsupported.")
 
 def register():
     bpy.utils.register_class( AppleseedLampPanel)

@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -46,7 +46,6 @@ class AppleseedObjRenderLayerPanel( bpy.types.Panel):
         scene = context.scene
         asr_obj = context.object.appleseed
         appleseed_layers = scene.appleseed_layers
-        layout.label( "Layer:", icon = 'OBJECT_DATA')
         layout.prop_search( asr_obj, "render_layer", appleseed_layers, "layers", text = "")
 
 class AppleseedObjMBlurPanel( bpy.types.Panel):

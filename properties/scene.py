@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -161,16 +161,15 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             default = 1)
 
         # Lighting.
-        cls.lighting_engine = bpy.props.EnumProperty( name = "Lighting Engine",
+        cls.lighting_engine = bpy.props.EnumProperty( name = "Engine",
                                             description = "Select the lighting engine to use",
                                             items = [( 'pt', "Path Tracing", "Full Global Illumination"),
-                                               ( 'sppm', "SPPM", "Full Global Illumination Using Stochastic Progressive Photon Mapping"), 
-                                               ( 'drt', "Distribution Ray Tracer", "Direct Lighting Only")],
+                                               ( 'sppm', "SPPM", "Full Global Illumination Using Stochastic Progressive Photon Mapping")],
                                             default = 'pt')
 
         # DRT.
-        cls.ibl_enable = bpy.props.BoolProperty( name = "Image Based Lighting",
-                                            description = "Image based lighting",
+        cls.ibl_enable = bpy.props.BoolProperty( name = "Image-Based Lighting",
+                                            description = "Image-based lighting",
                                             default = True)
                                             
         cls.caustics_enable = bpy.props.BoolProperty( name = "Caustics",
@@ -350,15 +349,15 @@ class AppleseedRenderSettings( bpy.types.PropertyGroup):
                                             description = "Number of samples to use for motion blur",
                                             default = 2)
 
-        cls.def_mblur = bpy.props.BoolProperty( name = "Deformation Motion Blur",
+        cls.def_mblur = bpy.props.BoolProperty( name = "Deformation",
                                             description = "Global toggle for rendering of deformation motion blur. Warning - objects with deformation motion blur enabled will add to export time!",
                                             default = False)
 
-        cls.ob_mblur = bpy.props.BoolProperty( name = "Object Motion Blur", 
+        cls.ob_mblur = bpy.props.BoolProperty( name = "Object", 
                                             description = "Global toggle for rendering of object motion blur",
                                             default = False)
 
-        cls.cam_mblur = bpy.props.BoolProperty( name = "Camera Motion Blur", 
+        cls.cam_mblur = bpy.props.BoolProperty( name = "Camera", 
                                             description = "Enable rendering of camera motion blur",
                                             default = False)
 

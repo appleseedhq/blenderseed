@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -46,22 +46,17 @@ class AppleseedCameraDoF( bpy.types.Panel):
         asr_cam_props = scene.camera.data.appleseed
         
         row = layout.row()
-        row.prop(asr_cam_props, "camera_type", text = 'Camera')
+        row.prop(asr_cam_props, "camera_type", text = 'Model')
         
-        row = layout.row()
         if asr_cam_props.camera_type == "thinlens":
-            row.prop(asr_cam_props, "camera_dof", text = "F-stop")
-            
-            split = layout.split()
-            col = split.column()
-            col2 = split.column()
-            col.prop(context.active_object.data, "dof_distance", text = "Focal Distance")
-            col.active = context.active_object.data.dof_object is None
-            col2.prop(context.active_object.data, "dof_object", text = 'Target')
+            layout.prop(asr_cam_props, "camera_dof", text = "F-Stop")
 
-            row = layout.row()
-            row.prop( asr_cam_props, "diaphragm_blades")
-            row.prop( asr_cam_props, "diaphragm_angle")
+            layout.prop(context.active_object.data, "dof_distance", text = "Focal Distance")
+            layout.active = context.active_object.data.dof_object is None
+            layout.prop(context.active_object.data, "dof_object", text = 'Autofocus')
+
+            layout.prop( asr_cam_props, "diaphragm_blades")
+            layout.prop( asr_cam_props, "diaphragm_angle")
 
             layout.prop( asr_cam_props, "diaphragm_map")
 

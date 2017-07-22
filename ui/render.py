@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -46,7 +46,7 @@ class AppleseedRenderSettingsPanel( bpy.types.Panel, AppleseedRenderPanelBase):
         layout = self.layout
         scene = context.scene
         asr_scene_props = scene.appleseed
-        layout.prop( asr_scene_props, "project_path", text = "Project Path")
+        layout.prop( asr_scene_props, "project_path", text = "")
         split = layout.split()
         col = split.column()
         col.label( "Render Threads:")
@@ -56,7 +56,7 @@ class AppleseedRenderSettingsPanel( bpy.types.Panel, AppleseedRenderPanelBase):
         row.prop( asr_scene_props, "generate_mesh_files")
         if asr_scene_props.generate_mesh_files:
             row.prop( asr_scene_props, "export_mode")
-#            layout.prop( asr_scene_props, "export_hair")
+            # layout.prop( asr_scene_props, "export_hair")
             
 class AppleseedSamplingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -68,8 +68,8 @@ class AppleseedSamplingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
         asr_scene_props = scene.appleseed
 
         row = layout.row( align=True)
-        row.prop( asr_scene_props, "pixel_filter")
-        row.prop( asr_scene_props, "filter_size")
+        layout.prop( asr_scene_props, "pixel_filter")
+        layout.prop( asr_scene_props, "filter_size")
 
         layout.separator()
         layout.prop( asr_scene_props, "pixel_sampler")
@@ -83,8 +83,8 @@ class AppleseedSamplingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
             layout.prop( asr_scene_props, "sampler_max_variation")
         else:
             row = layout.row()
-            row.prop( asr_scene_props, "decorrelate_pixels")
             row.prop( asr_scene_props, "force_aa")
+            row.prop( asr_scene_props, "decorrelate_pixels")
             layout.prop( asr_scene_props, "sampler_max_samples")
 
         layout.prop( asr_scene_props, "tile_ordering")
@@ -102,13 +102,13 @@ class AppleseedLightingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
         col.prop( asr_scene_props, "lighting_engine")
         split = layout.split()
 
-        # Pathtracing UI.
+        # Pathtracing UI
         if asr_scene_props.lighting_engine == 'pt':
             col = split.column()
             col.prop( asr_scene_props, "caustics_enable")
             col.prop( asr_scene_props, "next_event_est")
             col = split.column()
-            col.prop( asr_scene_props, "enable_diagnostics", text = "Enable Diagnostics")
+            col.prop( asr_scene_props, "enable_diagnostics", text = "Diagnostics")
             col.prop( asr_scene_props, "quality")
             if asr_scene_props.next_event_est == True:
                 row = layout.row()
@@ -122,21 +122,10 @@ class AppleseedLightingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
             layout.prop( asr_scene_props, "max_bounces")
             layout.prop( asr_scene_props, "max_ray_intensity")  
             layout.prop( asr_scene_props, "rr_start")
+            
 
-        # Direct Lighting UI.
-        elif asr_scene_props.lighting_engine == 'drt':
-            row = layout.row()
-            row.prop( asr_scene_props, "ibl_enable")
-            if asr_scene_props.ibl_enable == True:
-                row.prop( asr_scene_props, "ibl_env_samples")
-            layout.prop( asr_scene_props, "dl_light_samples")
-            layout.prop( asr_scene_props, "decorrelate_pixels")
-            layout.prop( asr_scene_props, "max_bounces")  
-            layout.prop( asr_scene_props, "rr_start")
-
-        # SPPM UI.
+        # SPPM UI
         elif asr_scene_props.lighting_engine == 'sppm':
-            layout.label( "Components")
             layout.prop( asr_scene_props, "sppm_dl_mode")
             row = layout.row()
             row.prop( asr_scene_props, "ibl_enable")
@@ -144,25 +133,20 @@ class AppleseedLightingPanel( bpy.types.Panel, AppleseedRenderPanelBase):
 
             layout.separator()
             layout.label( "Photon Tracing")
-            box = layout.box()
-            row = box.row()
-            row.prop( asr_scene_props, "sppm_light_photons")
-            row.prop( asr_scene_props, "sppm_env_photons")
-            box.prop( asr_scene_props, "sppm_photon_max_length")
-            box.prop( asr_scene_props, "sppm_photon_rr_start")
+            layout.prop( asr_scene_props, "sppm_light_photons")
+            layout.prop( asr_scene_props, "sppm_env_photons")
+            layout.prop( asr_scene_props, "sppm_photon_max_length")
+            layout.prop( asr_scene_props, "sppm_photon_rr_start")
 
-            layout.separator()
             layout.label( "Radiance Estimation")
-            box = layout.box()
-            box.prop( asr_scene_props, "sppm_max_per_estimate")
-            row = box.row()
+           
+            layout.prop( asr_scene_props, "sppm_max_per_estimate")
+            row = layout.row()
             row.prop( asr_scene_props, "sppm_initial_radius")
             row.prop( asr_scene_props, "sppm_alpha")
-            box.prop( asr_scene_props, "sppm_pt_max_length")
-            box.prop( asr_scene_props, "sppm_pt_rr_start")
+            layout.prop( asr_scene_props, "sppm_pt_max_length")
+            layout.prop( asr_scene_props, "sppm_pt_rr_start")
             
-        # Meshlights.
-        layout.separator()
         layout.separator()
         layout.prop( asr_scene_props, "export_emitting_obj_as_lights")     
         if asr_scene_props.export_emitting_obj_as_lights:
@@ -181,16 +165,15 @@ class AppleseedMotionBlurPanel( bpy.types.Panel, AppleseedRenderPanelBase):
         layout = self.layout
         asr_scene_props = context.scene.appleseed
 
-
         layout.active = asr_scene_props.mblur_enable
 
-        layout.prop( asr_scene_props, "ob_mblur")
-        layout.prop( asr_scene_props, "def_mblur")
-        layout.prop( asr_scene_props, "cam_mblur")
-
-        row = layout.row( align = True)
-        row.prop( asr_scene_props, "shutter_open")
-        row.prop( asr_scene_props, "shutter_close")
+        layout.prop( asr_scene_props, "shutter_open")
+        layout.prop( asr_scene_props, "shutter_close")
+	
+        row = layout.row(align=True)
+        row.prop( asr_scene_props, "cam_mblur", text="Camera Blur")
+        row.prop( asr_scene_props, "ob_mblur", text="Object Blur")
+        layout.prop( asr_scene_props, "def_mblur", text="Deformation Blur")
 
 def register():
     bpy.types.RENDER_PT_render.COMPAT_ENGINES.add( 'APPLESEED_RENDER')

@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ import bpy
 #------------------------------------
 class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     name = bpy.props.StringProperty( name=  "BSDF Name", 
-                                     description = "BSDF layer name -- This must be a unique name per layer!", 
+                                     description = "BSDF layer name", 
                                      default = "")
                                      
     bsdf_type = bpy.props.EnumProperty( items = [('ashikhmin_brdf', "Ashikhmin-Shirley BRDF", ""),
@@ -43,8 +43,8 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
                                                 ('lambertian_brdf', "Lambertian BRDF", ""),
                                                 ('microfacet_brdf', "Microfacet BRDF", ""),
                                                 ('orennayar_brdf', "Oren-Nayar BRDF", ""),
-                                                ('specular_brdf', "Specular BRDF (mirror)", ""),
-                                                ('specular_btdf', "Specular BTDF (glass)", "")],
+                                                # ('specular_btdf', "Specular BTDF", ""),
+                                                ('specular_brdf', "Specular BRDF", "")],                                              
                                                 name = "BSDF Model", 
                                                 description = "BSDF model for current material layer", 
                                                 default = "lambertian_brdf")
@@ -55,7 +55,7 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     transmittance_mult_tex = bpy.props.StringProperty(name = "", description = "Texture to influence transmittance", default = "")
     
-    transmittance_color = bpy.props.FloatVectorProperty(name = "Transmittance color", description = "Transmittance color", default = (0.8, 0.8, 0.8), subtype = 'COLOR',min = 0.0, max = 1.0)
+    transmittance_color = bpy.props.FloatVectorProperty(name = "Transmittance Color", description = "Transmittance color", default = (0.8, 0.8, 0.8), subtype = 'COLOR',min = 0.0, max = 1.0)
     
     transmittance_use_diff_tex = bpy.props.BoolProperty(name = "", description = "Use texture to influence diffuse color", default = False)
     
@@ -63,7 +63,7 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     transmittance_weight = bpy.props.FloatProperty(name = "Diffuse BTDF Blending Weight", description = "Blending weight of Diffuse BTDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0)
 
-    transmittance_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+    transmittance_use_tex = bpy.props.BoolProperty( name = "", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
 
     transmittance_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
 
@@ -89,11 +89,11 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     kelemen_weight = bpy.props.FloatProperty(name = "Kelemen Blending Weight", description = "Blending weight of Kelemen BRDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0)
 
-    kelemen_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False) 
+    kelemen_use_tex = bpy.props.BoolProperty( name = "", description = "Use texture to influence the layer weight in the BSDF mix", default = False) 
 
     kelemen_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
+    
     #-------------------------
-
     
     microfacet_fresnel = bpy.props.FloatProperty(name = "Fresnel Multiplier", description = "Microfacet fresnel multiplier", default = 1.0, min = 0.0, max = 1.0)
     
@@ -122,9 +122,10 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     microfacet_weight = bpy.props.FloatProperty(name = "Microfacet Blending Weight", description = "Blending weight of Microfacet BRDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0)
 
-    microfacet_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+    microfacet_use_tex = bpy.props.BoolProperty( name = "", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
 
     microfacet_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
+    
     #------------------------------
 
     ashikhmin_reflectance = bpy.props.FloatVectorProperty(name = "Diffuse Reflectance", description = "Ashikhmin-Shirley diffuse reflectance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
@@ -146,9 +147,10 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     ashikhmin_shininess_v = bpy.props.FloatProperty(name = "Shininess V", description = "", default = 200.0, min = 0.0, max = 1000.0)
     ashikhmin_weight = bpy.props.FloatProperty(name = "Ashikhmin Blending Weight", description = "Blending weight of Ashikhmin-Shirley BRDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0)
 
-    ashikhmin_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+    ashikhmin_use_tex = bpy.props.BoolProperty( name = "", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
 
     ashikhmin_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
+    
     #--------------------------------
     
     lambertian_reflectance = bpy.props.FloatVectorProperty(name = "Lambertian Reflectance", description = "Lambertian diffuse reflectance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
@@ -161,9 +163,10 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     lambertian_diffuse_tex = bpy.props.StringProperty(name = "", description = "Diffuse color texture", default = "")
 
-    lambertian_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+    lambertian_use_tex = bpy.props.BoolProperty( name = "", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
 
     lambertian_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
+    
     #--------------------------------
     
     orennayar_reflectance = bpy.props.FloatVectorProperty(name = "Oren-Nayar Reflectance", description = "Oren-Nayar diffuse reflectance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
@@ -182,14 +185,15 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     orennayar_rough_tex = bpy.props.StringProperty(name = "", description = "Roughness texture", default = "")
 
-    orennayar_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+    orennayar_use_tex = bpy.props.BoolProperty( name = "", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
 
     orennayar_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
+    
     #---------------------------------
     
     specular_reflectance = bpy.props.FloatVectorProperty(name = "Specular Reflectance", description = "Specular BRDF reflectance", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
     
-    specular_use_gloss_tex = bpy.props.BoolProperty(name= "Use Texture", description = "Use a texture to influence specular reflectance", default = False)
+    specular_use_gloss_tex = bpy.props.BoolProperty(name= "", description = "Use a texture to influence specular reflectance", default = False)
     
     specular_gloss_tex = bpy.props.StringProperty(name= "", description = "Texture to influence specular reflectance", default = "")
     
@@ -197,14 +201,15 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     specular_weight = bpy.props.FloatProperty(name = "Specular Blending Weight", description = "Blending weight of Specular BRDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0) 
 
-    specular_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+    specular_use_tex = bpy.props.BoolProperty( name = "", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
 
     specular_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
+    
     #---------------------------------
     
     spec_btdf_reflectance = bpy.props.FloatVectorProperty(name = "Specular Reflectance", description = "Specular BTDF reflectance", default = (0.8, 0.8, 0.8), subtype = 'COLOR', min = 0.0, max = 1.0)
     
-    spec_btdf_use_spec_tex = bpy.props.BoolProperty(name= "Use Texture", description = "Use a texture to influence specular reflectance", default = False)
+    spec_btdf_use_spec_tex = bpy.props.BoolProperty(name= "", description = "Use a texture to influence specular reflectance", default = False)
     
     spec_btdf_spec_tex = bpy.props.StringProperty(name= "", description = "Texture to influence specular reflectance", default = "")
     
@@ -212,7 +217,7 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     spec_btdf_transmittance = bpy.props.FloatVectorProperty(name = "Specular Transmittance", description = "Specular BTDF transmittance", default = (1, 1, 1), subtype = "COLOR", min = 0.0, max = 1.0)
     
-    spec_btdf_use_trans_tex = bpy.props.BoolProperty(name= "Use Texture", description = "Use a texture to influence specular transmittance", default = False)
+    spec_btdf_use_trans_tex = bpy.props.BoolProperty(name= "", description = "Use a texture to influence specular transmittance", default = False)
     
     spec_btdf_trans_tex = bpy.props.StringProperty(name= "", description = "Texture to influence specular transmittance", default = "")
     
@@ -224,80 +229,81 @@ class AppleseedMatLayerProps( bpy.types.PropertyGroup):
     
     spec_btdf_weight = bpy.props.FloatProperty(name = "Specular BTDF Blending Weight", description = "Blending weight of Specular BTDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0) 
 
-    spec_btdf_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+    spec_btdf_use_tex = bpy.props.BoolProperty( name = "", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
 
     spec_btdf_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
+    
     #---------------------------------
 
-    disney_base = bpy.props.FloatVectorProperty(name = "Base Coat", description = "Base coat color", default = (0.5, 0.5, 0.5), subtype = 'COLOR', min = 0.0, max = 1.0)
+    disney_base = bpy.props.FloatVectorProperty(name = "Base Coat Color", description = "Base coat color", default = (0.5, 0.5, 0.5), subtype = 'COLOR', min = 0.0, max = 1.0)
 
-    disney_use_base_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence base coat color", default = False)
+    disney_use_base_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence base coat color", default = False)
 
     disney_base_tex = bpy.props.StringProperty( name = "", description = "Texture to influence base coat color", default = "")
     
     disney_aniso = bpy.props.FloatProperty( name = "Anisotropic", description = "Anisotropic", default = 0, min = 0, soft_max = 1.0)
 
-    disney_use_aniso_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence anisotropy", default = False)
+    disney_use_aniso_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence anisotropy", default = False)
 
     disney_aniso_tex = bpy.props.StringProperty( name = "", description = "Texture to influence anisotropy", default = "")
     
     disney_clearcoat = bpy.props.FloatProperty( name = "Clear Coat", description = "Clear coat", default = 0, min = 0, soft_max = 1.0)
 
-    disney_use_clearcoat_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence clear coat", default = False)
+    disney_use_clearcoat_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence clear coat", default = False)
 
     disney_clearcoat_tex = bpy.props.StringProperty( name = "", description = "Texture to influence clear coat", default = "")
 
     disney_clearcoat_gloss = bpy.props.FloatProperty( name = "Clear Coat Gloss", description = "Clear coat gloss", default = 1, min = 0, soft_max = 1.0)
 
-    disney_use_clearcoat_gloss_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence clear coat gloss", default = False)
+    disney_use_clearcoat_gloss_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence clear coat gloss", default = False)
 
     disney_clearcoat_gloss_tex = bpy.props.StringProperty( name = "", description = "Texture to influence clear coat gloss", default = "")
     
     disney_metallic = bpy.props.FloatProperty( name = "Metallic", description = "Metalness", default = 0, min = 0, soft_max = 1.0)
 
-    disney_use_metallic_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence metalness", default = False)
+    disney_use_metallic_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence metalness", default = False)
 
     disney_metallic_tex = bpy.props.StringProperty( name = "", description = "Texture to influence metalness", default = "")
     
     disney_roughness = bpy.props.FloatProperty( name = "Roughness", description = "Specular / metallic roughness", default = 0.5, min = 0, soft_max = 1.0)
 
-    disney_use_roughness_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence roughness", default = False)
+    disney_use_roughness_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence roughness", default = False)
 
     disney_roughness_tex = bpy.props.StringProperty( name = "", description = "Texture to influence roughness", default = "")
     
     disney_sheen = bpy.props.FloatProperty( name = "Sheen", description = "Sheen", default = 0, min = 0, soft_max = 1.0)
 
-    disney_use_sheen_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence sheen", default = False)
+    disney_use_sheen_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence sheen", default = False)
 
     disney_sheen_tex = bpy.props.StringProperty( name = "", description = "Texture to influence sheen", default = "")
     
     disney_sheen_tint = bpy.props.FloatProperty( name = "Sheen Tint", description = "Sheen tint", default = 0.5, min = 0, soft_max = 1.0)
 
-    disney_use_sheen_tint_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence sheen tint", default = False)
+    disney_use_sheen_tint_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence sheen tint", default = False)
 
     disney_sheen_tint_tex = bpy.props.StringProperty( name = "", description = "Texture to influence sheen tint", default = "")
     
     disney_spec = bpy.props.FloatProperty( name = "Specular", description = "Specular", default = 0.5, min = 0, soft_max = 1.0)
 
-    disney_use_spec_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence specular", default = False)
+    disney_use_spec_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence specular", default = False)
 
     disney_spec_tex = bpy.props.StringProperty( name = "", description = "Texture to influence specular", default = "")
     
     disney_spec_tint = bpy.props.FloatProperty( name = "Specular Tint", description = "Specular tint", default = 0, min = 0, soft_max = 1.0)
 
-    disney_use_spec_tint_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence specular tint", default = False)
+    disney_use_spec_tint_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence specular tint", default = False)
 
     disney_spec_tint_tex = bpy.props.StringProperty( name = "", description = "Texture to influence specular tint", default = "")
     
     disney_subsurface = bpy.props.FloatProperty( name = "Subsurface", description = "Subsurface", default = 0, min = 0, soft_max = 1.0)
 
-    disney_use_subsurface_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use a texture to influence subsurface", default = False)
+    disney_use_subsurface_tex = bpy.props.BoolProperty( name = "", description = "Use a texture to influence subsurface", default = False)
 
     disney_subsurface_tex = bpy.props.StringProperty( name = "", description = "Texture to influence subsurface", default = "")
 
     disney_weight = bpy.props.FloatProperty(name = "Disney BRDF Blending Weight", description = "Blending weight of Disney BRDF in BSDF mix", default = 1.0, min = 0.0, max = 1.0) 
     
-    disney_use_tex = bpy.props.BoolProperty( name = "Use Texture", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
+    disney_use_tex = bpy.props.BoolProperty( name = "", description = "Use texture to influence the layer weight in the BSDF mix", default = False)
 
     disney_mix_tex = bpy.props.StringProperty( name = "", description = "Texture to influence layer weight in the BSDF mix", default = "")
 
@@ -317,7 +323,7 @@ class AppleseedMatProps( bpy.types.PropertyGroup):
     
     use_light_emission = bpy.props.BoolProperty(name = "", description = "Enable material light emission", default = False)
     
-    light_emission = bpy.props.FloatProperty(name = "Emission strength", description = "Light emission strength", default = 0.0, min = 0.0, max = 10000.0)
+    light_emission = bpy.props.FloatProperty(name = "Emission Strength", description = "Light emission strength", default = 0.0, min = 0.0, max = 10000.0)
     
     light_color = bpy.props.FloatVectorProperty(name = "Emission Color", description = "Light emission color", default = (0.8, 0.8, 0.8), subtype = "COLOR", min = 0.0, max = 1.0)
 
@@ -341,7 +347,7 @@ class AppleseedMatProps( bpy.types.PropertyGroup):
 
     material_alpha = bpy.props.FloatProperty(name = "Alpha", description = "Alpha", default = 1.0, min = 0.0, max = 1.0)
 
-    shade_alpha_cutouts = bpy.props.BoolProperty(name = "Shade Alpha Cutouts", description = "Shade alpha cutouts", default = False)
+    shade_alpha_cutouts = bpy.props.BoolProperty(name = "Shade Alpha Cutout", description = "Shade alpha cutout", default = False)
 
     preview_quality = bpy.props.IntProperty(name = "Preview Quality", description = "Number of samples used for preview rendering", default = 2, min = 1, max = 16)
 

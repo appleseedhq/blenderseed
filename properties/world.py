@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -43,11 +43,11 @@ class AppleseedSkySettings( bpy.types.PropertyGroup):
                                                                    description = "appleseed Sky",
                                                                    type = cls)
                 
-        cls.env_type = bpy.props.EnumProperty( items = [( "gradient", "Gradient", "Use sky color gradient"),
-                                                        ( "constant", "Constant", "Use constant color for sky"),
+        cls.env_type = bpy.props.EnumProperty( items = [( "constant", "Constant", "Use constant color for sky"),
+                                                        ( "gradient", "Gradient", "Use sky color gradient"),
                                                         ( "constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere"),
-                                                        ( "latlong_map", "Latitude-Longitude Map", "Use latlong map texture -- texture must be .png or .exr format"), 
-                                                        ( "mirrorball_map", "Mirror Ball Map", "Use mirror ball texture -- texture must be .png or .exr format"),  
+                                                        ( "latlong_map", "Latitude-Longitude Map", "Use latlong map texture"), 
+                                                        ( "mirrorball_map", "Mirror Ball Map", "Use mirror ball texture"),  
                                                         ( "sunsky", "Physical Sun/Sky", "")],
                                                name = "Environment Type", 
                                                description = "Select environment type", 
@@ -60,7 +60,7 @@ class AppleseedSkySettings( bpy.types.PropertyGroup):
                                                          default = "hosek_environment_edf")
                                         
         cls.env_tex = bpy.props.StringProperty( name = "Environment Texture", 
-                                                description = "Texture to influence environment- -- texture must be .png or .exr format", 
+                                                description = "Texture to influence environment", 
                                                 default = "")
         
         cls.env_tex_mult = bpy.props.FloatProperty( name = "Radiance Multiplier", 
@@ -69,13 +69,13 @@ class AppleseedSkySettings( bpy.types.PropertyGroup):
                                                     min = 0.0, 
                                                     max = 2.0)
                 
-        cls.sun_theta = bpy.props.FloatProperty( name = "Sun theta angle", 
+        cls.sun_theta = bpy.props.FloatProperty( name = "Sun Theta Angle", 
                                                  description = '', 
                                                  default = 0.0, 
                                                  min = -180, 
                                                  max = 180)
         
-        cls.sun_phi = bpy.props.FloatProperty( name = "Sun phi angle", 
+        cls.sun_phi = bpy.props.FloatProperty( name = "Sun Phi Angle", 
                                                description = '', 
                                                default = 0.0, 
                                                min = -180, 
@@ -85,25 +85,25 @@ class AppleseedSkySettings( bpy.types.PropertyGroup):
                                                name = "Sun Lamp", 
                                                description = "Sun lamp to export")                   
         
-        cls.horiz_shift = bpy.props.FloatProperty( name = "Horizon shift", 
+        cls.horiz_shift = bpy.props.FloatProperty( name = "Horizon Shift", 
                                                    description = '', 
                                                    default = 0.0, 
                                                    min = -2.0, 
                                                    max = 2.0)
         
-        cls.luminance_multiplier = bpy.props.FloatProperty( name = "Sky luminance multiplier", 
+        cls.luminance_multiplier = bpy.props.FloatProperty( name = "Sky Luminance Multiplier", 
                                                             description ='', 
                                                             default = 1.0, 
                                                             min = 0.0, 
                                                             max = 20.0)
         
-        cls.radiance_multiplier = bpy.props.FloatProperty( name = "Sun radiance multiplier", 
+        cls.radiance_multiplier = bpy.props.FloatProperty( name = "Sun Radiance Multiplier", 
                                                            description = '', 
                                                            default = 0.05, 
                                                            min = 0.0, 
                                                            max = 1.0)
         
-        cls.saturation_multiplier = bpy.props.FloatProperty( name= "Saturation multiplier", 
+        cls.saturation_multiplier = bpy.props.FloatProperty( name= "Saturation Multiplier", 
                                                              description = '', 
                                                              default = 1.0, 
                                                              min = 0.0, 
@@ -115,19 +115,19 @@ class AppleseedSkySettings( bpy.types.PropertyGroup):
                                                  min = 0.0, 
                                                  max = 10.0)
 
-        cls.turbidity_max = bpy.props.FloatProperty( name = "Turbidity max", 
+        cls.turbidity_max = bpy.props.FloatProperty( name = "Turbidity Max", 
                                                      description = '', 
                                                      default = 6.0, 
                                                      min = 0, 
                                                      max = 10.0)
 
-        cls.turbidity_min = bpy.props.FloatProperty( name = "Turbidity min", 
+        cls.turbidity_min = bpy.props.FloatProperty( name = "Turbidity Min", 
                                                      description = '', 
                                                      default = 2.0, 
                                                      min = 0, 
                                                      max = 10.0)
         
-        cls.ground_albedo = bpy.props.FloatProperty( name = "Ground albedo", 
+        cls.ground_albedo = bpy.props.FloatProperty( name = "Ground Albedo", 
                                                      description = '', 
                                                      default = 0.3, 
                                                      min = 0.0, 

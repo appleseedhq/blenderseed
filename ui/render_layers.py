@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -44,8 +44,6 @@ class AppleseedRenderLayers( bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         appleseed_layers = scene.appleseed_layers
-        
-        layout.label( "Render Layers:", icon = 'RENDERLAYERS')
        
         row = layout.row()
         row.template_list( "UI_UL_list", "appleseed_render_layers", appleseed_layers, "layers", appleseed_layers, "layer_index")
@@ -59,8 +57,8 @@ class AppleseedRenderLayers( bpy.types.Panel):
             layout.prop( current_layer, "name", text = "Layer Name")
 
             row = layout.row( align = True)
-            row.operator( "appleseed.add_to_renderlayer", icon = "ZOOMIN")
-            row.operator( "appleseed.remove_from_renderlayer", icon = "ZOOMOUT")
+            row.operator( "appleseed.add_to_renderlayer", text = "Add Selected", icon = "ZOOMIN")
+            row.operator( "appleseed.remove_from_renderlayer", text = "Remove", icon = "ZOOMOUT")
             
 def register():
     bpy.utils.register_class( AppleseedRenderLayers)

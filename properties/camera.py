@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -43,13 +43,13 @@ class AppleseedCameraSettings( bpy.types.PropertyGroup):
                 type = cls)
 
         cls.camera_type = bpy.props.EnumProperty( items = [('pinhole', 'Pinhole', 'Pinhole camera - no DoF'),
-                                                           ('thinlens', 'Thin lens', 'Thin lens - enables DoF'),
+                                                           ('thinlens', 'Thin Lens', 'Thin lens - enables DoF'),
                                                            ('spherical', 'Spherical', '')],
-                                            name = "Camera type",
+                                            name = "Camera Type",
                                             description = "Camera lens model",
                                             default = 'pinhole')
                                             
-        cls.camera_dof = bpy.props.FloatProperty( name = "F-stop", 
+        cls.camera_dof = bpy.props.FloatProperty( name = "F-Stop", 
                                             description = "Thin lens camera f-stop value", 
                                             default = 32.0, 
                                             min = 0.0, 
@@ -63,14 +63,14 @@ class AppleseedCameraSettings( bpy.types.PropertyGroup):
                                             max = 32,
                                             min = 0)
 
-        cls.diaphragm_angle = bpy.props.FloatProperty( name = "Tilt Angle", 
+        cls.diaphragm_angle = bpy.props.FloatProperty( name = "Diaphragm Tilt Angle", 
                                             description = "Diaphragm tilt angle", 
                                             default = 0, 
                                             min = -360, 
                                             max = 360, 
                                             precision = 3)
 
-        cls.diaphragm_map = bpy.props.StringProperty( name = "Diaphragm Map",
+        cls.diaphragm_map = bpy.props.StringProperty( name = "Diaphragm",
                                             description = "Image texture to influence bokeh",
                                             default = '',
                                             subtype = 'FILE_PATH')

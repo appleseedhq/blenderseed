@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -121,7 +121,7 @@ appleseed_node_categories = [
         nodeitems_utils.NodeItem( "AppleseedMicrofacetNode"),
         nodeitems_utils.NodeItem( "AppleseedOrenNayarNode"),
         nodeitems_utils.NodeItem( "AppleseedSpecBRDFNode"),
-        nodeitems_utils.NodeItem( "AppleseedSpecBTDFNode"),
+        # nodeitems_utils.NodeItem( "AppleseedSpecBTDFNode"),
         nodeitems_utils.NodeItem( "AppleseedBlendNode")]),
     AppleseedNodeCategory( "TEXTURES", "Texture", items = [
         nodeitems_utils.NodeItem( "AppleseedTexNode"),
