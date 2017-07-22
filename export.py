@@ -32,33 +32,36 @@ import os
 from . import project_file_writer
 from . import util
 
-class ExportAppleseedScene( bpy.types.Operator, ExportHelper):
+
+class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
     """Saves an appleseed scene"""
     bl_idname = "appleseed.export_scene"
     bl_label = "Export Appleseed Scene"
 
     filename_ext = ".appleseed"
-    filter_glob = bpy.props.StringProperty( default = "*.appleseed", options = {'HIDDEN'},)
-    
+    filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'},)
+
     @classmethod
-    def poll( cls, context):
+    def poll(cls, context):
         renderer = context.scene.render
         return renderer.engine == 'APPLESEED_RENDER'
-        
-    def execute( self, context):
+
+    def execute(self, context):
         scene = context.scene
         appleseed_proj = project_file_writer.write_project_file()
-        appleseed_proj.export( scene, util.realpath( self.filepath))
+        appleseed_proj.export(scene, util.realpath(self.filepath))
         return {'FINISHED'}
 
-def menu_func_export_scene( self, context):
-    self.layout.operator( ExportAppleseedScene.bl_idname, text = "Appleseed (.appleseed)")
+
+def menu_func_export_scene(self, context):
+    self.layout.operator(ExportAppleseedScene.bl_idname, text="Appleseed (.appleseed)")
+
 
 def register():
-    bpy.utils.register_class( ExportAppleseedScene)
-    bpy.types.INFO_MT_file_export.append( menu_func_export_scene)
+    bpy.utils.register_class(ExportAppleseedScene)
+    bpy.types.INFO_MT_file_export.append(menu_func_export_scene)
 
 
 def unregister():
-    bpy.utils.unregister_class( ExportAppleseedScene)
-    bpy.types.INFO_MT_file_export.remove( menu_func_export_scene)
+    bpy.utils.unregister_class(ExportAppleseedScene)
+    bpy.types.INFO_MT_file_export.remove(menu_func_export_scene)

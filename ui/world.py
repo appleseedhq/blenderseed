@@ -28,32 +28,33 @@
 
 import bpy
 
-class AppleseedWorldPanelOld( bpy.types.Panel):
+
+class AppleseedWorldPanelOld(bpy.types.Panel):
     bl_label = "Environment"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_context = "world"
-    
+
     @classmethod
-    def poll( cls, context):
+    def poll(cls, context):
         renderer = context.scene.render
         if renderer.engine == 'APPLESEED_RENDER':
             return context.scene.world != None
         return False
-    
+
     def draw(self, context):
         layout = self.layout
         scene = context.scene
         asr_sky_props = scene.appleseed_sky
 
-        layout.prop(asr_sky_props, "env_type", text = "")
-        
+        layout.prop(asr_sky_props, "env_type", text="")
+
         if asr_sky_props.env_type == "sunsky":
             layout.label("Sun Lamp:")
-            layout.prop(asr_sky_props, "sun_lamp", text = "")
-            layout.prop(asr_sky_props, "sun_model", text = "Sky Model")
-            
+            layout.prop(asr_sky_props, "sun_lamp", text="")
+            layout.prop(asr_sky_props, "sun_model", text="Sky Model")
+
             layout.prop(asr_sky_props, "luminance_multiplier")
             layout.prop(asr_sky_props, "radiance_multiplier")
             layout.prop(asr_sky_props, "saturation_multiplier")
@@ -65,29 +66,31 @@ class AppleseedWorldPanelOld( bpy.types.Panel):
             layout.prop(asr_sky_props, "horiz_shift")
             if asr_sky_props.sun_model == "hosek_environment_edf":
                 layout.prop(asr_sky_props, "ground_albedo")
-            
+
         elif asr_sky_props.env_type == "gradient":
-            layout.prop(scene.world, "horizon_color", text = "")
-            layout.prop(scene.world, "zenith_color", text = "")
-        
+            layout.prop(scene.world, "horizon_color", text="")
+            layout.prop(scene.world, "zenith_color", text="")
+
         elif asr_sky_props.env_type == "constant":
-            layout.prop(scene.world, "horizon_color", text = "")
-        
+            layout.prop(scene.world, "horizon_color", text="")
+
         elif asr_sky_props.env_type == "constant_hemisphere":
-            layout.prop(scene.world, "horizon_color", text = "")
-            layout.prop(scene.world, "zenith_color", text = "")
-            
+            layout.prop(scene.world, "horizon_color", text="")
+            layout.prop(scene.world, "zenith_color", text="")
+
         elif asr_sky_props.env_type == "mirrorball_map":
-            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text = "")
-            layout.prop(asr_sky_props, "env_tex_mult")
-            
-        elif asr_sky_props.env_type == "latlong_map":
-            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text = "")
+            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="")
             layout.prop(asr_sky_props, "env_tex_mult")
 
+        elif asr_sky_props.env_type == "latlong_map":
+            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="")
+            layout.prop(asr_sky_props, "env_tex_mult")
+
+
 def register():
-    bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
+    bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
+
 
 def unregister():
     pass

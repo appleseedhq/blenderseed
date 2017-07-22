@@ -28,24 +28,28 @@
 
 import bpy
 
-class AppleseedRenderLayers( bpy.types.PropertyGroup):
+
+class AppleseedRenderLayers(bpy.types.PropertyGroup):
     pass
 
-class AppleseedRenderLayerProps( bpy.types.PropertyGroup):
-    layers = bpy.props.CollectionProperty( type = AppleseedRenderLayers, 
-                                           name = "Appleseed Render Layers", 
-                                           description = "")
 
-    layer_index = bpy.props.IntProperty( name = "Layer Index", 
-                                         description = "", 
-                                         default = 0, 
-                                         min = 0, 
-                                         max = 32)
+class AppleseedRenderLayerProps(bpy.types.PropertyGroup):
+    layers = bpy.props.CollectionProperty(type=AppleseedRenderLayers,
+                                          name="Appleseed Render Layers",
+                                          description="")
+
+    layer_index = bpy.props.IntProperty(name="Layer Index",
+                                        description="",
+                                        default=0,
+                                        min=0,
+                                        max=32)
+
 
 def register():
-    bpy.utils.register_class( AppleseedRenderLayers)
-    bpy.utils.register_class( AppleseedRenderLayerProps)
+    bpy.utils.register_class(AppleseedRenderLayers)
+    bpy.utils.register_class(AppleseedRenderLayerProps)
+
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedRenderLayers)
-    bpy.utils.unregister_class( AppleseedRenderLayerProps)
+    bpy.utils.unregister_class(AppleseedRenderLayers)
+    bpy.utils.unregister_class(AppleseedRenderLayerProps)

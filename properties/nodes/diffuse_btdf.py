@@ -27,51 +27,57 @@
 #
 
 import bpy
-from bpy.types   import NodeSocket, Node
-from ...util     import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from bpy.types import NodeSocket, Node
+from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
 from ..materials import AppleseedMatLayerProps
-from .           import AppleseedNode, AppleseedSocket
+from . import AppleseedNode, AppleseedSocket
 
 #--------------------------------
 # Diffuse BTDF diffuse color socket.
 #--------------------------------
-class AppleseedDiffuseBTDFReflectanceSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedDiffuseBTDFReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDiffuseBTDFReflectance"
     bl_label = "Reflectance"
-    
+
     socket_value = AppleseedMatLayerProps.transmittance_color
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.8, 0.8, 0.5, 1)
 
 #--------------------------------
 # Diffuse BTDF diffuse multiplier socket.
 #--------------------------------
-class AppleseedDiffuseBTDFMultiplierSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedDiffuseBTDFMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDiffuseBTDFMultiplier"
     bl_label = "Multiplier"
-    
+
     socket_value = AppleseedMatLayerProps.transmittance_multiplier
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
-        
+
 #--------------------------------
 # Diffuse BTDF node.
 #--------------------------------
-class AppleseedDiffuseBTDFNode( Node, AppleseedNode):
+
+
+class AppleseedDiffuseBTDFNode(Node, AppleseedNode):
     '''Appleseed Diffuse BTDF Node'''
     bl_idname = "AppleseedDiffuseBTDFNode"
     bl_label = "Diffuse BTDF"
@@ -79,33 +85,34 @@ class AppleseedDiffuseBTDFNode( Node, AppleseedNode):
 
     node_type = 'diffuse_btdf'
 
-    def init( self, context):
-        self.inputs.new( 'AppleseedDiffuseBTDFReflectance', "Reflectance")
-        self.inputs.new( 'AppleseedDiffuseBTDFMultiplier', "Multiplier")
-        self.outputs.new( 'NodeSocketShader', "BTDF")
-        
-    def draw_buttons( self, context, layout):
+    def init(self, context):
+        self.inputs.new('AppleseedDiffuseBTDFReflectance', "Reflectance")
+        self.inputs.new('AppleseedDiffuseBTDFMultiplier', "Multiplier")
+        self.outputs.new('NodeSocketShader', "BTDF")
+
+    def draw_buttons(self, context, layout):
         pass
-    
+
     def draw_buttons_ext(self, context, layout):
         pass
-    
-    def copy( self, node):
+
+    def copy(self, node):
         pass
-    
-    def free( self):
-        asUpdate( "Removing node ", self)
-    
-    def draw_label( self):
+
+    def free(self):
+        asUpdate("Removing node ", self)
+
+    def draw_label(self):
         return self.bl_label
 
 
 def register():
-    bpy.utils.register_class( AppleseedDiffuseBTDFMultiplierSocket)
-    bpy.utils.register_class( AppleseedDiffuseBTDFReflectanceSocket)
-    bpy.utils.register_class( AppleseedDiffuseBTDFNode)
+    bpy.utils.register_class(AppleseedDiffuseBTDFMultiplierSocket)
+    bpy.utils.register_class(AppleseedDiffuseBTDFReflectanceSocket)
+    bpy.utils.register_class(AppleseedDiffuseBTDFNode)
+
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedDiffuseBTDFNode)
-    bpy.utils.unregister_class( AppleseedDiffuseBTDFMultiplierSocket)
-    bpy.utils.unregister_class( AppleseedDiffuseBTDFReflectanceSocket)
+    bpy.utils.unregister_class(AppleseedDiffuseBTDFNode)
+    bpy.utils.unregister_class(AppleseedDiffuseBTDFMultiplierSocket)
+    bpy.utils.unregister_class(AppleseedDiffuseBTDFReflectanceSocket)

@@ -27,100 +27,108 @@
 #
 
 import bpy
-from bpy.types   import NodeSocket, Node
-from ...util     import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from bpy.types import NodeSocket, Node
+from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
 from ..materials import AppleseedMatProps
-from .           import AppleseedNode, AppleseedSocket
+from . import AppleseedNode, AppleseedSocket
 
 
 #--------------------------------
 # Blend 1 socket.
 #--------------------------------
-class AppleseedBlend1Socket( NodeSocket, AppleseedSocket):
+class AppleseedBlend1Socket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBlend1"
     bl_label = "BSDF"
-    
-    def draw( self, context, layout, node, text):
-        layout.label( text)
 
-    def draw_color( self, context, node):
+    def draw(self, context, layout, node, text):
+        layout.label(text)
+
+    def draw_color(self, context, node):
         return (0.8, 0.8, 0.5, 1)
 
 #--------------------------------
 # Blend 2 socket.
 #--------------------------------
-class AppleseedBlend2Socket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedBlend2Socket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBlend2"
     bl_label = "BSDF"
 
-    def draw( self, context, layout, node, text):
-        layout.label( text)
+    def draw(self, context, layout, node, text):
+        layout.label(text)
 
-    def draw_color( self, context, node):
+    def draw_color(self, context, node):
         return (0.8, 0.8, 0.5, 1)
 
 #--------------------------------
 # Blend weight socket.
 #--------------------------------
-class AppleseedBlendWeightSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedBlendWeightSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBlendWeight"
     bl_label = "Weight"
-    
-    socket_value = bpy.props.FloatProperty( name = "Weight",
-                                            description = "Blending weight between BSDFs",
-                                            default = 0.5,
-                                            min = 0,
-                                            max = 1)
 
-    def draw( self, context, layout, node, text):
+    socket_value = bpy.props.FloatProperty(name="Weight",
+                                           description="Blending weight between BSDFs",
+                                           default=0.5,
+                                           min=0,
+                                           max=1)
+
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
-        
-#--------------------------------    
+
+#--------------------------------
 # BSDF Blend node.
 #--------------------------------
-class AppleseedBlendNode( Node, AppleseedNode):
+
+
+class AppleseedBlendNode(Node, AppleseedNode):
     '''Appleseed BSDF Blend Node'''
     bl_idname = "AppleseedBlendNode"
     bl_label = "BSDF Blend"
     bl_icon = 'SMOOTH'
 
     node_type = 'bsdf_blend'
-    
-    def init( self, context):
-        self.inputs.new( 'AppleseedBlendWeight', "Weight")
-        self.inputs.new( 'AppleseedBlend1', "BSDF")
-        self.inputs.new( 'AppleseedBlend2', "BSDF")
-        self.outputs.new( 'NodeSocketShader', "BSDF")
-        
-    def draw_buttons( self, context, layout):
+
+    def init(self, context):
+        self.inputs.new('AppleseedBlendWeight', "Weight")
+        self.inputs.new('AppleseedBlend1', "BSDF")
+        self.inputs.new('AppleseedBlend2', "BSDF")
+        self.outputs.new('NodeSocketShader', "BSDF")
+
+    def draw_buttons(self, context, layout):
         pass
-    
+
     def draw_buttons_ext(self, context, layout):
         pass
-    
-    def copy( self, node):
+
+    def copy(self, node):
         pass
-    
-    def free( self):
-        asUpdate( "Removing node ", self)
-    
-    def draw_label( self):
+
+    def free(self):
+        asUpdate("Removing node ", self)
+
+    def draw_label(self):
         return self.bl_label
 
+
 def register():
-    bpy.utils.register_class( AppleseedBlend1Socket)
-    bpy.utils.register_class( AppleseedBlend2Socket)
-    bpy.utils.register_class( AppleseedBlendWeightSocket)
-    bpy.utils.register_class( AppleseedBlendNode)
+    bpy.utils.register_class(AppleseedBlend1Socket)
+    bpy.utils.register_class(AppleseedBlend2Socket)
+    bpy.utils.register_class(AppleseedBlendWeightSocket)
+    bpy.utils.register_class(AppleseedBlendNode)
+
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedBlend1Socket)
-    bpy.utils.unregister_class( AppleseedBlend2Socket)
-    bpy.utils.unregister_class( AppleseedBlendWeightSocket)
-    bpy.utils.unregister_class( AppleseedBlendNode)
+    bpy.utils.unregister_class(AppleseedBlend1Socket)
+    bpy.utils.unregister_class(AppleseedBlend2Socket)
+    bpy.utils.unregister_class(AppleseedBlendWeightSocket)
+    bpy.utils.unregister_class(AppleseedBlendNode)

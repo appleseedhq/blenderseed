@@ -28,34 +28,38 @@
 
 import bpy
 
-class AppleseedObjSettings( bpy.types.PropertyGroup):
+
+class AppleseedObjSettings(bpy.types.PropertyGroup):
+
     @classmethod
     def register(cls):
         bpy.types.Object.appleseed = bpy.props.PointerProperty(
-                name = "Appleseed Object Settings",
-                description = "Appleseed object settings",
-                type = cls)
+            name="Appleseed Object Settings",
+            description="Appleseed object settings",
+            type=cls)
 
-        cls.render_layer = bpy.props.StringProperty( name = "Render Layer", 
-                                        description = "AOV containing this object", 
-                                        default = '')
+        cls.render_layer = bpy.props.StringProperty(name="Render Layer",
+                                                    description="AOV containing this object",
+                                                    default='')
 
-        cls.mblur_enable = bpy.props.BoolProperty( name = "",
-                                        description = "Enable rendering of motion blur",
-                                        default = False)
+        cls.mblur_enable = bpy.props.BoolProperty(name="",
+                                                  description="Enable rendering of motion blur",
+                                                  default=False)
 
-        cls.mblur_type = bpy.props.EnumProperty( name = "Type",
-                                        items = [('object', 'Object', 'Object motion blur'),
-                                                 ('deformation', 'Deformation', 'Deformation motion blur. Warning - this will increase export time')],
-                                        description = "Type of motion blur to render",
-                                        default = 'object')
-        
+        cls.mblur_type = bpy.props.EnumProperty(name="Type",
+                                                items=[('object', 'Object', 'Object motion blur'),
+                                                       ('deformation', 'Deformation', 'Deformation motion blur. Warning - this will increase export time')],
+                                                description="Type of motion blur to render",
+                                                default='object')
+
     @classmethod
-    def unregister( cls):
+    def unregister(cls):
         del bpy.types.Object.appleseed
+
 
 def register():
     pass
-    
+
+
 def unregister():
     pass

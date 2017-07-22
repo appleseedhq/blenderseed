@@ -28,41 +28,46 @@
 
 import bpy
 import nodeitems_utils
-from bpy.types          import NodeTree
-from bpy.app.handlers   import persistent
-from ...util            import addon_dir, join_names_underscore
+from bpy.types import NodeTree
+from bpy.app.handlers import persistent
+from ...util import addon_dir, join_names_underscore
 import os
 
 #--------------------------------
 # Class for appleseed node tree.
 #--------------------------------
-class AppleseedNodeTree( NodeTree):
+
+
+class AppleseedNodeTree(NodeTree):
     '''Appleseed Node Editor'''
     bl_idname = 'AppleseedNodeTree'
     bl_label = 'Appleseed Node Tree'
     bl_icon = 'NODETREE'
 
     @classmethod
-    def poll( cls, context):
-        renderer = context.scene.render.engine 
+    def poll(cls, context):
+        renderer = context.scene.render.engine
         return renderer == 'APPLESEED_RENDER'
 
-#--------------------------------    
+#--------------------------------
 # Base class for appleseed nodes.
 #--------------------------------
+
+
 class AppleseedNode:
+
     @classmethod
-    def poll( cls, context):
-        renderer = context.scene.render.engine 
+    def poll(cls, context):
+        renderer = context.scene.render.engine
         return context.bl_idname == "AppleseedNodeTree" and renderer == 'APPLESEED_RENDER'
 
-    def get_node_name( self):
+    def get_node_name(self):
         '''
         Return the node's name, including appended pointer
         '''
-        return join_names_underscore( self.name, str(self.as_pointer()))
+        return join_names_underscore(self.name, str(self.as_pointer()))
 
-    def traverse_tree( self, material_node):
+    def traverse_tree(self, material_node):
         '''
         Iterate inputs and traverse the tree backward if any inputs are connected.
         Nodes are added to a list attribute of the material output node.
@@ -70,17 +75,19 @@ class AppleseedNode:
         for socket in self.inputs:
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
-                linked_node.traverse_tree( material_node)
-        material_node.tree.append( self)
-        
-#--------------------------------   
+                linked_node.traverse_tree(material_node)
+        material_node.tree.append(self)
+
+#--------------------------------
 # Base class for appleseed sockets.
-#--------------------------------   
-class AppleseedSocket( object):
+#--------------------------------
+
+
+class AppleseedSocket(object):
     # Set to default None.
     socket_value = None
 
-    def get_socket_value( self, texture_only = True):
+    def get_socket_value(self, texture_only=True):
         '''
         Method to return socket's value, if not linked. 
         If linked, return the name of the node with appended pointer.
@@ -94,15 +101,16 @@ class AppleseedSocket( object):
                 return linked_node.get_node_name()
         # Return socket value if not linked, or if the incoming node is incompatible.
         return self.socket_value
-        
+
 
 #--------------------------------
-# Node category for extending the Add menu, toolbar panels 
-#   and search operator    
+# Node category for extending the Add menu, toolbar panels
+#   and search operator
 # Base class for node categories
 #--------------------------------
-class AppleseedNodeCategory( nodeitems_utils.NodeCategory):
-    @classmethod 
+class AppleseedNodeCategory(nodeitems_utils.NodeCategory):
+
+    @classmethod
     def poll(cls, context):
         renderer = context.scene.render.engine
         return context.space_data.tree_type == 'AppleseedNodeTree' and renderer == 'APPLESEED_RENDER'
@@ -112,34 +120,34 @@ class AppleseedNodeCategory( nodeitems_utils.NodeCategory):
 # identifier, label, items list
 #--------------------------------
 appleseed_node_categories = [
-    AppleseedNodeCategory("BSDF", "BSDF", items = [
-        nodeitems_utils.NodeItem( "AppleseedAshikhminNode"),
-        nodeitems_utils.NodeItem( "AppleseedDiffuseBTDFNode"),
-        nodeitems_utils.NodeItem( "AppleseedDisneyNode"),
-        nodeitems_utils.NodeItem( "AppleseedKelemenNode"),
-        nodeitems_utils.NodeItem( "AppleseedLambertianNode"),
-        nodeitems_utils.NodeItem( "AppleseedMicrofacetNode"),
-        nodeitems_utils.NodeItem( "AppleseedOrenNayarNode"),
-        nodeitems_utils.NodeItem( "AppleseedSpecBRDFNode"),
+    AppleseedNodeCategory("BSDF", "BSDF", items=[
+        nodeitems_utils.NodeItem("AppleseedAshikhminNode"),
+        nodeitems_utils.NodeItem("AppleseedDiffuseBTDFNode"),
+        nodeitems_utils.NodeItem("AppleseedDisneyNode"),
+        nodeitems_utils.NodeItem("AppleseedKelemenNode"),
+        nodeitems_utils.NodeItem("AppleseedLambertianNode"),
+        nodeitems_utils.NodeItem("AppleseedMicrofacetNode"),
+        nodeitems_utils.NodeItem("AppleseedOrenNayarNode"),
+        nodeitems_utils.NodeItem("AppleseedSpecBRDFNode"),
         # nodeitems_utils.NodeItem( "AppleseedSpecBTDFNode"),
-        nodeitems_utils.NodeItem( "AppleseedBlendNode")]),
-    AppleseedNodeCategory( "TEXTURES", "Texture", items = [
-        nodeitems_utils.NodeItem( "AppleseedTexNode"),
-        nodeitems_utils.NodeItem( "AppleseedNormalNode")]),
-    AppleseedNodeCategory( "OUTPUTS", "Output", items = [
-        nodeitems_utils.NodeItem( "AppleseedMaterialNode")])]
+        nodeitems_utils.NodeItem("AppleseedBlendNode")]),
+    AppleseedNodeCategory("TEXTURES", "Texture", items=[
+        nodeitems_utils.NodeItem("AppleseedTexNode"),
+        nodeitems_utils.NodeItem("AppleseedNormalNode")]),
+    AppleseedNodeCategory("OUTPUTS", "Output", items=[
+        nodeitems_utils.NodeItem("AppleseedMaterialNode")])]
 
 
 @persistent
 def appleseed_scene_loaded(dummy):
-    # Load images as icons 
+    # Load images as icons
     icon16 = bpy.data.images.get('APPLESEED16')
     icon32 = bpy.data.images.get('APPLESEED32')
     if icon16 is None:
-        img = bpy.data.images.load(os.path.join( os.path.join( addon_dir, 'icons'), 'APPLESEED16.png'))
+        img = bpy.data.images.load(os.path.join(os.path.join(addon_dir, 'icons'), 'APPLESEED16.png'))
         img.name = 'APPLESEED16'
         img.use_alpha = True
-        img.user_clear() 
+        img.user_clear()
     # remove scene_update handler
     elif "APPLESEED16" not in icon16.keys():
         icon16["APPLESEED16"] = True
@@ -147,10 +155,10 @@ def appleseed_scene_loaded(dummy):
             if f.__name__ == "appleseed_scene_loaded":
                 bpy.app.handlers.scene_update_pre.remove(f)
     if icon32 is None:
-        img = bpy.data.images.load(os.path.join( os.path.join( addon_dir, 'icons'), 'APPLESEED32.png'))
+        img = bpy.data.images.load(os.path.join(os.path.join(addon_dir, 'icons'), 'APPLESEED32.png'))
         img.name = 'APPLESEED32'
         img.use_alpha = True
-        img.user_clear() # Won't get saved into .blend files
+        img.user_clear()  # Won't get saved into .blend files
     # remove scene_update handler
     elif "APPLESEED32" not in icon32.keys():
         icon32["APPLESEED32"] = True
@@ -159,25 +167,26 @@ def appleseed_scene_loaded(dummy):
                 bpy.app.handlers.scene_update_pre.remove(f)
 
 # Load the modules after classes have been created.
-from .          import ashikhmin_brdf
-from .          import bsdf_blend
-from .          import diffuse_btdf
-from .          import disney_brdf
-from .          import kelemen_brdf
-from .          import lambertian_brdf
-from .          import microfacet_brdf
-from .          import orennayar_brdf
-from .          import specular_brdf
-from .          import specular_btdf
-from .          import texture
-from .          import normal
-from .          import material
+from . import ashikhmin_brdf
+from . import bsdf_blend
+from . import diffuse_btdf
+from . import disney_brdf
+from . import kelemen_brdf
+from . import lambertian_brdf
+from . import microfacet_brdf
+from . import orennayar_brdf
+from . import specular_brdf
+from . import specular_btdf
+from . import texture
+from . import normal
+from . import material
+
 
 def register():
-    bpy.app.handlers.load_post.append( appleseed_scene_loaded)
-    bpy.app.handlers.scene_update_pre.append( appleseed_scene_loaded)
+    bpy.app.handlers.load_post.append(appleseed_scene_loaded)
+    bpy.app.handlers.scene_update_pre.append(appleseed_scene_loaded)
     nodeitems_utils.register_node_categories("APPLESEED", appleseed_node_categories)
-    bpy.utils.register_class( AppleseedNodeTree)
+    bpy.utils.register_class(AppleseedNodeTree)
     ashikhmin_brdf.register()
     bsdf_blend.register()
     diffuse_btdf.register()
@@ -191,11 +200,11 @@ def register():
     texture.register()
     normal.register()
     material.register()
-    
+
 
 def unregister():
     nodeitems_utils.unregister_node_categories("APPLESEED")
-    bpy.utils.unregister_class( AppleseedNodeTree)
+    bpy.utils.unregister_class(AppleseedNodeTree)
     ashikhmin_brdf.unregister()
     bsdf_blend.unregister()
     disney_brdf.unregister()
@@ -209,4 +218,4 @@ def unregister():
     texture.unregister()
     material.unregister()
     normal.unregister()
-    bpy.app.handlers.load_post.remove( appleseed_scene_loaded)
+    bpy.app.handlers.load_post.remove(appleseed_scene_loaded)

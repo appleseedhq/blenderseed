@@ -38,15 +38,15 @@ bl_info = {
 
 if "bpy" in locals():
     import imp
-    imp.reload( properties)
-    imp.reload( operators)
-    imp.reload( export)
-    imp.reload( ui)
-    imp.reload( render)
-    imp.reload( util)
-    imp.reload( preferences)
-    imp.reload( project_file_writer)
-    
+    imp.reload(properties)
+    imp.reload(operators)
+    imp.reload(export)
+    imp.reload(ui)
+    imp.reload(render)
+    imp.reload(util)
+    imp.reload(preferences)
+    imp.reload(project_file_writer)
+
 else:
     import bpy
     from . import properties
@@ -58,11 +58,16 @@ else:
     from . import preferences
     from . import project_file_writer
 
-import bpy, bl_ui, bl_operators
-import math, mathutils
+import bpy
+import bl_ui
+import bl_operators
+import math
+import mathutils
 from shutil import copyfile
 from datetime import datetime
-import os, subprocess, time
+import os
+import subprocess
+import time
 
 
 def register():
@@ -71,7 +76,8 @@ def register():
     export.register()
     ui.register()
     preferences.register()
-    bpy.utils.register_module( __name__)
+    bpy.utils.register_module(__name__)
+
 
 def unregister():
     properties.unregister()
@@ -79,4 +85,4 @@ def unregister():
     export.unregister()
     ui.unregister()
     preferences.unregister()
-    bpy.utils.unregister_module( __name__)
+    bpy.utils.unregister_module(__name__)

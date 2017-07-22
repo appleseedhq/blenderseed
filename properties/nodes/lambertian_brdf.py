@@ -27,51 +27,57 @@
 #
 
 import bpy
-from bpy.types   import NodeSocket, Node
-from ...util     import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from bpy.types import NodeSocket, Node
+from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
 from ..materials import AppleseedMatLayerProps
-from .           import AppleseedNode, AppleseedSocket
+from . import AppleseedNode, AppleseedSocket
 
 #--------------------------------
 # Lambertian diffuse color socket.
 #--------------------------------
-class AppleseedLambertianReflectanceSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedLambertianReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedLambertianReflectance"
     bl_label = "Reflectance"
-    
+
     socket_value = AppleseedMatLayerProps.lambertian_reflectance
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.8, 0.8, 0.5, 1)
 
 #--------------------------------
 # Lambertian diffuse multiplier socket.
 #--------------------------------
-class AppleseedLambertianMultiplierSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedLambertianMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedLambertianMultiplier"
     bl_label = "Multiplier"
-    
+
     socket_value = AppleseedMatLayerProps.lambertian_multiplier
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
-        
+
 #--------------------------------
 # Lambertian BRDF node.
 #--------------------------------
-class AppleseedLambertianNode( Node, AppleseedNode):
+
+
+class AppleseedLambertianNode(Node, AppleseedNode):
     '''Appleseed Lambertian BRDF Node'''
     bl_idname = "AppleseedLambertianNode"
     bl_label = "Lambertian BRDF"
@@ -79,34 +85,34 @@ class AppleseedLambertianNode( Node, AppleseedNode):
 
     node_type = 'lambertian'
 
-    def init( self, context):
-        self.inputs.new( 'AppleseedLambertianReflectance', "Reflectance")
-        self.inputs.new( 'AppleseedLambertianMultiplier', "Multiplier")
-        self.outputs.new( 'NodeSocketShader', "BRDF")
-        
-    def draw_buttons( self, context, layout):
+    def init(self, context):
+        self.inputs.new('AppleseedLambertianReflectance', "Reflectance")
+        self.inputs.new('AppleseedLambertianMultiplier', "Multiplier")
+        self.outputs.new('NodeSocketShader', "BRDF")
+
+    def draw_buttons(self, context, layout):
         pass
-    
+
     def draw_buttons_ext(self, context, layout):
         pass
-    
-    def copy( self, node):
+
+    def copy(self, node):
         pass
-    
-    def free( self):
-        asUpdate( "Removing node ", self)
-    
-    def draw_label( self):
+
+    def free(self):
+        asUpdate("Removing node ", self)
+
+    def draw_label(self):
         return self.bl_label
 
 
 def register():
-    bpy.utils.register_class( AppleseedLambertianMultiplierSocket)
-    bpy.utils.register_class( AppleseedLambertianReflectanceSocket)
-    bpy.utils.register_class( AppleseedLambertianNode)
+    bpy.utils.register_class(AppleseedLambertianMultiplierSocket)
+    bpy.utils.register_class(AppleseedLambertianReflectanceSocket)
+    bpy.utils.register_class(AppleseedLambertianNode)
+
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedLambertianNode)
-    bpy.utils.unregister_class( AppleseedLambertianMultiplierSocket)
-    bpy.utils.unregister_class( AppleseedLambertianReflectanceSocket)
-    
+    bpy.utils.unregister_class(AppleseedLambertianNode)
+    bpy.utils.unregister_class(AppleseedLambertianMultiplierSocket)
+    bpy.utils.unregister_class(AppleseedLambertianReflectanceSocket)

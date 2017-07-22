@@ -19,25 +19,28 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-# 
+#
 #
 # ##### END MIT LICENSE BLOCK #####
 
 import bpy
 
-class AppleseedPreferencesPanel( bpy.types.AddonPreferences):
+
+class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
     bl_idname = __package__
-    
-    appleseed_path = bpy.props.StringProperty(  name = "Appleseed binary dir",
-                                                description = "Path to Appleseed binary dir",
-                                                subtype = 'DIR_PATH',
-                                                default = "")
+
+    appleseed_path = bpy.props.StringProperty(name="Appleseed binary dir",
+                                              description="Path to Appleseed binary dir",
+                                              subtype='DIR_PATH',
+                                              default="")
 
     def draw(self, context):
-        self.layout.prop( self, "appleseed_path")
+        self.layout.prop(self, "appleseed_path")
+
 
 def register():
-    bpy.utils.register_class( AppleseedPreferencesPanel)
+    bpy.utils.register_class(AppleseedPreferencesPanel)
+
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedPreferencesPanel)
+    bpy.utils.unregister_class(AppleseedPreferencesPanel)

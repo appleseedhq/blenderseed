@@ -28,59 +28,65 @@
 
 import bpy
 
+
 def get_shutter_min(self, context):
     return context.scene.camera.appleseed.shutter_open
+
 
 def get_shutter_max(self, context):
     return context.scene.camera.appleseed.shutter_close
 
-class AppleseedCameraSettings( bpy.types.PropertyGroup):
+
+class AppleseedCameraSettings(bpy.types.PropertyGroup):
+
     @classmethod
     def register(cls):
         bpy.types.Camera.appleseed = bpy.props.PointerProperty(
-                name = "Appleseed Camera Settings",
-                description = "Appleseed camera settings",
-                type = cls)
+            name="Appleseed Camera Settings",
+            description="Appleseed camera settings",
+            type=cls)
 
-        cls.camera_type = bpy.props.EnumProperty( items = [('pinhole', 'Pinhole', 'Pinhole camera - no DoF'),
-                                                           ('thinlens', 'Thin Lens', 'Thin lens - enables DoF'),
-                                                           ('spherical', 'Spherical', '')],
-                                            name = "Camera Type",
-                                            description = "Camera lens model",
-                                            default = 'pinhole')
-                                            
-        cls.camera_dof = bpy.props.FloatProperty( name = "F-Stop", 
-                                            description = "Thin lens camera f-stop value", 
-                                            default = 32.0, 
-                                            min = 0.0, 
-                                            max = 32.0, 
-                                            step = 3, 
-                                            precision = 1)
-                                            
-        cls.diaphragm_blades = bpy.props.IntProperty( name = "Diaphragm Blades",
-                                            description = "Number of diaphragm blades. Use minimum of 3 for geometric bokeh",
-                                            default = 3,
-                                            max = 32,
-                                            min = 0)
+        cls.camera_type = bpy.props.EnumProperty(items=[('pinhole', 'Pinhole', 'Pinhole camera - no DoF'),
+                                                        ('thinlens', 'Thin Lens', 'Thin lens - enables DoF'),
+                                                        ('spherical', 'Spherical', '')],
+                                                 name="Camera Type",
+                                                 description="Camera lens model",
+                                                 default='pinhole')
 
-        cls.diaphragm_angle = bpy.props.FloatProperty( name = "Diaphragm Tilt Angle", 
-                                            description = "Diaphragm tilt angle", 
-                                            default = 0, 
-                                            min = -360, 
-                                            max = 360, 
-                                            precision = 3)
+        cls.camera_dof = bpy.props.FloatProperty(name="F-Stop",
+                                                 description="Thin lens camera f-stop value",
+                                                 default=32.0,
+                                                 min=0.0,
+                                                 max=32.0,
+                                                 step=3,
+                                                 precision=1)
 
-        cls.diaphragm_map = bpy.props.StringProperty( name = "Diaphragm",
-                                            description = "Image texture to influence bokeh",
-                                            default = '',
-                                            subtype = 'FILE_PATH')
-                                            
+        cls.diaphragm_blades = bpy.props.IntProperty(name="Diaphragm Blades",
+                                                     description="Number of diaphragm blades. Use minimum of 3 for geometric bokeh",
+                                                     default=3,
+                                                     max=32,
+                                                     min=0)
+
+        cls.diaphragm_angle = bpy.props.FloatProperty(name="Diaphragm Tilt Angle",
+                                                      description="Diaphragm tilt angle",
+                                                      default=0,
+                                                      min=-360,
+                                                      max=360,
+                                                      precision=3)
+
+        cls.diaphragm_map = bpy.props.StringProperty(name="Diaphragm",
+                                                     description="Image texture to influence bokeh",
+                                                     default='',
+                                                     subtype='FILE_PATH')
+
     @classmethod
-    def unregister( cls):
+    def unregister(cls):
         del bpy.types.Camera.appleseed
+
 
 def register():
     pass
+
 
 def unregister():
     pass
