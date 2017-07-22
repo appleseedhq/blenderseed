@@ -38,42 +38,50 @@ from . import materials
 from . import lamps
 
 import bl_ui.properties_texture as properties_texture
-INCLUDE_TEXTURE = [ 'TEXTURE_MT_specials', 'TEXTURE_PT_context_texture', 'TEXTURE_PT_image', 'TEXTURE_UL_texslots', 'Panel', 'Object', 'Material', 'Texture', 'TextureSlotPanel', 'TextureButtonsPanel', 'UIList', 'id_tex_datablock', 'context_tex_datablock']
-for member in dir( properties_texture):
+INCLUDE_TEXTURE = ['TEXTURE_MT_specials', 'TEXTURE_PT_context_texture', 'TEXTURE_PT_image', 'TEXTURE_UL_texslots', 'Panel',
+                   'Object', 'Material', 'Texture', 'TextureSlotPanel', 'TextureButtonsPanel', 'UIList', 'id_tex_datablock', 'context_tex_datablock']
+for member in dir(properties_texture):
     if member in INCLUDE_TEXTURE:
-        subclass = getattr( properties_texture, member)
+        subclass = getattr(properties_texture, member)
         try:
-            subclass.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
+            subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
         except:
             pass
 del properties_texture
 
 import bl_ui.properties_material as properties_material
-properties_material.MATERIAL_PT_context_material.COMPAT_ENGINES.add( 'CORONA')
-properties_material.MATERIAL_PT_custom_props.COMPAT_ENGINES.add( 'CORONA')
+properties_material.MATERIAL_PT_context_material.COMPAT_ENGINES.add('CORONA')
+properties_material.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('CORONA')
 del properties_material
 
 # Enable all existing panels for these contexts
 import bl_ui.properties_data_mesh as properties_data_mesh
-for member in dir( properties_data_mesh):
-    subclass = getattr( properties_data_mesh, member)
-    try: subclass.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    except: pass
+for member in dir(properties_data_mesh):
+    subclass = getattr(properties_data_mesh, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
 del properties_data_mesh
 
 import bl_ui.properties_data_mesh as properties_data_mesh
-for member in dir( properties_data_mesh):
-    subclass = getattr( properties_data_mesh, member)
-    try: subclass.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    except: pass
+for member in dir(properties_data_mesh):
+    subclass = getattr(properties_data_mesh, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
 del properties_data_mesh
 
 import bl_ui.properties_particle as properties_particle
-for member in dir( properties_particle):
-    subclass = getattr( properties_particle, member)
-    try: subclass.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    except:  pass
+for member in dir(properties_particle):
+    subclass = getattr(properties_particle, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
 del properties_particle
+
 
 def register():
     render.register()
@@ -85,6 +93,7 @@ def register():
     objects.register()
 #    particles.register()
     lamps.register()
+
 
 def unregister():
     render.unregister()

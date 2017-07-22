@@ -28,44 +28,45 @@
 
 import bpy
 
-class AppleseedRenderLayers( bpy.types.Panel):
+
+class AppleseedRenderLayers(bpy.types.Panel):
     bl_label = "Render Layers"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    bl_context = "render_layer"    
+    bl_context = "render_layer"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    
+
     @classmethod
-    def poll( cls, context):
+    def poll(cls, context):
         renderer = context.scene.render
         return renderer.engine == 'APPLESEED_RENDER'
-    
-    def draw( self, context):
+
+    def draw(self, context):
         layout = self.layout
         scene = context.scene
         appleseed_layers = scene.appleseed_layers
-       
-        row = layout.row()
-        row.template_list( "UI_UL_list", "appleseed_render_layers", appleseed_layers, "layers", appleseed_layers, "layer_index")
-        
-        row = layout.row( align=True)
-        row.operator( "appleseed.add_renderlayer", icon = "ZOOMIN")
-        row.operator( "appleseed.remove_renderlayer", icon = "ZOOMOUT")
-                
-        if appleseed_layers.layers:
-            current_layer = appleseed_layers.layers[appleseed_layers.layer_index]   
-            layout.prop( current_layer, "name", text = "Layer Name")
 
-            row = layout.row( align = True)
-            row.operator( "appleseed.add_to_renderlayer", text = "Add Selected", icon = "ZOOMIN")
-            row.operator( "appleseed.remove_from_renderlayer", text = "Remove", icon = "ZOOMOUT")
-            
+        row = layout.row()
+        row.template_list("UI_UL_list", "appleseed_render_layers", appleseed_layers, "layers", appleseed_layers, "layer_index")
+
+        row = layout.row(align=True)
+        row.operator("appleseed.add_renderlayer", icon="ZOOMIN")
+        row.operator("appleseed.remove_renderlayer", icon="ZOOMOUT")
+
+        if appleseed_layers.layers:
+            current_layer = appleseed_layers.layers[appleseed_layers.layer_index]
+            layout.prop(current_layer, "name", text="Layer Name")
+
+            row = layout.row(align=True)
+            row.operator("appleseed.add_to_renderlayer", text="Add Selected", icon="ZOOMIN")
+            row.operator("appleseed.remove_from_renderlayer", text="Remove", icon="ZOOMOUT")
+
+
 def register():
-    bpy.utils.register_class( AppleseedRenderLayers)
+    bpy.utils.register_class(AppleseedRenderLayers)
 #    bpy.utils.register_class( AppleseedRenderPasses)
 
-    
-def unregister():
-    bpy.utils.unregister_class( AppleseedRenderLayers)
-#    bpy.utils.unregister_class( AppleseedRenderPasses)
 
+def unregister():
+    bpy.utils.unregister_class(AppleseedRenderLayers)
+#    bpy.utils.unregister_class( AppleseedRenderPasses)

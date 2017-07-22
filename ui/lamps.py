@@ -31,7 +31,8 @@ import bpy
 # appleseed Lamps panel.
 #------------------------------------
 
-class AppleseedLampPanel( bpy.types.Panel):
+
+class AppleseedLampPanel(bpy.types.Panel):
     bl_label = "Lamp"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -39,70 +40,72 @@ class AppleseedLampPanel( bpy.types.Panel):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
 
     @classmethod
-    def poll( cls, context):
+    def poll(cls, context):
         ob = context.object
         renderer = context.scene.render.engine
         return ob is not None and ob.type == 'LAMP' and renderer == 'APPLESEED_RENDER'
 
-    def draw( self, context):
+    def draw(self, context):
         layout = self.layout
         lamp_data = context.object.data
         asr_lamp = lamp_data.appleseed
 
-        layout.prop( lamp_data, "type", expand = True)
+        layout.prop(lamp_data, "type", expand=True)
 
         if lamp_data.type == 'SPOT':
             # Lamp radiance.
             # layout.label( "Intensity:")
-            split = layout.split( percentage = 0.90)
+            split = layout.split(percentage=0.90)
             col = split.column()
-            col.prop( asr_lamp, "radiance", text = "")
+            col.prop(asr_lamp, "radiance", text="")
 
             col = split.column()
-            col.prop( asr_lamp, "radiance_use_tex", icon = "TEXTURE_SHADED", toggle = True)
+            col.prop(asr_lamp, "radiance_use_tex", icon="TEXTURE_SHADED", toggle=True)
 
             if asr_lamp.radiance_use_tex:
-                layout.prop_search( asr_lamp, "radiance_tex", lamp_data, "texture_slots")
+                layout.prop_search(asr_lamp, "radiance_tex", lamp_data, "texture_slots")
                 if asr_lamp.radiance_tex != '' and asr_lamp.radiance_use_tex:
-                        radiance_tex = bpy.data.textures[ asr_lamp.radiance_tex]
-                        layout.prop( radiance_tex.image.colorspace_settings, "name", text = "Color Space")
+                    radiance_tex = bpy.data.textures[asr_lamp.radiance_tex]
+                    layout.prop(radiance_tex.image.colorspace_settings, "name", text="Color Space")
 
             # Radiance multiplier.
-            split = layout.split( percentage = 0.90)
+            split = layout.split(percentage=0.90)
             col = split.column()
-            col.prop( asr_lamp, "radiance_multiplier")
+            col.prop(asr_lamp, "radiance_multiplier")
 
             col = split.column()
-            col.prop( asr_lamp, "radiance_multiplier_use_tex", icon = "TEXTURE_SHADED", toggle = True)
+            col.prop(asr_lamp, "radiance_multiplier_use_tex", icon="TEXTURE_SHADED", toggle=True)
 
             if asr_lamp.radiance_multiplier_use_tex:
-                layout.prop_search( asr_lamp, "radiance_multiplier_tex", lamp_data, "texture_slots")
+                layout.prop_search(asr_lamp, "radiance_multiplier_tex", lamp_data, "texture_slots")
                 if asr_lamp.radiance_multiplier_tex != '' and asr_lamp.radiance_multiplier_use_tex:
-                    radiance_multiplier_tex = bpy.data.textures[ asr_lamp.radiance_multiplier_tex]
-                    layout.prop( radiance_multiplier_tex.image.colorspace_settings, "name", text = "Color Space")
+                    radiance_multiplier_tex = bpy.data.textures[asr_lamp.radiance_multiplier_tex]
+                    layout.prop(radiance_multiplier_tex.image.colorspace_settings, "name", text="Color Space")
 
-            layout.prop( lamp_data, "spot_blend", text = "Inner Angle")
-            layout.prop( lamp_data, "spot_size", text = "Outer Angle")
-            layout.prop( asr_lamp, "tilt_angle")
-            layout.prop( lamp_data, "show_cone")
+            layout.prop(lamp_data, "spot_blend", text="Inner Angle")
+            layout.prop(lamp_data, "spot_size", text="Outer Angle")
+            layout.prop(asr_lamp, "tilt_angle")
+            layout.prop(lamp_data, "show_cone")
 
         elif lamp_data.type in {'POINT', 'SUN', 'HEMI'}:
             # layout.label("Intensity:")
-            layout.prop( asr_lamp, "radiance")
-            layout.prop( asr_lamp, "radiance_multiplier")
+            layout.prop(asr_lamp, "radiance")
+            layout.prop(asr_lamp, "radiance_multiplier")
 
             if lamp_data.type == 'SUN':
-                layout.prop( asr_lamp, "turbidity")
-                
+                layout.prop(asr_lamp, "turbidity")
+
         if lamp_data.type != 'AREA':
-            layout.prop( asr_lamp, "cast_indirect")
-            layout.prop( asr_lamp, "importance_multiplier")
+            layout.prop(asr_lamp, "cast_indirect")
+            layout.prop(asr_lamp, "importance_multiplier")
 
         else:
-            layout.label( "Area lights are unsupported.")
+            layout.label("Area lights are unsupported.")
+
 
 def register():
-    bpy.utils.register_class( AppleseedLampPanel)
+    bpy.utils.register_class(AppleseedLampPanel)
+
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedLampPanel)
+    bpy.utils.unregister_class(AppleseedLampPanel)

@@ -27,10 +27,10 @@
 #
 
 import bpy
-from bpy.types   import NodeSocket, Node
-from ...util     import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from bpy.types import NodeSocket, Node
+from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
 from ..materials import AppleseedMatLayerProps
-from .           import AppleseedNode, AppleseedSocket
+from . import AppleseedNode, AppleseedSocket
 
 # reflectance
 # multiplier
@@ -41,79 +41,89 @@ from .           import AppleseedNode, AppleseedSocket
 #--------------------------------
 # Specular diffuse color socket.
 #--------------------------------
-class AppleseedSpecBTDFReflectanceSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedSpecBTDFReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBTDFReflectance"
     bl_label = "Reflectance"
-    
+
     socket_value = AppleseedMatLayerProps.specular_reflectance
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.8, 0.8, 0.5, 1)
 
 #--------------------------------
 # Specular diffuse multiplier socket.
 #--------------------------------
-class AppleseedSpecBTDFMultiplierSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedSpecBTDFMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBTDFMultiplier"
     bl_label = "Multiplier"
-    
+
     socket_value = AppleseedMatLayerProps.specular_multiplier
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
 #--------------------------------
 # Specular transmittance color socket.
 #--------------------------------
-class AppleseedSpecBTDFTransmittanceSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedSpecBTDFTransmittanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBTDFTransmittance"
     bl_label = "Transmittance"
-    
+
     socket_value = AppleseedMatLayerProps.spec_btdf_transmittance
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.8, 0.8, 0.5, 1)
 
 #--------------------------------
 # Specular transmittance multiplier socket.
 #--------------------------------
-class AppleseedSpecBTDFTransMultSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedSpecBTDFTransMultSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBTDFTransMult"
     bl_label = "Multiplier"
-    
+
     socket_value = AppleseedMatLayerProps.spec_btdf_trans_mult
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
 
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 #--------------------------------
 # Specular BTDF node.
 #--------------------------------
-class AppleseedSpecBTDFNode( Node, AppleseedNode):
+
+
+class AppleseedSpecBTDFNode(Node, AppleseedNode):
     '''Appleseed Specular BTDF Node'''
     bl_idname = "AppleseedSpecBTDFNode"
     bl_label = "Specular BTDF"
@@ -122,42 +132,43 @@ class AppleseedSpecBTDFNode( Node, AppleseedNode):
     node_type = 'specular_btdf'
 
     from_ior = AppleseedMatLayerProps.spec_btdf_from_ior
-    to_ior =   AppleseedMatLayerProps.spec_btdf_to_ior
-    
-    def init( self, context):
-        self.inputs.new( 'AppleseedSpecBTDFReflectance', "Reflectance")
-        self.inputs.new( 'AppleseedSpecBTDFMultiplier', "Multiplier")
-        self.inputs.new( 'AppleseedSpecBTDFTransmittance', "Transmittance")
-        self.inputs.new( 'AppleseedSpecBTDFTransMult', "Multiplier")
-        self.outputs.new( 'NodeSocketShader', "BTDF")
-        
-    def draw_buttons( self, context, layout):
-        layout.prop( self, "from_ior")
-        layout.prop( self, "to_ior")
-    
+    to_ior = AppleseedMatLayerProps.spec_btdf_to_ior
+
+    def init(self, context):
+        self.inputs.new('AppleseedSpecBTDFReflectance', "Reflectance")
+        self.inputs.new('AppleseedSpecBTDFMultiplier', "Multiplier")
+        self.inputs.new('AppleseedSpecBTDFTransmittance', "Transmittance")
+        self.inputs.new('AppleseedSpecBTDFTransMult', "Multiplier")
+        self.outputs.new('NodeSocketShader', "BTDF")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "from_ior")
+        layout.prop(self, "to_ior")
+
     def draw_buttons_ext(self, context, layout):
         pass
-    
-    def copy( self, node):
+
+    def copy(self, node):
         pass
-    
-    def free( self):
-        asUpdate( "Removing node ", self)
-    
-    def draw_label( self):
+
+    def free(self):
+        asUpdate("Removing node ", self)
+
+    def draw_label(self):
         return self.bl_label
-        
+
+
 def register():
-    bpy.utils.register_class( AppleseedSpecBTDFMultiplierSocket)
-    bpy.utils.register_class( AppleseedSpecBTDFReflectanceSocket)
-    bpy.utils.register_class( AppleseedSpecBTDFTransmittanceSocket)
-    bpy.utils.register_class( AppleseedSpecBTDFTransMultSocket)
-    bpy.utils.register_class( AppleseedSpecBTDFNode)
+    bpy.utils.register_class(AppleseedSpecBTDFMultiplierSocket)
+    bpy.utils.register_class(AppleseedSpecBTDFReflectanceSocket)
+    bpy.utils.register_class(AppleseedSpecBTDFTransmittanceSocket)
+    bpy.utils.register_class(AppleseedSpecBTDFTransMultSocket)
+    bpy.utils.register_class(AppleseedSpecBTDFNode)
+
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedSpecBTDFNode)
-    bpy.utils.unregister_class( AppleseedSpecBTDFMultiplierSocket)
-    bpy.utils.unregister_class( AppleseedSpecBTDFReflectanceSocket)
-    bpy.utils.unregister_class( AppleseedSpecBTDFTransmittanceSocket)
-    bpy.utils.unregister_class( AppleseedSpecBTDFTransMultSocket)
-    
+    bpy.utils.unregister_class(AppleseedSpecBTDFNode)
+    bpy.utils.unregister_class(AppleseedSpecBTDFMultiplierSocket)
+    bpy.utils.unregister_class(AppleseedSpecBTDFReflectanceSocket)
+    bpy.utils.unregister_class(AppleseedSpecBTDFTransmittanceSocket)
+    bpy.utils.unregister_class(AppleseedSpecBTDFTransMultSocket)

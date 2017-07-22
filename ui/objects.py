@@ -29,7 +29,8 @@
 import bpy
 import bl_ui
 
-class AppleseedObjRenderLayerPanel( bpy.types.Panel):
+
+class AppleseedObjRenderLayerPanel(bpy.types.Panel):
     bl_label = "Render Layer"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
@@ -37,7 +38,7 @@ class AppleseedObjRenderLayerPanel( bpy.types.Panel):
     bl_context = "object"
 
     @classmethod
-    def poll( cls, context):
+    def poll(cls, context):
         renderer = context.scene.render
         return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type != 'CAMERA'
 
@@ -46,20 +47,21 @@ class AppleseedObjRenderLayerPanel( bpy.types.Panel):
         scene = context.scene
         asr_obj = context.object.appleseed
         appleseed_layers = scene.appleseed_layers
-        layout.prop_search( asr_obj, "render_layer", appleseed_layers, "layers", text = "")
+        layout.prop_search(asr_obj, "render_layer", appleseed_layers, "layers", text="")
 
-class AppleseedObjMBlurPanel( bpy.types.Panel):
+
+class AppleseedObjMBlurPanel(bpy.types.Panel):
     bl_label = "Motion Blur"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
-    
+
     @classmethod
-    def poll( cls, context):
+    def poll(cls, context):
         renderer = context.scene.render
         return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
-    
+
     def draw_header(self, context):
         header = self.layout
         asr_obj = context.object.appleseed
@@ -71,25 +73,27 @@ class AppleseedObjMBlurPanel( bpy.types.Panel):
         layout.active = asr_obj.mblur_enable
 
         layout.prop(asr_obj, "mblur_type")
-    
+
+
 def register():
     import bl_ui.properties_object as properties_object
-    for member in dir( properties_object):
-        subclass = getattr( properties_object, member)
-        try: 
-            subclass.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-        except: 
+    for member in dir(properties_object):
+        subclass = getattr(properties_object, member)
+        try:
+            subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+        except:
             pass
     del properties_object
-    bpy.utils.register_class( AppleseedObjRenderLayerPanel)
+    bpy.utils.register_class(AppleseedObjRenderLayerPanel)
+
 
 def unregister():
     import bl_ui.properties_object as properties_object
-    for member in dir( properties_object):
-        subclass = getattr( properties_object, member)
-        try: 
-            subclass.COMPAT_ENGINES.remove( 'APPLESEED_RENDER')
-        except: 
+    for member in dir(properties_object):
+        subclass = getattr(properties_object, member)
+        try:
+            subclass.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+        except:
             pass
     del properties_object
-    bpy.utils.unregister_class( AppleseedObjRenderLayerPanel)
+    bpy.utils.unregister_class(AppleseedObjRenderLayerPanel)

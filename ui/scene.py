@@ -28,19 +28,21 @@
 
 import bpy
 
+
 def register():
-    bpy.types.SCENE_PT_scene.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_color_management.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_custom_props.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_audio.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_unit.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_keying_sets.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_keying_set_paths.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_physics.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_rigid_body_world.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_rigid_body_cache.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_rigid_body_field_weights.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    bpy.types.SCENE_PT_custom_props.COMPAT_ENGINES.add( 'APPLESEED_RENDER')
-    
+    bpy.types.SCENE_PT_scene.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_color_management.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_audio.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_unit.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_keying_sets.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_keying_set_paths.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_physics.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_rigid_body_world.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_rigid_body_cache.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_rigid_body_field_weights.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.types.SCENE_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
+
+
 def unregister():
     pass

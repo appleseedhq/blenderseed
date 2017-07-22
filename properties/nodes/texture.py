@@ -27,65 +27,68 @@
 #
 
 import bpy
-from bpy.types   import NodeSocket, Node
-from ...util     import strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate, sep
+from bpy.types import NodeSocket, Node
+from ...util import strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate, sep
 from ..materials import AppleseedMatProps
-from .           import AppleseedNode, AppleseedSocket
+from . import AppleseedNode, AppleseedSocket
 
 #--------------------------------
 # Image texture node.
 #--------------------------------
-class AppleseedTexNode( Node, AppleseedNode):
+
+
+class AppleseedTexNode(Node, AppleseedNode):
     '''Appleseed Image Texture Node'''
     bl_idname = "AppleseedTexNode"
     bl_label = "Image Texture"
     bl_icon = 'TEXTURE'
 
     node_type = 'texture'
-    
-    tex_path = bpy.props.StringProperty( name = "Texture", 
-                                         description = "Path to the image texture", 
-                                         default = '', 
-                                         subtype = 'FILE_PATH')
-                                         
-    color_space = bpy.props.EnumProperty( name = "",
-                                         description = "Image color space",
-                                         items = [
-                                         ( 'linear_rgb', 'Linear', ''),
-                                         ( 'srgb', 'sRGB', ''),
-                                         ( 'ciexyz', 'CIE-XYZ', '')],
-                                         default = 'srgb')
 
-    mode = bpy.props.EnumProperty( name = "",
-                                         description = "Tiling mode",
-                                         items = [
-                                         ( 'wrap', 'Wrap / Tiling', ''),
-                                         ( 'clamp', 'Clamp', '')],
-                                         default = 'wrap')
+    tex_path = bpy.props.StringProperty(name="Texture",
+                                        description="Path to the image texture",
+                                        default='',
+                                        subtype='FILE_PATH')
 
-    def init( self, context):
-        self.outputs.new( 'NodeSocketColor', "Color")
-        
-    def draw_buttons( self, context, layout):  
-        layout.prop( self, "tex_path", text = "")
-        layout.prop( self, "color_space")
-        layout.prop( self, "mode")
-    
+    color_space = bpy.props.EnumProperty(name="",
+                                         description="Image color space",
+                                         items=[
+                                             ('linear_rgb', 'Linear', ''),
+                                             ('srgb', 'sRGB', ''),
+                                             ('ciexyz', 'CIE-XYZ', '')],
+                                         default='srgb')
+
+    mode = bpy.props.EnumProperty(name="",
+                                  description="Tiling mode",
+                                  items=[
+                                      ('wrap', 'Wrap / Tiling', ''),
+                                      ('clamp', 'Clamp', '')],
+                                  default='wrap')
+
+    def init(self, context):
+        self.outputs.new('NodeSocketColor', "Color")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "tex_path", text="")
+        layout.prop(self, "color_space")
+        layout.prop(self, "mode")
+
     def draw_buttons_ext(self, context, layout):
         pass
-    
-    def copy( self, node):
+
+    def copy(self, node):
         pass
-    
-    def free( self):
-        asUpdate( "Removing node ", self)
-    
-    def draw_label( self):
+
+    def free(self):
+        asUpdate("Removing node ", self)
+
+    def draw_label(self):
         return self.bl_label
 
 
 def register():
-    bpy.utils.register_class( AppleseedTexNode)
+    bpy.utils.register_class(AppleseedTexNode)
+
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedTexNode)
+    bpy.utils.unregister_class(AppleseedTexNode)

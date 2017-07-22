@@ -27,105 +27,117 @@
 #
 
 import bpy
-from bpy.types   import NodeSocket, Node
-from ...util     import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from bpy.types import NodeSocket, Node
+from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
 from ..materials import AppleseedMatLayerProps
-from .           import AppleseedNode, AppleseedSocket
+from . import AppleseedNode, AppleseedSocket
 
 #--------------------------------
 # Kelemen diffuse reflectance socket.
 #--------------------------------
-class AppleseedKelemenReflectanceSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedKelemenReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenReflectance"
     bl_label = "Diffuse Reflectance"
-    
+
     socket_value = AppleseedMatLayerProps.kelemen_matte_reflectance
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.8, 0.8, 0.5, 1)
 
 #--------------------------------
 # Kelemen diffuse reflectance multiplier socket.
 #--------------------------------
-class AppleseedKelemenMultiplierSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedKelemenMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenMultiplier"
     bl_label = "Diffuse Multiplier"
-    
+
     socket_value = AppleseedMatLayerProps.kelemen_matte_multiplier
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
 #--------------------------------
 # Kelemen roughness
 #--------------------------------
-class AppleseedKelemenRoughnessSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedKelemenRoughnessSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenRoughness"
     bl_label = "Roughness"
-    
+
     socket_value = AppleseedMatLayerProps.kelemen_roughness
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
 #--------------------------------
 # Kelemen specular reflectance
 #--------------------------------
-class AppleseedKelemenSpecReflSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedKelemenSpecReflSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenSpecRefl"
     bl_label = "Specular Reflectance"
-    
+
     socket_value = AppleseedMatLayerProps.kelemen_specular_reflectance
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.8, 0.8, 0.5, 1)
 
 #--------------------------------
 # Kelemen specular multiplier
 #--------------------------------
-class AppleseedKelemenSpecMultSocket( NodeSocket, AppleseedSocket):
+
+
+class AppleseedKelemenSpecMultSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenSpecMult"
     bl_label = "Specular Multiplier"
-    
+
     socket_value = AppleseedMatLayerProps.kelemen_specular_multiplier
 
-    def draw( self, context, layout, node, text):
+    def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
-            layout.label( text)
+            layout.label(text)
         else:
-            layout.prop( self, "socket_value", text = text)
-    
-    def draw_color( self, context, node):
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
-        
+
 #--------------------------------
 # Kelemen BRDF node.
 #--------------------------------
-class AppleseedKelemenNode( Node, AppleseedNode):
+
+
+class AppleseedKelemenNode(Node, AppleseedNode):
     '''Appleseed Kelemen BRDF Node'''
     bl_idname = "AppleseedKelemenNode"
     bl_label = "Kelemen BRDF"
@@ -133,42 +145,43 @@ class AppleseedKelemenNode( Node, AppleseedNode):
 
     node_type = 'kelemen'
 
-    def init( self, context):
-        self.inputs.new( 'AppleseedKelemenReflectance', "Reflectance")
-        self.inputs.new( 'AppleseedKelemenMultiplier', "Multiplier")
-        self.inputs.new( 'AppleseedKelemenSpecRefl', "Specular Reflectance")
-        self.inputs.new( 'AppleseedKelemenSpecMult', "Specular Multiplier")
-        self.inputs.new( 'AppleseedKelemenRoughness', "Roughness")
-        self.outputs.new( 'NodeSocketShader', "BRDF")
-        
-    def draw_buttons( self, context, layout):
+    def init(self, context):
+        self.inputs.new('AppleseedKelemenReflectance', "Reflectance")
+        self.inputs.new('AppleseedKelemenMultiplier', "Multiplier")
+        self.inputs.new('AppleseedKelemenSpecRefl', "Specular Reflectance")
+        self.inputs.new('AppleseedKelemenSpecMult', "Specular Multiplier")
+        self.inputs.new('AppleseedKelemenRoughness', "Roughness")
+        self.outputs.new('NodeSocketShader', "BRDF")
+
+    def draw_buttons(self, context, layout):
         pass
-    
+
     def draw_buttons_ext(self, context, layout):
         pass
-    
-    def copy( self, node):
+
+    def copy(self, node):
         pass
-    
-    def free( self):
-        asUpdate( "Removing node ", self)
-    
-    def draw_label( self):
+
+    def free(self):
+        asUpdate("Removing node ", self)
+
+    def draw_label(self):
         return self.bl_label
 
 
 def register():
-    bpy.utils.register_class( AppleseedKelemenMultiplierSocket)
-    bpy.utils.register_class( AppleseedKelemenReflectanceSocket)
-    bpy.utils.register_class( AppleseedKelemenRoughnessSocket)
-    bpy.utils.register_class( AppleseedKelemenSpecReflSocket)
-    bpy.utils.register_class( AppleseedKelemenSpecMultSocket)
-    bpy.utils.register_class( AppleseedKelemenNode)
+    bpy.utils.register_class(AppleseedKelemenMultiplierSocket)
+    bpy.utils.register_class(AppleseedKelemenReflectanceSocket)
+    bpy.utils.register_class(AppleseedKelemenRoughnessSocket)
+    bpy.utils.register_class(AppleseedKelemenSpecReflSocket)
+    bpy.utils.register_class(AppleseedKelemenSpecMultSocket)
+    bpy.utils.register_class(AppleseedKelemenNode)
+
 
 def unregister():
-    bpy.utils.unregister_class( AppleseedKelemenNode)
-    bpy.utils.unregister_class( AppleseedKelemenMultiplierSocket)
-    bpy.utils.unregister_class( AppleseedKelemenReflectanceSocket)
-    bpy.utils.unregister_class( AppleseedKelemenRoughnessSocket)
-    bpy.utils.unregister_class( AppleseedKelemenSpecReflSocket)
-    bpy.utils.unregister_class( AppleseedKelemenSpecMultSocket)
+    bpy.utils.unregister_class(AppleseedKelemenNode)
+    bpy.utils.unregister_class(AppleseedKelemenMultiplierSocket)
+    bpy.utils.unregister_class(AppleseedKelemenReflectanceSocket)
+    bpy.utils.unregister_class(AppleseedKelemenRoughnessSocket)
+    bpy.utils.unregister_class(AppleseedKelemenSpecReflSocket)
+    bpy.utils.unregister_class(AppleseedKelemenSpecMultSocket)
