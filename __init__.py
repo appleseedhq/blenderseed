@@ -27,7 +27,7 @@ SOFTWARE.
 bl_info = {
     "name": "appleseed",
     "author": "Franz Beaune, Joel Daniels, Esteban Tovagliari, Jasper van Nieuwenhuizen, Luke Kliber",
-    "version": (0, 3, 6),
+    "version": (0, 3, 7),
     "blender": (2, 7, 1),
     "location": "Info Header (Render Engine Menu)",
     "description": "appleseed Render Engine",
