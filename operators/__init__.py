@@ -32,12 +32,12 @@ import subprocess
 from .. import project_file_writer
 from .. import util
 
-#---------------------------------------
-# Operator for adding material layers.
-#---------------------------------------
-
 
 class AppleseedAddMatLayer(bpy.types.Operator):
+    '''
+    Operator for adding material layers.
+    '''
+
     bl_label = "Add Layer"
     bl_description = "Add new BSDF layer"
     bl_idname = "appleseed.add_matlayer"
@@ -54,12 +54,12 @@ class AppleseedAddMatLayer(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#---------------------------------------
-# Operator for removing material layers.
-#---------------------------------------
-
 
 class AppleseedRemoveMatLayer(bpy.types.Operator):
+    '''
+    Operator for removing material layers.
+    '''
+
     bl_label = "Remove Layer"
     bl_description = "Remove BSDF layer"
     bl_idname = "appleseed.remove_matlayer"
@@ -80,12 +80,12 @@ class AppleseedRemoveMatLayer(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#---------------------------------------
-# Operator for adding render layers.
-#---------------------------------------
-
 
 class AppleseedAddRenderLayer(bpy.types.Operator):
+    '''
+    Operator for adding render layers.
+    '''
+
     bl_label = "Add Layer"
     bl_idname = "appleseed.add_renderlayer"
 
@@ -100,12 +100,12 @@ class AppleseedAddRenderLayer(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#---------------------------------------
-# Operator for removing render layers.
-#---------------------------------------
-
 
 class AppleseedRemoveRenderLayer(bpy.types.Operator):
+    '''
+    Operator for removing render layers.
+    '''
+
     bl_label = "Remove Layer"
     bl_idname = "appleseed.remove_renderlayer"
 
@@ -124,12 +124,12 @@ class AppleseedRemoveRenderLayer(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#---------------------------------------
-# Operator for adding objects to render layers.
-#---------------------------------------
-
 
 class AppleseedAddToRenderLayer(bpy.types.Operator):
+    '''
+    Operator for adding objects to render layers.
+    '''
+
     bl_label = "Add Selected To Layer"
     bl_idname = "appleseed.add_to_renderlayer"
 
@@ -142,12 +142,12 @@ class AppleseedAddToRenderLayer(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#---------------------------------------
-# Operator for removing objects from render layers.
-#---------------------------------------
-
 
 class AppleseedRemoveFromRenderLayer(bpy.types.Operator):
+    '''
+    Operator for removing objects from render layers.
+    '''
+
     bl_label = "Remove Selected From Layer"
     bl_idname = "appleseed.remove_from_renderlayer"
 
@@ -157,12 +157,12 @@ class AppleseedRemoveFromRenderLayer(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#---------------------------------------
-# appleseed material node tree generator.
-#---------------------------------------
-
 
 class AppleseedNewNodeTree(bpy.types.Operator):
+    '''
+    appleseed material node tree generator.
+    '''
+
     bl_idname = "appleseed.add_material_nodetree"
     bl_label = "Add appleseed Material Node Tree"
     bl_description = "Create an appleseed material node tree and link it to the current material"
@@ -177,12 +177,12 @@ class AppleseedNewNodeTree(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#---------------------------------------
-# appleseed export operator.
-#---------------------------------------
-
 
 class AppleseedExportOperator(bpy.types.Operator):
+    '''
+    appleseed export operator.
+    '''
+
     bl_idname = "appleseed.export"
     bl_label = "Export"
 

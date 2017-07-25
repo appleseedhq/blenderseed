@@ -172,8 +172,11 @@ def update_scene(engine, data, scene):
         proj_name = scene.appleseed.project_path.split(os.path.sep)[-1]
 
 
-# Export and render the scene.
 def render_scene(engine, scene):
+    '''
+    Export and render the scene.
+    '''
+
     # Write project file and export meshes.
     bpy.ops.appleseed.export()
     DELAY = 1.0  # seconds
