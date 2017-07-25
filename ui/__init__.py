@@ -35,7 +35,6 @@ from . import world
 from . import camera
 from . import objects
 from . import materials
-#from . import particles
 from . import lamps
 
 import bl_ui.properties_texture as properties_texture

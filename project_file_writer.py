@@ -73,6 +73,7 @@ class write_project_file(object):
         '''
         Write the .appleseed project file for rendering.
         '''
+
         if scene is None:
             self.__error("No scene to export.")
             return

@@ -47,9 +47,8 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
         return renderer.engine == 'APPLESEED_RENDER'
 
     def execute(self, context):
-        scene = context.scene
         appleseed_proj = project_file_writer.write_project_file()
-        appleseed_proj.export(scene, util.realpath(self.filepath))
+        appleseed_proj.export(context.scene, util.realpath(self.filepath))
         return {'FINISHED'}
 
 
