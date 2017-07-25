@@ -77,7 +77,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         cls.project_path = bpy.props.StringProperty(description="Folder where to export project files. Rendered images are saved in a render/ subdirectory.",
                                                     subtype='DIR_PATH')
 
-        cls.threads = bpy.props.IntProperty(name="",
+        cls.threads = bpy.props.IntProperty(name="Rendering Threads",
                                             description="Number of threads to use for rendering",
                                             default=threads,
                                             min=1,
