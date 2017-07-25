@@ -66,9 +66,9 @@ def object_enumerator(type):
     return matches
 
 
-class write_project_file(object):
+class Exporter(object):
     '''
-    Primary export function.
+    appleseed exporter.
     '''
 
     def export(self, scene, file_path):

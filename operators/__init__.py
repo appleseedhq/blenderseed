@@ -197,8 +197,8 @@ class AppleseedExportOperator(bpy.types.Operator):
 
         file_path = os.path.join(util.realpath(scene.appleseed.project_path), scene.name + ".appleseed")
 
-        appleseed_proj = project_file_writer.write_project_file()
-        appleseed_proj.export(scene, file_path)
+        exporter = project_file_writer.Exporter()
+        exporter.export(scene, file_path)
 
         return {'FINISHED'}
 
