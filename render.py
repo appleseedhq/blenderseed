@@ -107,7 +107,7 @@ def render_preview(engine, scene):
     as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
     appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
 
-    # If running Linux/OSX, add the binary path to environment.
+    # If running Linux/macOS, add the binary path to environment.
     if sys.platform != "win32":
         os.environ['LD_LIBRARY_PATH'] = as_bin_path
 
@@ -214,7 +214,7 @@ def render_scene(engine, scene):
         return
     appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
 
-    # If running Linux/OSX, add the binary path to environment.
+    # If running Linux/macOS, add the binary path to environment.
     if sys.platform != "win32":
         os.environ['LD_LIBRARY_PATH'] = as_bin_path
 
