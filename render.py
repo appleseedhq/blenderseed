@@ -76,10 +76,12 @@ def render_init(engine):
 def update_preview(engine, data, scene):
     pass
 
-# Export and render the material preview scene.
-
 
 def render_preview(engine, scene):
+    '''
+    Export and render the material preview scene.
+    '''
+
     objects_materials = {}
     (width, height) = util.resolution(scene)
 

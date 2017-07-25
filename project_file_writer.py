@@ -67,7 +67,9 @@ def object_enumerator(type):
 
 
 class write_project_file(object):
-    # Primary export function.
+    '''
+    Primary export function.
+    '''
 
     def export(self, scene, file_path):
         '''
