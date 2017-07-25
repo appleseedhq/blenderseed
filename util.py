@@ -42,7 +42,7 @@ from . import bl_info
 #------------------------------------
 sep = os.sep
 
-# Addon directory.
+# Add-on directory.
 for addon_path in bpy.utils.script_paths("addons"):
     if "blenderseed" in os.listdir(addon_path):
         addon_dir = os.path.join(addon_path, "blenderseed")

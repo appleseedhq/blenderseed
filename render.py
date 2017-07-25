@@ -111,7 +111,7 @@ def render_preview(engine, scene):
     if sys.platform != "win32":
         os.environ['LD_LIBRARY_PATH'] = as_bin_path
 
-    # Get the addon path so we can use the files in the material preview directory.
+    # Get the add-on path so we can use the files in the material preview directory.
     addon_prev_path = os.path.join(sep.join(util.realpath(__file__).split(sep)[:-1]), "mat_preview")
     tempdir = efutil.temp_directory()
     img_file = os.path.join(os.path.join(tempdir, "mat_preview"), "mat_preview.png")
@@ -210,7 +210,7 @@ def render_scene(engine, scene):
     # Get the absolute path to the executable directory.
     as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
     if as_bin_path == '':
-        engine.report({'INFO'}, "The path to appleseed executable has not been specified. Set the path in the addon user preferences.")
+        engine.report({'INFO'}, "The path to appleseed executable has not been specified. Set the path in the add-on user preferences.")
         return
     appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
 
