@@ -1674,6 +1674,7 @@ class Exporter(object):
     #----------------------
     # Write material emission.
     #----------------------
+
     def __emit_edf(self, material, edf_name, scene, material_node=None):
         asr_mat = material.appleseed
         # Nodes.
@@ -1721,6 +1722,7 @@ class Exporter(object):
     #----------------------------------------------------------------------------------------------
     # Export textures, if any exist on the material
     #----------------------------------------------------------------------------------------------
+
     # Write texture.
     def __emit_texture(self, texture, bump_bool, scene, node=None, material_name=None, scene_texture=False):
         if scene_texture:
@@ -2195,6 +2197,7 @@ class Exporter(object):
     #----------------------------------------------------------------------------------------------
     # Render layer assignments.
     #----------------------------------------------------------------------------------------------
+
     def __emit_rules(self, scene):
         if len(self._rules.keys()) > 0:
             self.__open_element("rules")
@@ -2212,6 +2215,7 @@ class Exporter(object):
         self.__emit_parameter("order", 1)
         self.__emit_parameter("pattern", ob_name)
         self.__close_element("render_layer_assignment")
+
     #----------------------------------------------------------------------------------------------
     # Configurations.
     #----------------------------------------------------------------------------------------------
@@ -2423,7 +2427,9 @@ class Exporter(object):
     #----------------------------------------------------------------------------------------------
 
     def export_preview(self, scene, file_path, addon_path, mat, mesh, width, height):
-        '''Write the .appleseed project file for preview rendering'''
+        '''
+        Write the .appleseed project file for preview rendering
+        '''
 
         self._textures_set = set()
         asr_mat = mat.appleseed

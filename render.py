@@ -161,8 +161,7 @@ def render_preview(engine, scene):
                     except:
                         pass
                 else:
-                    err_msg = 'Error: Could not load render result from %s' % img_file
-                    print(err_msg)
+                    print('Error: Could not load render result from %s' % img_file)
 
 
 def update_scene(engine, data, scene):
@@ -177,15 +176,16 @@ def render_scene(engine, scene):
     Export and render the scene.
     '''
 
-    # Write project file and export meshes.
-    bpy.ops.appleseed.export()
     DELAY = 1.0  # seconds
 
+    # Write project file and export meshes.
+    bpy.ops.appleseed.export()
+
     if scene.appleseed.project_path == '':
-        engine.report({'INFO'}, "No project path has been specified!")
+        engine.report({'INFO'}, "Please first specify a project path in the render settings.")
         return
 
-    # Make the output directory, if it doesn't exist yet
+    # Create the output directory if it doesn't exist yet.
     project_dir = util.realpath(scene.appleseed.project_path)
     if not os.path.exists(project_dir):
         try:
@@ -193,16 +193,17 @@ def render_scene(engine, scene):
         except:
             engine.report({"INFO"}, "The project directory cannot be created. Check directory permissions.")
             return
+
     render_output = os.path.join(project_dir, "render")
     img_file = os.path.join(render_output,
                             (scene.name + '_' + str(scene.frame_current) + '.exr'))
 
-    # Make the render directory, if it doesn't exist yet
+    # Create the render directory if it doesn't exist yet.
     if not os.path.exists(render_output):
         try:
             os.mkdir(render_output)
         except:
-            engine.report({"INFO"}, "The project render directory cannot be created. Check directory permissions.")
+            engine.report({"INFO"}, "The render directory cannot be created. Check directory permissions.")
             return
 
     # Set filename to render.

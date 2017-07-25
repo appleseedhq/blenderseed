@@ -74,8 +74,8 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                                   ("PROGRESSIVE", "Progressive", "appleseed.studio will begin rendering using progrssive render mode")),
                                                            default="PROGRESSIVE")
 
-        cls.project_path = bpy.props.StringProperty(
-            description="Where to export project files. Rendered images are saved in .render", subtype='DIR_PATH')
+        cls.project_path = bpy.props.StringProperty(description="Folder where to export project files. Rendered images are saved in a render/ subdirectory.",
+                                                    subtype='DIR_PATH')
 
         cls.threads = bpy.props.IntProperty(name="",
                                             description="Number of threads to use for rendering",
