@@ -34,9 +34,9 @@ from . import util
 
 
 class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
-    '''
+    """
     Export the scene to an appleseed project on disk.
-    '''
+    """
 
     bl_idname = "appleseed.export_scene"
     bl_label = "Export appleseed Scene"

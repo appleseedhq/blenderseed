@@ -284,13 +284,13 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                  max=1.0)
 
         # This doesn't have a respective setting in the appleseed.studio UI...
-        '''                                    
+        """                                    
         cls.sppm_photons_per_pass = bpy.props.IntProperty( name = "Photons Per Pass",
                                             description = "Photons emitted per pass",
                                             default = 100000,
                                             min = 0,
                                             max = 999999999)
-        '''
+        """
 
         # Miscellaneous settings.
         cls.premult_alpha = bpy.props.BoolProperty(name="Premultiplied Alpha",

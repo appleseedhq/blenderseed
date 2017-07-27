@@ -49,10 +49,10 @@ class AppleseedBSDFSocket(NodeSocket, AppleseedSocket):
         return (0.8, 0.8, 0.5, 1)
 
     def get_socket_value(self, texture_only=True):
-        '''
+        """
         Method to return socket's value, if not linked. 
         If linked, return the name of the node with appended pointer.
-        '''
+        """
         if self.is_linked:
             linked_node = self.links[0].from_node
             if linked_node.node_type in {'ashikhmin',
@@ -108,10 +108,10 @@ class AppleseedNormalSocket(NodeSocket, AppleseedSocket):
         return (0.67, 0.45, 1, 1)
 
     def get_socket_value(self, texture_only=True):
-        '''
+        """
         Method to return socket's value, if not linked. 
         If linked, return the name of the node with appended pointer.
-        '''
+        """
         if self.is_linked:
             linked_node = self.links[0].from_node
             if linked_node.node_type == 'normal' and linked_node.inputs[0].is_linked:
@@ -176,7 +176,7 @@ class AppleseedEmissionStrengthSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedMaterialNode(Node, AppleseedNode):
-    '''appleseed Material Output Node'''
+    """appleseed Material Output Node"""
     bl_idname = "AppleseedMaterialNode"
     bl_label = "Material"
     bl_icon = 'SMOOTH'
@@ -219,11 +219,11 @@ class AppleseedMaterialNode(Node, AppleseedNode):
         return self.bl_label
 
     def traverse_tree(self):
-        '''
+        """
         Iterate inputs and traverse the tree backward if any inputs are connected.
         Nodes are added to a list attribute of the material output node.
         Return the tree as a list of all the nodes.
-        '''
+        """
         self.tree.clear()
         for socket in self.inputs:
             if socket.is_linked:

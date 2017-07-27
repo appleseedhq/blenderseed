@@ -78,7 +78,7 @@ class AppleseedDiffuseBTDFMultiplierSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedDiffuseBTDFNode(Node, AppleseedNode):
-    '''appleseed Diffuse BTDF Node'''
+    """appleseed Diffuse BTDF Node"""
     bl_idname = "AppleseedDiffuseBTDFNode"
     bl_label = "Diffuse BTDF"
     bl_icon = 'SMOOTH'

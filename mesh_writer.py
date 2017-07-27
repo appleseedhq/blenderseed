@@ -171,9 +171,9 @@ def write_mesh_to_disk(ob, scene, mesh, filepath):
 
 
 def write_curves_to_disk(ob, scene, psys, filepath):
-    '''
+    """
     Write curves object to file.
-    '''
+    """
     with open(filepath, "w") as curves_file:
         fw = curves_file.write
 

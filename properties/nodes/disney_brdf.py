@@ -258,7 +258,7 @@ class AppleseedDisneySubsurfaceSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedDisneyNode(Node, AppleseedNode):
-    '''appleseed Disney BRDF Node'''
+    """appleseed Disney BRDF Node"""
     bl_idname = "AppleseedDisneyNode"
     bl_label = "Disney BRDF"
     bl_icon = 'SMOOTH'

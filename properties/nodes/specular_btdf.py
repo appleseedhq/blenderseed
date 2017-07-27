@@ -124,7 +124,7 @@ class AppleseedSpecBTDFTransMultSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedSpecBTDFNode(Node, AppleseedNode):
-    '''appleseed Specular BTDF Node'''
+    """appleseed Specular BTDF Node"""
     bl_idname = "AppleseedSpecBTDFNode"
     bl_label = "Specular BTDF"
     bl_icon = 'SMOOTH'

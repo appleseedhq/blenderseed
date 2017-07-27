@@ -39,7 +39,7 @@ import os
 
 
 class AppleseedNodeTree(NodeTree):
-    '''appleseed Node Editor'''
+    """appleseed Node Editor"""
     bl_idname = 'AppleseedNodeTree'
     bl_label = 'appleseed Node Tree'
     bl_icon = 'NODETREE'
@@ -62,16 +62,16 @@ class AppleseedNode:
         return context.bl_idname == "AppleseedNodeTree" and renderer == 'APPLESEED_RENDER'
 
     def get_node_name(self):
-        '''
+        """
         Return the node's name, including appended pointer
-        '''
+        """
         return join_names_underscore(self.name, str(self.as_pointer()))
 
     def traverse_tree(self, material_node):
-        '''
+        """
         Iterate inputs and traverse the tree backward if any inputs are connected.
         Nodes are added to a list attribute of the material output node.
-        '''
+        """
         for socket in self.inputs:
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
@@ -88,10 +88,10 @@ class AppleseedSocket(object):
     socket_value = None
 
     def get_socket_value(self, texture_only=True):
-        '''
+        """
         Method to return socket's value, if not linked. 
         If linked, return the name of the node with appended pointer.
-        '''
+        """
         if self.is_linked:
             linked_node = self.links[0].from_node
             if texture_only and linked_node.node_type == 'texture':

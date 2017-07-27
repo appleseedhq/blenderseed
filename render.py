@@ -78,9 +78,9 @@ def update_preview(engine, data, scene):
 
 
 def render_preview(engine, scene):
-    '''
+    """
     Export and render the material preview scene.
-    '''
+    """
 
     objects_materials = {}
     (width, height) = util.resolution(scene)
@@ -172,9 +172,9 @@ def update_scene(engine, data, scene):
 
 
 def render_scene(engine, scene):
-    '''
+    """
     Export and render the scene.
-    '''
+    """
 
     DELAY = 1.0  # seconds
 

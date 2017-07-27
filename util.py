@@ -117,9 +117,9 @@ def resolution(scene):
 
 
 def get_camera_matrix(camera, global_matrix):
-    '''
+    """
     Get the camera transformation decomposed as origin, forward, up and target.
-    '''
+    """
     camera_mat = global_matrix * camera.matrix_world
     origin = camera_mat.col[3]
     forward = -camera_mat.col[2]
@@ -129,11 +129,11 @@ def get_camera_matrix(camera, global_matrix):
 
 
 def calc_fov(camera_ob, width, height):
-    ''' 
+    """
     Calculate horizontal FOV if rendered height is greater than rendered with
 
     Thanks to NOX exporter developers for this solution.
-    '''
+    """
     camera_angle = degrees(camera_ob.data.angle)
     if width < height:
         length = 18.0 / tan(camera_ob.data.angle / 2)
@@ -189,11 +189,11 @@ def get_all_duplis(scene):
 
 
 def get_instances(obj_parent, scene):
-    '''
+    """
     Get the instanced objects on the parent object (dupli-faces / dupli-verts).
     If motion blur is not enabled, returns list of lists [ [dupli_object.object, dupli matrix]]
     If motion blur is enabled, returns a nested list: [ [dupli_object.object, [dupli matrices]]]
-    '''
+    """
     dupli_list = []
     if ob_mblur_enabled(obj_parent, scene):
         dupli_list = sample_mblur(obj_parent, scene, dupli=True)
@@ -207,11 +207,11 @@ def get_instances(obj_parent, scene):
 
 
 def sample_mblur(ob, scene, dupli=False):
-    '''
+    """
     Sample motion blur matrices for the object or duplis.
     Returns a list of matrices, if an object only.
     Returns a nested list of [ [dupli_object.object, [dupli matrix 1, dupli matrix 2]]]
-    '''
+    """
     matrices = []
     asr_scn = scene.appleseed
     frame_orig = scene.frame_current
@@ -278,9 +278,9 @@ def has_hairsys(ob):
 
 
 def get_all_psysobs():
-    '''
+    """
     Return a set of all the objects being instanced in particle systems
-    '''
+    """
     obs = set()
     for settings in bpy.data.particles:
         if settings.render_type == 'OBJECT' and settings.dupli_object is not None:
@@ -291,12 +291,12 @@ def get_all_psysobs():
 
 
 def get_psys_instances(ob, scene):
-    ''' 
+    """
     Return a dictionary of 
     particle: [dupli.object, [matrices]] 
     pairs. This function assumes particle systems and 
     face / verts duplication aren't being used on the same object.
-    '''
+    """
     all_duplis = {}
     current_total = 0
     index = 0
@@ -356,11 +356,11 @@ def get_psys_instances(ob, scene):
 
 
 def sample_psys_mblur(ob, scene, psys, index, start, current_total):
-    '''
+    """
     Return a dictionary of 
     particle: [dupli.object, [matrices]] 
     pairs
-    '''
+    """
     asr_scn = scene.appleseed
     dupli_dict = {}
     frame_orig = scene.frame_current

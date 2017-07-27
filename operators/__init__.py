@@ -34,9 +34,9 @@ from .. import util
 
 
 class AppleseedAddMatLayer(bpy.types.Operator):
-    '''
+    """
     Operator for adding material layers.
-    '''
+    """
 
     bl_label = "Add Layer"
     bl_description = "Add new BSDF layer"
@@ -56,9 +56,9 @@ class AppleseedAddMatLayer(bpy.types.Operator):
 
 
 class AppleseedRemoveMatLayer(bpy.types.Operator):
-    '''
+    """
     Operator for removing material layers.
-    '''
+    """
 
     bl_label = "Remove Layer"
     bl_description = "Remove BSDF layer"
@@ -82,9 +82,9 @@ class AppleseedRemoveMatLayer(bpy.types.Operator):
 
 
 class AppleseedAddRenderLayer(bpy.types.Operator):
-    '''
+    """
     Operator for adding render layers.
-    '''
+    """
 
     bl_label = "Add Layer"
     bl_idname = "appleseed.add_renderlayer"
@@ -102,9 +102,9 @@ class AppleseedAddRenderLayer(bpy.types.Operator):
 
 
 class AppleseedRemoveRenderLayer(bpy.types.Operator):
-    '''
+    """
     Operator for removing render layers.
-    '''
+    """
 
     bl_label = "Remove Layer"
     bl_idname = "appleseed.remove_renderlayer"
@@ -126,9 +126,9 @@ class AppleseedRemoveRenderLayer(bpy.types.Operator):
 
 
 class AppleseedAddToRenderLayer(bpy.types.Operator):
-    '''
+    """
     Operator for adding objects to render layers.
-    '''
+    """
 
     bl_label = "Add Selected To Layer"
     bl_idname = "appleseed.add_to_renderlayer"
@@ -144,9 +144,9 @@ class AppleseedAddToRenderLayer(bpy.types.Operator):
 
 
 class AppleseedRemoveFromRenderLayer(bpy.types.Operator):
-    '''
+    """
     Operator for removing objects from render layers.
-    '''
+    """
 
     bl_label = "Remove Selected From Layer"
     bl_idname = "appleseed.remove_from_renderlayer"
@@ -159,9 +159,9 @@ class AppleseedRemoveFromRenderLayer(bpy.types.Operator):
 
 
 class AppleseedNewNodeTree(bpy.types.Operator):
-    '''
+    """
     appleseed material node tree generator.
-    '''
+    """
 
     bl_idname = "appleseed.add_material_nodetree"
     bl_label = "Add appleseed Material Node Tree"
@@ -179,9 +179,9 @@ class AppleseedNewNodeTree(bpy.types.Operator):
 
 
 class AppleseedExportOperator(bpy.types.Operator):
-    '''
+    """
     appleseed export operator.
-    '''
+    """
 
     bl_idname = "appleseed.export"
     bl_label = "Export"
