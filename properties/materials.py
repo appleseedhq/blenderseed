@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -352,7 +352,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
 
     # Per layer properties are stored in AppleseedMatLayerProps
     layers = bpy.props.CollectionProperty(type=AppleseedMatLayerProps,
-                                          name="Appleseed Material Layers",
+                                          name="appleseed Material Layers",
                                           description="")
 
     layer_index = bpy.props.IntProperty(name="Layer Index", description="", default=0, min=0, max=16)

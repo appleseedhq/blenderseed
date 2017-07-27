@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -78,7 +78,7 @@ class AppleseedDiffuseBTDFMultiplierSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedDiffuseBTDFNode(Node, AppleseedNode):
-    '''Appleseed Diffuse BTDF Node'''
+    '''appleseed Diffuse BTDF Node'''
     bl_idname = "AppleseedDiffuseBTDFNode"
     bl_label = "Diffuse BTDF"
     bl_icon = 'SMOOTH'

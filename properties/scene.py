@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -55,8 +55,8 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     @classmethod
     def register(cls):
         bpy.types.Scene.appleseed = bpy.props.PointerProperty(
-            name="Appleseed Render Settings",
-            description="Appleseed render settings",
+            name="appleseed Render Settings",
+            description="appleseed render settings",
             type=cls)
 
         # Scene render settings.
@@ -74,10 +74,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                                   ("PROGRESSIVE", "Progressive", "appleseed.studio will begin rendering using progrssive render mode")),
                                                            default="PROGRESSIVE")
 
-        cls.project_path = bpy.props.StringProperty(
-            description="Where to export project files. Rendered images are saved in .render", subtype='DIR_PATH')
+        cls.project_path = bpy.props.StringProperty(description="Folder where to export project files. Rendered images are saved in a render/ subdirectory.",
+                                                    subtype='DIR_PATH')
 
-        cls.threads = bpy.props.IntProperty(name="",
+        cls.threads = bpy.props.IntProperty(name="Rendering Threads",
                                             description="Number of threads to use for rendering",
                                             default=threads,
                                             min=1,

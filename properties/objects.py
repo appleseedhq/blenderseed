@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -34,8 +34,8 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
     @classmethod
     def register(cls):
         bpy.types.Object.appleseed = bpy.props.PointerProperty(
-            name="Appleseed Object Settings",
-            description="Appleseed object settings",
+            name="appleseed Object Settings",
+            description="appleseed object settings",
             type=cls)
 
         cls.render_layer = bpy.props.StringProperty(name="Render Layer",

@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -162,7 +162,7 @@ class AppleseedAshikhminFresnelSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedAshikhminNode(Node, AppleseedNode):
-    '''Appleseed Ashikhmin-Shirley BRDF Node'''
+    '''appleseed Ashikhmin-Shirley BRDF Node'''
     bl_idname = "AppleseedAshikhminNode"
     bl_label = "Ashikhmin-Shirley BRDF"
     bl_icon = 'SMOOTH'

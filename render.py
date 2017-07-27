@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -76,10 +76,12 @@ def render_init(engine):
 def update_preview(engine, data, scene):
     pass
 
-# Export and render the material preview scene.
-
 
 def render_preview(engine, scene):
+    '''
+    Export and render the material preview scene.
+    '''
+
     objects_materials = {}
     (width, height) = util.resolution(scene)
 
@@ -105,11 +107,11 @@ def render_preview(engine, scene):
     as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
     appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
 
-    # If running Linux/OSX, add the binary path to environment.
+    # If running Linux/macOS, add the binary path to environment.
     if sys.platform != "win32":
         os.environ['LD_LIBRARY_PATH'] = as_bin_path
 
-    # Get the addon path so we can use the files in the material preview directory.
+    # Get the add-on path so we can use the files in the material preview directory.
     addon_prev_path = os.path.join(sep.join(util.realpath(__file__).split(sep)[:-1]), "mat_preview")
     tempdir = efutil.temp_directory()
     img_file = os.path.join(os.path.join(tempdir, "mat_preview"), "mat_preview.png")
@@ -125,7 +127,8 @@ def render_preview(engine, scene):
 
     prev_mat = likely_materials[0]
     prev_type = prev_mat.preview_render_type.lower()
-    exporter = project_file_writer.write_project_file()
+
+    exporter = project_file_writer.Exporter()
     file_written = exporter.export_preview(scene,
                                            scene_file,
                                            addon_prev_path,
@@ -158,8 +161,7 @@ def render_preview(engine, scene):
                     except:
                         pass
                 else:
-                    err_msg = 'Error: Could not load render result from %s' % img_file
-                    print(err_msg)
+                    print('Error: Could not load render result from %s' % img_file)
 
 
 def update_scene(engine, data, scene):
@@ -169,17 +171,21 @@ def update_scene(engine, data, scene):
         proj_name = scene.appleseed.project_path.split(os.path.sep)[-1]
 
 
-# Export and render the scene.
 def render_scene(engine, scene):
-    # Write project file and export meshes.
-    bpy.ops.appleseed.export()
+    '''
+    Export and render the scene.
+    '''
+
     DELAY = 1.0  # seconds
 
+    # Write project file and export meshes.
+    bpy.ops.appleseed.export()
+
     if scene.appleseed.project_path == '':
-        engine.report({'INFO'}, "No project path has been specified!")
+        engine.report({'INFO'}, "Please first specify a project path in the render settings.")
         return
 
-    # Make the output directory, if it doesn't exist yet
+    # Create the output directory if it doesn't exist yet.
     project_dir = util.realpath(scene.appleseed.project_path)
     if not os.path.exists(project_dir):
         try:
@@ -187,16 +193,17 @@ def render_scene(engine, scene):
         except:
             engine.report({"INFO"}, "The project directory cannot be created. Check directory permissions.")
             return
+
     render_output = os.path.join(project_dir, "render")
     img_file = os.path.join(render_output,
                             (scene.name + '_' + str(scene.frame_current) + '.exr'))
 
-    # Make the render directory, if it doesn't exist yet
+    # Create the render directory if it doesn't exist yet.
     if not os.path.exists(render_output):
         try:
             os.mkdir(render_output)
         except:
-            engine.report({"INFO"}, "The project render directory cannot be created. Check directory permissions.")
+            engine.report({"INFO"}, "The render directory cannot be created. Check directory permissions.")
             return
 
     # Set filename to render.
@@ -208,11 +215,11 @@ def render_scene(engine, scene):
     # Get the absolute path to the executable directory.
     as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
     if as_bin_path == '':
-        engine.report({'INFO'}, "The path to appleseed executable has not been specified. Set the path in the addon user preferences.")
+        engine.report({'INFO'}, "The path to appleseed executable has not been specified. Set the path in the add-on user preferences.")
         return
     appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
 
-    # If running Linux/OSX, add the binary path to environment.
+    # If running Linux/macOS, add the binary path to environment.
     if sys.platform != "win32":
         os.environ['LD_LIBRARY_PATH'] = as_bin_path
 
@@ -256,13 +263,13 @@ def render_scene(engine, scene):
             break
 
         if process.poll() != None:
-            engine.update_stats("", "Appleseed: Error")
+            engine.update_stats("", "appleseed: Error")
             break
 
         time.sleep(DELAY)
 
     if os.path.exists(img_file):
-        engine.update_stats("", "Appleseed: Rendering")
+        engine.update_stats("", "appleseed: Rendering")
 
         prev_size = -1
 

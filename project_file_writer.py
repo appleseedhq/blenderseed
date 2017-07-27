@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -66,13 +66,16 @@ def object_enumerator(type):
     return matches
 
 
-class write_project_file(object):
-    # Primary export function.
+class Exporter(object):
+    '''
+    appleseed exporter.
+    '''
 
     def export(self, scene, file_path):
         '''
         Write the .appleseed project file for rendering.
         '''
+
         if scene is None:
             self.__error("No scene to export.")
             return
@@ -1671,6 +1674,7 @@ class write_project_file(object):
     #----------------------
     # Write material emission.
     #----------------------
+
     def __emit_edf(self, material, edf_name, scene, material_node=None):
         asr_mat = material.appleseed
         # Nodes.
@@ -1718,6 +1722,7 @@ class write_project_file(object):
     #----------------------------------------------------------------------------------------------
     # Export textures, if any exist on the material
     #----------------------------------------------------------------------------------------------
+
     # Write texture.
     def __emit_texture(self, texture, bump_bool, scene, node=None, material_name=None, scene_texture=False):
         if scene_texture:
@@ -2192,6 +2197,7 @@ class write_project_file(object):
     #----------------------------------------------------------------------------------------------
     # Render layer assignments.
     #----------------------------------------------------------------------------------------------
+
     def __emit_rules(self, scene):
         if len(self._rules.keys()) > 0:
             self.__open_element("rules")
@@ -2209,6 +2215,7 @@ class write_project_file(object):
         self.__emit_parameter("order", 1)
         self.__emit_parameter("pattern", ob_name)
         self.__close_element("render_layer_assignment")
+
     #----------------------------------------------------------------------------------------------
     # Configurations.
     #----------------------------------------------------------------------------------------------
@@ -2420,7 +2427,9 @@ class write_project_file(object):
     #----------------------------------------------------------------------------------------------
 
     def export_preview(self, scene, file_path, addon_path, mat, mesh, width, height):
-        '''Write the .appleseed project file for preview rendering'''
+        '''
+        Write the .appleseed project file for preview rendering
+        '''
 
         self._textures_set = set()
         asr_mat = mat.appleseed

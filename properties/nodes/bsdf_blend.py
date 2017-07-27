@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -91,7 +91,7 @@ class AppleseedBlendWeightSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedBlendNode(Node, AppleseedNode):
-    '''Appleseed BSDF Blend Node'''
+    '''appleseed BSDF Blend Node'''
     bl_idname = "AppleseedBlendNode"
     bl_label = "BSDF Blend"
     bl_icon = 'SMOOTH'

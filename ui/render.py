@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -48,12 +48,17 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         layout = self.layout
         scene = context.scene
         asr_scene_props = scene.appleseed
-        layout.prop(asr_scene_props, "project_path", text="")
+
         split = layout.split()
         col = split.column()
-        col.label("Render Threads:")
+        col.label("Project Folder:")
         col = split.column()
-        col.prop(asr_scene_props, "threads")
+        col.prop(asr_scene_props, "project_path", text="")
+
+        layout.separator()
+        layout.prop(asr_scene_props, "threads")
+
+        layout.separator()
         row = layout.row()
         row.prop(asr_scene_props, "generate_mesh_files")
         if asr_scene_props.generate_mesh_files:
@@ -106,7 +111,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col.prop(asr_scene_props, "lighting_engine")
         split = layout.split()
 
-        # Pathtracing UI
+        # Path tracing UI
         if asr_scene_props.lighting_engine == 'pt':
             col = split.column()
             col.prop(asr_scene_props, "caustics_enable")

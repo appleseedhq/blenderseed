@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@ from ..materials import AppleseedMatProps
 
 
 class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
-    '''Appleseed Normal Input Socket'''
+    '''appleseed Normal Input Socket'''
     bl_idname = "AppleseedNormalInput"
     bl_label = "Image"
 
@@ -64,7 +64,7 @@ class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedNormalNode(Node, AppleseedNode):
-    '''Appleseed Bump / Normal Node'''
+    '''appleseed Bump / Normal Node'''
     bl_idname = "AppleseedNormalNode"
     bl_label = "Bump / Normal"
     bl_icon = 'SMOOTH'

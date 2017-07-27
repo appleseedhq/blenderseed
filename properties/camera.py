@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -42,8 +42,8 @@ class AppleseedCameraSettings(bpy.types.PropertyGroup):
     @classmethod
     def register(cls):
         bpy.types.Camera.appleseed = bpy.props.PointerProperty(
-            name="Appleseed Camera Settings",
-            description="Appleseed camera settings",
+            name="appleseed Camera Settings",
+            description="appleseed camera settings",
             type=cls)
 
         cls.camera_type = bpy.props.EnumProperty(items=[('pinhole', 'Pinhole', 'Pinhole camera - no DoF'),

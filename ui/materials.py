@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2013 Franz Beaune, Joel Daniels, Esteban Tovagliari, Luke Kliber.
+# Copyright (c) 2014-2017 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ def node_tree_selector_draw(layout, mat, output_type):
     node = find_node(mat, output_type)
     if not node:
         if mat.appleseed.node_tree == '':
-            layout.operator('appleseed.add_material_nodetree', text="Appleseed Node", icon='NODETREE')
+            layout.operator('appleseed.add_material_nodetree', text="appleseed Node", icon='NODETREE')
             return False
     return True
 
