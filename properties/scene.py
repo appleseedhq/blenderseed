@@ -71,7 +71,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         cls.studio_rendering_mode = bpy.props.EnumProperty(name="Mode",
                                                            description="Rendering mode to be used after launching appleseed.studio",
                                                            items=(("FINAL", "Final", "appleseed.studio will begin rendering in final render mode"),
-                                                                  ("PROGRESSIVE", "Progressive", "appleseed.studio will begin rendering using progrssive render mode")),
+                                                                  ("PROGRESSIVE", "Progressive", "appleseed.studio will begin rendering using progressive render mode")),
                                                            default="PROGRESSIVE")
 
         cls.project_path = bpy.props.StringProperty(description="Folder where to export project files. Rendered images are saved in a render/ subdirectory.",
