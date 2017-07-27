@@ -155,8 +155,8 @@ def render_preview(engine, scene):
                 if os.path.exists(img_file):
                     try:
                         result = engine.begin_result(0, 0, width, height)
-                        lay = result.layers[0]
-                        lay.load_from_file(img_file)
+                        layer = result.layers[0]
+                        layer.load_from_file(img_file)
                         engine.end_result(result)
                     except:
                         pass
@@ -275,10 +275,10 @@ def render_scene(engine, scene):
 
         def update_image():
             result = engine.begin_result(0, 0, width, height)
-            lay = result.layers[0]
+            layer = result.layers[0]
             # it's possible the image wont load early on.
             try:
-                lay.load_from_file(img_file)
+                layer.load_from_file(img_file)
             except:
                 pass
 
