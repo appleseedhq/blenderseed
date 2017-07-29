@@ -26,20 +26,20 @@
 # THE SOFTWARE.
 #
 
-import bpy
-import os
-import sys
-import multiprocessing
 import datetime
-from extensions_framework import util as efutil
-from shutil import copyfile
+import multiprocessing
+import os
 from math import tan, atan, degrees
+
+import bpy
 import mathutils
+from extensions_framework import util as efutil
+
 from . import bl_info
 
-#------------------------------------
+# ------------------------------------
 # Generic utilities and settings.
-#------------------------------------
+# ------------------------------------
 sep = os.sep
 
 # Add-on directory.
@@ -95,9 +95,9 @@ def realpath(path):
     return os.path.realpath(efutil.filesystem_path(path))
 
 
-#------------------------------------
+# ------------------------------------
 # Scene export utilities.
-#------------------------------------
+# ------------------------------------
 def inscenelayer(object, scene):
     for i in range(len(object.layers)):
         if object.layers[i] == True and scene.layers[i] == True:
@@ -149,9 +149,9 @@ def is_uv_img(tex):
     return False
 
 
-#------------------------------------
+# ------------------------------------
 # Object / instance utilities.
-#------------------------------------
+# ------------------------------------
 def ob_mblur_enabled(object, scene):
     return object.appleseed.mblur_enable and object.appleseed.mblur_type == 'object' and scene.appleseed.mblur_enable and scene.appleseed.ob_mblur
 
@@ -237,9 +237,9 @@ def sample_mblur(ob, scene, dupli=False):
     return matrices
 
 
-#------------------------------------
+# ------------------------------------
 # Particle system utilities.
-#------------------------------------
+# ------------------------------------
 def calc_decrement(root, tip, segments):
     return ((root - tip) / (segments - 1))
 
@@ -328,7 +328,7 @@ def get_psys_instances(ob, scene):
                     duplis.append(ob.dupli_list[dupli_index].object)
 
                 if psys.settings.type == 'EMITTER':
-                    p_duplis_pairs = list(zip(particles, duplis))     # Match the particles to the duplis
+                    p_duplis_pairs = list(zip(particles, duplis))  # Match the particles to the duplis
                     dupli_dict = {p[0]: [p[1], []] for p in p_duplis_pairs}  # Create particle:[dupli.object, [matrix]] pairs
                     for particle in dupli_dict.keys():
                         size = particle.size
@@ -336,7 +336,8 @@ def get_psys_instances(ob, scene):
                         scale = dupli_dict[particle][0].scale * size
                         transl = mathutils.Matrix.Translation((loc))
                         scale = mathutils.Matrix.Scale(scale.x, 4, (1, 0, 0)) * mathutils.Matrix.Scale(scale.y, 4,
-                                                                                                       (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4, (0, 0, 1))
+                                                                                                       (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4,
+                                                                                                                                           (0, 0, 1))
                         mat = transl * scale
                         dupli_dict[particle][1].append(mat)
                 else:
@@ -391,7 +392,8 @@ def sample_psys_mblur(ob, scene, psys, index, start, current_total):
                 scale = dupli_dict[particle][0].scale * size
                 transl = mathutils.Matrix.Translation((transl))
                 scale = mathutils.Matrix.Scale(scale.x, 4, (1, 0, 0)) * mathutils.Matrix.Scale(scale.y, 4,
-                                                                                               (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4, (0, 0, 1))
+                                                                                               (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4,
+                                                                                                                                   (0, 0, 1))
                 mat = transl * scale
                 dupli_dict[particle][1].append(mat)
                 new_index += 1

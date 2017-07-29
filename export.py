@@ -28,7 +28,7 @@
 
 import bpy
 from bpy_extras.io_utils import ExportHelper
-import os
+
 from . import project_file_writer
 from . import util
 
@@ -42,7 +42,7 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
     bl_label = "Export appleseed Scene"
 
     filename_ext = ".appleseed"
-    filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'},)
+    filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'})
 
     @classmethod
     def poll(cls, context):
