@@ -26,286 +26,20 @@
 # THE SOFTWARE.
 #
 
-import bpy
+import array
 import os
+import struct
 import subprocess
 import sys
-import time
-import multiprocessing
 import threading
 from shutil import copyfile
+
+import bpy
 from extensions_framework import util as efutil
-from . import util
+
 from . import project_file_writer
+from . import util
 from .properties.scene import threads
-from locale import getdefaultlocale
-
-sep = os.sep
-
-
-def update_start(engine, data, scene):
-    if engine.is_preview:
-        update_preview(engine, data, scene)
-    else:
-        update_scene(engine, data, scene)
-
-
-def render_start(engine, scene):
-    if engine.is_preview:
-        render_preview(engine, scene)
-    else:
-        if engine.animation:
-            print("Animation: ", engine.animation)
-            frame_start = scene.frame_start
-            frame_current = frame_start
-            scene.frame_set(frame_start)
-            frame_end = scene.frame_end
-            step = scene.frame_step
-            while frame_current <= frame_end:
-                render_scene(engine, scene)
-                frame_current += frame_step
-                scene.frame_set(frame_current)
-        else:
-            render_scene(engine, scene)
-
-
-def render_init(engine):
-    pass
-
-
-def update_preview(engine, data, scene):
-    pass
-
-
-def render_preview(engine, scene):
-    """
-    Export and render the material preview scene.
-    """
-
-    objects_materials = {}
-    (width, height) = util.resolution(scene)
-
-    if (width, height) == (96, 96):
-        return
-    for object in [ob for ob in scene.objects if ob.is_visible(scene) and not ob.hide_render]:
-        for mat in util.get_instance_materials(object):
-            if mat is not None:
-                if not object.name in objects_materials.keys():
-                    objects_materials[object] = []
-                objects_materials[object].append(mat)
-
-    # Find objects that are likely to be the preview objects.
-    preview_objects = [o for o in objects_materials.keys() if o.name.startswith('preview')]
-    if len(preview_objects) < 1:
-        return
-
-    # Find the materials attached to the likely preview object.
-    likely_materials = objects_materials[preview_objects[0]]
-    if len(likely_materials) < 1:
-        return
-
-    as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
-    appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
-
-    # If running Linux/macOS, add the binary path to environment.
-    if sys.platform != "win32":
-        os.environ['LD_LIBRARY_PATH'] = as_bin_path
-
-    # Get the add-on path so we can use the files in the material preview directory.
-    addon_prev_path = os.path.join(sep.join(util.realpath(__file__).split(sep)[:-1]), "mat_preview")
-    tempdir = efutil.temp_directory()
-    img_file = os.path.join(os.path.join(tempdir, "mat_preview"), "mat_preview.png")
-    scene_file = os.path.join(os.path.join(tempdir, "mat_preview"), "mat_preview.appleseed")
-    output_path = os.path.join(tempdir, "mat_preview")
-
-    if not os.path.isdir(output_path):
-        os.mkdir(output_path)
-    temp_files = os.listdir(output_path)
-    for item in os.listdir(addon_prev_path):
-        if item not in temp_files:
-            copyfile(os.path.join(addon_prev_path, item), os.path.join(output_path, item))
-
-    prev_mat = likely_materials[0]
-    prev_type = prev_mat.preview_render_type.lower()
-
-    exporter = project_file_writer.Exporter()
-    file_written = exporter.export_preview(scene,
-                                           scene_file,
-                                           addon_prev_path,
-                                           prev_mat,
-                                           prev_type,
-                                           width,
-                                           height)
-    if not file_written:
-        print('Error while exporting -- check the console for details.')
-        return
-    else:
-        if not bpy.app.background:
-            cmd = (appleseed_exe,
-                   scene_file,
-                   '-o', img_file,
-                   '--threads', str(threads),
-                   '--continuous-saving',
-                   '--message-verbosity', 'fatal')
-
-            appleseed_proc = subprocess.Popen(cmd, cwd=as_bin_path, env=os.environ.copy(), stdout=subprocess.PIPE)
-            returncode = appleseed_proc.communicate()
-
-            if returncode[0] == b'':
-                if os.path.exists(img_file):
-                    try:
-                        result = engine.begin_result(0, 0, width, height)
-                        layer = result.layers[0]
-                        layer.load_from_file(img_file)
-                        engine.end_result(result)
-                    except:
-                        pass
-                else:
-                    print('Error: Could not load render result from %s' % img_file)
-
-
-def update_scene(engine, data, scene):
-    if os.path.isdir(scene.appleseed.project_path):
-        proj_name = None
-    else:
-        proj_name = scene.appleseed.project_path.split(os.path.sep)[-1]
-
-
-def render_scene(engine, scene):
-    """
-    Export and render the scene.
-    """
-
-    DELAY = 1.0  # seconds
-
-    # Write project file and export meshes.
-    bpy.ops.appleseed.export()
-
-    if scene.appleseed.project_path == '':
-        engine.report({'INFO'}, "Please first specify a project path in the render settings.")
-        return
-
-    # Create the output directory if it doesn't exist yet.
-    project_dir = util.realpath(scene.appleseed.project_path)
-    if not os.path.exists(project_dir):
-        try:
-            os.mkdir(project_dir)
-        except:
-            engine.report({"INFO"}, "The project directory cannot be created. Check directory permissions.")
-            return
-
-    render_output = os.path.join(project_dir, "render")
-    img_file = os.path.join(render_output,
-                            (scene.name + '_' + str(scene.frame_current) + '.exr'))
-
-    # Create the render directory if it doesn't exist yet.
-    if not os.path.exists(render_output):
-        try:
-            os.mkdir(render_output)
-        except:
-            engine.report({"INFO"}, "The render directory cannot be created. Check directory permissions.")
-            return
-
-    # Set filename to render.
-    filename = scene.name
-    if not filename.endswith(".appleseed"):
-        filename += ".appleseed"
-    filename = os.path.join(project_dir, filename)
-
-    # Get the absolute path to the executable directory.
-    as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
-    if as_bin_path == '':
-        engine.report({'INFO'}, "The path to appleseed executable has not been specified. Set the path in the add-on user preferences.")
-        return
-    appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
-
-    # If running Linux/macOS, add the binary path to environment.
-    if sys.platform != "win32":
-        os.environ['LD_LIBRARY_PATH'] = as_bin_path
-
-    scale = scene.render.resolution_percentage / 100.0
-    width = int(scene.render.resolution_x * scale)
-    height = int(scene.render.resolution_y * scale)
-
-    # Start the appleseed.cli executable.
-
-    # Border rendering (rectangle = resolution).
-    x, y, endX, endY = 0, 0, width, height
-    if scene.render.use_border:
-        x = int(scene.render.border_min_x * width)
-        y = height - int(scene.render.border_max_y * height)
-        endX = int(scene.render.border_max_x * width)
-        endY = height - int(scene.render.border_min_y * height)
-
-    cmd = (appleseed_exe,
-           filename,
-           '-o', img_file,
-           '--threads', str(threads),
-           '--continuous-saving',
-           '--message-verbosity', 'fatal',
-           '--resolution', str(width), str(height),
-           '--window', str(x), str(y), str(endX), str(endY))
-
-    # Remove previous renders.
-    if os.path.exists(img_file):
-        os.remove(img_file)
-
-    # Launch appleseed.cli.
-    process = subprocess.Popen(cmd, cwd=as_bin_path, env=os.environ.copy())
-
-    # Wait for the rendered image file to be created
-    while not os.path.exists(img_file):
-        if engine.test_break():
-            try:
-                process.kill()
-            except:
-                pass
-            break
-
-        if process.poll() != None:
-            engine.update_stats("", "appleseed: Error")
-            break
-
-        time.sleep(DELAY)
-
-    if os.path.exists(img_file):
-        engine.update_stats("", "appleseed: Rendering")
-
-        prev_size = -1
-
-        def update_image():
-            result = engine.begin_result(0, 0, width, height)
-            layer = result.layers[0]
-            # it's possible the image wont load early on.
-            try:
-                layer.load_from_file(img_file)
-            except:
-                pass
-
-            engine.end_result(result)
-
-        # Update while rendering
-        while True:
-            if process.poll() != None:
-                update_image()
-                break
-
-            # user exit
-            if engine.test_break():
-                try:
-                    process.kill()
-                except:
-                    pass
-                break
-
-            # check if the file updated
-            new_size = os.path.getsize(img_file)
-
-            if new_size != prev_size:
-                update_image()
-                prev_size = new_size
-
-            time.sleep(DELAY)
 
 
 class RenderAppleseed(bpy.types.RenderEngine):
@@ -313,17 +47,205 @@ class RenderAppleseed(bpy.types.RenderEngine):
     bl_label = 'appleseed'
     bl_use_preview = True
 
-    lock = threading.Lock()
-
-    animation = False
+    # This lock allows to serialize renders.
+    render_lock = threading.Lock()
 
     def __init__(self):
-        render_init(self)
+        pass
 
-    # final rendering
     def update(self, data, scene):
-        update_start(self, data, scene)
+        pass
 
     def render(self, scene):
-        with self.lock:
-            render_start(self, scene)
+        with RenderAppleseed.render_lock:
+            if self.is_preview:
+                if not bpy.app.background:
+                    self.__render_material_preview(scene)
+            elif self.is_animation:
+                frame_current = scene.frame_start
+                while frame_current <= scene.frame_end:
+                    scene.frame_set(frame_current)
+                    self.__render_scene(scene)
+                    frame_current += scene.frame_step
+            else:
+                self.__render_scene(scene)
+
+    def __render_scene(self, scene):
+        """
+        Export and render the scene.
+        """
+
+        # Write project file and export meshes.
+        bpy.ops.appleseed.export()
+
+        if scene.appleseed.project_path == '':
+            self.report({'INFO'}, "Please first specify a project path in the appleseed render settings.")
+            return
+
+        # Make sure the project directory exists.
+        project_dir = util.realpath(scene.appleseed.project_path)
+        if not os.path.exists(project_dir):
+            try:
+                os.makedirs(project_dir)
+            except os.error:
+                self.report({"ERROR"}, "The project directory could not be created. Check directory permissions.")
+                return
+
+        # Build the file path for the appleseed project.
+        project_filepath = scene.name
+        if not project_filepath.endswith(".appleseed"):
+            project_filepath += ".appleseed"
+        project_filepath = os.path.join(project_dir, project_filepath)
+
+        # Render the project.
+        self.__render_project_file(scene, project_filepath)
+
+    def __render_material_preview(self, scene):
+        """
+        Export and render the material preview scene.
+        """
+
+        # Collect objects and their materials in a object -> [materials] dictionary.
+        objects_materials = {}
+        for obj in (obj for obj in scene.objects if obj.is_visible(scene) and not obj.hide_render):
+            for mat in util.get_instance_materials(obj):
+                if mat is not None:
+                    if obj.name not in objects_materials.keys():
+                        objects_materials[obj] = []
+                    objects_materials[obj].append(mat)
+
+        # Find objects that are likely to be the preview objects.
+        preview_objects = [o for o in objects_materials.keys() if o.name.startswith('preview')]
+        if not preview_objects:
+            return
+
+        # Find the materials attached to the likely preview object.
+        likely_materials = objects_materials[preview_objects[0]]
+        if not likely_materials:
+            return
+
+        # Build the path to the template preview project in the add-on directory.
+        preview_template_dir = os.path.join(os.sep.join(util.realpath(__file__).split(sep)[:-1]), "mat_preview")
+
+        # Build the path to the output preview project.
+        preview_output_dir = os.path.join(efutil.temp_directory(), "mat_preview")
+        preview_project_filepath = os.path.join(preview_output_dir, "mat_preview.appleseed")
+
+        # Copy preview scene assets.
+        if not os.path.isdir(preview_output_dir):
+            os.mkdir(preview_output_dir)
+        existing_files = os.listdir(preview_output_dir)
+        for item in os.listdir(preview_template_dir):
+            if item not in existing_files:
+                copyfile(os.path.join(preview_template_dir, item), os.path.join(preview_output_dir, item))
+
+        prev_mat = likely_materials[0]
+        prev_type = prev_mat.preview_render_type.lower()
+        (width, height) = util.get_render_resolution(scene)
+
+        # Export the project.
+        exporter = project_file_writer.Exporter()
+        file_written = exporter.export_preview(scene,
+                                               preview_project_filepath,
+                                               preview_template_dir,
+                                               prev_mat,
+                                               prev_type,
+                                               width,
+                                               height)
+        if not file_written:
+            print('Error while exporting -- check the console for details.')
+            return
+
+        # Render the project.
+        self.__render_project_file(scene, preview_project_filepath)
+
+    def __render_project_file(self, scene, project_filepath):
+        # Get the absolute path to the executable directory.
+        as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
+        if as_bin_path == '':
+            self.report({'ERROR'}, "The path to appleseed.cli executable has not been specified. Set the path in the add-on user preferences.")
+            return
+        appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
+
+        # If running Linux/macOS, add the binary path to environment.
+        if sys.platform != "win32":
+            os.environ['LD_LIBRARY_PATH'] = as_bin_path
+
+        # Compute render resolution.
+        (width, height) = util.get_render_resolution(scene)
+
+        # Compute render window.
+        x0, y0, x1, y1 = 0, 0, width, height
+        if scene.render.use_border:
+            x0 = int(scene.render.border_min_x * width)
+            x1 = int(scene.render.border_max_x * width)
+            y0 = height - int(scene.render.border_min_y * height)
+            y1 = height - int(scene.render.border_max_y * height)
+
+        # Launch appleseed.cli.
+        cmd = (appleseed_exe,
+               project_filepath,
+               '--to-stdout',
+               '--threads', str(threads),
+               '--message-verbosity', 'warning',
+               '--resolution', str(width), str(height),
+               '--window', str(x0), str(y0), str(x1), str(y1))
+        process = subprocess.Popen(cmd, cwd=as_bin_path, env=os.environ.copy(), stdout=subprocess.PIPE)
+
+        self.update_stats("", "appleseed: Rendering")
+
+        # Update while rendering.
+        while not self.test_break():
+            # Wait for the next chunk header from the process's stdout.
+            chunk_header_data = os.read(process.stdout.fileno(), 2 * 4)
+            if not chunk_header_data:
+                break
+
+            # Decode chunk header.
+            chunk_header = struct.unpack("II", chunk_header_data)
+            chunk_type = chunk_header[0]
+            chunk_size = chunk_header[1]
+
+            # Ignore unknown chunks.
+            # Known chunk types:
+            #   1 = tile, protocol version 1
+            if chunk_type != 1:
+                os.read(process.stdout.fileno(), chunk_size)
+                continue
+
+            # Read and decode tile header.
+            tile_header = struct.unpack("IIIII", os.read(process.stdout.fileno(), 5 * 4))
+            tile_x = tile_header[0]
+            tile_y = tile_header[1]
+            tile_w = tile_header[2]
+            tile_h = tile_header[3]
+            tile_c = tile_header[4]
+
+            # Read tile data.
+            tile_size = 4 * tile_w * tile_h * tile_c
+            tile_data = bytes()
+            while len(tile_data) < tile_size and not self.test_break():
+                tile_data += os.read(process.stdout.fileno(), tile_size - len(tile_data))
+            if self.test_break():
+                break
+
+            # Optional debug message.
+            if False:
+                print("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
+
+            # Update image.
+            result = self.begin_result(tile_x, height - tile_y - tile_h, tile_w, tile_h)
+            layer = result.layers[0].passes["Combined"]
+            floats = array.array('f')
+            floats.fromstring(tile_data)
+            pix = []
+            for y in range(tile_h - 1, -1, -1):
+                stride = tile_w * 4
+                start_index = y * stride
+                end_index = start_index + stride
+                pix.extend(floats[i:i + 4] for i in range(start_index, end_index, 4))
+            layer.rect = pix
+            self.end_result(result)
+
+        # Make sure the appleseed.cli process has terminated.
+        process.kill()

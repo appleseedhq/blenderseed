@@ -110,10 +110,11 @@ def do_export(obj, scene):
     return not obj.hide_render and obj.type in ('MESH', 'SURFACE', 'META', 'TEXT', 'CURVE', 'LAMP') and inscenelayer(obj, scene)
 
 
-def resolution(scene):
-    xr = scene.render.resolution_x * scene.render.resolution_percentage / 100.0
-    yr = scene.render.resolution_y * scene.render.resolution_percentage / 100.0
-    return xr, yr
+def get_render_resolution(scene):
+    scale = scene.render.resolution_percentage / 100.0
+    width = int(scene.render.resolution_x * scale)
+    height = int(scene.render.resolution_y * scale)
+    return width, height
 
 
 def get_camera_matrix(camera, global_matrix):
