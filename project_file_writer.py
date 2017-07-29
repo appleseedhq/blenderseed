@@ -2244,9 +2244,11 @@ class Exporter(object):
         # Interactive: always use drt
         lighting_engine = 'drt' if type == "interactive" else scene.appleseed.lighting_engine
 
-        self.__emit_parameter("lighting_engine", lighting_engine)
-        self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
         self.__emit_parameter("rendering_threads", scene.appleseed.threads)
+
+        self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
+        self.__emit_parameter("lighting_engine", lighting_engine)
+
         self.__open_element('parameters name="adaptive_pixel_renderer"')
         self.__emit_parameter("enable_diagnostics", scene.appleseed.enable_diagnostics)
         self.__emit_parameter("max_samples", scene.appleseed.sampler_max_samples)
@@ -2265,7 +2267,10 @@ class Exporter(object):
         self.__emit_parameter("tile_ordering", scene.appleseed.tile_ordering)
         self.__close_element("parameters")
 
+        self.__emit_parameter("shading_result_framebuffer", "permanent" if scene.appleseed.renderer_passes > 1 else "ephemeral")
+
         self.__open_element('parameters name="{0}"'.format(scene.appleseed.lighting_engine))
+
         # IBL can be enabled with all three engines.
         self.__emit_parameter("enable_ibl", "true" if scene.appleseed.ibl_enable else "false")
 
