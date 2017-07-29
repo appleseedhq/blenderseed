@@ -67,14 +67,14 @@ def object_enumerator(type):
 
 
 class Exporter(object):
-    '''
+    """
     appleseed exporter.
-    '''
+    """
 
     def export(self, scene, file_path):
-        '''
+        """
         Write the .appleseed project file for rendering.
-        '''
+        """
 
         if scene is None:
             self.__error("No scene to export.")
@@ -166,9 +166,9 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_assembly(self, scene):
-        '''
+        """
         Write the scene assembly.
-        '''
+        """
         self.__open_element('assembly name="%s"' % scene.name)
         self.__emit_physical_surface_shader_element()
         self.__emit_default_material(scene)
@@ -177,10 +177,10 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_assembly_instance(self, scene, obj=None):
-        '''
+        """
         Write a scene assembly instance,
         or write an assembly instance for an object with transformation motion blur.
-        '''
+        """
         asr_scn = scene.appleseed
         shutter_open = asr_scn.shutter_open if asr_scn.mblur_enable else 0
         shutter_close = asr_scn.shutter_close if asr_scn.mblur_enable else 1
@@ -211,9 +211,9 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_object_assembly(self, scene, object):
-        '''
+        """
         Write an assembly for an object with transformation motion blur.
-        '''
+        """
         object_name = object.name
         self.__open_element('assembly name="%s"' % object_name)
         self.__emit_physical_surface_shader_element()
@@ -223,9 +223,9 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_dupli_assembly(self, scene, object, matrices):
-        '''
+        """
         Write an assembly for a dupli/particle with transformation motion blur.
-        '''
+        """
         object_name = object.name
         # Figure out the instance number of this assembly instance.
         if object_name in self._assembly_count:
@@ -245,9 +245,9 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_dupli_assembly_instance(self, scene, assembly_name, matrices):
-        '''
+        """
         Write an instance of the dupli object assembly (for duplis/particles with motion blur).
-        '''
+        """
         asr_scn = scene.appleseed
         # Figure out the instance number of this assembly instance.
         if assembly_name in self._assembly_instance_count:
@@ -268,9 +268,9 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_objects(self, scene):
-        '''
+        """
         Emit the objects in the scene.
-        '''
+        """
         for object in scene.objects:
             if util.do_export(object, scene):  # Skip objects marked as non-renderable.
                 if object.type == 'LAMP':
@@ -311,11 +311,11 @@ class Exporter(object):
     #----------------------------------------------------------------------------------------------
 
     def __emit_geometric_object(self, scene, object, ob_mblur=False):
-        '''
+        """
         Get scene objects and instances for emitting.
         Only emit dupli- objects if the object doesn't have moblur enabled.
         Dupli- objects with object motion blur are handled separately.
-        '''
+        """
         if not ob_mblur:
             self._dupli_objects.clear()
 
@@ -342,9 +342,9 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_dupli_object(self, scene, object, object_matrix, ob_mblur, new_assembly=False):
-        '''
+        """
         Emit objects / dupli objects.
-        '''
+        """
         asr_scn = scene.appleseed
         shutter_open = asr_scn.shutter_open if asr_scn.mblur_enable else 0
         current_frame = scene.frame_current
@@ -425,10 +425,10 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_curves_object(self, scene, object, psys, new_assembly=False):
-        '''
+        """
         Emit the curves object element and write to disk.
         Return mesh parts to self._mesh_parts["_".join( [object.name, psys.name])]
-        '''
+        """
         curves_name = "_".join([object.name, psys.name])
         curves_filename = curves_name + ".curves"
 
@@ -462,10 +462,10 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex, new_assembly):
-        '''
+        """
         Emit the mesh object element and write to disk.
         Return mesh parts to self._mesh_parts[object.name]
-        '''
+        """
         if len(mesh_faces) == 0:
             self.__info("Skipping object '{0}' since it has no faces once converted to a mesh.".format(object.name))
             return []
@@ -510,9 +510,9 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_object_element(self, object_name, mesh_file, object, scene):
-        '''
+        """
         Emit an object element to the project file.
-        '''
+        """
         mesh_filename = "meshes" + os.path.sep + mesh_file
         self.__open_element('object name="' + object_name + '" model="mesh_object"')
         if util.def_mblur_enabled(object, scene):
@@ -526,9 +526,9 @@ class Exporter(object):
 
     #--------------------------------
     def __emit_curves_element(self, curves_name, curves_file, object, scene):
-        '''
+        """
         Emit a curves object element to the project file.
-        '''
+        """
         curves_filename = "meshes" + os.path.sep + curves_file
         self.__open_element('object name="' + curves_name + '" model="curve_object"')
         if util.def_mblur_enabled(object, scene):
@@ -544,9 +544,9 @@ class Exporter(object):
     # Emit object mesh for deformation mblur evaluation.
     # --------------------------------------------------
     def __emit_def_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex):
-        '''
+        """
         Emit a deformation mesh object and write to disk.
-        '''
+        """
         if len(mesh_faces) == 0:
             self.__info("Skipping object '{0}' since it has no faces once converted to a mesh.".format(object.name))
             return []
@@ -580,9 +580,9 @@ class Exporter(object):
     # Emit curves object for deformation mblur evaluation.
     # --------------------------------------------------
     def __emit_def_curves_object(self, scene, object, psys):
-        '''
+        """
         Emit a curves deformation mesh object and write to disk.
-        '''
+        """
 
         curves_name = "_".join([object.name, psys.name])
         curves_filename = curves_name + "_deform.curves"
@@ -614,9 +614,9 @@ class Exporter(object):
     # Emit mesh object instance.
     #---------------------------
     def __emit_mesh_object_instance(self, scene, object, object_matrix, new_assembly, hair=False, hair_material=None, psys_name=None):
-        '''
+        """
         Calls __emit_object_instance_element to emit an object instance.
-        '''
+        """
         object_name = "_".join([object.name, psys_name]) if hair else object.name
         if new_assembly:
             object_matrix = self._global_matrix * identity_matrix
@@ -670,9 +670,9 @@ class Exporter(object):
     # Emit an object instance to the project file.
     #---------------------------------------------
     def __emit_object_instance_element(self, object_name, instance_name, instance_matrix, front_material_name, back_material_name, object, scene):
-        '''
+        """
         Emit an object instance element to the project file.
-        '''
+        """
         self.__open_element('object_instance name="{0}" object="{1}"'.format(instance_name, object_name))
         if util.ob_mblur_enabled(object, scene):
             self.__emit_transform_element(identity_matrix, None)
@@ -784,9 +784,9 @@ class Exporter(object):
     # Write front material BSDF tree.
     #--------------------------------
     def __emit_front_material_bsdf_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
-        '''
+        """
         Emit the front material's BSDF tree and return the last BSDF name to the calling function (__emit_front_material).
-        '''
+        """
         # material_name here is material.name + "_front"
         bsdfs = []
         asr_mat = material.appleseed
@@ -1639,9 +1639,9 @@ class Exporter(object):
     # Write BSDF Mixes.
     #----------------------
     def __emit_bsdf_mix(self, bsdf_name, bsdf0_name, bsdf0_weight, bsdf1_name, bsdf1_weight):
-        '''
+        """
         Emit BSDF mix to project file.
-        '''
+        """
         self.__open_element('bsdf name="{0}" model="bsdf_mix"'.format(bsdf_name))
         self.__emit_parameter("bsdf0", bsdf0_name)
         self.__emit_parameter("weight0", bsdf0_weight)
@@ -1653,9 +1653,9 @@ class Exporter(object):
     # Write BSDF Blend.
     #----------------------
     def __emit_bsdf_blend(self, bsdf_name, material_name, node=None):
-        '''
+        """
         Emit BSDF blend to project file.
-        '''
+        """
         if node is not None:
             inputs = node.inputs
             weight = inputs[0].get_socket_value(True)
@@ -1699,9 +1699,9 @@ class Exporter(object):
         self.__emit_diffuse_edf_element(asr_mat, edf_name, radiance_name, radiance_multiplier, material_node)
 
     def __emit_diffuse_edf_element(self, asr_mat, edf_name, radiance_name, radiance_multiplier, material_node=None):
-        '''
+        """
         Emit the EDF to the project file.
-        '''
+        """
         if material_node is not None:
             cast_indirect = material_node.cast_indirect
             importance_multiplier = material_node.importance_multiplier
@@ -2244,9 +2244,11 @@ class Exporter(object):
         # Interactive: always use drt
         lighting_engine = 'drt' if type == "interactive" else scene.appleseed.lighting_engine
 
-        self.__emit_parameter("lighting_engine", lighting_engine)
-        self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
         self.__emit_parameter("rendering_threads", scene.appleseed.threads)
+
+        self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
+        self.__emit_parameter("lighting_engine", lighting_engine)
+
         self.__open_element('parameters name="adaptive_pixel_renderer"')
         self.__emit_parameter("enable_diagnostics", scene.appleseed.enable_diagnostics)
         self.__emit_parameter("max_samples", scene.appleseed.sampler_max_samples)
@@ -2265,7 +2267,10 @@ class Exporter(object):
         self.__emit_parameter("tile_ordering", scene.appleseed.tile_ordering)
         self.__close_element("parameters")
 
+        self.__emit_parameter("shading_result_framebuffer", "permanent" if scene.appleseed.renderer_passes > 1 else "ephemeral")
+
         self.__open_element('parameters name="{0}"'.format(scene.appleseed.lighting_engine))
+
         # IBL can be enabled with all three engines.
         self.__emit_parameter("enable_ibl", "true" if scene.appleseed.ibl_enable else "false")
 
@@ -2427,9 +2432,9 @@ class Exporter(object):
     #----------------------------------------------------------------------------------------------
 
     def export_preview(self, scene, file_path, addon_path, mat, mesh, width, height):
-        '''
+        """
         Write the .appleseed project file for preview rendering
-        '''
+        """
 
         self._textures_set = set()
         asr_mat = mat.appleseed

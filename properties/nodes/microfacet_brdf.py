@@ -138,7 +138,7 @@ class AppleseedMicrofacetGlossMultSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedMicrofacetNode(Node, AppleseedNode):
-    '''appleseed Microfacet BRDF Node'''
+    """appleseed Microfacet BRDF Node"""
     bl_idname = "AppleseedMicrofacetNode"
     bl_label = "Microfacet BRDF"
     bl_icon = 'SMOOTH'

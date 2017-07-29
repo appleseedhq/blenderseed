@@ -138,7 +138,7 @@ class AppleseedKelemenSpecMultSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedKelemenNode(Node, AppleseedNode):
-    '''appleseed Kelemen BRDF Node'''
+    """appleseed Kelemen BRDF Node"""
     bl_idname = "AppleseedKelemenNode"
     bl_label = "Kelemen BRDF"
     bl_icon = 'SMOOTH'

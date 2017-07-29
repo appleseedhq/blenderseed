@@ -91,7 +91,7 @@ class AppleseedBlendWeightSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedBlendNode(Node, AppleseedNode):
-    '''appleseed BSDF Blend Node'''
+    """appleseed BSDF Blend Node"""
     bl_idname = "AppleseedBlendNode"
     bl_label = "BSDF Blend"
     bl_icon = 'SMOOTH'

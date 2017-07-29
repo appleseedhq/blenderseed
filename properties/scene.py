@@ -26,8 +26,9 @@
 # THE SOFTWARE.
 #
 
-import bpy
 import multiprocessing
+
+import bpy
 
 from . import render_layers
 
@@ -51,7 +52,6 @@ def camera_enumerator(self, context):
 
 
 class AppleseedRenderSettings(bpy.types.PropertyGroup):
-
     @classmethod
     def register(cls):
         bpy.types.Scene.appleseed = bpy.props.PointerProperty(
@@ -71,11 +71,13 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         cls.studio_rendering_mode = bpy.props.EnumProperty(name="Mode",
                                                            description="Rendering mode to be used after launching appleseed.studio",
                                                            items=(("FINAL", "Final", "appleseed.studio will begin rendering in final render mode"),
-                                                                  ("PROGRESSIVE", "Progressive", "appleseed.studio will begin rendering using progrssive render mode")),
+                                                                  ("PROGRESSIVE", "Progressive",
+                                                                   "appleseed.studio will begin rendering using progressive render mode")),
                                                            default="PROGRESSIVE")
 
-        cls.project_path = bpy.props.StringProperty(description="Folder where to export project files. Rendered images are saved in a render/ subdirectory.",
-                                                    subtype='DIR_PATH')
+        cls.project_path = bpy.props.StringProperty(
+            description="Root folder for the appleseed project. Rendered images are saved in a render/ subdirectory.",
+            subtype='DIR_PATH')
 
         cls.threads = bpy.props.IntProperty(name="Rendering Threads",
                                             description="Number of threads to use for rendering",
@@ -98,6 +100,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         cls.export_hair = bpy.props.BoolProperty(name="Export Hair",
                                                  description="Export hair particle systems as renderable geometry",
                                                  default=False)
+
         # Sampling.
         cls.decorrelate_pixels = bpy.props.BoolProperty(name="Decorrelate Pixels", description='', default=True)
 
@@ -134,6 +137,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                         max=1000000,
                                                         default=16,
                                                         subtype='UNSIGNED')
+
         cls.force_aa = bpy.props.BoolProperty(name="Force Antialiasing",
                                               description="Force antialiasing",
                                               default=True)
@@ -284,13 +288,13 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                  max=1.0)
 
         # This doesn't have a respective setting in the appleseed.studio UI...
-        '''                                    
+        """                                    
         cls.sppm_photons_per_pass = bpy.props.IntProperty( name = "Photons Per Pass",
                                             description = "Photons emitted per pass",
                                             default = 100000,
                                             min = 0,
                                             max = 999999999)
-        '''
+        """
 
         # Miscellaneous settings.
         cls.premult_alpha = bpy.props.BoolProperty(name="Premultiplied Alpha",

@@ -78,7 +78,7 @@ class AppleseedLambertianMultiplierSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedLambertianNode(Node, AppleseedNode):
-    '''appleseed Lambertian BRDF Node'''
+    """appleseed Lambertian BRDF Node"""
     bl_idname = "AppleseedLambertianNode"
     bl_label = "Lambertian BRDF"
     bl_icon = 'SMOOTH'

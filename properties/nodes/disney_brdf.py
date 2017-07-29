@@ -28,18 +28,19 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
-from ..materials import AppleseedMatLayerProps
-from . import AppleseedNode, AppleseedSocket
 
-#--------------------------------
-# Ashikhmin diffuse reflectance socket.
-#--------------------------------
+from . import AppleseedNode, AppleseedSocket
+from ..materials import AppleseedMatLayerProps
+from ...util import asUpdate
 
 
 class AppleseedDisneyBaseSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Base Color socket.
+    """
+
     bl_idname = "AppleseedDisneyBase"
-    bl_label = "Base Coat"
+    bl_label = "Base Color"
 
     socket_value = AppleseedMatLayerProps.disney_base
 
@@ -52,12 +53,12 @@ class AppleseedDisneyBaseSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.8, 0.8, 0.5, 1)
 
-#--------------------------------
-# Disney Anisotropy socket.
-#--------------------------------
-
 
 class AppleseedDisneyAnisoSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Anisotropy socket.
+    """
+
     bl_idname = "AppleseedDisneyAniso"
     bl_label = "Anisotropy"
 
@@ -72,12 +73,12 @@ class AppleseedDisneyAnisoSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# Disney Clear Coat socket.
-#--------------------------------
-
 
 class AppleseedDisneyClearCoatSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Clear Coat socket.
+    """
+
     bl_idname = "AppleseedDisneyClearCoat"
     bl_label = "Clear Coat"
 
@@ -92,12 +93,12 @@ class AppleseedDisneyClearCoatSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# Disney Clear Coat Gloss socket.
-#--------------------------------
-
 
 class AppleseedDisneyClearCoatGlossSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Clear Coat Gloss socket.
+    """
+
     bl_idname = "AppleseedDisneyClearCoatGloss"
     bl_label = "Clear Coat Gloss"
 
@@ -112,12 +113,12 @@ class AppleseedDisneyClearCoatGlossSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# Disney Metallic socket.
-#--------------------------------
-
 
 class AppleseedDisneyMetallicSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Metallic socket.
+    """
+
     bl_idname = "AppleseedDisneyMetallic"
     bl_label = "Metallic"
 
@@ -132,12 +133,12 @@ class AppleseedDisneyMetallicSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# Disney Roughness socket.
-#--------------------------------
-
 
 class AppleseedDisneyRoughnessSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Roughness socket.
+    """
+
     bl_idname = "AppleseedDisneyRoughness"
     bl_label = "Roughness"
 
@@ -152,12 +153,12 @@ class AppleseedDisneyRoughnessSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# Disney Sheen socket.
-#--------------------------------
-
 
 class AppleseedDisneySheenSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Sheen socket.
+    """
+
     bl_idname = "AppleseedDisneySheen"
     bl_label = "Sheen"
 
@@ -172,12 +173,12 @@ class AppleseedDisneySheenSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# Disney Sheen Tint socket.
-#--------------------------------
-
 
 class AppleseedDisneySheenTintSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Sheen Tint socket.
+    """
+
     bl_idname = "AppleseedDisneySheenTint"
     bl_label = "Sheen Tint"
 
@@ -192,12 +193,12 @@ class AppleseedDisneySheenTintSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# Disney Specular socket.
-#--------------------------------
-
 
 class AppleseedDisneySpecSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Specular socket.
+    """
+
     bl_idname = "AppleseedDisneySpec"
     bl_label = "Specular"
 
@@ -212,12 +213,12 @@ class AppleseedDisneySpecSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# Disney Specular Tint socket.
-#--------------------------------
-
 
 class AppleseedDisneySpecTintSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Specular Tint socket.
+    """
+
     bl_idname = "AppleseedDisneySpecTint"
     bl_label = "Specular Tint"
 
@@ -232,12 +233,12 @@ class AppleseedDisneySpecTintSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# Disney Subsurface socket.
-#--------------------------------
-
 
 class AppleseedDisneySubsurfaceSocket(NodeSocket, AppleseedSocket):
+    """
+    Disney Subsurface socket.
+    """
+
     bl_idname = "AppleseedDisneySubsurface"
     bl_label = "Subsurface"
 
@@ -252,13 +253,12 @@ class AppleseedDisneySubsurfaceSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-#  BRDF node.
-#--------------------------------
-
 
 class AppleseedDisneyNode(Node, AppleseedNode):
-    '''appleseed Disney BRDF Node'''
+    """
+    Disney BRDF node.
+    """
+
     bl_idname = "AppleseedDisneyNode"
     bl_label = "Disney BRDF"
     bl_icon = 'SMOOTH'
@@ -266,7 +266,7 @@ class AppleseedDisneyNode(Node, AppleseedNode):
     node_type = 'disney'
 
     def init(self, context):
-        self.inputs.new('AppleseedDisneyBase', "Base Coat")
+        self.inputs.new('AppleseedDisneyBase', "Base Color")
         self.inputs.new('AppleseedDisneySpec', "Specular")
         self.inputs.new('AppleseedDisneySpecTint', "Specular Tint")
         self.inputs.new('AppleseedDisneyAniso', "Anisotropy")

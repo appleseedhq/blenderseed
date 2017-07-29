@@ -35,7 +35,7 @@ from ..materials import AppleseedMatProps
 
 
 class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
-    '''appleseed Normal Input Socket'''
+    """appleseed Normal Input Socket"""
     bl_idname = "AppleseedNormalInput"
     bl_label = "Image"
 
@@ -46,10 +46,10 @@ class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
         return (0.8, 0.8, 0.5, 1)
 
     def get_socket_value(self, texture_only=True):
-        '''
+        """
         Method to return socket's value, if not linked. 
         If linked, return the name of the node with appended pointer.
-        '''
+        """
         if self.is_linked:
             linked_node = self.links[0].from_node
             if linked_node.node_type == 'texture':
@@ -64,7 +64,7 @@ class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedNormalNode(Node, AppleseedNode):
-    '''appleseed Bump / Normal Node'''
+    """appleseed Bump / Normal Node"""
     bl_idname = "AppleseedNormalNode"
     bl_label = "Bump / Normal"
     bl_icon = 'SMOOTH'

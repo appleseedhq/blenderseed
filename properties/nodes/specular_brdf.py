@@ -78,7 +78,7 @@ class AppleseedSpecBRDFMultiplierSocket(NodeSocket, AppleseedSocket):
 
 
 class AppleseedSpecBRDFNode(Node, AppleseedNode):
-    '''appleseed Specular BRDF Node'''
+    """appleseed Specular BRDF Node"""
     bl_idname = "AppleseedSpecBRDFNode"
     bl_label = "Specular BRDF"
     bl_icon = 'SMOOTH'

@@ -26,20 +26,20 @@
 # THE SOFTWARE.
 #
 
-import bpy
-import os
-import sys
-import multiprocessing
 import datetime
-from extensions_framework import util as efutil
-from shutil import copyfile
+import multiprocessing
+import os
 from math import tan, atan, degrees
+
+import bpy
 import mathutils
+from extensions_framework import util as efutil
+
 from . import bl_info
 
-#------------------------------------
+# ------------------------------------
 # Generic utilities and settings.
-#------------------------------------
+# ------------------------------------
 sep = os.sep
 
 # Add-on directory.
@@ -95,9 +95,9 @@ def realpath(path):
     return os.path.realpath(efutil.filesystem_path(path))
 
 
-#------------------------------------
+# ------------------------------------
 # Scene export utilities.
-#------------------------------------
+# ------------------------------------
 def inscenelayer(object, scene):
     for i in range(len(object.layers)):
         if object.layers[i] == True and scene.layers[i] == True:
@@ -110,16 +110,17 @@ def do_export(obj, scene):
     return not obj.hide_render and obj.type in ('MESH', 'SURFACE', 'META', 'TEXT', 'CURVE', 'LAMP') and inscenelayer(obj, scene)
 
 
-def resolution(scene):
-    xr = scene.render.resolution_x * scene.render.resolution_percentage / 100.0
-    yr = scene.render.resolution_y * scene.render.resolution_percentage / 100.0
-    return xr, yr
+def get_render_resolution(scene):
+    scale = scene.render.resolution_percentage / 100.0
+    width = int(scene.render.resolution_x * scale)
+    height = int(scene.render.resolution_y * scale)
+    return width, height
 
 
 def get_camera_matrix(camera, global_matrix):
-    '''
+    """
     Get the camera transformation decomposed as origin, forward, up and target.
-    '''
+    """
     camera_mat = global_matrix * camera.matrix_world
     origin = camera_mat.col[3]
     forward = -camera_mat.col[2]
@@ -129,11 +130,11 @@ def get_camera_matrix(camera, global_matrix):
 
 
 def calc_fov(camera_ob, width, height):
-    ''' 
+    """
     Calculate horizontal FOV if rendered height is greater than rendered with
 
     Thanks to NOX exporter developers for this solution.
-    '''
+    """
     camera_angle = degrees(camera_ob.data.angle)
     if width < height:
         length = 18.0 / tan(camera_ob.data.angle / 2)
@@ -148,9 +149,9 @@ def is_uv_img(tex):
     return False
 
 
-#------------------------------------
+# ------------------------------------
 # Object / instance utilities.
-#------------------------------------
+# ------------------------------------
 def ob_mblur_enabled(object, scene):
     return object.appleseed.mblur_enable and object.appleseed.mblur_type == 'object' and scene.appleseed.mblur_enable and scene.appleseed.ob_mblur
 
@@ -189,11 +190,11 @@ def get_all_duplis(scene):
 
 
 def get_instances(obj_parent, scene):
-    '''
+    """
     Get the instanced objects on the parent object (dupli-faces / dupli-verts).
     If motion blur is not enabled, returns list of lists [ [dupli_object.object, dupli matrix]]
     If motion blur is enabled, returns a nested list: [ [dupli_object.object, [dupli matrices]]]
-    '''
+    """
     dupli_list = []
     if ob_mblur_enabled(obj_parent, scene):
         dupli_list = sample_mblur(obj_parent, scene, dupli=True)
@@ -207,11 +208,11 @@ def get_instances(obj_parent, scene):
 
 
 def sample_mblur(ob, scene, dupli=False):
-    '''
+    """
     Sample motion blur matrices for the object or duplis.
     Returns a list of matrices, if an object only.
     Returns a nested list of [ [dupli_object.object, [dupli matrix 1, dupli matrix 2]]]
-    '''
+    """
     matrices = []
     asr_scn = scene.appleseed
     frame_orig = scene.frame_current
@@ -236,9 +237,9 @@ def sample_mblur(ob, scene, dupli=False):
     return matrices
 
 
-#------------------------------------
+# ------------------------------------
 # Particle system utilities.
-#------------------------------------
+# ------------------------------------
 def calc_decrement(root, tip, segments):
     return ((root - tip) / (segments - 1))
 
@@ -278,9 +279,9 @@ def has_hairsys(ob):
 
 
 def get_all_psysobs():
-    '''
+    """
     Return a set of all the objects being instanced in particle systems
-    '''
+    """
     obs = set()
     for settings in bpy.data.particles:
         if settings.render_type == 'OBJECT' and settings.dupli_object is not None:
@@ -291,12 +292,12 @@ def get_all_psysobs():
 
 
 def get_psys_instances(ob, scene):
-    ''' 
+    """
     Return a dictionary of 
     particle: [dupli.object, [matrices]] 
     pairs. This function assumes particle systems and 
     face / verts duplication aren't being used on the same object.
-    '''
+    """
     all_duplis = {}
     current_total = 0
     index = 0
@@ -327,7 +328,7 @@ def get_psys_instances(ob, scene):
                     duplis.append(ob.dupli_list[dupli_index].object)
 
                 if psys.settings.type == 'EMITTER':
-                    p_duplis_pairs = list(zip(particles, duplis))     # Match the particles to the duplis
+                    p_duplis_pairs = list(zip(particles, duplis))  # Match the particles to the duplis
                     dupli_dict = {p[0]: [p[1], []] for p in p_duplis_pairs}  # Create particle:[dupli.object, [matrix]] pairs
                     for particle in dupli_dict.keys():
                         size = particle.size
@@ -335,7 +336,8 @@ def get_psys_instances(ob, scene):
                         scale = dupli_dict[particle][0].scale * size
                         transl = mathutils.Matrix.Translation((loc))
                         scale = mathutils.Matrix.Scale(scale.x, 4, (1, 0, 0)) * mathutils.Matrix.Scale(scale.y, 4,
-                                                                                                       (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4, (0, 0, 1))
+                                                                                                       (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4,
+                                                                                                                                           (0, 0, 1))
                         mat = transl * scale
                         dupli_dict[particle][1].append(mat)
                 else:
@@ -356,11 +358,11 @@ def get_psys_instances(ob, scene):
 
 
 def sample_psys_mblur(ob, scene, psys, index, start, current_total):
-    '''
+    """
     Return a dictionary of 
     particle: [dupli.object, [matrices]] 
     pairs
-    '''
+    """
     asr_scn = scene.appleseed
     dupli_dict = {}
     frame_orig = scene.frame_current
@@ -390,7 +392,8 @@ def sample_psys_mblur(ob, scene, psys, index, start, current_total):
                 scale = dupli_dict[particle][0].scale * size
                 transl = mathutils.Matrix.Translation((transl))
                 scale = mathutils.Matrix.Scale(scale.x, 4, (1, 0, 0)) * mathutils.Matrix.Scale(scale.y, 4,
-                                                                                               (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4, (0, 0, 1))
+                                                                                               (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4,
+                                                                                                                                   (0, 0, 1))
                 mat = transl * scale
                 dupli_dict[particle][1].append(mat)
                 new_index += 1
