@@ -235,7 +235,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
             # Update image.
             result = self.begin_result(tile_x, height - tile_y - tile_h, tile_w, tile_h)
-            layer = result.layers[0].passes["Combined"]
+            layer = result.layers[0] if bpy.app.version < (2, 74, 4) else result.layers[0].passes[0]
             floats = array.array('f')
             floats.fromstring(tile_data)
             pix = []
