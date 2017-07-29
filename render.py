@@ -107,7 +107,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Don't render material thumbnails.
         (width, height) = util.get_render_resolution(scene)
-        print(width, height)
         if width <= 96:
             return
 
