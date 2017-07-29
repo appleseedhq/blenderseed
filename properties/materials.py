@@ -366,7 +366,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
 
     disney_aniso_tex = bpy.props.StringProperty(name="", description="Texture to influence anisotropy", default="", update=refresh_preview)
 
-    disney_clearcoat = bpy.props.FloatProperty(name="Clear Coat", description="Clear coat", default=0, min=0, soft_max=1.0, update=refresh_preview)
+    disney_clearcoat = bpy.props.FloatProperty(name="Clear Coat", description="Clear coat", default=0, min=0, soft_max=10.0, update=refresh_preview)
 
     disney_use_clearcoat_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence clear coat", default=False,
                                                       update=refresh_preview)
