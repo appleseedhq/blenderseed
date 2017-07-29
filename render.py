@@ -39,7 +39,6 @@ from extensions_framework import util as efutil
 
 from . import project_file_writer
 from . import util
-from .properties.scene import threads
 
 
 class RenderAppleseed(bpy.types.RenderEngine):
@@ -190,7 +189,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         cmd = (appleseed_exe,
                project_filepath,
                '--to-stdout',
-               '--threads', str(threads),
+               '--threads', str(scene.appleseed.threads),
                '--message-verbosity', 'warning',
                '--resolution', str(width), str(height),
                '--window', str(x0), str(y0), str(x1), str(y1))
