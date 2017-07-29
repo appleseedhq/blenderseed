@@ -105,6 +105,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Export and render the material preview scene.
         """
 
+        # Don't render material thumbnails.
+        (width, height) = util.get_render_resolution(scene)
+        print(width, height)
+        if width <= 96:
+            return
+
         # Collect objects and their materials in a object -> [materials] dictionary.
         objects_materials = {}
         for obj in (obj for obj in scene.objects if obj.is_visible(scene) and not obj.hide_render):
@@ -141,7 +147,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         prev_mat = likely_materials[0]
         prev_type = prev_mat.preview_render_type.lower()
-        (width, height) = util.get_render_resolution(scene)
 
         # Export the project.
         exporter = project_file_writer.Exporter()
