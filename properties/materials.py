@@ -34,10 +34,13 @@ def refresh_preview(self, context):
     Triggers a refresh of the material preview.
     """
 
-    if context.material is not None:
-        context.material.preview_render_type = context.material.preview_render_type
-    if context.texture is not None:
-        context.texture.type = context.texture.type
+    if hasattr(context, "material"):
+        if context.material is not None:
+            context.material.preview_render_type = context.material.preview_render_type
+
+    if hasattr(context, "texture"):
+        if context.texture is not None:
+            context.texture.type = context.texture.type
 
 
 class AppleseedMatLayerProps(bpy.types.PropertyGroup):
