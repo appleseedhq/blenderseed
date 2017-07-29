@@ -125,7 +125,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             return
 
         # Build the path to the template preview project in the add-on directory.
-        preview_template_dir = os.path.join(os.sep.join(util.realpath(__file__).split(sep)[:-1]), "mat_preview")
+        preview_template_dir = os.path.join(os.sep.join(util.realpath(__file__).split(os.sep)[:-1]), "mat_preview")
 
         # Build the path to the output preview project.
         preview_output_dir = os.path.join(efutil.temp_directory(), "mat_preview")
