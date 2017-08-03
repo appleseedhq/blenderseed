@@ -2649,6 +2649,7 @@ class Exporter(object):
         <frame name="beauty">
             <parameter name="camera" value="Camera" />
             <parameter name="resolution" value="{0} {1}" />
+            <parameter name="pixel_format" value="float" />
             <parameter name="color_space" value="srgb" />
         </frame>
     </output>
