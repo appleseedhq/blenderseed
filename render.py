@@ -236,9 +236,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             if False:
                 print("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
 
-            # Update image.
-            result = self.begin_result(tile_x, height - tile_y - tile_h, tile_w, tile_h)
-            layer = result.layers[0] if bpy.app.version < (2, 74, 4) else result.layers[0].passes[0]
+            # Convert tile data to the format expected by Blender.
             floats = array.array('f')
             floats.fromstring(tile_data)
             pix = []
@@ -247,6 +245,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 start_index = y * stride
                 end_index = start_index + stride
                 pix.extend(floats[i:i + 4] for i in range(start_index, end_index, 4))
+
+            # Update image.
+            result = self.begin_result(tile_x, height - tile_y - tile_h, tile_w, tile_h)
+            layer = result.layers[0] if bpy.app.version < (2, 74, 4) else result.layers[0].passes[0]
             layer.rect = pix
             self.end_result(result)
 
