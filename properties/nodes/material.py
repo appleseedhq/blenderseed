@@ -197,7 +197,7 @@ class AppleseedMaterialNode(Node, AppleseedNode):
         self.inputs.new('AppleseedEmissionColor', "Emission Color")
 
     def draw_buttons(self, context, layout):
-        img = bpy.data.images.get('APPLESEED32')
+        img = bpy.data.images.get('appleseed32')
         if img is not None:
             icon = layout.icon(img)
             layout.label(text="appleseed", icon_value=icon)
