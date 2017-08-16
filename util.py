@@ -47,7 +47,7 @@ for addon_path in bpy.utils.script_paths("addons"):
     if "blenderseed" in os.listdir(addon_path):
         addon_dir = os.path.join(addon_path, "blenderseed")
 
-version = str(bl_info['version'][1]) + "." + str(bl_info['version'][2])
+version = "{0}.{1}.{2}".format(bl_info['version'][0], bl_info['version'][1], bl_info['version'][2])
 
 thread_count = multiprocessing.cpu_count()
 
@@ -98,12 +98,11 @@ def realpath(path):
 # ------------------------------------
 # Scene export utilities.
 # ------------------------------------
-def inscenelayer(object, scene):
-    for i in range(len(object.layers)):
-        if object.layers[i] == True and scene.layers[i] == True:
+
+def inscenelayer(obj, scene):
+    for i in range(len(obj.layers)):
+        if obj.layers[i] and scene.layers[i]:
             return True
-        else:
-            continue
 
 
 def do_export(obj, scene):
@@ -131,7 +130,7 @@ def get_camera_matrix(camera, global_matrix):
 
 def calc_fov(camera_ob, width, height):
     """
-    Calculate horizontal FOV if rendered height is greater than rendered with
+    Calculate horizontal FOV if rendered height is greater than rendered width.
 
     Thanks to NOX exporter developers for this solution.
     """

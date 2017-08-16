@@ -141,27 +141,27 @@ appleseed_node_categories = [
 @persistent
 def appleseed_scene_loaded(dummy):
     # Load images as icons
-    icon16 = bpy.data.images.get('APPLESEED16')
-    icon32 = bpy.data.images.get('APPLESEED32')
+    icon16 = bpy.data.images.get('appleseed16')
+    icon32 = bpy.data.images.get('appleseed32')
     if icon16 is None:
-        img = bpy.data.images.load(os.path.join(os.path.join(addon_dir, 'icons'), 'APPLESEED16.png'))
-        img.name = 'APPLESEED16'
+        img = bpy.data.images.load(os.path.join(os.path.join(addon_dir, 'icons'), 'appleseed16.png'))
+        img.name = 'appleseed16'
         img.use_alpha = True
         img.user_clear()
     # remove scene_update handler
-    elif "APPLESEED16" not in icon16.keys():
-        icon16["APPLESEED16"] = True
+    elif "appleseed16" not in icon16.keys():
+        icon16["appleseed16"] = True
         for f in bpy.app.handlers.scene_update_pre:
             if f.__name__ == "appleseed_scene_loaded":
                 bpy.app.handlers.scene_update_pre.remove(f)
     if icon32 is None:
-        img = bpy.data.images.load(os.path.join(os.path.join(addon_dir, 'icons'), 'APPLESEED32.png'))
-        img.name = 'APPLESEED32'
+        img = bpy.data.images.load(os.path.join(os.path.join(addon_dir, 'icons'), 'appleseed32.png'))
+        img.name = 'appleseed32'
         img.use_alpha = True
         img.user_clear()  # Won't get saved into .blend files
     # remove scene_update handler
-    elif "APPLESEED32" not in icon32.keys():
-        icon32["APPLESEED32"] = True
+    elif "appleseed32" not in icon32.keys():
+        icon32["appleseed32"] = True
         for f in bpy.app.handlers.scene_update_pre:
             if f.__name__ == "appleseed_scene_loaded":
                 bpy.app.handlers.scene_update_pre.remove(f)
