@@ -26,6 +26,7 @@
 # THE SOFTWARE.
 #
 
+import codecs
 import math
 import os
 from datetime import datetime
@@ -114,7 +115,7 @@ class Exporter(object):
         start_time = datetime.now()
 
         try:
-            with open(file_path, "w") as self._output_file:
+            with codecs.open(file_path, "w", "utf-8") as self._output_file:
                 self._indent = 0
                 self.__emit_file_header()
                 self.__emit_project(scene)
@@ -2437,7 +2438,7 @@ class Exporter(object):
         mesh = 'sphere' if mesh in {'sphere', 'sphere_a'} else mesh
 
         try:
-            with open(file_path, "w") as self._output_file:
+            with codecs.open(file_path, "w", "utf-8") as self._output_file:
                 self._indent = 0
                 self.__emit_file_header()
                 aspect_ratio = self.__get_frame_aspect_ratio(scene.render)
