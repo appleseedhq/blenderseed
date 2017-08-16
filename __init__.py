@@ -40,6 +40,7 @@ bl_info = {
 
 if "bpy" in locals():
     import imp
+
     imp.reload(properties)
     imp.reload(operators)
     imp.reload(export)
@@ -55,21 +56,9 @@ else:
     from . import operators
     from . import export
     from . import ui
-    from . import render
-    from . import util
     from . import preferences
-    from . import project_file_writer
 
 import bpy
-import bl_ui
-import bl_operators
-import math
-import mathutils
-from shutil import copyfile
-from datetime import datetime
-import os
-import subprocess
-import time
 
 
 def register():

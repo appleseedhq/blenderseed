@@ -98,12 +98,11 @@ def realpath(path):
 # ------------------------------------
 # Scene export utilities.
 # ------------------------------------
-def inscenelayer(object, scene):
-    for i in range(len(object.layers)):
-        if object.layers[i] == True and scene.layers[i] == True:
+
+def inscenelayer(obj, scene):
+    for i in range(len(obj.layers)):
+        if obj.layers[i] and scene.layers[i]:
             return True
-        else:
-            continue
 
 
 def do_export(obj, scene):
@@ -131,7 +130,7 @@ def get_camera_matrix(camera, global_matrix):
 
 def calc_fov(camera_ob, width, height):
     """
-    Calculate horizontal FOV if rendered height is greater than rendered with
+    Calculate horizontal FOV if rendered height is greater than rendered width.
 
     Thanks to NOX exporter developers for this solution.
     """

@@ -26,19 +26,15 @@
 # THE SOFTWARE.
 #
 
-import bpy
-import bl_ui
-import bl_operators
 import math
-import mathutils
 import os
-import subprocess
-import time
-from shutil import copyfile
 from datetime import datetime
-from . import util
-import sys
+
+import bpy
+import mathutils
+
 from . import mesh_writer
+from . import util
 
 identity_matrix = mathutils.Matrix(((1.0, 0.0, 0.0, 0.0),
                                     (0.0, 0.0, -1.0, 0.0),
@@ -130,9 +126,9 @@ class Exporter(object):
 
         self.__info("Finished exporting in {0}".format(elapsed_time))
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Export the project.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __get_selected_camera(self, scene):
         if scene.camera is not None and scene.camera.name in bpy.data.objects:
@@ -152,9 +148,9 @@ class Exporter(object):
         self.__emit_configurations(scene)
         self.__close_element("project")
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Scene.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_scene(self, scene):
         self.__open_element("scene")
@@ -164,7 +160,7 @@ class Exporter(object):
         self.__emit_assembly_instance(scene)
         self.__close_element("scene")
 
-    #--------------------------------
+    # --------------------------------
     def __emit_assembly(self, scene):
         """
         Write the scene assembly.
@@ -175,7 +171,7 @@ class Exporter(object):
         self.__emit_objects(scene)
         self.__close_element("assembly")
 
-    #--------------------------------
+    # --------------------------------
     def __emit_assembly_instance(self, scene, obj=None):
         """
         Write a scene assembly instance,
@@ -209,7 +205,7 @@ class Exporter(object):
             self.__open_element('assembly_instance name="%s_instance" assembly="%s"' % (scene.name, scene.name))
             self.__close_element("assembly_instance")
 
-    #--------------------------------
+    # --------------------------------
     def __emit_object_assembly(self, scene, object):
         """
         Write an assembly for an object with transformation motion blur.
@@ -221,7 +217,7 @@ class Exporter(object):
         self.__emit_geometric_object(scene, object, True)
         self.__close_element("assembly")
 
-    #--------------------------------
+    # --------------------------------
     def __emit_dupli_assembly(self, scene, object, matrices):
         """
         Write an assembly for a dupli/particle with transformation motion blur.
@@ -243,7 +239,7 @@ class Exporter(object):
         # Emit an instance of the dupli object assembly.
         self.__emit_dupli_assembly_instance(scene, assembly_name, matrices)
 
-    #--------------------------------
+    # --------------------------------
     def __emit_dupli_assembly_instance(self, scene, assembly_name, matrices):
         """
         Write an instance of the dupli object assembly (for duplis/particles with motion blur).
@@ -266,7 +262,7 @@ class Exporter(object):
         self.__emit_transform_element(next_matrix, 1)
         self.__close_element("assembly_instance")
 
-    #--------------------------------
+    # --------------------------------
     def __emit_objects(self, scene):
         """
         Emit the objects in the scene.
@@ -289,10 +285,10 @@ class Exporter(object):
                         elif util.is_psys_emitter(object):
                             # Motion blur enabled on a particle system emitter.
                             particle_obs = util.get_psys_instances(object, scene)
-                            for ob in particle_obs:             # each 'ob' is a particle, as dict key
-                                                                # The value is a list: dupli.object and another list of two matrices
-                                dupli_obj = particle_obs[ob][0]     # The dupli.object
-                                inst_mats = particle_obs[ob][1]     # The list of matrices
+                            for ob in particle_obs:  # each 'ob' is a particle, as dict key
+                                # The value is a list: dupli.object and another list of two matrices
+                                dupli_obj = particle_obs[ob][0]  # The dupli.object
+                                inst_mats = particle_obs[ob][1]  # The list of matrices
                                 self.__emit_dupli_assembly(scene, dupli_obj, inst_mats)
 
                             if util.render_emitter(object):
@@ -306,9 +302,9 @@ class Exporter(object):
                         # No motion blur enabled.
                         self.__emit_geometric_object(scene, object, False)
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Geometry.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_geometric_object(self, scene, object, ob_mblur=False):
         """
@@ -340,7 +336,7 @@ class Exporter(object):
         for dupli_object in self._dupli_objects:
             self.__emit_dupli_object(scene, dupli_object[0], dupli_object[1], ob_mblur)
 
-    #--------------------------------
+    # --------------------------------
     def __emit_dupli_object(self, scene, object, object_matrix, ob_mblur, new_assembly=False):
         """
         Emit objects / dupli objects.
@@ -359,7 +355,7 @@ class Exporter(object):
                     if not util.render_emitter(object):
                         export_mesh = False
 
-                #-----------------------------------------------------------------------
+                # -----------------------------------------------------------------------
                 # If deformation motion blur is enabled, write deformation mesh to disk.
                 if util.def_mblur_enabled(object, scene):
                     scene.frame_set(current_frame, subframe=asr_scn.shutter_close)
@@ -385,7 +381,7 @@ class Exporter(object):
 
                     # Reset the timeline to current frame
                     scene.frame_set(current_frame)
-                #-----------------------------------------------------------------------
+                # -----------------------------------------------------------------------
 
                 # Tessellate the object at shutter open.
                 scene.frame_set(current_frame, subframe=shutter_open)
@@ -423,7 +419,7 @@ class Exporter(object):
         if export_mesh:
             self.__emit_mesh_object_instance(scene, object, object_matrix, new_assembly)
 
-    #--------------------------------
+    # --------------------------------
     def __emit_curves_object(self, scene, object, psys, new_assembly=False):
         """
         Emit the curves object element and write to disk.
@@ -460,7 +456,7 @@ class Exporter(object):
         # Hard code one mesh part for now, since particle systems aren't split into materials.
         return [(0, "part_0")]
 
-    #--------------------------------
+    # --------------------------------
     def __emit_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex, new_assembly):
         """
         Emit the mesh object element and write to disk.
@@ -508,7 +504,7 @@ class Exporter(object):
 
         return mesh_parts
 
-    #--------------------------------
+    # --------------------------------
     def __emit_object_element(self, object_name, mesh_file, object, scene):
         """
         Emit an object element to the project file.
@@ -524,7 +520,7 @@ class Exporter(object):
             self.__emit_parameter("filename", mesh_filename)
         self.__close_element("object")
 
-    #--------------------------------
+    # --------------------------------
     def __emit_curves_element(self, curves_name, curves_file, object, scene):
         """
         Emit a curves object element to the project file.
@@ -610,9 +606,9 @@ class Exporter(object):
                     self.__error("While exporting particle system '{0}': could not write to {1}, skipping particle system.".format(
                         psys.name, curves_filepath))
 
-    #---------------------------
+    # ---------------------------
     # Emit mesh object instance.
-    #---------------------------
+    # ---------------------------
     def __emit_mesh_object_instance(self, scene, object, object_matrix, new_assembly, hair=False, hair_material=None, psys_name=None):
         """
         Calls __emit_object_instance_element to emit an object instance.
@@ -666,9 +662,9 @@ class Exporter(object):
                 util.debug(object_name, object_matrix)
             self.__emit_object_instance_element(part_name, instance_name, object_matrix, front_material_name, back_material_name, object, scene)
 
-    #---------------------------------------------
+    # ---------------------------------------------
     # Emit an object instance to the project file.
-    #---------------------------------------------
+    # ---------------------------------------------
     def __emit_object_instance_element(self, object_name, instance_name, instance_matrix, front_material_name, back_material_name, object, scene):
         """
         Emit an object instance element to the project file.
@@ -684,9 +680,9 @@ class Exporter(object):
             self._rules[object.name] = object.appleseed.render_layer
         self.__close_element("object_instance")
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Materials.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __is_light_emitting_material(self, asr_mat, scene, material_node=None):
         if material_node is not None:
@@ -712,9 +708,9 @@ class Exporter(object):
 
         self.__emit_material_element("__default_material", "__default_material_bsdf", "", "physical_surface_shader", scene, "")
 
-    #-------------------------------------------
+    # -------------------------------------------
     # Write the material.
-    #-------------------------------------------
+    # -------------------------------------------
     def __emit_material(self, material, scene):
         asr_mat = material.appleseed
         asr_node_tree = asr_mat.node_tree
@@ -780,9 +776,9 @@ class Exporter(object):
 
         self.__emit_material_element(material_name, bsdf_name, "", "physical_surface_shader", scene, material, material_node)
 
-    #--------------------------------
+    # --------------------------------
     # Write front material BSDF tree.
-    #--------------------------------
+    # --------------------------------
     def __emit_front_material_bsdf_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
         """
         Emit the front material's BSDF tree and return the last BSDF name to the calling function (__emit_front_material).
@@ -961,9 +957,9 @@ class Exporter(object):
 
                 return self.__emit_bsdf_mixes(bsdfs)
 
-    #----------------------
+    # ----------------------
     # Write back material.
-    #----------------------
+    # ----------------------
     def __emit_back_material_bsdf_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
         # material_name = material.name  + "_back"
         # Need to include all instances of Specular BTDFs.
@@ -986,9 +982,9 @@ class Exporter(object):
                     break
         return transp_bsdf_name
 
-    #-----------------------------
+    # -----------------------------
     # Write BSDF blends / weights.
-    #-----------------------------
+    # -----------------------------
     def __emit_bsdf_mixes(self, bsdfs):
 
         # Only one BSDF, no blending.
@@ -1019,9 +1015,9 @@ class Exporter(object):
 
         return mix_name
 
-    #----------------------
+    # ----------------------
     # Write Lambertian BRDF.
-    #----------------------
+    # ----------------------
     def __emit_lambertian_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         asr_mat = material.appleseed
         reflectance_name = ""
@@ -1061,9 +1057,9 @@ class Exporter(object):
         self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
         self.__close_element("bsdf")
 
-    #-----------------------
+    # -----------------------
     # Write Disney BRDF.
-    #-----------------------
+    # -----------------------
     def __emit_disney_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         asr_mat = material.appleseed
         base_coat_name = ""
@@ -1209,9 +1205,9 @@ class Exporter(object):
         self.__emit_parameter("subsurface", subsurface)
         self.__close_element("bsdf")
 
-    #-----------------------
+    # -----------------------
     # Write Oren-Nayar BRDF.
-    #-----------------------
+    # -----------------------
     def __emit_orennayar_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         asr_mat = material.appleseed
         reflectance_name = ""
@@ -1262,9 +1258,9 @@ class Exporter(object):
         self.__emit_parameter("roughness", roughness)
         self.__close_element("bsdf")
 
-    #----------------------
+    # ----------------------
     # Write Diffuse BTDF.
-    #----------------------
+    # ----------------------
     def __emit_diffuse_btdf(self, material, bsdf_name, scene, layer=None, node=None):
         asr_mat = material.appleseed
         transmittance_name = ""
@@ -1311,9 +1307,9 @@ class Exporter(object):
         self.__emit_parameter("transmittance_multiplier", transmittance)
         self.__close_element("bsdf")
 
-    #-----------------------------
+    # -----------------------------
     # Write Ashikhmin-Shirley BRDF.
-    #-----------------------------
+    # -----------------------------
     def __emit_ashikhmin_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         asr_mat = material.appleseed
         diffuse_reflectance_name = ""
@@ -1384,9 +1380,9 @@ class Exporter(object):
         self.__emit_parameter("fresnel_multiplier", fresnel)
         self.__close_element("bsdf")
 
-    #----------------------
+    # ----------------------
     # Write Specular BRDF.
-    #----------------------
+    # ----------------------
     def __emit_specular_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         asr_mat = material.appleseed
         reflectance_name = ""
@@ -1411,7 +1407,6 @@ class Exporter(object):
 
                     reflectance_name = layer.specular_gloss_tex + "_inst"
                     if reflectance_name not in self._textures_set:
-
                         self._textures_set.add(reflectance_name)
                         self.__emit_texture(bpy.data.textures[layer.specular_gloss_tex], False, scene)
             if reflectance_name == "":
@@ -1427,9 +1422,9 @@ class Exporter(object):
         self.__emit_parameter("reflectance_multiplier", multiplier)
         self.__close_element("bsdf")
 
-    #----------------------
+    # ----------------------
     # Write Specular BTDF.
-    #----------------------
+    # ----------------------
     def __emit_specular_btdf(self, material, bsdf_name, scene, side, layer, node=None):
         assert side == 'front' or side == 'back'
         asr_mat = material.appleseed
@@ -1507,9 +1502,9 @@ class Exporter(object):
         self.__emit_parameter("to_ior", to_ior)
         self.__close_element("bsdf")
 
-    #-----------------------
+    # -----------------------
     # Write Microfacet BRDF.
-    #-----------------------
+    # -----------------------
     def __emit_microfacet_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         asr_mat = material.appleseed
         reflectance_name = ""
@@ -1569,9 +1564,9 @@ class Exporter(object):
         self.__emit_parameter("fresnel_multiplier", microfacet_fresnel)
         self.__close_element("bsdf")
 
-    #----------------------
+    # ----------------------
     # Write Kelemen BRDF.
-    #----------------------
+    # ----------------------
     def __emit_kelemen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         asr_mat = material.appleseed
         reflectance_name = ""
@@ -1635,9 +1630,9 @@ class Exporter(object):
         self.__emit_parameter("specular_reflectance_multiplier", kelemen_specular_multiplier)
         self.__close_element("bsdf")
 
-    #----------------------
+    # ----------------------
     # Write BSDF Mixes.
-    #----------------------
+    # ----------------------
     def __emit_bsdf_mix(self, bsdf_name, bsdf0_name, bsdf0_weight, bsdf1_name, bsdf1_weight):
         """
         Emit BSDF mix to project file.
@@ -1649,9 +1644,9 @@ class Exporter(object):
         self.__emit_parameter("weight1", bsdf1_weight)
         self.__close_element("bsdf")
 
-    #----------------------
+    # ----------------------
     # Write BSDF Blend.
-    #----------------------
+    # ----------------------
     def __emit_bsdf_blend(self, bsdf_name, material_name, node=None):
         """
         Emit BSDF blend to project file.
@@ -1671,9 +1666,9 @@ class Exporter(object):
         self.__emit_parameter("weight", weight)
         self.__close_element("bsdf")
 
-    #----------------------
+    # ----------------------
     # Write material emission.
-    #----------------------
+    # ----------------------
 
     def __emit_edf(self, material, edf_name, scene, material_node=None):
         asr_mat = material.appleseed
@@ -1719,9 +1714,9 @@ class Exporter(object):
         self.__emit_parameter("light_near_start", light_near_start)
         self.__close_element("edf")
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Export textures, if any exist on the material
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     # Write texture.
     def __emit_texture(self, texture, bump_bool, scene, node=None, material_name=None, scene_texture=False):
@@ -1768,9 +1763,9 @@ class Exporter(object):
         self.__emit_parameter("filtering_mode", "bilinear")
         self.__close_element("texture_instance")
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Create the material
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_material_element(self, material_name, bsdf_name, edf_name, surface_shader_name, scene, material, material_node=None):
         if material != "":
@@ -1830,9 +1825,9 @@ class Exporter(object):
         self.__emit_parameter("surface_shader", surface_shader_name)
         self.__close_element("material")
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Camera.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_camera(self, scene):
         asr_scn = scene.appleseed
@@ -1897,23 +1892,23 @@ class Exporter(object):
 
             self.__open_element('transform time="0"')
             self.__emit_line('<look_at origin="{0} {1} {2}" target="{3} {4} {5}" up="{6} {7} {8}" />'.format(
-                             origin_1[0], origin_1[2], -origin_1[1],
-                             target_1[0], target_1[2], -target_1[1],
-                             up_1[0], up_1[2], -up_1[1]))
+                origin_1[0], origin_1[2], -origin_1[1],
+                target_1[0], target_1[2], -target_1[1],
+                up_1[0], up_1[2], -up_1[1]))
             self.__close_element("transform")
 
             self.__open_element('transform time="1"')
             self.__emit_line('<look_at origin="{0} {1} {2}" target="{3} {4} {5}" up="{6} {7} {8}" />'.format(
-                             origin_2[0], origin_2[2], -origin_2[1],
-                             target_2[0], target_2[2], -target_2[1],
-                             up_2[0], up_2[2], -up_2[1]))
+                origin_2[0], origin_2[2], -origin_2[1],
+                target_2[0], target_2[2], -target_2[1],
+                up_2[0], up_2[2], -up_2[1]))
             self.__close_element("transform")
         else:
             self.__open_element("transform")
             self.__emit_line('<look_at origin="{0} {1} {2}" target="{3} {4} {5}" up="{6} {7} {8}" />'.format(
-                             origin_1[0], origin_1[2], -origin_1[1],
-                             target_1[0], target_1[2], -target_1[1],
-                             up_1[0], up_1[2], -up_1[1]))
+                origin_1[0], origin_1[2], -origin_1[1],
+                target_1[0], target_1[2], -target_1[1],
+                up_1[0], up_1[2], -up_1[1]))
             self.__close_element("transform")
 
         self.__close_element("camera")
@@ -1930,9 +1925,9 @@ class Exporter(object):
         self.__close_element("camera")
         return
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Environment.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_environment(self, scene):
         horizon_radiance = [0.0, 0.0, 0.0]
@@ -2042,9 +2037,9 @@ class Exporter(object):
             self.__emit_parameter("environment_shader", env_shader_name)
         self.__close_element('environment')
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Lights.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_light(self, scene, object):
         light_type = object.data.type
@@ -2154,9 +2149,9 @@ class Exporter(object):
         self.__emit_transform_element(self._global_matrix * lamp.matrix_world, None)
         self.__close_element("light")
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Output.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_output(self, scene):
         self.__open_element("output")
@@ -2194,9 +2189,9 @@ class Exporter(object):
         endY = height - int(scene.render.border_min_y * height)
         return X, Y, endX, endY
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Render layer assignments.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_rules(self, scene):
         if len(self._rules.keys()) > 0:
@@ -2216,9 +2211,9 @@ class Exporter(object):
         self.__emit_parameter("pattern", ob_name)
         self.__close_element("render_layer_assignment")
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Configurations.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_configurations(self, scene):
         self.__open_element("configurations")
@@ -2308,9 +2303,9 @@ class Exporter(object):
 
         self.__close_element('parameters')
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Common elements.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __emit_color_element(self, name, color_space, values, alpha, multiplier):
         self.__open_element('color name="{0}"'.format(name))
@@ -2356,10 +2351,10 @@ class Exporter(object):
         else:
             self.__open_element("transform")
         self.__open_element("matrix")
-        self.__emit_line("{0} {1} {2} {3}".format(m[0][0],  m[0][1],  m[0][2],  m[0][3]))
-        self.__emit_line("{0} {1} {2} {3}".format(m[2][0],  m[2][1],  m[2][2],  m[2][3]))
+        self.__emit_line("{0} {1} {2} {3}".format(m[0][0], m[0][1], m[0][2], m[0][3]))
+        self.__emit_line("{0} {1} {2} {3}".format(m[2][0], m[2][1], m[2][2], m[2][3]))
         self.__emit_line("{0} {1} {2} {3}".format(-m[1][0], -m[1][1], -m[1][2], -m[1][3]))
-        self.__emit_line("{0} {1} {2} {3}".format(m[3][0],  m[3][1],  m[3][2],  m[3][3]))
+        self.__emit_line("{0} {1} {2} {3}".format(m[3][0], m[3][1], m[3][2], m[3][3]))
         self.__close_element("matrix")
         self.__close_element("transform")
 
@@ -2376,9 +2371,9 @@ class Exporter(object):
     def __emit_parameter(self, name, value):
         self.__emit_line("<parameter name=\"" + name + "\" value=\"" + str(value) + "\" />")
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     # Utilities.
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def __open_element(self, name):
         self.__emit_line("<" + name + ">")
@@ -2405,18 +2400,18 @@ class Exporter(object):
 
     def __error(self, message):
         self.__print_message("error", message)
-        #self.report({ 'ERROR' }, message)
+        # self.report({ 'ERROR' }, message)
 
     def __warning(self, message):
         self.__print_message("warning", message)
-        #self.report({ 'WARNING' }, message)
+        # self.report({ 'WARNING' }, message)
 
     def __info(self, message):
         if len(message) > 0:
             self.__print_message("info", message)
         else:
             print("")
-        #self.report({ 'INFO' }, message)
+            # self.report({ 'INFO' }, message)
 
     def __progress(self, message):
         self.__print_message("progress", message)
@@ -2427,9 +2422,9 @@ class Exporter(object):
         padding = " " * padding_count
         print("{0}{1} : {2}".format(severity, padding, message))
 
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     #   Preview render .appleseed file export
-    #----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
 
     def export_preview(self, scene, file_path, addon_path, mat, mesh, width, height):
         """
@@ -2635,7 +2630,7 @@ class Exporter(object):
                 </transform>
                 <assign_material slot="0" side="front" material="{1}" />
                 <assign_material slot="0" side="back" material="{2}" />
-            </object_instance>""".format( mesh, mat_front, mat_back))
+            </object_instance>""".format(mesh, mat_front, mat_back))
 
                 # Write the material for the preview sphere
                 self.__emit_material(mat, scene)
