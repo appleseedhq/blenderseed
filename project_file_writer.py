@@ -2089,7 +2089,7 @@ class Exporter(object):
         if bool(lamp.appleseed.render_layer):
             self._rules[lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
-        self.__emit_parameter("radiance_mutliplier", asr_light.radiance_multiplier)
+        self.__emit_parameter("radiance_multiplier", asr_light.radiance_multiplier)
         self.__emit_parameter("cast_indirect_light", str(asr_light.cast_indirect).lower())
         self.__emit_parameter("importance_multiplier", asr_light.importance_multiplier)
         self.__emit_transform_element(self._global_matrix * lamp.matrix_world, None)
