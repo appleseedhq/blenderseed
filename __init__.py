@@ -56,6 +56,7 @@ else:
     from . import operators
     from . import export
     from . import ui
+    from . import render
     from . import preferences
 
 import bpy
