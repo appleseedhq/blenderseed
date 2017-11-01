@@ -1,6 +1,6 @@
 ## blenderseed
 
-**blenderseed** is a Blender-to-[appleseed](http://appleseedhq.net) exporter for Blender 2.71 and later.
+**blenderseed** is a Blender-to-[appleseed](http://appleseedhq.net) exporter for [Blender](https://www.blender.org/) 2.71 and later.
 
 * [**Download** the latest release](https://github.com/appleseedhq/blenderseed/releases)
 * [**Read** installation instructions](https://github.com/appleseedhq/blenderseed/wiki/Installation)
