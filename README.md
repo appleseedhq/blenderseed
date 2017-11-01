@@ -1,11 +1,10 @@
-blenderseed
-===========
+## blenderseed
 
 **blenderseed** is a Blender-to-[appleseed](http://appleseedhq.net) exporter for Blender 2.71 and later.
 
-* [Download the latest release](https://github.com/appleseedhq/blenderseed/releases)
-* [Read installation instructions](https://github.com/appleseedhq/blenderseed/wiki/Installation)
-* [Report bugs and suggest features](https://github.com/appleseedhq/blenderseed/issues)
+* [**Download** the latest release](https://github.com/appleseedhq/blenderseed/releases)
+* [**Read** installation instructions](https://github.com/appleseedhq/blenderseed/wiki/Installation)
+* [**Report** bugs and suggest features](https://github.com/appleseedhq/blenderseed/issues)
 
 **blenderseed** includes support for the following features of appleseed:  
 * Pinhole, thin lens (supports physically correct depth of field), and spherical camera models
