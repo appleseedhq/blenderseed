@@ -33,10 +33,9 @@ from ..materials import AppleseedMatLayerProps
 from . import AppleseedNode, AppleseedSocket
 
 
-
-class AppleseedDiffuseBTDFReflectanceSocket(NodeSocket, AppleseedSocket):
-    bl_idname = "AppleseedDiffuseBTDFReflectance"
-    bl_label = "Reflectance"
+class AppleseedDiffuseBTDFTransmittanceSocket(NodeSocket, AppleseedSocket):
+    bl_idname = "AppleseedDiffuseBTDFTransmittance"
+    bl_label = "Transmittance"
 
     socket_value = AppleseedMatLayerProps.transmittance_color
 
@@ -74,7 +73,7 @@ class AppleseedDiffuseBTDFNode(Node, AppleseedNode):
     node_type = 'diffuse_btdf'
 
     def init(self, context):
-        self.inputs.new('AppleseedDiffuseBTDFReflectance', "Reflectance")
+        self.inputs.new('AppleseedDiffuseBTDFTransmittance', "Transmittance")
         self.inputs.new('AppleseedDiffuseBTDFMultiplier', "Multiplier")
         self.outputs.new('NodeSocketShader', "BTDF")
 
@@ -96,11 +95,11 @@ class AppleseedDiffuseBTDFNode(Node, AppleseedNode):
 
 def register():
     bpy.utils.register_class(AppleseedDiffuseBTDFMultiplierSocket)
-    bpy.utils.register_class(AppleseedDiffuseBTDFReflectanceSocket)
+    bpy.utils.register_class(AppleseedDiffuseBTDFTransmittanceSocket)
     bpy.utils.register_class(AppleseedDiffuseBTDFNode)
 
 
 def unregister():
     bpy.utils.unregister_class(AppleseedDiffuseBTDFNode)
     bpy.utils.unregister_class(AppleseedDiffuseBTDFMultiplierSocket)
-    bpy.utils.unregister_class(AppleseedDiffuseBTDFReflectanceSocket)
+    bpy.utils.unregister_class(AppleseedDiffuseBTDFTransmittanceSocket)

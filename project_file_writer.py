@@ -720,16 +720,16 @@ class Exporter(object):
             material_node = bpy.data.node_groups[asr_node_tree].nodes[asr_mat.node_output]
             node_list = material_node.traverse_tree()
             for node in node_list:
-                if node.node_type == "specular_btdf":
+                if node.node_type in ['specular_btdf', 'diffuse_btdf']:
                     front_material_name = material.name + "_front"
                     back_material_name = material.name + "_back"
                     self.__emit_front_material(material, front_material_name, scene, layers, material_node, node_list)
                     self.__emit_back_material(material, back_material_name, scene, layers, material_node, node_list)
                     break
         else:
-            # Need to iterate through layers only once, to find out if we have any specular btdfs.
+            # Need to iterate through layers only once, to find out if we have any btdfs.
             for layer in layers:
-                if layer.bsdf_type == "specular_btdf":
+                if layer.bsdf_type in ['specular_btdf', 'diffuse_btdf']:
                     front_material_name = material.name + "_front"
                     back_material_name = material.name + "_back"
                     self.__emit_front_material(material, front_material_name, scene, layers)
@@ -953,21 +953,25 @@ class Exporter(object):
     # Write back material.
     # ----------------------
     def __emit_back_material_bsdf_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
-        # material_name = material.name  + "_back"
-        # Need to include all instances of Specular BTDFs.
+        transp_bsdf_name = None
         if material_node is not None:
             for node in node_list:
-                if node.node_type == "specular_btdf":
+                if node.node_type == "diffuse_btdf":
+                    transp_bsdf_name = "{0}|{1}".format(material_name, node.name)
+                    self.__emit_diffuse_btdf(material, transp_bsdf_name, scene, None, node)
+                    break
+                elif node.node_type == "specular_btdf":
                     transp_bsdf_name = "{0}|{1}".format(material_name, node.name)
                     self.__emit_specular_btdf(material, transp_bsdf_name, scene, None, node)
                     break
         else:
-            spec_btdfs = []
             for layer in layers:
-                if layer.bsdf_type == "specular_btdf":
-                    # This is a hack for now; just return the first one we find
-                    spec_btdfs.append([layer.name, layer.spec_btdf_weight])
-                    transp_bsdf_name = "{0}|{1}".format(material_name, spec_btdfs[0][0])
+                if layer.bsdf_type == "diffuse_btdf":
+                    transp_bsdf_name = "{0}|{1}".format(material_name, layer.name)
+                    self.__emit_diffuse_btdf(material, transp_bsdf_name, scene, layer)
+                    break
+                elif layer.bsdf_type == "specular_btdf":
+                    transp_bsdf_name = "{0}|{1}".format(material_name, layer.name)
                     self.__emit_specular_btdf(material, transp_bsdf_name, scene, layer)
                     break
         return transp_bsdf_name
@@ -2544,13 +2548,13 @@ class Exporter(object):
                     material_node = bpy.data.node_groups[asr_mat.node_tree].nodes[asr_mat.node_output]
                     node_list = material_node.traverse_tree()
                     for node in node_list:
-                        if node.node_type == 'specular_btdf':
+                        if node.node_type in ['specular_btdf', 'diffuse_btdf']:
                             mat_front = mat.name + "_front"
                             mat_back = mat.name + "_back"
                             break
                 else:
                     for layer in asr_mat.layers:
-                        if layer.bsdf_type == 'specular_btdf':
+                        if layer.bsdf_type in ['specular_btdf', 'diffuse_btdf']:
                             mat_front = mat.name + "_front"
                             mat_back = mat.name + "_back"
                             break
