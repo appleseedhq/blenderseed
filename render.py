@@ -156,7 +156,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                                                width,
                                                height)
         if not file_written:
-            print('Error while exporting -- check the console for details.')
+            print('Error while exporting. Check the console for details.')
             return
 
         # Render the project.
