@@ -59,7 +59,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('lambertian_brdf', "Lambertian BRDF", ""),
                                               ('microfacet_brdf', "Microfacet BRDF", ""),
                                               ('orennayar_brdf', "Oren-Nayar BRDF", ""),
-                                              # ('specular_btdf', "Specular BTDF", ""),
+                                              ('specular_btdf', "Specular BTDF", ""),
                                               ('specular_brdf', "Specular BRDF", "")],
                                        name="BSDF Model",
                                        description="BSDF model for current material layer",
@@ -337,11 +337,8 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                    description="Specular BTDF transmittance multiplier", default=1.0, min=0.0, max=1.0,
                                                    update=refresh_preview)
 
-    spec_btdf_from_ior = bpy.props.FloatProperty(name="From IOR", description="Outside index of refraction", default=1.0, min=1.0, max=5,
-                                                 update=refresh_preview)
-
-    spec_btdf_to_ior = bpy.props.FloatProperty(name="To IOR", description="Inside index of refraction", default=1.0, min=1.0, max=5,
-                                               update=refresh_preview)
+    spec_btdf_ior = bpy.props.FloatProperty(name="IOR", description="Index of refraction", default=1.0, min=1.0, max=2.5,
+                                            update=refresh_preview)
 
     spec_btdf_weight = bpy.props.FloatProperty(name="Specular BTDF Blending Weight",
                                                description="Blending weight of Specular BTDF in BSDF mix", default=1.0, min=0.0, max=1.0,

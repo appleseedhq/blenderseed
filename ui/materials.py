@@ -668,10 +668,9 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
                     layout.prop(current_layer, "spec_btdf_trans_mult")
 
-                    # ior
+                    # IOR
                     row = layout.row(align=True)
-                    row.prop(current_layer, "spec_btdf_from_ior")
-                    row.prop(current_layer, "spec_btdf_to_ior")
+                    row.prop(current_layer, "spec_btdf_ior")
 
             #----------------------------------------------
 

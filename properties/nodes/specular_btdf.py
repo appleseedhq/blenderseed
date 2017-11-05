@@ -131,8 +131,7 @@ class AppleseedSpecBTDFNode(Node, AppleseedNode):
 
     node_type = 'specular_btdf'
 
-    from_ior = AppleseedMatLayerProps.spec_btdf_from_ior
-    to_ior = AppleseedMatLayerProps.spec_btdf_to_ior
+    ior = AppleseedMatLayerProps.spec_btdf_ior
 
     def init(self, context):
         self.inputs.new('AppleseedSpecBTDFReflectance', "Reflectance")
@@ -142,8 +141,7 @@ class AppleseedSpecBTDFNode(Node, AppleseedNode):
         self.outputs.new('NodeSocketShader', "BTDF")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "from_ior")
-        layout.prop(self, "to_ior")
+        layout.prop(self, "ior")
 
     def draw_buttons_ext(self, context, layout):
         pass

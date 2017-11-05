@@ -806,7 +806,7 @@ class Exporter(object):
                 if node.node_type == 'orennayar':
                     self.__emit_orennayar_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'specular_btdf':
-                    self.__emit_specular_btdf(material, bsdf_name, scene, 'front', None, node)
+                    self.__emit_specular_btdf(material, bsdf_name, scene, None, node)
                 if node.node_type == 'specular_brdf':
                     self.__emit_specular_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'texture':
@@ -823,7 +823,7 @@ class Exporter(object):
                     # Spec BTDF
                     if layer.bsdf_type == "specular_btdf":
                         transp_bsdf_name = "{0}|{1}".format(material_name, layer.name)
-                        self.__emit_specular_btdf(material, transp_bsdf_name, scene, 'front', layer)
+                        self.__emit_specular_btdf(material, transp_bsdf_name, scene, layer)
                         # Layer mask textures.
                         if layer.spec_btdf_use_tex and layer.spec_btdf_mix_tex != '':
                             bsdfs.append([transp_bsdf_name, layer.spec_btdf_mix_tex + "_inst"])
@@ -961,7 +961,7 @@ class Exporter(object):
                 if node.node_type == "specular_btdf":
                     transp_bsdf_name = "{0}|{1}".format(material_name, node.name)
 
-                    self.__emit_specular_btdf(material, transp_bsdf_name, scene, 'back', None, node)
+                    self.__emit_specular_btdf(material, transp_bsdf_name, scene, None, node)
                     break
         else:
             spec_btdfs = []
@@ -971,7 +971,7 @@ class Exporter(object):
                     spec_btdfs.append([layer.name, layer.spec_btdf_weight])
                     transp_bsdf_name = "{0}|{1}".format(material_name, spec_btdfs[0][0])
 
-                    self.__emit_specular_btdf(material, transp_bsdf_name, scene, 'back', layer)
+                    self.__emit_specular_btdf(material, transp_bsdf_name, scene, layer)
                     break
         return transp_bsdf_name
 
@@ -1418,8 +1418,7 @@ class Exporter(object):
     # ----------------------
     # Write Specular BTDF.
     # ----------------------
-    def __emit_specular_btdf(self, material, bsdf_name, scene, side, layer, node=None):
-        assert side == 'front' or side == 'back'
+    def __emit_specular_btdf(self, material, bsdf_name, scene, layer, node=None):
         asr_mat = material.appleseed
         reflectance_name = ""
         transmittance_name = ""
@@ -1431,12 +1430,7 @@ class Exporter(object):
             reflectance_multiplier = inputs[1].get_socket_value(True)
             transmittance_name = inputs[2].get_socket_value(True)
             transmittance_multiplier = inputs[3].get_socket_value(True)
-            if side == 'front':
-                from_ior = node.from_ior
-                to_ior = node.to_ior
-            else:
-                from_ior = node.to_ior
-                to_ior = node.from_ior
+            ior = node.ior
 
             if not inputs[0].is_linked:
                 spec_btdf_reflectance = reflectance_name
@@ -1479,20 +1473,14 @@ class Exporter(object):
             reflectance_multiplier = layer.spec_btdf_refl_mult
             transmittance_multiplier = layer.spec_btdf_trans_mult
 
-            if side == 'front':
-                from_ior = layer.spec_btdf_from_ior
-                to_ior = layer.spec_btdf_to_ior
-            else:
-                from_ior = layer.spec_btdf_to_ior
-                to_ior = layer.spec_btdf_from_ior
+            ior = layer.spec_btdf_ior
 
         self.__open_element('bsdf name="{0}" model="specular_btdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance_name)
         self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
         self.__emit_parameter("transmittance", transmittance_name)
         self.__emit_parameter("transmittance_multiplier", transmittance_multiplier)
-        self.__emit_parameter("from_ior", from_ior)
-        self.__emit_parameter("to_ior", to_ior)
+        self.__emit_parameter("ior", ior)
         self.__close_element("bsdf")
 
     # -----------------------

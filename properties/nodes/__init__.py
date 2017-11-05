@@ -132,7 +132,7 @@ appleseed_node_categories = [
         nodeitems_utils.NodeItem("AppleseedMicrofacetNode"),
         nodeitems_utils.NodeItem("AppleseedOrenNayarNode"),
         nodeitems_utils.NodeItem("AppleseedSpecBRDFNode"),
-        # nodeitems_utils.NodeItem( "AppleseedSpecBTDFNode"),
+        nodeitems_utils.NodeItem("AppleseedSpecBTDFNode"),
         nodeitems_utils.NodeItem("AppleseedBlendNode")]),
     AppleseedNodeCategory("TEXTURES", "Texture", items=[
         nodeitems_utils.NodeItem("AppleseedTexNode"),
