@@ -2585,8 +2585,8 @@ class Exporter(object):
     </output>
     <configurations>
         <configuration name="interactive" base="base_interactive">
-            <parameter name="lighting_engine" value="drt" />
-            <parameters name="drt">
+            <parameter name="lighting_engine" value="pt" />
+            <parameters name="pt">
                 <parameter name="dl_light_samples" value="1" />
                 <parameter name="enable_ibl" value="true" />
                 <parameter name="ibl_env_samples" value="1" />
@@ -2594,13 +2594,13 @@ class Exporter(object):
             </parameters>
         </configuration>
         <configuration name="final" base="base_final">
-            <parameter name="lighting_engine" value="drt" />
+            <parameter name="lighting_engine" value="pt" />
             <parameter name="pixel_renderer" value="uniform" />
             <parameters name="uniform_pixel_renderer">
                 <parameter name="decorrelate_pixels" value="False" />
                 <parameter name="samples" value="{2}" />
             </parameters>
-            <parameters name="drt">
+            <parameters name="pt">
                 <parameter name="dl_light_samples" value="1" />
                 <parameter name="enable_ibl" value="true" />
                 <parameter name="ibl_env_samples" value="1" />
