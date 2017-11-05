@@ -778,7 +778,6 @@ class Exporter(object):
         """
         # material_name here is material.name + "_front"
         bsdfs = []
-        asr_mat = material.appleseed
 
         # If using nodes.
         if material_node is not None:
@@ -960,7 +959,6 @@ class Exporter(object):
             for node in node_list:
                 if node.node_type == "specular_btdf":
                     transp_bsdf_name = "{0}|{1}".format(material_name, node.name)
-
                     self.__emit_specular_btdf(material, transp_bsdf_name, scene, None, node)
                     break
         else:
@@ -970,7 +968,6 @@ class Exporter(object):
                     # This is a hack for now; just return the first one we find
                     spec_btdfs.append([layer.name, layer.spec_btdf_weight])
                     transp_bsdf_name = "{0}|{1}".format(material_name, spec_btdfs[0][0])
-
                     self.__emit_specular_btdf(material, transp_bsdf_name, scene, layer)
                     break
         return transp_bsdf_name
@@ -1012,7 +1009,6 @@ class Exporter(object):
     # Write Lambertian BRDF.
     # ----------------------
     def __emit_lambertian_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
 
         # Nodes.
@@ -1054,7 +1050,6 @@ class Exporter(object):
     # Write Disney BRDF.
     # -----------------------
     def __emit_disney_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         base_coat_name = ""
 
         # Nodes.
@@ -1202,7 +1197,6 @@ class Exporter(object):
     # Write Oren-Nayar BRDF.
     # -----------------------
     def __emit_orennayar_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
 
         # Nodes.
@@ -1255,7 +1249,6 @@ class Exporter(object):
     # Write Diffuse BTDF.
     # ----------------------
     def __emit_diffuse_btdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         transmittance_name = ""
 
         # Nodes.
@@ -1304,7 +1297,6 @@ class Exporter(object):
     # Write Ashikhmin-Shirley BRDF.
     # -----------------------------
     def __emit_ashikhmin_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         diffuse_reflectance_name = ""
         glossy_reflectance_name = ""
 
@@ -1377,7 +1369,6 @@ class Exporter(object):
     # Write Specular BRDF.
     # ----------------------
     def __emit_specular_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
 
         # Nodes.
@@ -1419,7 +1410,6 @@ class Exporter(object):
     # Write Specular BTDF.
     # ----------------------
     def __emit_specular_btdf(self, material, bsdf_name, scene, layer, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
         transmittance_name = ""
 
@@ -1451,6 +1441,7 @@ class Exporter(object):
                     if reflectance_name not in self._textures_set:
                         self._textures_set.add(reflectance_name)
                         self.__emit_texture(bpy.data.textures[layer.spec_btdf_spec_tex], False, scene)
+
             if reflectance_name == "":
                 reflectance_name = "{0}_transp_reflectance".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(reflectance_name,
@@ -1487,7 +1478,6 @@ class Exporter(object):
     # Write Microfacet BRDF.
     # -----------------------
     def __emit_microfacet_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
         mdf_refl = ""
 
@@ -1549,7 +1539,6 @@ class Exporter(object):
     # Write Kelemen BRDF.
     # ----------------------
     def __emit_kelemen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
         spec_refl_name = ""
 

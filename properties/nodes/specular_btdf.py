@@ -28,19 +28,9 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from ...util import asUpdate
 from ..materials import AppleseedMatLayerProps
 from . import AppleseedNode, AppleseedSocket
-
-# reflectance
-# multiplier
-# transmittance
-# transmittance multiplier
-# ior
-
-#--------------------------------
-# Specular diffuse color socket.
-#--------------------------------
 
 
 class AppleseedSpecBTDFReflectanceSocket(NodeSocket, AppleseedSocket):
@@ -56,11 +46,7 @@ class AppleseedSpecBTDFReflectanceSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Specular diffuse multiplier socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedSpecBTDFMultiplierSocket(NodeSocket, AppleseedSocket):
@@ -76,11 +62,7 @@ class AppleseedSpecBTDFMultiplierSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Specular transmittance color socket.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedSpecBTDFTransmittanceSocket(NodeSocket, AppleseedSocket):
@@ -96,11 +78,7 @@ class AppleseedSpecBTDFTransmittanceSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Specular transmittance multiplier socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedSpecBTDFTransMultSocket(NodeSocket, AppleseedSocket):
@@ -117,14 +95,10 @@ class AppleseedSpecBTDFTransMultSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-#--------------------------------
-# Specular BTDF node.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedSpecBTDFNode(Node, AppleseedNode):
-    """appleseed Specular BTDF Node"""
     bl_idname = "AppleseedSpecBTDFNode"
     bl_label = "Specular BTDF"
     bl_icon = 'SMOOTH'

@@ -28,14 +28,11 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from ...util import filter_params, asUpdate
 from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
-#--------------------------------
-# Material BSDF socket.
-#--------------------------------
 class AppleseedBSDFSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedMaterialBSDF"
     bl_label = "BSDF"
@@ -46,11 +43,11 @@ class AppleseedBSDFSocket(NodeSocket, AppleseedSocket):
         layout.label(text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
+        return 0.8, 0.8, 0.5, 1.0
 
     def get_socket_value(self, texture_only=True):
-        """
-        Method to return socket's value, if not linked. 
+        """Method to return socket's value, if not linked.
+
         If linked, return the name of the node with appended pointer.
         """
         if self.is_linked:
@@ -68,10 +65,6 @@ class AppleseedBSDFSocket(NodeSocket, AppleseedSocket):
         # Return a default BSDF if not linked, or if the incoming node is incompatible.
         return self.socket_value
 
-#--------------------------------
-# Material opacity socket.
-#--------------------------------
-
 
 class AppleseedAlphaSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAlpha"
@@ -86,11 +79,7 @@ class AppleseedAlphaSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Material normal socket.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedNormalSocket(NodeSocket, AppleseedSocket):
@@ -105,7 +94,7 @@ class AppleseedNormalSocket(NodeSocket, AppleseedSocket):
         layout.label(text)
 
     def draw_color(self, context, node):
-        return (0.67, 0.45, 1, 1)
+        return 0.67, 0.45, 1.0, 1.0
 
     def get_socket_value(self, texture_only=True):
         """
@@ -126,9 +115,6 @@ class AppleseedNormalSocket(NodeSocket, AppleseedSocket):
         bump_amplitude = linked_node.material_bump_amplitude
         use_normalmap = linked_node.material_use_normalmap
         return bump_amplitude, use_normalmap
-#--------------------------------
-# Material emission color socket.
-#--------------------------------
 
 
 class AppleseedEmissionColorSocket(NodeSocket, AppleseedSocket):
@@ -144,11 +130,7 @@ class AppleseedEmissionColorSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Material emission strength socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedEmissionStrengthSocket(NodeSocket, AppleseedSocket):
@@ -168,15 +150,10 @@ class AppleseedEmissionStrengthSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Material output node.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedMaterialNode(Node, AppleseedNode):
-    """appleseed Material Output Node"""
     bl_idname = "AppleseedMaterialNode"
     bl_label = "Material"
     bl_icon = 'SMOOTH'
@@ -219,8 +196,8 @@ class AppleseedMaterialNode(Node, AppleseedNode):
         return self.bl_label
 
     def traverse_tree(self):
-        """
-        Iterate inputs and traverse the tree backward if any inputs are connected.
+        """Iterate inputs and traverse the tree backward if any inputs are connected.
+
         Nodes are added to a list attribute of the material output node.
         Return the tree as a list of all the nodes.
         """

@@ -28,13 +28,9 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from ...util import asUpdate
 from ..materials import AppleseedMatLayerProps
 from . import AppleseedNode, AppleseedSocket
-
-#--------------------------------
-# Ashikhmin diffuse reflectance socket.
-#--------------------------------
 
 
 class AppleseedAshikhminReflectanceSocket(NodeSocket, AppleseedSocket):
@@ -50,11 +46,7 @@ class AppleseedAshikhminReflectanceSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Ashikhmin diffuse reflectance multiplier socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedAshikhminMultiplierSocket(NodeSocket, AppleseedSocket):
@@ -70,11 +62,7 @@ class AppleseedAshikhminMultiplierSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Ashikhmin glossy reflectance socket.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedAshikhminGlossySocket(NodeSocket, AppleseedSocket):
@@ -90,11 +78,7 @@ class AppleseedAshikhminGlossySocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Ashikhmin shininess U socket.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedAshikhminUSocket(NodeSocket, AppleseedSocket):
@@ -110,11 +94,7 @@ class AppleseedAshikhminUSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Ashikhmin shininess V socket.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedAshikhminVSocket(NodeSocket, AppleseedSocket):
@@ -130,11 +110,7 @@ class AppleseedAshikhminVSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Ashikhmin fresnel socket.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedAshikhminFresnelSocket(NodeSocket, AppleseedSocket):
@@ -154,15 +130,10 @@ class AppleseedAshikhminFresnelSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Ashikhmin BRDF node.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedAshikhminNode(Node, AppleseedNode):
-    """appleseed Ashikhmin-Shirley BRDF Node"""
     bl_idname = "AppleseedAshikhminNode"
     bl_label = "Ashikhmin-Shirley BRDF"
     bl_icon = 'SMOOTH'

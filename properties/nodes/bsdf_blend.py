@@ -28,14 +28,10 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
-from ..materials import AppleseedMatProps
+from ...util import asUpdate
 from . import AppleseedNode, AppleseedSocket
 
 
-#--------------------------------
-# Blend 1 socket.
-#--------------------------------
 class AppleseedBlend1Socket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBlend1"
     bl_label = "BSDF"
@@ -44,11 +40,7 @@ class AppleseedBlend1Socket(NodeSocket, AppleseedSocket):
         layout.label(text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Blend 2 socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedBlend2Socket(NodeSocket, AppleseedSocket):
@@ -59,11 +51,7 @@ class AppleseedBlend2Socket(NodeSocket, AppleseedSocket):
         layout.label(text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Blend weight socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedBlendWeightSocket(NodeSocket, AppleseedSocket):
@@ -85,13 +73,8 @@ class AppleseedBlendWeightSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1)
 
-#--------------------------------
-# BSDF Blend node.
-#--------------------------------
-
 
 class AppleseedBlendNode(Node, AppleseedNode):
-    """appleseed BSDF Blend Node"""
     bl_idname = "AppleseedBlendNode"
     bl_label = "BSDF Blend"
     bl_icon = 'SMOOTH'

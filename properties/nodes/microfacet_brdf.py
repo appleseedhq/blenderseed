@@ -28,13 +28,9 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from ...util import asUpdate
 from ..materials import AppleseedMatLayerProps
 from . import AppleseedNode, AppleseedSocket
-
-#--------------------------------
-# Microfacet diffuse reflectance socket.
-#--------------------------------
 
 
 class AppleseedMicrofacetReflectanceSocket(NodeSocket, AppleseedSocket):
@@ -50,11 +46,7 @@ class AppleseedMicrofacetReflectanceSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Microfacet diffuse reflectance multiplier socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedMicrofacetMultiplierSocket(NodeSocket, AppleseedSocket):
@@ -70,11 +62,7 @@ class AppleseedMicrofacetMultiplierSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Microfacet roughness
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedMicrofacetFresnelSocket(NodeSocket, AppleseedSocket):
@@ -90,11 +78,7 @@ class AppleseedMicrofacetFresnelSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Microfacet specular reflectance
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedMicrofacetGlossinessSocket(NodeSocket, AppleseedSocket):
@@ -110,11 +94,7 @@ class AppleseedMicrofacetGlossinessSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Microfacet specular multiplier
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedMicrofacetGlossMultSocket(NodeSocket, AppleseedSocket):
@@ -130,15 +110,10 @@ class AppleseedMicrofacetGlossMultSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Microfacet BRDF node.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedMicrofacetNode(Node, AppleseedNode):
-    """appleseed Microfacet BRDF Node"""
     bl_idname = "AppleseedMicrofacetNode"
     bl_label = "Microfacet BRDF"
     bl_icon = 'SMOOTH'

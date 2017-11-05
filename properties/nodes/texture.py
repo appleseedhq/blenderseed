@@ -32,13 +32,10 @@ from ...util import strip_spaces, realpath, join_names_underscore, filter_params
 from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
-#--------------------------------
-# Image texture node.
-#--------------------------------
-
 
 class AppleseedTexNode(Node, AppleseedNode):
     """appleseed Image Texture Node"""
+
     bl_idname = "AppleseedTexNode"
     bl_label = "Image Texture"
     bl_icon = 'TEXTURE'
