@@ -30,8 +30,6 @@ import multiprocessing
 
 import bpy
 
-from . import render_layers
-
 try:
     threads = multiprocessing.cpu_count()
     max_threads = threads
@@ -52,6 +50,7 @@ def camera_enumerator(self, context):
 
 
 class AppleseedRenderSettings(bpy.types.PropertyGroup):
+
     @classmethod
     def register(cls):
         bpy.types.Scene.appleseed = bpy.props.PointerProperty(
@@ -390,8 +389,8 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
 
 def register():
-    bpy.types.Scene.appleseed_layers = bpy.props.PointerProperty(type=render_layers.AppleseedRenderLayerProps)
+    pass
 
 
 def unregister():
-    del bpy.types.Scene.appleseed_layers
+    pass

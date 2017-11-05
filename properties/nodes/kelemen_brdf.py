@@ -28,13 +28,9 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from ...util import asUpdate
 from ..materials import AppleseedMatLayerProps
 from . import AppleseedNode, AppleseedSocket
-
-#--------------------------------
-# Kelemen diffuse reflectance socket.
-#--------------------------------
 
 
 class AppleseedKelemenReflectanceSocket(NodeSocket, AppleseedSocket):
@@ -50,11 +46,7 @@ class AppleseedKelemenReflectanceSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Kelemen diffuse reflectance multiplier socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedKelemenMultiplierSocket(NodeSocket, AppleseedSocket):
@@ -70,11 +62,7 @@ class AppleseedKelemenMultiplierSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Kelemen roughness
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedKelemenRoughnessSocket(NodeSocket, AppleseedSocket):
@@ -90,11 +78,7 @@ class AppleseedKelemenRoughnessSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Kelemen specular reflectance
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedKelemenSpecReflSocket(NodeSocket, AppleseedSocket):
@@ -110,11 +94,7 @@ class AppleseedKelemenSpecReflSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Kelemen specular multiplier
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedKelemenSpecMultSocket(NodeSocket, AppleseedSocket):
@@ -130,15 +110,10 @@ class AppleseedKelemenSpecMultSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Kelemen BRDF node.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedKelemenNode(Node, AppleseedNode):
-    """appleseed Kelemen BRDF Node"""
     bl_idname = "AppleseedKelemenNode"
     bl_label = "Kelemen BRDF"
     bl_icon = 'SMOOTH'

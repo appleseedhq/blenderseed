@@ -27,7 +27,6 @@
 #
 
 import bpy
-from . import render_layers
 from . import scene
 from . import world
 from . import objects
@@ -39,7 +38,6 @@ from . import lamps
 
 
 def register():
-    render_layers.register()
     scene.register()
     world.register()
     objects.register()
@@ -51,7 +49,6 @@ def register():
 
 
 def unregister():
-    render_layers.unregister()
     scene.unregister()
     world.unregister()
     objects.unregister()

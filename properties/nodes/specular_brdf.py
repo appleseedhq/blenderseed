@@ -28,13 +28,9 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from ...util import asUpdate
 from ..materials import AppleseedMatLayerProps
 from . import AppleseedNode, AppleseedSocket
-
-#--------------------------------
-# Specular diffuse color socket.
-#--------------------------------
 
 
 class AppleseedSpecBRDFReflectanceSocket(NodeSocket, AppleseedSocket):
@@ -50,11 +46,7 @@ class AppleseedSpecBRDFReflectanceSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Specular diffuse multiplier socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedSpecBRDFMultiplierSocket(NodeSocket, AppleseedSocket):
@@ -70,15 +62,10 @@ class AppleseedSpecBRDFMultiplierSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Specular BRDF node.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedSpecBRDFNode(Node, AppleseedNode):
-    """appleseed Specular BRDF Node"""
     bl_idname = "AppleseedSpecBRDFNode"
     bl_label = "Specular BRDF"
     bl_icon = 'SMOOTH'

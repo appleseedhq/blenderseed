@@ -150,13 +150,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
         exporter = project_file_writer.Exporter()
         file_written = exporter.export_preview(scene,
                                                preview_project_filepath,
-                                               preview_template_dir,
                                                prev_mat,
                                                prev_type,
                                                width,
                                                height)
         if not file_written:
-            print('Error while exporting -- check the console for details.')
+            print('Error while exporting. Check the console for details.')
             return
 
         # Render the project.

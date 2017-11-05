@@ -28,13 +28,9 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from ...util import asUpdate
 from ..materials import AppleseedMatLayerProps
 from . import AppleseedNode, AppleseedSocket
-
-#--------------------------------
-# Oren-Nayar diffuse color socket.
-#--------------------------------
 
 
 class AppleseedOrenNayarReflectanceSocket(NodeSocket, AppleseedSocket):
@@ -50,11 +46,7 @@ class AppleseedOrenNayarReflectanceSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
-
-#--------------------------------
-# Oren-Nayar diffuse multiplier socket.
-#--------------------------------
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedOrenNayarMultiplierSocket(NodeSocket, AppleseedSocket):
@@ -70,11 +62,7 @@ class AppleseedOrenNayarMultiplierSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Oren-Nayar roughness socket.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedOrenNayarRoughnessSocket(NodeSocket, AppleseedSocket):
@@ -90,15 +78,10 @@ class AppleseedOrenNayarRoughnessSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
-
-#--------------------------------
-# Oren-Nayar BRDF node.
-#--------------------------------
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedOrenNayarNode(Node, AppleseedNode):
-    """appleseed Oren-Nayar BRDF Node"""
     bl_idname = "AppleseedOrenNayarNode"
     bl_label = "Oren-Nayar BRDF"
     bl_icon = 'SMOOTH'

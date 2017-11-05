@@ -33,13 +33,10 @@ from bpy.app.handlers import persistent
 from ...util import addon_dir, join_names_underscore
 import os
 
-#--------------------------------
-# Class for appleseed node tree.
-#--------------------------------
-
 
 class AppleseedNodeTree(NodeTree):
-    """appleseed Node Editor"""
+    """Class for appleseed node tree."""
+
     bl_idname = 'AppleseedNodeTree'
     bl_label = 'appleseed Node Tree'
     bl_icon = 'NODETREE'
@@ -49,12 +46,9 @@ class AppleseedNodeTree(NodeTree):
         renderer = context.scene.render.engine
         return renderer == 'APPLESEED_RENDER'
 
-#--------------------------------
-# Base class for appleseed nodes.
-#--------------------------------
-
 
 class AppleseedNode:
+    """Base class for appleseed nodes."""
 
     @classmethod
     def poll(cls, context):
@@ -62,14 +56,12 @@ class AppleseedNode:
         return context.bl_idname == "AppleseedNodeTree" and renderer == 'APPLESEED_RENDER'
 
     def get_node_name(self):
-        """
-        Return the node's name, including appended pointer
-        """
+        """Return the node's name, including appended pointer."""
         return join_names_underscore(self.name, str(self.as_pointer()))
 
     def traverse_tree(self, material_node):
-        """
-        Iterate inputs and traverse the tree backward if any inputs are connected.
+        """Iterate inputs and traverse the tree backward if any inputs are connected.
+
         Nodes are added to a list attribute of the material output node.
         """
         for socket in self.inputs:
@@ -78,13 +70,10 @@ class AppleseedNode:
                 linked_node.traverse_tree(material_node)
         material_node.tree.append(self)
 
-#--------------------------------
-# Base class for appleseed sockets.
-#--------------------------------
-
 
 class AppleseedSocket(object):
-    # Set to default None.
+    """Base class for appleseed sockets."""
+
     socket_value = None
 
     def get_socket_value(self, texture_only=True):
@@ -103,22 +92,20 @@ class AppleseedSocket(object):
         return self.socket_value
 
 
-#--------------------------------
-# Node category for extending the Add menu, toolbar panels
-#   and search operator
-# Base class for node categories
-#--------------------------------
 class AppleseedNodeCategory(nodeitems_utils.NodeCategory):
+    """Node category for extending the Add menu, toolbar panels and search operator.
+
+    Base class for node categories.
+    """
 
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render.engine
         return context.space_data.tree_type == 'AppleseedNodeTree' and renderer == 'APPLESEED_RENDER'
 
-#--------------------------------
+
 # appleseed node categories
-# identifier, label, items list
-#--------------------------------
+# Format: (identifier, label, items list)
 appleseed_node_categories = [
     AppleseedNodeCategory("BSDF", "BSDF", items=[
         nodeitems_utils.NodeItem("AppleseedAshikhminNode"),
@@ -129,7 +116,7 @@ appleseed_node_categories = [
         nodeitems_utils.NodeItem("AppleseedMicrofacetNode"),
         nodeitems_utils.NodeItem("AppleseedOrenNayarNode"),
         nodeitems_utils.NodeItem("AppleseedSpecBRDFNode"),
-        # nodeitems_utils.NodeItem( "AppleseedSpecBTDFNode"),
+        nodeitems_utils.NodeItem("AppleseedSpecBTDFNode"),
         nodeitems_utils.NodeItem("AppleseedBlendNode")]),
     AppleseedNodeCategory("TEXTURES", "Texture", items=[
         nodeitems_utils.NodeItem("AppleseedTexNode"),

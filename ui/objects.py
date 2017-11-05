@@ -30,26 +30,6 @@ import bpy
 import bl_ui
 
 
-class AppleseedObjRenderLayerPanel(bpy.types.Panel):
-    bl_label = "Render Layer"
-    COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "object"
-
-    @classmethod
-    def poll(cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type != 'CAMERA'
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        asr_obj = context.object.appleseed
-        appleseed_layers = scene.appleseed_layers
-        layout.prop_search(asr_obj, "render_layer", appleseed_layers, "layers", text="")
-
-
 class AppleseedObjMBlurPanel(bpy.types.Panel):
     bl_label = "Motion Blur"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -84,7 +64,6 @@ def register():
         except:
             pass
     del properties_object
-    bpy.utils.register_class(AppleseedObjRenderLayerPanel)
 
 
 def unregister():
@@ -96,4 +75,3 @@ def unregister():
         except:
             pass
     del properties_object
-    bpy.utils.unregister_class(AppleseedObjRenderLayerPanel)

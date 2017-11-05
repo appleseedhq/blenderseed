@@ -38,10 +38,6 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
             description="appleseed object settings",
             type=cls)
 
-        cls.render_layer = bpy.props.StringProperty(name="Render Layer",
-                                                    description="AOV containing this object",
-                                                    default='')
-
         cls.mblur_enable = bpy.props.BoolProperty(name="",
                                                   description="Enable rendering of motion blur",
                                                   default=False)

@@ -89,11 +89,6 @@ class Exporter(object):
         self._selected_objects = [ob.name for ob in scene.objects if ob.select]
         self._dupli_objects = []
 
-        # Render layer rules. Pattern is the object name.
-        # Object name - > render layer.
-        self._rules = {}
-        self._rule_index = 1
-
         # Blender material -> front material name, back material name.
         self._emitted_materials = {}
 
@@ -144,7 +139,6 @@ class Exporter(object):
     def __emit_project(self, scene):
         self.__open_element("project")
         self.__emit_scene(scene)
-        self.__emit_rules(scene)
         self.__emit_output(scene)
         self.__emit_configurations(scene)
         self.__close_element("project")
@@ -677,8 +671,6 @@ class Exporter(object):
             self.__emit_transform_element(instance_matrix, None)
         self.__emit_line('<assign_material slot="0" side="front" material="{0}" />'.format(front_material_name))
         self.__emit_line('<assign_material slot="0" side="back" material="{0}" />'.format(back_material_name))
-        if bool(object.appleseed.render_layer):
-            self._rules[object.name] = object.appleseed.render_layer
         self.__close_element("object_instance")
 
     # ----------------------------------------------------------------------------------------------
@@ -728,16 +720,16 @@ class Exporter(object):
             material_node = bpy.data.node_groups[asr_node_tree].nodes[asr_mat.node_output]
             node_list = material_node.traverse_tree()
             for node in node_list:
-                if node.node_type == "specular_btdf":
+                if node.node_type in ['specular_btdf', 'diffuse_btdf']:
                     front_material_name = material.name + "_front"
                     back_material_name = material.name + "_back"
                     self.__emit_front_material(material, front_material_name, scene, layers, material_node, node_list)
                     self.__emit_back_material(material, back_material_name, scene, layers, material_node, node_list)
                     break
         else:
-            # Need to iterate through layers only once, to find out if we have any specular btdfs.
+            # Need to iterate through layers only once, to find out if we have any btdfs.
             for layer in layers:
-                if layer.bsdf_type == "specular_btdf":
+                if layer.bsdf_type in ['specular_btdf', 'diffuse_btdf']:
                     front_material_name = material.name + "_front"
                     back_material_name = material.name + "_back"
                     self.__emit_front_material(material, front_material_name, scene, layers)
@@ -786,7 +778,6 @@ class Exporter(object):
         """
         # material_name here is material.name + "_front"
         bsdfs = []
-        asr_mat = material.appleseed
 
         # If using nodes.
         if material_node is not None:
@@ -814,7 +805,7 @@ class Exporter(object):
                 if node.node_type == 'orennayar':
                     self.__emit_orennayar_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'specular_btdf':
-                    self.__emit_specular_btdf(material, bsdf_name, scene, 'front', None, node)
+                    self.__emit_specular_btdf(material, bsdf_name, scene, None, node)
                 if node.node_type == 'specular_brdf':
                     self.__emit_specular_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'texture':
@@ -831,7 +822,7 @@ class Exporter(object):
                     # Spec BTDF
                     if layer.bsdf_type == "specular_btdf":
                         transp_bsdf_name = "{0}|{1}".format(material_name, layer.name)
-                        self.__emit_specular_btdf(material, transp_bsdf_name, scene, 'front', layer)
+                        self.__emit_specular_btdf(material, transp_bsdf_name, scene, layer)
                         # Layer mask textures.
                         if layer.spec_btdf_use_tex and layer.spec_btdf_mix_tex != '':
                             bsdfs.append([transp_bsdf_name, layer.spec_btdf_mix_tex + "_inst"])
@@ -962,24 +953,26 @@ class Exporter(object):
     # Write back material.
     # ----------------------
     def __emit_back_material_bsdf_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
-        # material_name = material.name  + "_back"
-        # Need to include all instances of Specular BTDFs.
+        transp_bsdf_name = None
         if material_node is not None:
             for node in node_list:
-                if node.node_type == "specular_btdf":
+                if node.node_type == "diffuse_btdf":
                     transp_bsdf_name = "{0}|{1}".format(material_name, node.name)
-
-                    self.__emit_specular_btdf(material, transp_bsdf_name, scene, 'back', None, node)
+                    self.__emit_diffuse_btdf(material, transp_bsdf_name, scene, None, node)
+                    break
+                elif node.node_type == "specular_btdf":
+                    transp_bsdf_name = "{0}|{1}".format(material_name, node.name)
+                    self.__emit_specular_btdf(material, transp_bsdf_name, scene, None, node)
                     break
         else:
-            spec_btdfs = []
             for layer in layers:
-                if layer.bsdf_type == "specular_btdf":
-                    # This is a hack for now; just return the first one we find
-                    spec_btdfs.append([layer.name, layer.spec_btdf_weight])
-                    transp_bsdf_name = "{0}|{1}".format(material_name, spec_btdfs[0][0])
-
-                    self.__emit_specular_btdf(material, transp_bsdf_name, scene, 'back', layer)
+                if layer.bsdf_type == "diffuse_btdf":
+                    transp_bsdf_name = "{0}|{1}".format(material_name, layer.name)
+                    self.__emit_diffuse_btdf(material, transp_bsdf_name, scene, layer)
+                    break
+                elif layer.bsdf_type == "specular_btdf":
+                    transp_bsdf_name = "{0}|{1}".format(material_name, layer.name)
+                    self.__emit_specular_btdf(material, transp_bsdf_name, scene, layer)
                     break
         return transp_bsdf_name
 
@@ -1020,7 +1013,6 @@ class Exporter(object):
     # Write Lambertian BRDF.
     # ----------------------
     def __emit_lambertian_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
 
         # Nodes.
@@ -1062,7 +1054,6 @@ class Exporter(object):
     # Write Disney BRDF.
     # -----------------------
     def __emit_disney_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         base_coat_name = ""
 
         # Nodes.
@@ -1210,7 +1201,6 @@ class Exporter(object):
     # Write Oren-Nayar BRDF.
     # -----------------------
     def __emit_orennayar_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
 
         # Nodes.
@@ -1263,7 +1253,6 @@ class Exporter(object):
     # Write Diffuse BTDF.
     # ----------------------
     def __emit_diffuse_btdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         transmittance_name = ""
 
         # Nodes.
@@ -1312,7 +1301,6 @@ class Exporter(object):
     # Write Ashikhmin-Shirley BRDF.
     # -----------------------------
     def __emit_ashikhmin_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         diffuse_reflectance_name = ""
         glossy_reflectance_name = ""
 
@@ -1385,7 +1373,6 @@ class Exporter(object):
     # Write Specular BRDF.
     # ----------------------
     def __emit_specular_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
 
         # Nodes.
@@ -1426,9 +1413,7 @@ class Exporter(object):
     # ----------------------
     # Write Specular BTDF.
     # ----------------------
-    def __emit_specular_btdf(self, material, bsdf_name, scene, side, layer, node=None):
-        assert side == 'front' or side == 'back'
-        asr_mat = material.appleseed
+    def __emit_specular_btdf(self, material, bsdf_name, scene, layer, node=None):
         reflectance_name = ""
         transmittance_name = ""
 
@@ -1439,12 +1424,7 @@ class Exporter(object):
             reflectance_multiplier = inputs[1].get_socket_value(True)
             transmittance_name = inputs[2].get_socket_value(True)
             transmittance_multiplier = inputs[3].get_socket_value(True)
-            if side == 'front':
-                from_ior = node.from_ior
-                to_ior = node.to_ior
-            else:
-                from_ior = node.to_ior
-                to_ior = node.from_ior
+            ior = node.ior
 
             if not inputs[0].is_linked:
                 spec_btdf_reflectance = reflectance_name
@@ -1465,6 +1445,7 @@ class Exporter(object):
                     if reflectance_name not in self._textures_set:
                         self._textures_set.add(reflectance_name)
                         self.__emit_texture(bpy.data.textures[layer.spec_btdf_spec_tex], False, scene)
+
             if reflectance_name == "":
                 reflectance_name = "{0}_transp_reflectance".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(reflectance_name,
@@ -1487,27 +1468,20 @@ class Exporter(object):
             reflectance_multiplier = layer.spec_btdf_refl_mult
             transmittance_multiplier = layer.spec_btdf_trans_mult
 
-            if side == 'front':
-                from_ior = layer.spec_btdf_from_ior
-                to_ior = layer.spec_btdf_to_ior
-            else:
-                from_ior = layer.spec_btdf_to_ior
-                to_ior = layer.spec_btdf_from_ior
+            ior = layer.spec_btdf_ior
 
         self.__open_element('bsdf name="{0}" model="specular_btdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance_name)
         self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
         self.__emit_parameter("transmittance", transmittance_name)
         self.__emit_parameter("transmittance_multiplier", transmittance_multiplier)
-        self.__emit_parameter("from_ior", from_ior)
-        self.__emit_parameter("to_ior", to_ior)
+        self.__emit_parameter("ior", ior)
         self.__close_element("bsdf")
 
     # -----------------------
     # Write Microfacet BRDF.
     # -----------------------
     def __emit_microfacet_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
         mdf_refl = ""
 
@@ -1569,7 +1543,6 @@ class Exporter(object):
     # Write Kelemen BRDF.
     # ----------------------
     def __emit_kelemen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        asr_mat = material.appleseed
         reflectance_name = ""
         spec_refl_name = ""
 
@@ -2067,8 +2040,6 @@ class Exporter(object):
         environment_edf = "environment_edf"
 
         self.__open_element('light name="{0}" model="sun_light"'.format(lamp.name))
-        if bool(lamp.appleseed.render_layer):
-            self._rules[lamp.name] = lamp.appleseed.render_layer
         if use_sunsky:
             self.__emit_parameter("environment_edf", environment_edf)
         self.__emit_parameter("radiance_multiplier", sunsky.radiance_multiplier if use_sunsky else asr_light.radiance_multiplier)
@@ -2086,8 +2057,6 @@ class Exporter(object):
         self.__emit_solid_linear_rgb_color_element(radiance_name, asr_light.radiance, 1)
 
         self.__open_element('light name="{0}" model="point_light"'.format(lamp.name))
-        if bool(lamp.appleseed.render_layer):
-            self._rules[lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_multiplier", asr_light.radiance_multiplier)
         self.__emit_parameter("cast_indirect_light", str(asr_light.cast_indirect).lower())
@@ -2122,8 +2091,6 @@ class Exporter(object):
         inner_angle = (1.0 - lamp.data.spot_blend) * outer_angle
 
         self.__open_element('light name="{0}" model="spot_light"'.format(lamp.name))
-        if bool(lamp.appleseed.render_layer):
-            self._rules[lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_multiplier", radiance_multiplier)
         self.__emit_parameter("inner_angle", inner_angle)
@@ -2141,8 +2108,6 @@ class Exporter(object):
         self.__emit_solid_linear_rgb_color_element(radiance_name, asr_light.radiance, 1)
 
         self.__open_element('light name="{0}" model="directional_light"'.format(lamp.name))
-        if bool(lamp.appleseed.render_layer):
-            self._rules[lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_multiplier", asr_light.radiance_multiplier)
         self.__emit_parameter("cast_indirect_light", str(asr_light.cast_indirect).lower())
@@ -2189,28 +2154,6 @@ class Exporter(object):
         endX = int(scene.render.border_max_x * width)
         endY = height - int(scene.render.border_min_y * height)
         return X, Y, endX, endY
-
-    # ----------------------------------------------------------------------------------------------
-    # Render layer assignments.
-    # ----------------------------------------------------------------------------------------------
-
-    def __emit_rules(self, scene):
-        if len(self._rules.keys()) > 0:
-            self.__open_element("rules")
-            for ob_name in self._rules.keys():
-                render_layer = self._rules[ob_name]
-                rule_name = "rule_%d" % self._rule_index
-                self._emit_render_layer_assignment(rule_name, ob_name, render_layer)
-                self._rule_index += 1
-            self.__close_element("rules")
-
-    def _emit_render_layer_assignment(self, rule_name, ob_name, render_layer):
-        # For now, all assignments are to "All" entity types
-        self.__open_element('render_layer_assignment name="%s" model="regex"' % rule_name)
-        self.__emit_parameter("render_layer", render_layer)
-        self.__emit_parameter("order", 1)
-        self.__emit_parameter("pattern", ob_name)
-        self.__close_element("render_layer_assignment")
 
     # ----------------------------------------------------------------------------------------------
     # Configurations.
@@ -2427,7 +2370,7 @@ class Exporter(object):
     #   Preview render .appleseed file export
     # ----------------------------------------------------------------------------------------------
 
-    def export_preview(self, scene, file_path, addon_path, mat, mesh, width, height):
+    def export_preview(self, scene, file_path, mat, mesh, width, height):
         """
         Write the .appleseed project file for preview rendering
         """
@@ -2505,7 +2448,6 @@ class Exporter(object):
             <surface_shader name="physical_surface_shader" model="physical_surface_shader" />
             <color name="__default_material_albedo">
                 <parameter name="color_space" value="linear_rgb" />
-
                 <parameter name="multiplier" value="1.0" />
                 <values>0.8 0.8 0.8</values>
             </color>
@@ -2513,21 +2455,18 @@ class Exporter(object):
                 <parameter name="color_space" value="linear_rgb" />
                 <parameter name="multiplier" value="1.0" />
                 <values>0.8</values>
-
             </color>
             <bsdf name="__default_material_bsdf" model="lambertian_brdf">
                 <parameter name="reflectance" value="__default_material_bsdf_reflectance" />
             </bsdf>
             <material name="__default_material" model="generic_material">
                 <parameter name="bsdf" value="__default_material_bsdf" />
-
                 <parameter name="surface_shader" value="physical_surface_shader" />
             </material>
             <object name="material_preview_lamp" model="mesh_object">
                 <parameter name="filename" value="material_preview_lamp.obj" />
             </object>
             <color name="material_preview_lamp_material|BSDF Layer 1_lambertian_reflectance">
-
                 <parameter name="color_space" value="linear_rgb" />
                 <parameter name="multiplier" value="1.0" />
                 <values>0.8 0.8 0.8</values>
@@ -2535,17 +2474,14 @@ class Exporter(object):
             <bsdf name="material_preview_lamp_material|BSDF Layer 1" model="lambertian_brdf">
                 <parameter name="reflectance" value="material_preview_lamp_material|BSDF Layer 1_lambertian_reflectance" />
             </bsdf>
-
             <color name="material_preview_lamp_material_edf_radiance">
                 <parameter name="color_space" value="linear_rgb" />
                 <parameter name="multiplier" value="5.0" />
                 <values>0.8 0.8 0.8</values>
             </color>
             <edf name="material_preview_lamp_material_edf" model="diffuse_edf">
-
                 <parameter name="radiance" value="material_preview_lamp_material_edf_radiance" />
             </edf>
-
             <material name="material_preview_lamp_material" model="generic_material">
                 <parameter name="bsdf" value="material_preview_lamp_material|BSDF Layer 1" />
                 <parameter name="edf" value="material_preview_lamp_material_edf" />
@@ -2605,17 +2541,16 @@ class Exporter(object):
                     material_node = bpy.data.node_groups[asr_mat.node_tree].nodes[asr_mat.node_output]
                     node_list = material_node.traverse_tree()
                     for node in node_list:
-                        if node.node_type == 'specular_btdf':
+                        if node.node_type in ['specular_btdf', 'diffuse_btdf']:
                             mat_front = mat.name + "_front"
                             mat_back = mat.name + "_back"
                             break
                 else:
                     for layer in asr_mat.layers:
-                        if layer.bsdf_type == 'specular_btdf':
+                        if layer.bsdf_type in ['specular_btdf', 'diffuse_btdf']:
                             mat_front = mat.name + "_front"
                             mat_back = mat.name + "_back"
                             break
-
                 self._output_file.write("""
             <object name="material_preview_{0}" model="mesh_object">
                 <parameter name="filename" value="material_preview_{0}.obj" />
@@ -2631,7 +2566,8 @@ class Exporter(object):
                 </transform>
                 <assign_material slot="0" side="front" material="{1}" />
                 <assign_material slot="0" side="back" material="{2}" />
-            </object_instance>""".format(mesh, mat_front, mat_back))
+            </object_instance>
+""".format(mesh, mat_front, mat_back))
 
                 # Write the material for the preview sphere
                 self.__emit_material(mat, scene)
@@ -2645,46 +2581,26 @@ class Exporter(object):
         <frame name="beauty">
             <parameter name="camera" value="Camera" />
             <parameter name="resolution" value="{0} {1}" />
-            <parameter name="pixel_format" value="float" />
-            <parameter name="color_space" value="srgb" />
         </frame>
     </output>
     <configurations>
         <configuration name="interactive" base="base_interactive">
-            <parameter name="lighting_engine" value="drt" />
-            <parameter name="pixel_renderer" value="uniform" />
-            <parameters name="adaptive_pixel_renderer">
-                <parameter name="enable_diagnostics" value="False" />
-                <parameter name="max_samples" value="8" />
-                <parameter name="min_samples" value="2" />
-                <parameter name="quality" value="3.0" />
-            </parameters>
-            <parameters name="uniform_pixel_renderer">
-                <parameter name="decorrelate_pixels" value="False" />
-                <parameter name="samples" value="4" />
-            </parameters>
-            <parameters name="drt">
+            <parameter name="lighting_engine" value="pt" />
+            <parameters name="pt">
                 <parameter name="dl_light_samples" value="1" />
                 <parameter name="enable_ibl" value="true" />
                 <parameter name="ibl_env_samples" value="1" />
-
                 <parameter name="rr_min_path_length" value="3" />
             </parameters>
         </configuration>
         <configuration name="final" base="base_final">
-            <parameter name="lighting_engine" value="drt" />
+            <parameter name="lighting_engine" value="pt" />
             <parameter name="pixel_renderer" value="uniform" />
-            <parameters name="adaptive_pixel_renderer">
-                <parameter name="enable_diagnostics" value="False" />
-                <parameter name="max_samples" value="8" />
-                <parameter name="min_samples" value="2" />
-                <parameter name="quality" value="3.0" />
-            </parameters>
             <parameters name="uniform_pixel_renderer">
                 <parameter name="decorrelate_pixels" value="False" />
                 <parameter name="samples" value="{2}" />
             </parameters>
-            <parameters name="drt">
+            <parameters name="pt">
                 <parameter name="dl_light_samples" value="1" />
                 <parameter name="enable_ibl" value="true" />
                 <parameter name="ibl_env_samples" value="1" />

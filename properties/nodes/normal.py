@@ -28,14 +28,12 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import addon_dir, strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate
+from ...util import asUpdate
 from . import AppleseedNode, AppleseedSocket
-from .material import AppleseedNormalSocket
 from ..materials import AppleseedMatProps
 
 
 class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
-    """appleseed Normal Input Socket"""
     bl_idname = "AppleseedNormalInput"
     bl_label = "Image"
 
@@ -43,13 +41,14 @@ class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
         layout.label(text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
+        return 0.8, 0.8, 0.5, 1.0
 
     def get_socket_value(self, texture_only=True):
-        """
-        Method to return socket's value, if not linked. 
+        """Method to return socket's value, if not linked.
+
         If linked, return the name of the node with appended pointer.
         """
+
         if self.is_linked:
             linked_node = self.links[0].from_node
             if linked_node.node_type == 'texture':
@@ -58,13 +57,8 @@ class AppleseedNormalInputSocket(NodeSocket, AppleseedSocket):
         # Return socket value if not linked, or if the incoming node is incompatible.
         return self.socket_value
 
-#--------------------------------
-# Normal / bump node.
-#--------------------------------
-
 
 class AppleseedNormalNode(Node, AppleseedNode):
-    """appleseed Bump / Normal Node"""
     bl_idname = "AppleseedNormalNode"
     bl_label = "Bump / Normal"
     bl_icon = 'SMOOTH'
@@ -72,7 +66,6 @@ class AppleseedNormalNode(Node, AppleseedNode):
     node_type = 'normal'
 
     material_use_normalmap = AppleseedMatProps.material_use_normalmap
-
     material_bump_amplitude = AppleseedMatProps.material_bump_amplitude
 
     def init(self, context):

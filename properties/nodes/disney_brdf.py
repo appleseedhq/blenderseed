@@ -35,10 +35,6 @@ from ...util import asUpdate
 
 
 class AppleseedDisneyBaseSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Base Color socket.
-    """
-
     bl_idname = "AppleseedDisneyBase"
     bl_label = "Base Color"
 
@@ -51,14 +47,10 @@ class AppleseedDisneyBaseSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.5, 1)
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedDisneyAnisoSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Anisotropy socket.
-    """
-
     bl_idname = "AppleseedDisneyAniso"
     bl_label = "Anisotropy"
 
@@ -71,14 +63,10 @@ class AppleseedDisneyAnisoSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneyClearCoatSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Clear Coat socket.
-    """
-
     bl_idname = "AppleseedDisneyClearCoat"
     bl_label = "Clear Coat"
 
@@ -91,14 +79,10 @@ class AppleseedDisneyClearCoatSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneyClearCoatGlossSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Clear Coat Gloss socket.
-    """
-
     bl_idname = "AppleseedDisneyClearCoatGloss"
     bl_label = "Clear Coat Gloss"
 
@@ -111,14 +95,10 @@ class AppleseedDisneyClearCoatGlossSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneyMetallicSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Metallic socket.
-    """
-
     bl_idname = "AppleseedDisneyMetallic"
     bl_label = "Metallic"
 
@@ -131,14 +111,10 @@ class AppleseedDisneyMetallicSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneyRoughnessSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Roughness socket.
-    """
-
     bl_idname = "AppleseedDisneyRoughness"
     bl_label = "Roughness"
 
@@ -151,14 +127,10 @@ class AppleseedDisneyRoughnessSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneySheenSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Sheen socket.
-    """
-
     bl_idname = "AppleseedDisneySheen"
     bl_label = "Sheen"
 
@@ -171,14 +143,10 @@ class AppleseedDisneySheenSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneySheenTintSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Sheen Tint socket.
-    """
-
     bl_idname = "AppleseedDisneySheenTint"
     bl_label = "Sheen Tint"
 
@@ -191,14 +159,10 @@ class AppleseedDisneySheenTintSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneySpecSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Specular socket.
-    """
-
     bl_idname = "AppleseedDisneySpec"
     bl_label = "Specular"
 
@@ -211,14 +175,10 @@ class AppleseedDisneySpecSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneySpecTintSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Specular Tint socket.
-    """
-
     bl_idname = "AppleseedDisneySpecTint"
     bl_label = "Specular Tint"
 
@@ -231,14 +191,10 @@ class AppleseedDisneySpecTintSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneySubsurfaceSocket(NodeSocket, AppleseedSocket):
-    """
-    Disney Subsurface socket.
-    """
-
     bl_idname = "AppleseedDisneySubsurface"
     bl_label = "Subsurface"
 
@@ -251,14 +207,10 @@ class AppleseedDisneySubsurfaceSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return (0.5, 0.5, 0.5, 1)
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedDisneyNode(Node, AppleseedNode):
-    """
-    Disney BRDF node.
-    """
-
     bl_idname = "AppleseedDisneyNode"
     bl_label = "Disney BRDF"
     bl_icon = 'SMOOTH'
