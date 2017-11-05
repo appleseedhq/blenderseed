@@ -52,6 +52,7 @@ def camera_enumerator(self, context):
 
 
 class AppleseedRenderSettings(bpy.types.PropertyGroup):
+
     @classmethod
     def register(cls):
         bpy.types.Scene.appleseed = bpy.props.PointerProperty(

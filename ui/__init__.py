@@ -49,20 +49,7 @@ for member in dir(properties_texture):
             pass
 del properties_texture
 
-import bl_ui.properties_material as properties_material
-properties_material.MATERIAL_PT_context_material.COMPAT_ENGINES.add('CORONA')
-properties_material.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('CORONA')
-del properties_material
-
 # Enable all existing panels for these contexts
-import bl_ui.properties_data_mesh as properties_data_mesh
-for member in dir(properties_data_mesh):
-    subclass = getattr(properties_data_mesh, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_data_mesh
 
 import bl_ui.properties_data_mesh as properties_data_mesh
 for member in dir(properties_data_mesh):

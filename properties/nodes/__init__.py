@@ -33,10 +33,10 @@ from bpy.app.handlers import persistent
 from ...util import addon_dir, join_names_underscore
 import os
 
-#--------------------------------
-# Class for appleseed node tree.
-#--------------------------------
 
+# --------------------------------
+# Class for appleseed node tree.
+# --------------------------------
 
 class AppleseedNodeTree(NodeTree):
     """appleseed Node Editor"""
@@ -49,10 +49,10 @@ class AppleseedNodeTree(NodeTree):
         renderer = context.scene.render.engine
         return renderer == 'APPLESEED_RENDER'
 
-#--------------------------------
-# Base class for appleseed nodes.
-#--------------------------------
 
+# --------------------------------
+# Base class for appleseed nodes.
+# --------------------------------
 
 class AppleseedNode:
 
@@ -78,10 +78,10 @@ class AppleseedNode:
                 linked_node.traverse_tree(material_node)
         material_node.tree.append(self)
 
-#--------------------------------
-# Base class for appleseed sockets.
-#--------------------------------
 
+# --------------------------------
+# Base class for appleseed sockets.
+# --------------------------------
 
 class AppleseedSocket(object):
     # Set to default None.
@@ -103,11 +103,12 @@ class AppleseedSocket(object):
         return self.socket_value
 
 
-#--------------------------------
+# --------------------------------
 # Node category for extending the Add menu, toolbar panels
 #   and search operator
 # Base class for node categories
-#--------------------------------
+# --------------------------------
+
 class AppleseedNodeCategory(nodeitems_utils.NodeCategory):
 
     @classmethod
@@ -115,10 +116,12 @@ class AppleseedNodeCategory(nodeitems_utils.NodeCategory):
         renderer = context.scene.render.engine
         return context.space_data.tree_type == 'AppleseedNodeTree' and renderer == 'APPLESEED_RENDER'
 
-#--------------------------------
+
+# --------------------------------
 # appleseed node categories
 # identifier, label, items list
-#--------------------------------
+# --------------------------------
+
 appleseed_node_categories = [
     AppleseedNodeCategory("BSDF", "BSDF", items=[
         nodeitems_utils.NodeItem("AppleseedAshikhminNode"),
