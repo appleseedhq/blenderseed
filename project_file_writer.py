@@ -89,11 +89,6 @@ class Exporter(object):
         self._selected_objects = [ob.name for ob in scene.objects if ob.select]
         self._dupli_objects = []
 
-        # Render layer rules. Pattern is the object name.
-        # Object name - > render layer.
-        self._rules = {}
-        self._rule_index = 1
-
         # Blender material -> front material name, back material name.
         self._emitted_materials = {}
 
@@ -144,7 +139,6 @@ class Exporter(object):
     def __emit_project(self, scene):
         self.__open_element("project")
         self.__emit_scene(scene)
-        self.__emit_rules(scene)
         self.__emit_output(scene)
         self.__emit_configurations(scene)
         self.__close_element("project")
@@ -677,8 +671,6 @@ class Exporter(object):
             self.__emit_transform_element(instance_matrix, None)
         self.__emit_line('<assign_material slot="0" side="front" material="{0}" />'.format(front_material_name))
         self.__emit_line('<assign_material slot="0" side="back" material="{0}" />'.format(back_material_name))
-        if bool(object.appleseed.render_layer):
-            self._rules[object.name] = object.appleseed.render_layer
         self.__close_element("object_instance")
 
     # ----------------------------------------------------------------------------------------------
@@ -2067,8 +2059,6 @@ class Exporter(object):
         environment_edf = "environment_edf"
 
         self.__open_element('light name="{0}" model="sun_light"'.format(lamp.name))
-        if bool(lamp.appleseed.render_layer):
-            self._rules[lamp.name] = lamp.appleseed.render_layer
         if use_sunsky:
             self.__emit_parameter("environment_edf", environment_edf)
         self.__emit_parameter("radiance_multiplier", sunsky.radiance_multiplier if use_sunsky else asr_light.radiance_multiplier)
@@ -2086,8 +2076,6 @@ class Exporter(object):
         self.__emit_solid_linear_rgb_color_element(radiance_name, asr_light.radiance, 1)
 
         self.__open_element('light name="{0}" model="point_light"'.format(lamp.name))
-        if bool(lamp.appleseed.render_layer):
-            self._rules[lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_multiplier", asr_light.radiance_multiplier)
         self.__emit_parameter("cast_indirect_light", str(asr_light.cast_indirect).lower())
@@ -2122,8 +2110,6 @@ class Exporter(object):
         inner_angle = (1.0 - lamp.data.spot_blend) * outer_angle
 
         self.__open_element('light name="{0}" model="spot_light"'.format(lamp.name))
-        if bool(lamp.appleseed.render_layer):
-            self._rules[lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_multiplier", radiance_multiplier)
         self.__emit_parameter("inner_angle", inner_angle)
@@ -2141,8 +2127,6 @@ class Exporter(object):
         self.__emit_solid_linear_rgb_color_element(radiance_name, asr_light.radiance, 1)
 
         self.__open_element('light name="{0}" model="directional_light"'.format(lamp.name))
-        if bool(lamp.appleseed.render_layer):
-            self._rules[lamp.name] = lamp.appleseed.render_layer
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_multiplier", asr_light.radiance_multiplier)
         self.__emit_parameter("cast_indirect_light", str(asr_light.cast_indirect).lower())
@@ -2189,28 +2173,6 @@ class Exporter(object):
         endX = int(scene.render.border_max_x * width)
         endY = height - int(scene.render.border_min_y * height)
         return X, Y, endX, endY
-
-    # ----------------------------------------------------------------------------------------------
-    # Render layer assignments.
-    # ----------------------------------------------------------------------------------------------
-
-    def __emit_rules(self, scene):
-        if len(self._rules.keys()) > 0:
-            self.__open_element("rules")
-            for ob_name in self._rules.keys():
-                render_layer = self._rules[ob_name]
-                rule_name = "rule_%d" % self._rule_index
-                self._emit_render_layer_assignment(rule_name, ob_name, render_layer)
-                self._rule_index += 1
-            self.__close_element("rules")
-
-    def _emit_render_layer_assignment(self, rule_name, ob_name, render_layer):
-        # For now, all assignments are to "All" entity types
-        self.__open_element('render_layer_assignment name="%s" model="regex"' % rule_name)
-        self.__emit_parameter("render_layer", render_layer)
-        self.__emit_parameter("order", 1)
-        self.__emit_parameter("pattern", ob_name)
-        self.__close_element("render_layer_assignment")
 
     # ----------------------------------------------------------------------------------------------
     # Configurations.

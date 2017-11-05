@@ -29,7 +29,6 @@
 import bpy
 import bl_ui
 from . import render
-from . import render_layers
 from . import scene
 from . import world
 from . import camera
@@ -72,7 +71,6 @@ del properties_particle
 
 def register():
     render.register()
-    render_layers.register()
     scene.register()
     world.register()
     materials.register()
@@ -84,7 +82,6 @@ def register():
 
 def unregister():
     render.unregister()
-    render_layers.unregister()
     scene.unregister()
     world.unregister()
     materials.unregister()
