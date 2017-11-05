@@ -459,7 +459,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
 
     use_light_emission = bpy.props.BoolProperty(name="", description="Enable material light emission", default=False, update=refresh_preview)
 
-    light_emission = bpy.props.FloatProperty(name="Emission Strength", description="Light emission strength", default=0.0, min=0.0, max=10000.0,
+    light_emission = bpy.props.FloatProperty(name="Emission Strength", description="Light emission strength", default=1.0, min=0.0, max=10000.0,
                                              update=refresh_preview)
 
     light_color = bpy.props.FloatVectorProperty(name="Emission Color", description="Light emission color",
