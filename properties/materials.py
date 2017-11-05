@@ -67,7 +67,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                        update=refresh_preview)
 
     transmittance_multiplier = bpy.props.FloatProperty(
-        name="Transmittance multiplier", description="Multiplier for material transmittance", default=0.0, min=0.0, max=2.0, update=refresh_preview)
+        name="Transmittance multiplier", description="Multiplier for material transmittance", default=1.0, min=0.0, max=2.0, update=refresh_preview)
 
     transmittance_use_mult_tex = bpy.props.BoolProperty(name="", description="Use texture to influence transmittance", default=False,
                                                         update=refresh_preview)
@@ -258,7 +258,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     orennayar_multiplier = bpy.props.FloatProperty(
         name="Reflectance Multiplier", description="Oren-Nayar reflectance multiplier", default=1.0, min=0.0, max=2.0, update=refresh_preview)
 
-    orennayar_roughness = bpy.props.FloatProperty(name="Roughness", description="Oren-Nayar roughness", default=0.1, min=0.0, max=1.0,
+    orennayar_roughness = bpy.props.FloatProperty(name="Roughness", description="Oren-Nayar roughness", default=0.5, min=0.0, max=1.0,
                                                   update=refresh_preview)
 
     orennayar_weight = bpy.props.FloatProperty(name="Oren-Nayar Blending Weight",
@@ -337,7 +337,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                    description="Specular BTDF transmittance multiplier", default=1.0, min=0.0, max=1.0,
                                                    update=refresh_preview)
 
-    spec_btdf_ior = bpy.props.FloatProperty(name="IOR", description="Index of refraction", default=1.0, min=1.0, max=2.5,
+    spec_btdf_ior = bpy.props.FloatProperty(name="IOR", description="Index of refraction", default=1.33, min=1.0, max=2.5,
                                             update=refresh_preview)
 
     spec_btdf_weight = bpy.props.FloatProperty(name="Specular BTDF Blending Weight",
