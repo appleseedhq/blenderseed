@@ -2370,7 +2370,7 @@ class Exporter(object):
     #   Preview render .appleseed file export
     # ----------------------------------------------------------------------------------------------
 
-    def export_preview(self, scene, file_path, addon_path, mat, mesh, width, height):
+    def export_preview(self, scene, file_path, mat, mesh, width, height):
         """
         Write the .appleseed project file for preview rendering
         """
@@ -2448,7 +2448,6 @@ class Exporter(object):
             <surface_shader name="physical_surface_shader" model="physical_surface_shader" />
             <color name="__default_material_albedo">
                 <parameter name="color_space" value="linear_rgb" />
-
                 <parameter name="multiplier" value="1.0" />
                 <values>0.8 0.8 0.8</values>
             </color>
@@ -2456,21 +2455,18 @@ class Exporter(object):
                 <parameter name="color_space" value="linear_rgb" />
                 <parameter name="multiplier" value="1.0" />
                 <values>0.8</values>
-
             </color>
             <bsdf name="__default_material_bsdf" model="lambertian_brdf">
                 <parameter name="reflectance" value="__default_material_bsdf_reflectance" />
             </bsdf>
             <material name="__default_material" model="generic_material">
                 <parameter name="bsdf" value="__default_material_bsdf" />
-
                 <parameter name="surface_shader" value="physical_surface_shader" />
             </material>
             <object name="material_preview_lamp" model="mesh_object">
                 <parameter name="filename" value="material_preview_lamp.obj" />
             </object>
             <color name="material_preview_lamp_material|BSDF Layer 1_lambertian_reflectance">
-
                 <parameter name="color_space" value="linear_rgb" />
                 <parameter name="multiplier" value="1.0" />
                 <values>0.8 0.8 0.8</values>
@@ -2478,17 +2474,14 @@ class Exporter(object):
             <bsdf name="material_preview_lamp_material|BSDF Layer 1" model="lambertian_brdf">
                 <parameter name="reflectance" value="material_preview_lamp_material|BSDF Layer 1_lambertian_reflectance" />
             </bsdf>
-
             <color name="material_preview_lamp_material_edf_radiance">
                 <parameter name="color_space" value="linear_rgb" />
                 <parameter name="multiplier" value="5.0" />
                 <values>0.8 0.8 0.8</values>
             </color>
             <edf name="material_preview_lamp_material_edf" model="diffuse_edf">
-
                 <parameter name="radiance" value="material_preview_lamp_material_edf_radiance" />
             </edf>
-
             <material name="material_preview_lamp_material" model="generic_material">
                 <parameter name="bsdf" value="material_preview_lamp_material|BSDF Layer 1" />
                 <parameter name="edf" value="material_preview_lamp_material_edf" />
@@ -2558,7 +2551,6 @@ class Exporter(object):
                             mat_front = mat.name + "_front"
                             mat_back = mat.name + "_back"
                             break
-
                 self._output_file.write("""
             <object name="material_preview_{0}" model="mesh_object">
                 <parameter name="filename" value="material_preview_{0}.obj" />
@@ -2574,7 +2566,8 @@ class Exporter(object):
                 </transform>
                 <assign_material slot="0" side="front" material="{1}" />
                 <assign_material slot="0" side="back" material="{2}" />
-            </object_instance>""".format(mesh, mat_front, mat_back))
+            </object_instance>
+""".format(mesh, mat_front, mat_back))
 
                 # Write the material for the preview sphere
                 self.__emit_material(mat, scene)
@@ -2588,41 +2581,21 @@ class Exporter(object):
         <frame name="beauty">
             <parameter name="camera" value="Camera" />
             <parameter name="resolution" value="{0} {1}" />
-            <parameter name="pixel_format" value="float" />
-            <parameter name="color_space" value="srgb" />
         </frame>
     </output>
     <configurations>
         <configuration name="interactive" base="base_interactive">
             <parameter name="lighting_engine" value="drt" />
-            <parameter name="pixel_renderer" value="uniform" />
-            <parameters name="adaptive_pixel_renderer">
-                <parameter name="enable_diagnostics" value="False" />
-                <parameter name="max_samples" value="8" />
-                <parameter name="min_samples" value="2" />
-                <parameter name="quality" value="3.0" />
-            </parameters>
-            <parameters name="uniform_pixel_renderer">
-                <parameter name="decorrelate_pixels" value="False" />
-                <parameter name="samples" value="4" />
-            </parameters>
             <parameters name="drt">
                 <parameter name="dl_light_samples" value="1" />
                 <parameter name="enable_ibl" value="true" />
                 <parameter name="ibl_env_samples" value="1" />
-
                 <parameter name="rr_min_path_length" value="3" />
             </parameters>
         </configuration>
         <configuration name="final" base="base_final">
             <parameter name="lighting_engine" value="drt" />
             <parameter name="pixel_renderer" value="uniform" />
-            <parameters name="adaptive_pixel_renderer">
-                <parameter name="enable_diagnostics" value="False" />
-                <parameter name="max_samples" value="8" />
-                <parameter name="min_samples" value="2" />
-                <parameter name="quality" value="3.0" />
-            </parameters>
             <parameters name="uniform_pixel_renderer">
                 <parameter name="decorrelate_pixels" value="False" />
                 <parameter name="samples" value="{2}" />
