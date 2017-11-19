@@ -2572,8 +2572,7 @@ class Exporter(object):
                 # Write the material for the preview sphere
                 self.__emit_material(mat, scene)
 
-                self._output_file.write("""
-        </assembly>
+                self._output_file.write("""        </assembly>
         <assembly_instance name="mat_preview_instance" assembly="mat_preview">
         </assembly_instance>
     </scene>
