@@ -6,6 +6,8 @@
 * [**Read** installation instructions](https://github.com/appleseedhq/blenderseed/wiki/Installation)
 * [**Report** bugs and suggest features](https://github.com/appleseedhq/blenderseed/issues)
 
+![Chair & Table](https://github.com/appleseedhq/appleseedhq.github.io/raw/master/img/renders/chair-and-table.png)
+
 **blenderseed** includes support for the following features of appleseed:  
 * Pinhole, thin lens (supports physically correct depth of field), and spherical camera models
 * Camera, transformation and deformation motion blur
