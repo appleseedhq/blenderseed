@@ -60,8 +60,7 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                                           description="Multiplier of lamp intensity",
                                                           default=1,
                                                           min=0,
-                                                          soft_max=10,
-                                                          max=9999)
+                                                          soft_max=10)
 
         cls.radiance_multiplier_use_tex = bpy.props.BoolProperty(name="",
                                                                  description="Use texture to influence intensity multiplier",
@@ -76,11 +75,10 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                                    default=True)
 
         cls.importance_multiplier = bpy.props.FloatProperty(name="Importance Multiplier",
-                                                            description="Multiple importance sampling multiplier",
+                                                            description="Adjust the sampling effort for this light with respect to the other lights",
                                                             default=1,
                                                             min=0,
-                                                            soft_max=10,
-                                                            max=100)
+                                                            soft_max=10)
 
         cls.turbidity = bpy.props.FloatProperty(name="Turbidity",
                                                 description="Sun lamp turbidity. If physical sky environment is also used, environment turbidity value will be used instead",
