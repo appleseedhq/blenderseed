@@ -74,9 +74,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Export and render the scene.
         """
 
-        # Write project file and export meshes.
-        bpy.ops.appleseed.export()
-
         if scene.appleseed.project_path == '':
             self.report({'INFO'}, "Please first specify a project path in the appleseed render settings.")
             return
@@ -89,6 +86,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
             except os.error:
                 self.report({"ERROR"}, "The project directory could not be created. Check directory permissions.")
                 return
+
+        # Write project file and export meshes.
+        bpy.ops.appleseed.export()
 
         # Build the file path for the appleseed project.
         project_filepath = scene.name
