@@ -156,7 +156,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         cls.light_sampler = bpy.props.EnumProperty(name="Light Sampler",
                                                   description="The method used for sampling lights",
                                                   items=[('cdf', 'CDF', 'CDF'),
-                                                        ('lighttree', 'Lights Tree', 'Light Tree')],
+                                                        ('lighttree', 'Light Tree', 'Light Tree')],
                                                   default='cdf')
 
         cls.tile_ordering = bpy.props.EnumProperty(name="Tile Ordering",
@@ -215,25 +215,25 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                           default=False)
 
         cls.max_diffuse_bounces = bpy.props.IntProperty(name="Max Diffuse Bounces",
-                                                        description="Maximum diffuse length: 0 = Unlimited",
+                                                        description="Maximum total number of diffuse bounces: 0 = Unlimited",
                                                         default=0,
                                                         min=0,
                                                         max=100)
 
         cls.max_glossy_bounces = bpy.props.IntProperty(name="Max Glossy Bounces",
-                                                      description="Maximum glossy length: 0 = Unlimited",
+                                                      description="MMaximum total number of glossy bounces: 0 = Unlimited",
                                                       default=0,
                                                       min=0,
                                                       max=100)
 
         cls.max_specular_bounces = bpy.props.IntProperty(name="Max Specular Bounces",
-                                                      description="Maximum specular length: 0 = Unlimited",
+                                                      description="Maximum total number of specular bounces: 0 = Unlimited",
                                                       default=0,
                                                       min=0,
                                                       max=100)
 
         cls.max_volume_bounces = bpy.props.IntProperty(name="Max Volume Bounces",
-                                                      description="Maximum volume length: 0 = Unlimited",
+                                                      description="Maximum total number of volume bounces: 0 = Unlimited",
                                                       default=0,
                                                       min=0,
                                                       max=100)
