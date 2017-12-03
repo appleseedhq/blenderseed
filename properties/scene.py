@@ -74,6 +74,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                                    "appleseed.studio will begin rendering using progressive render mode")),
                                                            default="PROGRESSIVE")
 
+        cls.output_mode = bpy.props.EnumProperty(name="Output Mode",
+                                      description="Set the mode of export",
+                                      items=[('render', 'Render', ''),
+                                            ('export_only', 'Export Files Only', '')],
+                                      default='render')
+
         cls.project_path = bpy.props.StringProperty(
             description="Root folder for the appleseed project. Rendered images are saved in a render/ subdirectory.",
             subtype='DIR_PATH')
@@ -147,6 +153,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                     min=1,
                                                     max=999999)
 
+        cls.light_sampler = bpy.props.EnumProperty(name="Light Sampler",
+                                                  description="The method used for sampling lights",
+                                                  items=[('cdf', 'CDF', 'CDF'),
+                                                        ('lighttree', 'Light Tree', 'Light Tree')],
+                                                  default='cdf')
+
         cls.tile_ordering = bpy.props.EnumProperty(name="Tile Ordering",
                                                    description="Tile ordering",
                                                    items=[
@@ -154,7 +166,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                        ('spiral', "Spiral", "Spiral"),
                                                        ('hilbert', "Hilbert", "Hilbert"),
                                                        ('random', "Random", "Random")],
-                                                   default='hilbert')
+                                                   default='spiral')
 
         cls.sampler_max_contrast = bpy.props.FloatProperty(name="Max Contrast",
                                                            description="Maximum contrast",
@@ -198,6 +210,34 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 min=0,
                                                 max=512)
 
+        cls.use_separate_bounces = bpy.props.BoolProperty(name="Use Individual Bounce Limits",
+                                                          description="Use individual limits for different ray types",
+                                                          default=False)
+
+        cls.max_diffuse_bounces = bpy.props.IntProperty(name="Max Diffuse Bounces",
+                                                        description="Maximum total number of diffuse bounces: 0 = Unlimited",
+                                                        default=0,
+                                                        min=0,
+                                                        max=100)
+
+        cls.max_glossy_bounces = bpy.props.IntProperty(name="Max Glossy Bounces",
+                                                      description="MMaximum total number of glossy bounces: 0 = Unlimited",
+                                                      default=0,
+                                                      min=0,
+                                                      max=100)
+
+        cls.max_specular_bounces = bpy.props.IntProperty(name="Max Specular Bounces",
+                                                      description="Maximum total number of specular bounces: 0 = Unlimited",
+                                                      default=0,
+                                                      min=0,
+                                                      max=100)
+
+        cls.max_volume_bounces = bpy.props.IntProperty(name="Max Volume Bounces",
+                                                      description="Maximum total number of volume bounces: 0 = Unlimited",
+                                                      default=0,
+                                                      min=0,
+                                                      max=100)
+
         cls.max_ray_intensity = bpy.props.FloatProperty(name="Max Ray Intensity",
                                                         description="Maximum ray intensity: 0 = Unlimited",
                                                         default=0,
@@ -210,11 +250,27 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                              min=0,
                                              max=512)
 
+        cls.optimize_for_lights_outside_volumes = bpy.props.BoolProperty(name="Optimize for Lights Outside Volumes",
+                                                                  description="Use when lighting sources are outside the volume",
+                                                                  default=True)
+
+        cls.volume_distance_samples = bpy.props.IntProperty(name="Volume Distance Samples",
+                                                  description="Number of depth samples to take in a volume",
+                                                  default=2,
+                                                  min=0,
+                                                  max=100)
+
         cls.dl_light_samples = bpy.props.IntProperty(name="Direct Lighting Light Samples",
                                                      description="Direct lighting light samples",
                                                      default=1,
                                                      min=0,
                                                      max=512)
+
+        cls.dl_low_light_threshold = bpy.props.FloatProperty(name="Low Light Threshold",
+                                                    description="Light contribution threshold to disable shadow rays",
+                                                    default=0.0,
+                                                    min=0.0,
+                                                    max=100)
 
         cls.ibl_env_samples = bpy.props.IntProperty(name="IBL Samples",
                                                     description="Image based lighting environment samples",

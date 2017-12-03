@@ -109,6 +109,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         col = layout.column()
         col.prop(asr_scene_props, "lighting_engine")
+        col.prop(asr_scene_props, "light_sampler")
         split = layout.split()
 
         # Path tracing UI
@@ -129,8 +130,17 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
                 if asr_scene_props.direct_lighting == True:
                     row.prop(asr_scene_props, "dl_light_samples")
             layout.prop(asr_scene_props, "max_bounces")
+            layout.prop(asr_scene_props, "use_separate_bounces")
+            if asr_scene_props.use_separate_bounces:
+                layout.prop(asr_scene_props, "max_diffuse_bounces")
+                layout.prop(asr_scene_props, "max_glossy_bounces")
+                layout.prop(asr_scene_props, "max_specular_bounces")
+                layout.prop(asr_scene_props, "max_volume_bounces")
+            layout.separator()
             layout.prop(asr_scene_props, "max_ray_intensity")
             layout.prop(asr_scene_props, "rr_start")
+            layout.prop(asr_scene_props, "optimize_for_lights_outside_volumes")
+            layout.prop(asr_scene_props, "volume_distance_samples")
 
         # SPPM UI
         elif asr_scene_props.lighting_engine == 'sppm':

@@ -97,7 +97,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
         project_filepath = os.path.join(project_dir, project_filepath)
 
         # Render the project.
-        self.__render_project_file(scene, project_filepath)
+        if scene.appleseed.output_mode == 'render':
+            self.__render_project_file(scene, project_filepath)
 
     def __render_material_preview(self, scene):
         """
