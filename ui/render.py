@@ -77,7 +77,7 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         row = layout.row(align=True)
         layout.prop(asr_scene_props, "pixel_filter")
-        layout.prop(asr_scene_props, "filter_size")
+        layout.prop(asr_scene_props, "pixel_filter_size")
 
         layout.separator()
         layout.prop(asr_scene_props, "renderer_passes")

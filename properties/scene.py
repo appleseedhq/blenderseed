@@ -118,11 +118,11 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                          ("blackman-harris", "Blackman-Harris", "Blackman-Harris")],
                                                   default="blackman-harris")
 
-        cls.filter_size = bpy.props.FloatProperty(name="Pixel Filter Size",
-                                                  description="Pixel filter size",
-                                                  min=0.0,
-                                                  max=16.0,
-                                                  default=1.5)
+        cls.pixel_filter_size = bpy.props.FloatProperty(name="Pixel Filter Size",
+                                                        description="Pixel filter size",
+                                                        min=0.0,
+                                                        max=16.0,
+                                                        default=1.5)
 
         cls.pixel_sampler = bpy.props.EnumProperty(name="Pixel Sampler",
                                                    description="Sampler",
