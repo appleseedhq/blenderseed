@@ -42,7 +42,7 @@ class AppleseedRenderPanelBase(object):
 
 class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_label = "Settings"
+    bl_label = "General"
 
     def draw(self, context):
         layout = self.layout
@@ -77,11 +77,11 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         row = layout.row(align=True)
         layout.prop(asr_scene_props, "pixel_filter")
-        layout.prop(asr_scene_props, "filter_size")
+        layout.prop(asr_scene_props, "pixel_filter_size")
 
         layout.separator()
-        layout.prop(asr_scene_props, "pixel_sampler")
         layout.prop(asr_scene_props, "renderer_passes")
+        layout.prop(asr_scene_props, "pixel_sampler")
 
         if asr_scene_props.pixel_sampler == 'adaptive':
             row = layout.row(align=True)
@@ -90,10 +90,10 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             layout.prop(asr_scene_props, "sampler_max_contrast")
             layout.prop(asr_scene_props, "sampler_max_variation")
         else:
+            layout.prop(asr_scene_props, "sampler_max_samples")
             row = layout.row()
             row.prop(asr_scene_props, "force_aa")
             row.prop(asr_scene_props, "decorrelate_pixels")
-            layout.prop(asr_scene_props, "sampler_max_samples")
 
         layout.prop(asr_scene_props, "tile_ordering")
 
@@ -120,14 +120,14 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             col = split.column()
             col.prop(asr_scene_props, "enable_diagnostics", text="Diagnostics")
             col.prop(asr_scene_props, "quality")
-            if asr_scene_props.next_event_est == True:
+            if asr_scene_props.next_event_est:
                 row = layout.row()
                 row.prop(asr_scene_props, "ibl_enable")
-                if asr_scene_props.ibl_enable == True:
+                if asr_scene_props.ibl_enable:
                     row.prop(asr_scene_props, "ibl_env_samples")
                 row = layout.row()
                 row.prop(asr_scene_props, "direct_lighting")
-                if asr_scene_props.direct_lighting == True:
+                if asr_scene_props.direct_lighting:
                     row.prop(asr_scene_props, "dl_light_samples")
             layout.prop(asr_scene_props, "max_bounces")
             layout.prop(asr_scene_props, "use_separate_bounces")
