@@ -27,10 +27,6 @@
 #
 
 import bpy
-import os
-import subprocess
-from .. import project_file_writer
-from .. import util
 
 
 class AppleseedAddMatLayer(bpy.types.Operator):
@@ -43,10 +39,8 @@ class AppleseedAddMatLayer(bpy.types.Operator):
     bl_idname = "appleseed.add_matlayer"
 
     def invoke(self, context, event):
-        scene = context.scene
         material = context.object.active_material
         collection = material.appleseed.layers
-        index = material.appleseed.layer_index
 
         collection.add()
         num = collection.__len__()
@@ -65,7 +59,6 @@ class AppleseedRemoveMatLayer(bpy.types.Operator):
     bl_idname = "appleseed.remove_matlayer"
 
     def invoke(self, context, event):
-        scene = context.scene
         material = context.object.active_material
         collection = material.appleseed.layers
         index = material.appleseed.layer_index
@@ -97,42 +90,14 @@ class AppleseedNewNodeTree(bpy.types.Operator):
         node = nodetree.nodes.new('AppleseedMaterialNode')
         material.appleseed.node_tree = nodetree.name
         material.appleseed.node_output = node.name
-
-        return {'FINISHED'}
-
-
-class AppleseedExportOperator(bpy.types.Operator):
-    """
-    appleseed export operator.
-    """
-
-    bl_idname = "appleseed.export"
-    bl_label = "Export"
-
-    inst_set = set()
-    psysob_set = set()
-    exported_obs = set()
-
-    def execute(self, context):
-        scene = context.scene
-        if scene.appleseed.project_path == '':
-            return {'CANCELLED'}
-
-        file_path = os.path.join(util.realpath(scene.appleseed.project_path), scene.name + ".appleseed")
-
-        exporter = project_file_writer.Exporter()
-        exporter.export(scene, file_path)
-
         return {'FINISHED'}
 
 
 def register():
     bpy.utils.register_class(AppleseedAddMatLayer)
     bpy.utils.register_class(AppleseedRemoveMatLayer)
-    bpy.utils.register_class(AppleseedExportOperator)
 
 
 def unregister():
     bpy.utils.unregister_class(AppleseedAddMatLayer)
     bpy.utils.unregister_class(AppleseedRemoveMatLayer)
-    bpy.utils.unregister_class(AppleseedExportOperator)
