@@ -49,16 +49,16 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         scene = context.scene
         asr_scene_props = scene.appleseed
 
-        split = layout.split()
-
-        row = layout.row()
-        row.prop(asr_scene_props, "threads")
+        layout.separator()
+        col = layout.column()
+        col.prop(asr_scene_props, "threads_auto")
+        col = layout.column()
+        col.enabled = not asr_scene_props.threads_auto
+        col.prop(asr_scene_props, "threads")
 
         layout.separator()
-
         row = layout.row()
         row.prop(asr_scene_props, "generate_mesh_files")
-
         if asr_scene_props.generate_mesh_files:
             row.prop(asr_scene_props, "export_mode")
             # layout.prop(asr_scene_props, "export_hair")
