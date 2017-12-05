@@ -2110,7 +2110,7 @@ class Exporter(object):
         self.__emit_parameter("rendering_threads", scene.appleseed.threads)
 
         self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
-        self.__emit_parameter("lighting_engine", scene.appleseed.lighting_engine)
+        self.__emit_parameter("lighting_engine", lighting_engine)
 
         self.__open_element('parameters name="adaptive_pixel_renderer"')
         self.__emit_parameter("enable_diagnostics", scene.appleseed.enable_diagnostics)
@@ -2153,12 +2153,16 @@ class Exporter(object):
             if scene.appleseed.dl_low_light_threshold > 0.0:
                 self.__emit_parameter("dl_low_light_threshold", scene.appleseed.dl_low_light_threshold)
             self.__emit_parameter("ibl_env_samples", scene.appleseed.ibl_env_samples)
-            if scene.appleseed.use_separate_bounces:
+            if not scene.appleseed.max_diffuse_bounces_unlimited:
                 self.__emit_parameter("max_diffuse_bounces", scene.appleseed.max_diffuse_bounces)
+            if not scene.appleseed.max_glossy_bounces_unlimited:    
                 self.__emit_parameter("max_glossy_bounces", scene.appleseed.max_glossy_bounces)
+            if not scene.appleseed.max_specular_bounces_unlimited:
                 self.__emit_parameter("max_specular_bounces", scene.appleseed.max_specular_bounces)
+            if not scene.appleseed.max_volume_bounces_unlimited:
                 self.__emit_parameter("max_volume_bounces", scene.appleseed.max_volume_bounces)
-            self.__emit_parameter("max_bounces", scene.appleseed.max_bounces)
+            if not scene.appleseed.max_bounces_unlimited:
+                self.__emit_parameter("max_bounces", scene.appleseed.max_bounces)
             self.__emit_parameter("rr_min_path_length", scene.appleseed.rr_start)
             self.__emit_parameter("optimize_for_lights_outside_volumes", scene.appleseed.optimize_for_lights_outside_volumes)
             self.__emit_parameter("volume_distance_samples", scene.appleseed.volume_distance_samples)
