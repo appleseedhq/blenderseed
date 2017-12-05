@@ -56,7 +56,11 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col.prop(asr_scene_props, "project_path", text="")
 
         layout.separator()
-        layout.prop(asr_scene_props, "threads")
+        col = layout.column()
+        col.prop(asr_scene_props, "threads_auto")
+        col = layout.column()
+        col.enabled = not asr_scene_props.threads_auto
+        col.prop(asr_scene_props, "threads")
 
         layout.separator()
         row = layout.row()

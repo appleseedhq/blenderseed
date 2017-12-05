@@ -78,6 +78,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
             description="Root folder for the appleseed project. Rendered images are saved in a render/ subdirectory.",
             subtype='DIR_PATH')
 
+        cls.threads_auto = bpy.props.BoolProperty(name="Auto Threads",
+                                                description="Automatically determine the number of rendering threads",
+                                                default=True)
+
         cls.threads = bpy.props.IntProperty(name="Rendering Threads",
                                             description="Number of threads to use for rendering",
                                             default=threads,
