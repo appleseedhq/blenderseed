@@ -138,7 +138,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
             split = layout.split(percentage=0.2)
             col = split.column()
-            col.label("Bouces")
+            col.label("Bounces")
             split = split.split(percentage=0.33)
             col = split.column()
             col.label("Limit")
