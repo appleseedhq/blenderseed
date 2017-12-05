@@ -74,29 +74,23 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Export and render the scene.
         """
 
-        if scene.appleseed.project_path == '':
-            self.report({'INFO'}, "Please first specify a project path in the appleseed render settings.")
-            return
+        # Name and location of the exported project.
+        project_dir = os.path.join(efutil.temp_directory(), "blenderseed", "render")
+        project_filepath = os.path.join(project_dir, "render.appleseed")
 
-        # Make sure the project directory exists.
-        project_dir = util.realpath(scene.appleseed.project_path)
+        # Create target directories if necessary.
         if not os.path.exists(project_dir):
             try:
                 os.makedirs(project_dir)
             except os.error:
-                self.report({"ERROR"}, "The project directory could not be created. Check directory permissions.")
+                self.report({"ERROR"}, "The directory {0} could not be created. Check directory permissions.".format(project_dir))
                 return
 
-        # Write project file and export meshes.
-        bpy.ops.appleseed.export()
+        # Generate project on disk.
+        exporter = project_file_writer.Exporter()
+        exporter.export(scene, project_filepath)
 
-        # Build the file path for the appleseed project.
-        project_filepath = scene.name
-        if not project_filepath.endswith(".appleseed"):
-            project_filepath += ".appleseed"
-        project_filepath = os.path.join(project_dir, project_filepath)
-
-        # Render the project.
+        # Render project.
         if scene.appleseed.output_mode == 'render':
             self.__render_project_file(scene, project_filepath)
 
@@ -129,16 +123,20 @@ class RenderAppleseed(bpy.types.RenderEngine):
         if not likely_materials:
             return
 
-        # Build the path to the template preview project in the add-on directory.
-        preview_template_dir = os.path.join(os.sep.join(util.realpath(__file__).split(os.sep)[:-1]), "mat_preview")
-
         # Build the path to the output preview project.
-        preview_output_dir = os.path.join(efutil.temp_directory(), "mat_preview")
-        preview_project_filepath = os.path.join(preview_output_dir, "mat_preview.appleseed")
+        preview_output_dir = os.path.join(efutil.temp_directory(), "blenderseed", "material_preview")
+        preview_project_filepath = os.path.join(preview_output_dir, "material_preview.appleseed")
 
-        # Copy preview scene assets.
-        if not os.path.isdir(preview_output_dir):
-            os.mkdir(preview_output_dir)
+        # Create target directories if necessary.
+        if not os.path.exists(preview_output_dir):
+            try:
+                os.makedirs(preview_output_dir)
+            except os.error:
+                self.report({"ERROR"}, "The directory {0} could not be created. Check directory permissions.".format(preview_output_dir))
+                return
+
+        # Copy assets from template project to output directory.
+        preview_template_dir = os.path.join(os.sep.join(util.realpath(__file__).split(os.sep)[:-1]), "mat_preview")
         existing_files = os.listdir(preview_output_dir)
         for item in os.listdir(preview_template_dir):
             if item not in existing_files:

@@ -50,20 +50,18 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         asr_scene_props = scene.appleseed
 
         split = layout.split()
-        col = split.column()
-        col.label("Project Folder:")
-        col = split.column()
-        col.prop(asr_scene_props, "project_path", text="")
+
+        row = layout.row()
+        row.prop(asr_scene_props, "threads")
 
         layout.separator()
-        layout.prop(asr_scene_props, "threads")
 
-        layout.separator()
         row = layout.row()
         row.prop(asr_scene_props, "generate_mesh_files")
+
         if asr_scene_props.generate_mesh_files:
             row.prop(asr_scene_props, "export_mode")
-            # layout.prop( asr_scene_props, "export_hair")
+            # layout.prop(asr_scene_props, "export_hair")
 
 
 class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
