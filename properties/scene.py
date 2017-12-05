@@ -206,39 +206,54 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                     description="Explicitly connect path vertices to light sources to improve efficiency",
                                                     default=True)
 
-        cls.max_bounces = bpy.props.IntProperty(name="Max Bounces",
-                                                description="Maximum ray length (0 = unlimited)",
-                                                default=0,
-                                                min=0,
-                                                max=100)
+        cls.max_bounces_unlimited = bpy.props.BoolProperty(name="",
+                                                        description="No limit to number of ray bounces",
+                                                        default=True)
+
+        cls.max_bounces = bpy.props.IntProperty(name="",
+                                                description="Maximum number of ray bounces (-1 = unlimited)",
+                                                default=8,
+                                                min=0)
 
         cls.use_separate_bounces = bpy.props.BoolProperty(name="Use Individual Bounce Limits",
                                                           description="Use individual limits for different ray types",
                                                           default=False)
 
-        cls.max_diffuse_bounces = bpy.props.IntProperty(name="Max Diffuse Bounces",
-                                                        description="Maximum total number of diffuse bounces: 0 = Unlimited",
-                                                        default=0,
-                                                        min=0,
-                                                        max=100)
+        cls.max_diffuse_bounces_unlimited = bpy.props.BoolProperty(name="",
+                                                        description="No limit to number of diffuse ray bounces",
+                                                        default=True)
 
-        cls.max_glossy_bounces = bpy.props.IntProperty(name="Max Glossy Bounces",
-                                                       description="Maximum total number of glossy bounces: 0 = Unlimited",
-                                                       default=0,
-                                                       min=0,
-                                                       max=100)
+        cls.max_diffuse_bounces = bpy.props.IntProperty(name="",
+                                                        description="Maximum total number of diffuse bounces: -1 = Unlimited",
+                                                        default=8,
+                                                        min=0)
 
-        cls.max_specular_bounces = bpy.props.IntProperty(name="Max Specular Bounces",
-                                                         description="Maximum total number of specular bounces: 0 = Unlimited",
-                                                         default=0,
-                                                         min=0,
-                                                         max=100)
+        cls.max_glossy_bounces_unlimited = bpy.props.BoolProperty(name="",
+                                                        description="No limit to number of glossy ray bounces",
+                                                        default=True)
 
-        cls.max_volume_bounces = bpy.props.IntProperty(name="Max Volume Bounces",
-                                                       description="Maximum total number of volume bounces: 0 = Unlimited",
-                                                       default=0,
-                                                       min=0,
-                                                       max=100)
+        cls.max_glossy_bounces = bpy.props.IntProperty(name="",
+                                                       description="Maximum total number of glossy bounces: -1 = Unlimited",
+                                                       default=8,
+                                                       min=0)
+
+        cls.max_specular_bounces_unlimited = bpy.props.BoolProperty(name="",
+                                                        description="No limit to number of specular ray bounces",
+                                                        default=True)
+
+        cls.max_specular_bounces = bpy.props.IntProperty(name="",
+                                                         description="Maximum total number of specular bounces: -1 = Unlimited",
+                                                         default=8,
+                                                         min=0)
+
+        cls.max_volume_bounces_unlimited = bpy.props.BoolProperty(name="",
+                                                        description="No limit to number of volume ray bounces",
+                                                        default=True)
+
+        cls.max_volume_bounces = bpy.props.IntProperty(name="",
+                                                       description="Maximum total number of volume bounces: -1 = Unlimited",
+                                                       default=8,
+                                                       min=-0)
 
         cls.max_ray_intensity = bpy.props.FloatProperty(name="Max Ray Intensity",
                                                         description="Clamp intensity of rays (after the first bounce) to this value to reduce fireflies (0 = unlimited)",

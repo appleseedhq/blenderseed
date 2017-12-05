@@ -113,7 +113,6 @@ appleseed_node_categories = [
         nodeitems_utils.NodeItem("AppleseedDisneyNode"),
         nodeitems_utils.NodeItem("AppleseedKelemenNode"),
         nodeitems_utils.NodeItem("AppleseedLambertianNode"),
-        nodeitems_utils.NodeItem("AppleseedMicrofacetNode"),
         nodeitems_utils.NodeItem("AppleseedOrenNayarNode"),
         nodeitems_utils.NodeItem("AppleseedSpecBRDFNode"),
         nodeitems_utils.NodeItem("AppleseedSpecBTDFNode"),
@@ -160,7 +159,6 @@ from . import diffuse_btdf
 from . import disney_brdf
 from . import kelemen_brdf
 from . import lambertian_brdf
-from . import microfacet_brdf
 from . import orennayar_brdf
 from . import specular_brdf
 from . import specular_btdf
@@ -180,7 +178,6 @@ def register():
     disney_brdf.register()
     kelemen_brdf.register()
     lambertian_brdf.register()
-    microfacet_brdf.register()
     orennayar_brdf.register()
     specular_brdf.register()
     specular_btdf.register()
@@ -198,7 +195,6 @@ def unregister():
     diffuse_btdf.unregister()
     kelemen_brdf.unregister()
     lambertian_brdf.unregister()
-    microfacet_brdf.unregister()
     orennayar_brdf.unregister()
     specular_brdf.unregister()
     specular_btdf.unregister()

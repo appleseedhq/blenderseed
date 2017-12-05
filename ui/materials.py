@@ -180,6 +180,222 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
                 #-------------------------------------------------
 
+                # glass bsdf layout
+                if current_layer.bsdf_type == "glass_bsdf":
+
+                    # layer weight
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glass_weight", text="Layer Weight")
+                    if current_layer.glass_use_tex:
+                        layout.prop_search(current_layer, "glass_mix_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glass_use_tex", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glass_mix_tex != '' and current_layer.glass_use_tex:
+                        mix_tex = bpy.data.textures[current_layer.blinn_mix_tex]
+                        layout.prop(mix_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # mdf
+                    col = layout.column()
+                    col.prop(current_layer, "glass_mdf")
+
+                    # surface transmittance
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glass_surface_transmittance", text="")
+
+                    if current_layer.glass_surface_transmittance_use_tex:
+                        layout.prop_search(current_layer, "glass_surface_transmittance_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glass_surface_transmittance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glass_surface_transmittance_tex != '' and current_layer.glass_surface_transmittance_use_tex:
+                        diffuse_tex = bpy.data.textures[current_layer.glass_surface_transmittance_tex]
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # surface transmittance multiplier
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glass_surface_transmittance_multiplier")
+
+                    if current_layer.glass_surface_transmittance_multiplier_use_tex:
+                        layout.prop_search(current_layer, "glass_surface_transmittance_multiplier_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glass_surface_transmittance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glass_surface_transmittance_multiplier_tex != '' and current_layer.glass_surface_transmittance_multiplier_use_tex:
+                        diffuse_tex = bpy.data.textures[current_layer.glass_surface_transmittance_multiplier_tex]
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # reflection
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glass_reflection_tint", text="")
+
+                    if current_layer.glass_reflection_tint_use_tex:
+                        layout.prop_search(current_layer, "glass_reflection_tint_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glass_reflection_tint_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glass_reflection_tint_tex != '' and current_layer.glass_reflection_tint_use_tex:
+                        glass_reflection_tint_tex = bpy.data.textures[current_layer.glass_reflection_tint_tex]
+                        layout.prop(glass_reflection_tint_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # refraction
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glass_refraction_tint", text="")
+
+                    if current_layer.glass_refraction_tint_use_tex:
+                        layout.prop_search(current_layer, "glass_refraction_tint_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glass_refraction_tint_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glass_refraction_tint_tex != '' and current_layer.glass_refraction_tint_use_tex:
+                        glass_refraction_tint = bpy.data.textures[current_layer.glass_refraction_tint_tex]
+                        layout.prop(glass_refraction_tint.image.colorspace_settings, "name", text="Color Space")
+
+                    # ior
+                    col = layout.column()
+                    col.prop(current_layer, "glass_ior")
+
+                    # roughness
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glass_roughness")
+
+                    if current_layer.glass_roughness_use_tex:
+                        layout.prop_search(current_layer, "glass_roughness_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glass_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glass_roughness_tex != '' and current_layer.glass_roughness_use_tex:
+                        glass_roughness = bpy.data.textures[current_layer.glass_roughness_tint_tex]
+                        layout.prop(glass_roughness.image.colorspace_settings, "name", text="Color Space")
+
+                    # highlight falloff
+                    col = layout.column()
+                    col.prop(current_layer, "glass_highlight_falloff")
+
+                    # anisotropy
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glass_anisotropy")
+
+                    if current_layer.glass_anisotropy_use_tex:
+                        layout.prop_search(current_layer, "glass_anisotropy_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glass_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glass_anisotropy_tex != '' and current_layer.glass_anisotropy_use_tex:
+                        glass_anisotropy = bpy.data.textures[current_layer.glass_anisotropy_tex]
+                        layout.prop(glass_anisotropy.image.colorspace_settings, "name", text="Color Space")
+
+                    # volume parameterization
+                    col = layout.column()
+                    col.prop(current_layer, "glass_volume_parameterization")
+
+                    if current_layer.glass_volume_parameterization == 'transmittance':
+                        # glass volume transmittance
+                        split = layout.split(percentage=0.90)
+                        col = split.column()
+                        col.prop(current_layer, "glass_volume_transmittance", text="")
+
+                        if current_layer.glass_volume_transmittance_use_tex:
+                            layout.prop_search(current_layer, "glass_volume_transmittance_tex", material, "texture_slots")
+
+                        col = split.column()
+                        col.prop(current_layer, "glass_volume_transmittance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                        if current_layer.glass_volume_transmittance_tex != '' and current_layer.glass_volume_transmittance_use_tex:
+                            glass_volume_transmittance = bpy.data.textures[current_layer.glass_volume_transmittance_tex]
+                            layout.prop(glass_volume_transmittance.image.colorspace_settings, "name", text="Color Space")
+
+                        # glass volume transmittance distance
+                        split = layout.split(percentage=0.90)
+                        col = split.column()
+                        col.prop(current_layer, "glass_volume_transmittance_distance")
+
+                        if current_layer.glass_volume_transmittance_distance_use_tex:
+                            layout.prop_search(current_layer, "glass_volume_transmittance_distance_tex", material, "texture_slots")
+
+                        col = split.column()
+                        col.prop(current_layer, "glass_volume_transmittance_distance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                        if current_layer.glass_volume_transmittance_distance_tex != '' and current_layer.glass_volume_transmittance_distance_use_tex:
+                            glass_volume_transmittance_distance = bpy.data.textures[current_layer.glass_volume_transmittance_distance_tex]
+                            layout.prop(glass_volume_transmittance_distance.image.colorspace_settings, "name", text="Color Space")
+
+                    else:
+                        # glass volume density
+                        split = layout.split(percentage=0.90)
+                        col = split.column()
+                        col.prop(current_layer, "glass_volume_density")
+
+                        if current_layer.glass_volume_density_use_tex:
+                            layout.prop_search(current_layer, "glass_volume_density_tex", material, "texture_slots")
+
+                        col = split.column()
+                        col.prop(current_layer, "glass_volume_density_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                        if current_layer.glass_volume_density_tex != '' and current_layer.glass_volume_density_use_tex:
+                            glass_volume_density = bpy.data.textures[current_layer.glass_volume_density_tex]
+                            layout.prop(glass_volume_density.image.colorspace_settings, "name", text="Color Space")
+
+                        # glass volume absorption
+                        split = layout.split(percentage=0.90)
+                        col = split.column()
+                        col.prop(current_layer, "glass_volume_absorption", text="")
+
+                        if current_layer.glass_volume_absorption_use_tex:
+                            layout.prop_search(current_layer, "glass_volume_absorption_tex", material, "texture_slots")
+
+                        col = split.column()
+                        col.prop(current_layer, "glass_volume_absorption_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                        if current_layer.glass_volume_absorption_tex != '' and current_layer.glass_volume_absorption_use_tex:
+                            glass_volume_absorption = bpy.data.textures[current_layer.glass_volume_absorption_tex]
+                            layout.prop(glass_volume_absorption.image.colorspace_settings, "name", text="Color Space")
+
+                    # scale
+                    col = layout.column()
+                    col.prop(current_layer, "glass_volume_scale")
+
+                #-------------------------------------------------
+
+                # blinn brdf layout
+                if current_layer.bsdf_type == "blinn_brdf":
+
+                    # layer weight
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "blinn_weight", text="Layer Weight")
+                    if current_layer.blinn_use_tex:
+                        layout.prop_search(current_layer, "blinn_mix_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "blinn_use_tex", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.blinn_mix_tex != '' and current_layer.blinn_use_tex:
+                        mix_tex = bpy.data.textures[current_layer.blinn_mix_tex]
+                        layout.prop(mix_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # exponent
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "blinn_exponent", text="")
+
+                    if current_layer.blinn_exponent_use_tex:
+                        layout.prop_search(current_layer, "blinn_exponent_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "blinn_exponent_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.blinn_exponent_tex != '' and current_layer.blinn_exponent_use_tex:
+                        diffuse_tex = bpy.data.textures[current_layer.blinn_exponent_tex]
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # ior
+                    col = layout.column()
+                    col.prop(current_layer, "blinn_ior")
+
+                #-------------------------------------------------
+
                 # oren-nayar brdf layout
                 if current_layer.bsdf_type == "orennayar_brdf":
 
