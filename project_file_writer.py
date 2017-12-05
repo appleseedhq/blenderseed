@@ -800,8 +800,6 @@ class Exporter(object):
                     self.__emit_kelemen_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'lambertian':
                     self.__emit_lambertian_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'microfacet':
-                    self.__emit_microfacet_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'orennayar':
                     self.__emit_orennayar_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'specular_btdf':
@@ -917,20 +915,6 @@ class Exporter(object):
                                 self._textures_set.add(mix_tex_name)
                         else:
                             bsdfs.append([ashk_bsdf_name, layer.ashikhmin_weight])
-
-                    # Microfacet
-                    elif layer.bsdf_type == "microfacet_brdf":
-                        mfacet_bsdf_name = "{0}|{1}".format(material_name, layer.name)
-                        self.__emit_microfacet_brdf(material, mfacet_bsdf_name, scene, layer)
-                        # Layer mask textures.
-                        if layer.microfacet_use_tex and layer.microfacet_mix_tex != '':
-                            bsdfs.append([mfacet_bsdf_name, layer.microfacet_mix_tex + "_inst"])
-                            mix_tex_name = layer.microfacet_mix_tex + "_inst"
-                            if mix_tex_name not in self._textures_set:
-                                self.__emit_texture(bpy.data.textures[layer.microfacet_mix_tex], False, scene)
-                                self._textures_set.add(mix_tex_name)
-                        else:
-                            bsdfs.append([mfacet_bsdf_name, layer.microfacet_weight])
 
                     # Kelemen
                     elif layer.bsdf_type == "kelemen_brdf":
@@ -1476,67 +1460,6 @@ class Exporter(object):
         self.__emit_parameter("transmittance", transmittance_name)
         self.__emit_parameter("transmittance_multiplier", transmittance_multiplier)
         self.__emit_parameter("ior", ior)
-        self.__close_element("bsdf")
-
-    # -----------------------
-    # Write Microfacet BRDF.
-    # -----------------------
-    def __emit_microfacet_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        reflectance_name = ""
-        mdf_refl = ""
-
-        if node is not None:
-            inputs = node.inputs
-            microfacet_model = node.microfacet_model
-            reflectance_name = inputs[0].get_socket_value(True)
-            microfacet_multiplier = inputs[1].get_socket_value(True)
-            mdf_refl = inputs[2].get_socket_value(True)
-            microfacet_mdf_multiplier = inputs[3].get_socket_value(True)
-            microfacet_fresnel = inputs[4].get_socket_value(True)
-
-            if not inputs[0].is_linked:
-                microfacet_reflectance = reflectance_name
-                reflectance_name = "{0}_microfacet_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           microfacet_reflectance,
-                                                           1)
-        else:
-            if layer.microfacet_use_diff_tex and layer.microfacet_diff_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.microfacet_diff_tex]):
-                    reflectance_name = layer.microfacet_diff_tex + "_inst"
-                    if reflectance_name not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.microfacet_diff_tex], False, scene)
-                        self._textures_set.add(reflectance_name)
-
-            if reflectance_name == "":
-                reflectance_name = "{0}_microfacet_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           layer.microfacet_reflectance,
-                                                           1)
-
-            if layer.microfacet_use_spec_tex and layer.microfacet_spec_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.microfacet_spec_tex]):
-                    mdf_refl = layer.microfacet_spec_tex + "_inst"
-                    if mdf_refl not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.microfacet_spec_tex], False, scene)
-                        self._textures_set.add(mdf_refl)
-            if mdf_refl == "":
-                # This changes to a float, if it's not a texture
-                mdf_refl = layer.microfacet_mdf
-
-            # TODO: add texture support for multiplier
-            microfacet_model = layer.microfacet_model
-            microfacet_multiplier = layer.microfacet_multiplier
-            microfacet_mdf_multiplier = layer.microfacet_mdf_multiplier
-            microfacet_fresnel = layer.microfacet_fresnel
-
-        self.__open_element('bsdf name="{0}" model="microfacet_brdf"'.format(bsdf_name))
-        self.__emit_parameter("mdf", microfacet_model)
-        self.__emit_parameter("reflectance", reflectance_name)
-        self.__emit_parameter("reflectance_multiplier", microfacet_multiplier)
-        self.__emit_parameter("glossiness", mdf_refl)
-        self.__emit_parameter("glossiness_multiplier", microfacet_mdf_multiplier)
-        self.__emit_parameter("fresnel_multiplier", microfacet_fresnel)
         self.__close_element("bsdf")
 
     # ----------------------

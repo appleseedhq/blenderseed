@@ -62,8 +62,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('lambertian_brdf',
                                                "Lambertian BRDF", ""),
                                               ('metal_brdf', "Metal BRDF", ""),
-                                              ('microfacet_brdf',
-                                               "Microfacet BRDF", ""),
                                               ('orennayar_brdf',
                                                "Oren-Nayar BRDF", ""),
                                               ('plastic_brdf', "Plastic BRDF", ""),
@@ -157,54 +155,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
 
     kelemen_mix_tex = bpy.props.StringProperty(name="", description="Texture to influence layer weight in the BSDF mix", default="",
                                                update=refresh_preview)
-
-    # -------------------------
-
-    microfacet_fresnel = bpy.props.FloatProperty(
-        name="Fresnel Multiplier", description="Microfacet fresnel multiplier", default=1.0, min=0.0, max=1.0, update=refresh_preview)
-
-    microfacet_model = bpy.props.EnumProperty(items=[
-        ("ggx", "GGX", ""),
-        ("ward", "Ward", ""),
-        ("beckmann", "Beckmann", ""),
-        ("blinn", "Blinn", "")],
-        name="Microfacet model", description="Microfacet distribution function model", default="beckmann", update=refresh_preview)
-
-    microfacet_mdf = bpy.props.FloatProperty(name="Glossiness", description="Microfacet glossiness", default=0.5, min=0.0, max=1.0,
-                                             update=refresh_preview)
-
-    microfacet_mdf_multiplier = bpy.props.FloatProperty(
-        name="Glossiness Multiplier", description="Microfacet glossiness multiplier", default=1.0, min=0.0, max=1.0, update=refresh_preview)
-
-    microfacet_reflectance = bpy.props.FloatVectorProperty(
-        name="Microfacet Reflectance", description="Microfacet reflectance", default=(0.8, 0.8, 0.8), subtype="COLOR", min=0.0, max=1.0,
-        update=refresh_preview)
-
-    microfacet_multiplier = bpy.props.FloatProperty(name="Microfacet Reflectance Multiplier",
-                                                    description="Microfacet reflectance multiplier", default=1.0, min=0.0, max=1.0,
-                                                    update=refresh_preview)
-
-    microfacet_use_diff_tex = bpy.props.BoolProperty(name="", description="Use texture to influence reflectance", default=False,
-                                                     update=refresh_preview)
-
-    microfacet_diff_tex = bpy.props.StringProperty(
-        name="", description="Texture to influence reflectance", default="", update=refresh_preview)
-
-    microfacet_use_spec_tex = bpy.props.BoolProperty(
-        name="", description="Use texture to influence distribution function (glossiness)", default=False, update=refresh_preview)
-
-    microfacet_spec_tex = bpy.props.StringProperty(name="", description="Texture to influence distribution function (glossiness)", default="",
-                                                   update=refresh_preview)
-
-    microfacet_weight = bpy.props.FloatProperty(name="Microfacet Blending Weight",
-                                                description="Blending weight of Microfacet BRDF in BSDF mix", default=1.0, min=0.0, max=1.0,
-                                                update=refresh_preview)
-
-    microfacet_use_tex = bpy.props.BoolProperty(name="", description="Use texture to influence the layer weight in the BSDF mix", default=False,
-                                                update=refresh_preview)
-
-    microfacet_mix_tex = bpy.props.StringProperty(name="", description="Texture to influence layer weight in the BSDF mix", default="",
-                                                  update=refresh_preview)
 
     # ------------------------------
 
