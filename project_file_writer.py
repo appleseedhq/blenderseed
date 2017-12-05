@@ -55,11 +55,11 @@ def mul(color, multiplier):
     return [color[0] * multiplier, color[1] * multiplier, color[2] * multiplier]
 
 
-def object_enumerator(type):
+def object_enumerator(obj_type):
     matches = []
-    for object in bpy.data.objects:
-        if object.type == type:
-            matches.append((object.name, object.name, ""))
+    for obj in bpy.data.objects:
+        if obj.type == obj_type:
+            matches.append((obj.name, obj.name, ""))
     return matches
 
 
@@ -76,6 +76,9 @@ class Exporter(object):
         if scene is None:
             self.__error("No scene to export.")
             return
+
+        # Root path of the exported project.
+        self._root_path = os.path.dirname(util.realpath(file_path))
 
         # Transformation matrix applied to all entities of the scene.
         self._global_scale = 1
@@ -423,7 +426,7 @@ class Exporter(object):
         curves_name = "_".join([object.name, psys.name])
         curves_filename = curves_name + ".curves"
 
-        meshes_path = os.path.join(util.realpath(scene.appleseed.project_path), "meshes")
+        meshes_path = os.path.join(self._root_path, "meshes")
         export_curves = False
         if scene.appleseed.generate_mesh_files:
             curves_filepath = os.path.join(meshes_path, curves_filename)
@@ -464,7 +467,7 @@ class Exporter(object):
         object_name = object.name
 
         mesh_filename = object_name + ".obj"
-        meshes_path = os.path.join(util.realpath(scene.appleseed.project_path), "meshes")
+        meshes_path = os.path.join(self._root_path, "meshes")
         export_mesh = False
         if scene.appleseed.generate_mesh_files:
             mesh_filepath = os.path.join(meshes_path, mesh_filename)
@@ -547,7 +550,7 @@ class Exporter(object):
 
         self._def_mblur_obs[object_name] = mesh_filename
 
-        meshes_path = os.path.join(util.realpath(scene.appleseed.project_path), "meshes")
+        meshes_path = os.path.join(self._root_path, "meshes")
         export_mesh = False
         if scene.appleseed.generate_mesh_files:
             mesh_filepath = os.path.join(meshes_path, mesh_filename)
@@ -580,7 +583,7 @@ class Exporter(object):
 
         self._def_mblur_obs[curves_name] = curves_filename
 
-        meshes_path = os.path.join(util.realpath(scene.appleseed.project_path), "meshes")
+        meshes_path = os.path.join(self._root_path, "meshes")
         export_curves = False
         if scene.appleseed.generate_mesh_files:
             curves_filepath = os.path.join(meshes_path, curves_filename)
