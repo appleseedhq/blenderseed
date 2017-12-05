@@ -69,8 +69,7 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
         cls.env_tex_mult = bpy.props.FloatProperty(name="Radiance Multiplier",
                                                    description="",
                                                    default=1.0,
-                                                   min=0.0,
-                                                   max=2.0)
+                                                   min=0.0)
 
         cls.sun_theta = bpy.props.FloatProperty(name="Sun Theta Angle",
                                                 description='',
@@ -97,20 +96,17 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
         cls.luminance_multiplier = bpy.props.FloatProperty(name="Sky Luminance Multiplier",
                                                            description='',
                                                            default=1.0,
-                                                           min=0.0,
-                                                           max=20.0)
+                                                           min=0.0)
 
         cls.radiance_multiplier = bpy.props.FloatProperty(name="Sun Radiance Multiplier",
                                                           description='',
                                                           default=0.05,
-                                                          min=0.0,
-                                                          max=1.0)
+                                                          min=0.0)
 
         cls.saturation_multiplier = bpy.props.FloatProperty(name="Saturation Multiplier",
                                                             description='',
                                                             default=1.0,
-                                                            min=0.0,
-                                                            max=10.0)
+                                                            min=0.0)
 
         cls.turbidity = bpy.props.FloatProperty(name="Turbidity",
                                                 description='',
@@ -139,7 +135,6 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
         cls.env_radiance_multiplier = bpy.props.FloatProperty(name="Environment Energy Multiplier",
                                                               description="Multiply the exitance of the environment by this factor",
                                                               min=0.0,
-                                                              max=1000.0,
                                                               default=1.0,
                                                               subtype='FACTOR')
 

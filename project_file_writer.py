@@ -2053,7 +2053,8 @@ class Exporter(object):
         self.__open_element("frame name=\"beauty\"")
         self.__emit_parameter("camera", "camera" if camera is None else camera.name)
         self.__emit_parameter("resolution", "{0} {1}".format(width, height))
-        self.__emit_custom_prop(scene, "color_space", "srgb")
+        self.__emit_parameter("filter", scene.appleseed.pixel_filter)
+        self.__emit_parameter("filter_size", scene.appleseed.pixel_filter_size)
         if scene.render.use_border:
             X, Y, endX, endY = self.__get_border_limits(scene, width, height)
             self.__emit_parameter("crop_window", "{0} {1} {2} {3}".format(X, Y, endX, endY))
@@ -2154,9 +2155,9 @@ class Exporter(object):
             self.__emit_parameter("ibl_env_samples", scene.appleseed.ibl_env_samples)
             if scene.appleseed.use_separate_bounces:
                 self.__emit_parameter("max_diffuse_bounces", scene.appleseed.max_diffuse_bounces)
-                self.__emit_parameter("max_glossy_bounces", scene.appleseed.max_glossy_bounces) 
-                self.__emit_parameter("max_specular_bounces", scene.appleseed.max_specular_bounces) 
-                self.__emit_parameter("max_volume_bounces", scene.appleseed.max_volume_bounces)              
+                self.__emit_parameter("max_glossy_bounces", scene.appleseed.max_glossy_bounces)
+                self.__emit_parameter("max_specular_bounces", scene.appleseed.max_specular_bounces)
+                self.__emit_parameter("max_volume_bounces", scene.appleseed.max_volume_bounces)
             self.__emit_parameter("max_bounces", scene.appleseed.max_bounces)
             self.__emit_parameter("rr_min_path_length", scene.appleseed.rr_start)
             self.__emit_parameter("optimize_for_lights_outside_volumes", scene.appleseed.optimize_for_lights_outside_volumes)
