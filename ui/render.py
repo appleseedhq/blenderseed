@@ -49,12 +49,6 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         scene = context.scene
         asr_scene_props = scene.appleseed
 
-        split = layout.split()
-        col = split.column()
-        col.label("Project Folder:")
-        col = split.column()
-        col.prop(asr_scene_props, "project_path", text="")
-
         layout.separator()
         col = layout.column()
         col.prop(asr_scene_props, "threads_auto")
