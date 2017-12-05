@@ -168,10 +168,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
             return
         appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
 
-        # If running Linux/macOS, add the binary path to environment.
-        if sys.platform != "win32":
-            os.environ['LD_LIBRARY_PATH'] = as_bin_path
-
         # Compute render resolution.
         (width, height) = util.get_render_resolution(scene)
 
