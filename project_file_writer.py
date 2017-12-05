@@ -845,6 +845,34 @@ class Exporter(object):
                         else:
                             bsdfs.append([mirror_bsdf_name, layer.specular_weight])
 
+                    # Blinn BRDF
+                    elif layer.bsdf_type == "blinn_brdf":
+                        blinn_bsdf_name = "{0}|{1}".format(material_name, layer.name)
+                        self.__emit_blinn_brdf(material, blinn_bsdf_name, scene, layer)
+                        # Layer mask textures.
+                        if layer.blinn_use_tex and layer.blinn_mix_tex != '':
+                            bsdfs.append([blinn_bsdf_name, layer.blinn_mix_tex + "_inst"])
+                            mix_tex_name = layer.blinn_mix_tex + "_inst"
+                            if mix_tex_name not in self._textures_set:
+                                self.__emit_texture(bpy.data.textures[layer.blinn_mix_tex], False, scene)
+                                self._textures_set.add(mix_tex_name)
+                        else:
+                            bsdfs.append([blinn_bsdf_name, layer.blinn_weight])
+
+                    # Glass BRDF
+                    elif layer.bsdf_type == "glass_bsdf":
+                        glass_bsdf_name = "{0}|{1}".format(material_name, layer.name)
+                        self.__emit_glass_bsdf(material, glass_bsdf_name, scene, layer)
+                        # Layer mask textures.
+                        if layer.glass_use_tex and layer.glass_mix_tex != '':
+                            bsdfs.append([glass_bsdf_name, layer.glass_mix_tex + "_inst"])
+                            mix_tex_name = layer.glass_mix_tex + "_inst"
+                            if mix_tex_name not in self._textures_set:
+                                self.__emit_texture(bpy.data.textures[layer.glass_mix_tex], False, scene)
+                                self._textures_set.add(mix_tex_name)
+                        else:
+                            bsdfs.append([glass_bsdf_name, layer.glass_weight])
+
                     # Diffuse BTDF
                     elif layer.bsdf_type == "diffuse_btdf":
                         dt_bsdf_name = "{0}|{1}".format(material_name, layer.name)
@@ -1351,6 +1379,209 @@ class Exporter(object):
         self.__emit_parameter("shininess_u", shininess_u)
         self.__emit_parameter("shininess_v", shininess_v)
         self.__emit_parameter("fresnel_multiplier", fresnel)
+        self.__close_element("bsdf")
+
+    # ----------------------
+    # Write Blinn BRDF.
+    # ----------------------
+    def __emit_blinn_brdf(self, material, bsdf_name, scene, layer=None, node=None):
+        exponent_name = ""
+
+        # Nodes.
+        if node is not None:
+            inputs = node.inputs
+            reflectance_name = inputs["Reflectance"].get_socket_value(True)
+            multiplier = inputs["Multiplier"].get_socket_value(True)
+
+            # If the socket is not connected.
+            if not inputs["Reflectance"].is_linked:
+                specular_reflectance = reflectance_name
+                reflectance_name = "{0}_specular_reflectance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(reflectance_name,
+                                                           specular_reflectance,
+                                                           1)
+
+        else:
+
+            # check for texture in exponent slot
+            if layer.blinn_exponent_use_tex and layer.blinn_exponent_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.blinn_exponent_tex]):
+
+                    exponent_name = layer.blinn_exponent_tex + "_inst"
+                    if exponent_name not in self._textures_set:
+                        self._textures_set.add(exponent_name)
+                        self.__emit_texture(bpy.data.textures[layer.blinn_exponent_tex], False, scene)
+            if exponent_name == "":
+                exponent_name = "{0}_exponent".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(exponent_name,
+                                                           layer.blinn_exponent,
+                                                           1)
+
+        self.__open_element('bsdf name="{0}" model="blinn_brdf"'.format(bsdf_name))
+        self.__emit_parameter("exponent", exponent_name)
+        self.__emit_parameter("ior", layer.blinn_ior)
+        self.__close_element("bsdf")
+
+    # ----------------------
+    # Write Glass BRDF.
+    # ----------------------
+    def __emit_glass_bsdf(self, material, bsdf_name, scene, layer=None, node=None):
+        surface_transmittance = ""
+        surface_transmittance_multiplier = layer.glass_surface_transmittance_multiplier
+        reflection_tint = ""
+        refraction_tint = ""
+        roughness = layer.glass_roughness
+        anisotropy = layer.glass_anisotropy
+        volume_transmittance = ""
+        volume_transmittance_distance = layer.glass_volume_transmittance_distance
+        volume_absorption = ""
+        volume_density = layer.glass_volume_density
+
+
+        # Nodes.
+        if node is not None:
+            inputs = node.inputs
+            reflectance_name = inputs["Reflectance"].get_socket_value(True)
+            multiplier = inputs["Multiplier"].get_socket_value(True)
+
+            # If the socket is not connected.
+            if not inputs["Reflectance"].is_linked:
+                specular_reflectance = reflectance_name
+                reflectance_name = "{0}_specular_reflectance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(reflectance_name,
+                                                           specular_reflectance,
+                                                           1)
+
+        else:
+            
+            # check for texture in surface_transmittance_name slot
+            if layer.glass_surface_transmittance_use_tex and layer.glass_surface_transmittance_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_surface_transmittance_tex]):
+
+                    surface_transmittance = layer.glass_surface_transmittance_tex + "_inst"
+                    if surface_transmittance not in self._textures_set:
+                        self._textures_set.add(surface_transmittance)
+                        self.__emit_texture(bpy.data.textures[layer.glass_surface_transmittance_tex], False, scene)
+            if surface_transmittance == "":
+                surface_transmittance = "{0}_surface_transmittance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(surface_transmittance,
+                                                           layer.glass_surface_transmittance,
+                                                           1)
+
+            # check for texture in surface_transmittance_multiplier slot
+            if layer.glass_surface_transmittance_multiplier_use_tex and layer.glass_surface_transmittance_multiplier_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_surface_transmittance_multiplier_tex]):
+                    surface_transmittance_multiplier = layer.glass_surface_transmittance_multiplier_tex + "_inst"
+                    if surface_transmittance_multiplier not in self._textures_set:
+                        self._textures_set.add(surface_transmittance_multiplier)
+                        self.__emit_texture(bpy.data.textures[layer.glass_surface_transmittance_multiplier_tex], False, scene)
+
+            # check for texture in reflection_tint slot
+            if layer.glass_reflection_tint_use_tex and layer.glass_reflection_tint_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_reflection_tint_tex]):
+
+                    reflection_tint = layer.glass_reflection_tint_tex + "_inst"
+                    if reflection_tint not in self._textures_set:
+                        self._textures_set.add(reflection_tint)
+                        self.__emit_texture(bpy.data.textures[layer.glass_reflection_tint_tex], False, scene)
+            if reflection_tint == "":
+                reflection_tint = "{0}_eflection_tint".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(reflection_tint,
+                                                           layer.glass_reflection_tint,
+                                                           1)
+
+            # check for texture in refraction_tint slot
+            if layer.glass_refraction_tint_use_tex and layer.glass_refraction_tint_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_refraction_tint_tex]):
+
+                    refraction_tint = layer.glass_refraction_tint_tex + "_inst"
+                    if refraction_tint not in self._textures_set:
+                        self._textures_set.add(refraction_tint)
+                        self.__emit_texture(bpy.data.textures[layer.glass_refraction_tint_tex], False, scene)
+            if refraction_tint == "":
+                refraction_tint = "{0}_refraction_tint".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(refraction_tint,
+                                                           layer.glass_refraction_tint,
+                                                           1)
+
+            # check for texture in roughness slot
+            if layer.glass_roughness_use_tex and layer.glass_roughness_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_roughness_tex]):
+                    roughness = layer.glass_roughness_tex + "_inst"
+                    if roughness not in self._textures_set:
+                        self._textures_set.add(roughness)
+                        self.__emit_texture(bpy.data.textures[layer.glass_roughness_tex], False, scene)
+
+            # check for texture in anisotropy slot
+            if layer.glass_anisotropy_use_tex and layer.glass_anisotropy_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_anisotropy_tex]):
+
+                    anisotropy = layer.glass_anisotropy_tex + "_inst"
+                    if anisotropy not in self._textures_set:
+                        self._textures_set.add(anisotropy)
+                        self.__emit_texture(bpy.data.textures[layer.glass_anisotropy_tex], False, scene)
+            
+            # check for texture in volume_transmittance slot
+            if layer.glass_volume_transmittance_use_tex and layer.glass_volume_transmittance_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_volume_transmittance_tex]):
+
+                    volume_transmittance = layer.glass_volume_transmittance_tex + "_inst"
+                    if volume_transmittance not in self._textures_set:
+                        self._textures_set.add(volume_transmittance)
+                        self.__emit_texture(bpy.data.textures[layer.glass_volume_transmittance_tex], False, scene)
+            if volume_transmittance == "":
+                volume_transmittance = "{0}_volume_transmittance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(volume_transmittance,
+                                                           layer.glass_volume_transmittance,
+                                                           1)
+
+            # check for texture in volume_transmittance_distance slot
+            if layer.glass_volume_transmittance_distance_use_tex and layer.glass_volume_transmittance_distance_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_volume_transmittance_distance_tex]):
+                    volume_transmittance_distance = layer.glass_volume_transmittance_distance_tex + "_inst"
+                    if volume_transmittance_distance not in self._textures_set:
+                        self._textures_set.add(volume_transmittance_distance)
+                        self.__emit_texture(bpy.data.textures[layer.glass_volume_transmittance_distance_tex], False, scene)
+            
+            # check for texture in volume_absorption slot
+            if layer.glass_volume_absorption_use_tex and layer.glass_volume_absorption_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_volume_absorption_tex]):
+                    volume_absorption = layer.glass_volume_absorption_tex + "_inst"
+                    if volume_absorption not in self._textures_set:
+                        self._textures_set.add(volume_absorption)
+                        self.__emit_texture(bpy.data.textures[layer.glass_volume_absorption_tex], False, scene)
+            if volume_absorption == "":
+                volume_absorption = "{0}_volume_absorption".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(volume_absorption,
+                                                           layer.glass_volume_absorption,
+                                                           1)
+
+            # check for texture in volume_density slot
+            if layer.glass_volume_density_use_tex and layer.glass_volume_density_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.glass_volume_density_tex]):
+                    volume_density = layer.glass_volume_density_tex + "_inst"
+                    if volume_density not in self._textures_set:
+                        self._textures_set.add(volume_density)
+                        self.__emit_texture(bpy.data.textures[layer.glass_volume_density_tex], False, scene)
+
+        self.__open_element('bsdf name="{0}" model="glass_bsdf"'.format(bsdf_name))
+        self.__emit_parameter("mdf", layer.glass_mdf)
+        self.__emit_parameter("surface_transmittance", surface_transmittance)
+        self.__emit_parameter("surface_transmittance_multiplier", surface_transmittance_multiplier)
+        self.__emit_parameter("reflection_tint", reflection_tint)
+        self.__emit_parameter("refraction_tint", refraction_tint)
+        self.__emit_parameter("ior", layer.glass_ior)
+        self.__emit_parameter("roughness", roughness)
+        self.__emit_parameter("highlight_falloff", layer.glass_highlight_falloff)
+        self.__emit_parameter("anisotropy", anisotropy)
+        self.__emit_parameter("volume_parameterization", layer.glass_volume_parameterization)
+        if layer.glass_volume_parameterization == 'transmittance':
+            self.__emit_parameter("volume_transmittance", volume_transmittance)
+            self.__emit_parameter("volume_transmittance_distance", volume_transmittance_distance)
+        else:
+            self.__emit_parameter("volume_absorption", volume_absorption)
+            self.__emit_parameter("volume_density", volume_density)
+        self.__emit_parameter("volume_scale", layer.glass_volume_scale)
         self.__close_element("bsdf")
 
     # ----------------------
