@@ -876,6 +876,20 @@ class Exporter(object):
                         else:
                             bsdfs.append([glass_bsdf_name, layer.glass_weight])
 
+                    # Metal BRDF
+                    elif layer.bsdf_type == "metal_brdf":
+                        metal_bsdf_name = "{0}|{1}".format(material_name, layer.name)
+                        self.__emit_metal_brdf(material, metal_bsdf_name, scene, layer)
+                        # Layer mask textures.
+                        if layer.metal_use_tex and layer.metal_mix_tex != '':
+                            bsdfs.append([metal_bsdf_name, layer.metal_mix_tex + "_inst"])
+                            mix_tex_name = layer.metal_mix_tex + "_inst"
+                            if mix_tex_name not in self._textures_set:
+                                self.__emit_texture(bpy.data.textures[layer.metal_mix_tex], False, scene)
+                                self._textures_set.add(mix_tex_name)
+                        else:
+                            bsdfs.append([metal_bsdf_name, layer.metal_weight])
+
                     # Diffuse BTDF
                     elif layer.bsdf_type == "diffuse_btdf":
                         dt_bsdf_name = "{0}|{1}".format(material_name, layer.name)
@@ -1585,6 +1599,78 @@ class Exporter(object):
             self.__emit_parameter("volume_absorption", volume_absorption)
             self.__emit_parameter("volume_density", volume_density)
         self.__emit_parameter("volume_scale", layer.glass_volume_scale)
+        self.__close_element("bsdf")
+
+    # ----------------------
+    # Write Metal BRDF
+    # ----------------------
+    def __emit_metal_brdf(self, material, bsdf_name, scene, layer=None, node=None):
+        normal_reflectance = ""
+        edge_tint = ""
+        reflectance_multiplier = layer.metal_reflectance_multiplier
+        roughness = layer.metal_roughness
+        anisotropy = layer.metal_anisotropy
+
+        # check for texture in normal_reflectance_name slot
+        if layer.metal_normal_reflectance_use_tex and layer.metal_normal_reflectance_tex != "":
+            if util.is_uv_img(bpy.data.textures[layer.metal_normal_reflectance_tex]):
+
+                normal_reflectance = layer.metal_normal_reflectance_tex + "_inst"
+                if normal_reflectance not in self._textures_set:
+                    self._textures_set.add(normal_reflectance)
+                    self.__emit_texture(bpy.data.textures[layer.metal_normal_reflectance_tex], False, scene)
+        if normal_reflectance == "":
+            normal_reflectance = "{0}_normal_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(normal_reflectance,
+                                                       layer.metal_normal_reflectance,
+                                                       1)
+
+        # check for texture in edge_tint_name slot
+        if layer.metal_edge_tint_use_tex and layer.metal_edge_tint_tex != "":
+            if util.is_uv_img(bpy.data.textures[layer.metal_edge_tint_tex]):
+
+                edge_tint = layer.metal_edge_tint_tex + "_inst"
+                if edge_tint not in self._textures_set:
+                    self._textures_set.add(edge_tint)
+                    self.__emit_texture(bpy.data.textures[layer.metal_edge_tint_tex], False, scene)
+        if edge_tint == "":
+            edge_tint = "{0}_edge_tint".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(edge_tint,
+                                                       layer.metal_edge_tint,
+                                                       1)
+
+        # check for texture in reflectance_multiplier_multiplier slot
+        if layer.metal_reflectance_multiplier_use_tex and layer.metal_reflectance_multiplier_tex != "":
+            if util.is_uv_img(bpy.data.textures[layer.metal_reflectance_multiplier_tex]):
+                reflectance_multiplier = layer.metal_reflectance_multiplier_tex + "_inst"
+                if reflectance_multiplier not in self._textures_set:
+                    self._textures_set.add(reflectance_multiplier)
+                    self.__emit_texture(bpy.data.textures[layer.metal_reflectance_multiplier_tex], False, scene)
+
+        # check for texture in roughness slot
+        if layer.metal_roughness_use_tex and layer.metal_roughness_tex != "":
+            if util.is_uv_img(bpy.data.textures[layer.metal_roughness_tex]):
+                roughness = layer.metal_roughness_tex + "_inst"
+                if roughness not in self._textures_set:
+                    self._textures_set.add(roughness)
+                    self.__emit_texture(bpy.data.textures[layer.metal_roughness_tex], False, scene)
+
+        # check for texture in anisotropy slot
+        if layer.metal_anisotropy_use_tex and layer.metal_anisotropy_tex != "":
+            if util.is_uv_img(bpy.data.textures[layer.metal_anisotropy_tex]):
+                anisotropy = layer.metal_anisotropy_tex + "_inst"
+                if anisotropy not in self._textures_set:
+                    self._textures_set.add(anisotropy)
+                    self.__emit_texture(bpy.data.textures[layer.metal_anisotropy_tex], False, scene)
+
+        self.__open_element('bsdf name="{0}" model="metal_brdf"'.format(bsdf_name))
+        self.__emit_parameter("mdf", layer.metal_mdf)
+        self.__emit_parameter("normal_reflectance", normal_reflectance)
+        self.__emit_parameter("edge_tint", edge_tint)
+        self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
+        self.__emit_parameter("highlight_falloff", layer.metal_highlight_falloff)
+        self.__emit_parameter("roughness", roughness)
+        self.__emit_parameter("anisotropy", anisotropy)
         self.__close_element("bsdf")
 
     # ----------------------
@@ -2341,7 +2427,8 @@ class Exporter(object):
         # Interactive: always use drt
         lighting_engine = 'drt' if type == "interactive" else scene.appleseed.lighting_engine
 
-        self.__emit_parameter("rendering_threads", scene.appleseed.threads)
+        if not scene.appleseed.threads_auto:
+            self.__emit_parameter("rendering_threads", scene.appleseed.threads)
 
         self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
         self.__emit_parameter("lighting_engine", lighting_engine)
@@ -2379,7 +2466,7 @@ class Exporter(object):
             self.__emit_parameter("enable_dl", "true" if scene.appleseed.direct_lighting else "false")
             self.__emit_parameter("enable_caustics", "true" if scene.appleseed.caustics_enable else "false")
             self.__emit_parameter("next_event_estimation", "true" if scene.appleseed.next_event_est else "false")
-            if scene.appleseed.max_ray_intensity > 0.0:
+            if not scene.appleseed.max_ray_intensity_unlimited:
                 self.__emit_parameter("max_ray_intensity", scene.appleseed.max_ray_intensity)
 
         if scene.appleseed.lighting_engine == 'pt' or scene.appleseed.lighting_engine == 'drt':
