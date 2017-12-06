@@ -64,25 +64,28 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('metal_brdf', "Metal BRDF", ""),
                                               ('orennayar_brdf',
                                                "Oren-Nayar BRDF", ""),
-                                              ('plastic_brdf', "Plastic BRDF", ""),
-                                              ('sheen_brdf', "Sheen BRDF", ""),
+                                              #('plastic_brdf', "Plastic BRDF", ""),
+                                              #('sheen_brdf', "Sheen BRDF", ""),
                                               ('specular_btdf',
                                                "Specular BTDF", ""),
                                               ('specular_brdf',
-                                               "Specular BRDF", ""),
-                                              ('better_dipole_bssrdf',
-                                               "Better Dipole BSSRDF", ""),
-                                              ('directional_dipole_bssrdf',
-                                               "Directional Dipole BSSRDF", ""),
-                                              ('gaussian_bssrdf',
-                                               "Gaussian BSSRDF", ""),
-                                              ('normalized_diffusion_bssrdf',
-                                               "Normalized Diffusion BSSRDF", ""),
-                                              ('standard_dipole_bssrdf', "Standard Dipole BSSRDF", "")],
+                                               "Specular BRDF", "")
+                                              # ('better_dipole_bssrdf',
+                                              #  "Better Dipole BSSRDF", ""),
+                                              # ('directional_dipole_bssrdf',
+                                              #  "Directional Dipole BSSRDF", ""),
+                                              # ('gaussian_bssrdf',
+                                              #  "Gaussian BSSRDF", ""),
+                                              # ('normalized_diffusion_bssrdf',
+                                              #  "Normalized Diffusion BSSRDF", ""),
+                                              # ('standard_dipole_bssrdf', "Standard Dipole BSSRDF", "")
+                                              ],
                                        name="BSDF Model",
                                        description="BSDF model for current material layer",
                                        default="lambertian_brdf",
                                        update=refresh_preview)
+
+    # -----------------------
 
     transmittance_multiplier = bpy.props.FloatProperty(
         name="Transmittance multiplier", description="Multiplier for material transmittance", default=1.0, min=0.0, max=2.0, update=refresh_preview)
@@ -448,10 +451,124 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                            update=refresh_preview)
 
     glass_use_tex = bpy.props.BoolProperty(name="", description="Use texture to influence the layer weight in the BSDF mix", default=False,
-                                                update=refresh_preview)
+                                           update=refresh_preview)
 
     glass_mix_tex = bpy.props.StringProperty(name="", description="Texture to influence layer weight in the BSDF mix", default="",
-                                                  update=refresh_preview)
+                                             update=refresh_preview)
+
+    # --------------------------------
+
+    metal_mdf = bpy.props.EnumProperty(name="Microfacet Distribution Function",
+                                       description="",
+                                       items=[('beckmann', "Beckmann", ""),
+                                              ('ggx', "GGX", ""),
+                                              ('std', "STD", "")],
+                                       default='ggx',
+                                       update=refresh_preview)
+
+    metal_normal_reflectance = bpy.props.FloatVectorProperty(name="Normal Reflectance",
+                                                             description="Reflectance facing the camera", subtype='COLOR',
+                                                             min=0.0,
+                                                             max=1.0,
+                                                             default=(
+                                                                 0.92, 0.92, 0.92),
+                                                             update=refresh_preview)
+
+    metal_normal_reflectance_use_tex = bpy.props.BoolProperty(name="",
+                                                              description="Use a texture to influence the normal reflectance",
+                                                              default=False,
+                                                              update=refresh_preview)
+
+    metal_normal_reflectance_tex = bpy.props.StringProperty(name="",
+                                                            description="Normal reflectance texture",
+                                                            default="",
+                                                            update=refresh_preview)
+
+    metal_edge_tint = bpy.props.FloatVectorProperty(name="Edge Tint",
+                                                    description="Tint at glancing angle", subtype='COLOR',
+                                                    min=0.0,
+                                                    max=1.0,
+                                                    default=(0.98, 0.98, 0.98),
+                                                    update=refresh_preview)
+
+    metal_edge_tint_use_tex = bpy.props.BoolProperty(name="",
+                                                     description="Use a texture to influence the edge tint",
+                                                     default=False,
+                                                     update=refresh_preview)
+
+    metal_edge_tint_tex = bpy.props.StringProperty(name="",
+                                                   description="Edge tint texture",
+                                                   default="",
+                                                   update=refresh_preview)
+
+    metal_reflectance_multiplier = bpy.props.FloatProperty(name="Reflectance Multiplier",
+                                                           description="",
+                                                           min=0.0,
+                                                           max=1.0,
+                                                           default=1.0,
+                                                           update=refresh_preview)
+
+    metal_reflectance_multiplier_use_tex = bpy.props.BoolProperty(name="",
+                                                                  description="Use a texture to influence the reflectance multiplier",
+                                                                  default=False,
+                                                                  update=refresh_preview)
+
+    metal_reflectance_multiplier_tex = bpy.props.StringProperty(name="",
+                                                                description="Reflectance multiplier texture",
+                                                                default="",
+                                                                update=refresh_preview)
+
+    metal_roughness = bpy.props.FloatProperty(name="Roughness",
+                                              description="Roughness",
+                                              min=0.0,
+                                              max=1.0,
+                                              default=0.15,
+                                              update=refresh_preview)
+
+    metal_roughness_use_tex = bpy.props.BoolProperty(name="",
+                                                     description="Use a texture to influence the roughness",
+                                                     default=False,
+                                                     update=refresh_preview)
+
+    metal_roughness_tex = bpy.props.StringProperty(name="",
+                                                   description="Roughness texture",
+                                                   default="",
+                                                   update=refresh_preview)
+
+    metal_highlight_falloff = bpy.props.FloatProperty(name="Highlight Falloff",
+                                                      description="",
+                                                      default=0.4,
+                                                      min=0.0,
+                                                      max=1.0,
+                                                      update=refresh_preview)
+
+    metal_anisotropy = bpy.props.FloatProperty(name="Anisotropy",
+                                               description="",
+                                               default=0.0,
+                                               min=-1.0,
+                                               max=1.0,
+                                               update=refresh_preview)
+
+    metal_anisotropy_use_tex = bpy.props.BoolProperty(name="",
+                                                      description="Use a texture to influence the anisotropy",
+                                                      default=False,
+                                                      update=refresh_preview)
+
+    metal_anisotropy_tex = bpy.props.StringProperty(name="",
+                                                    description="Anisotropy texture",
+                                                    default="",
+                                                    update=refresh_preview)
+
+    metal_weight = bpy.props.FloatProperty(name="Glass Blending Weight",
+                                           description="Blending weight of Metal BRDF in mix", default=1.0, min=0.0, max=1.0,
+                                           update=refresh_preview)
+
+    metal_use_tex = bpy.props.BoolProperty(name="",
+                                           description="Use texture to influence the layer weight in the BSDF mix", default=False,
+                                           update=refresh_preview)
+
+    metal_mix_tex = bpy.props.StringProperty(name="", description="Texture to influence layer weight in the BSDF mix", default="",
+                                             update=refresh_preview)
 
     # --------------------------------
 

@@ -75,8 +75,8 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                  default='render')
 
         cls.threads_auto = bpy.props.BoolProperty(name="Auto Threads",
-                                                description="Automatically determine the number of rendering threads",
-                                                default=True)
+                                                  description="Automatically determine the number of rendering threads",
+                                                  default=True)
 
         cls.threads = bpy.props.IntProperty(name="Rendering Threads",
                                             description="Number of threads to use for rendering",
@@ -109,12 +109,18 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         cls.pixel_filter = bpy.props.EnumProperty(name="Pixel Filter",
                                                   description="Pixel filter to use",
                                                   items=[("box", "Box", "Box"),
-                                                         ("triangle", "Triangle", "Triangle"),
-                                                         ("gaussian", "Gaussian", "Gaussian"),
-                                                         ("mitchell", "Mitchell-Netravali", "Mitchell-Netravali"),
-                                                         ("bspline", "Cubic B-spline", "Cubic B-spline"),
-                                                         ("catmull", "Catmull-Rom Spline", "Catmull-Rom Spline"),
-                                                         ("lanczos", "Lanczos", "Lanczos"),
+                                                         ("triangle", "Triangle",
+                                                          "Triangle"),
+                                                         ("gaussian", "Gaussian",
+                                                          "Gaussian"),
+                                                         ("mitchell", "Mitchell-Netravali",
+                                                          "Mitchell-Netravali"),
+                                                         ("bspline", "Cubic B-spline",
+                                                          "Cubic B-spline"),
+                                                         ("catmull", "Catmull-Rom Spline",
+                                                          "Catmull-Rom Spline"),
+                                                         ("lanczos", "Lanczos",
+                                                          "Lanczos"),
                                                          ("blackman-harris", "Blackman-Harris", "Blackman-Harris")],
                                                   default="blackman-harris")
 
@@ -163,9 +169,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         cls.tile_ordering = bpy.props.EnumProperty(name="Tile Ordering",
                                                    description="Tile ordering",
                                                    items=[
-                                                       ('linear', "Linear", "Linear"),
-                                                       ('spiral', "Spiral", "Spiral"),
-                                                       ('hilbert', "Hilbert", "Hilbert"),
+                                                       ('linear', "Linear",
+                                                        "Linear"),
+                                                       ('spiral', "Spiral",
+                                                        "Spiral"),
+                                                       ('hilbert', "Hilbert",
+                                                        "Hilbert"),
                                                        ('random', "Random", "Random")],
                                                    default='spiral')
 
@@ -206,57 +215,57 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                     description="Explicitly connect path vertices to light sources to improve efficiency",
                                                     default=True)
 
-        cls.max_bounces_unlimited = bpy.props.BoolProperty(name="",
-                                                        description="No limit to number of ray bounces",
-                                                        default=True)
+        cls.max_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+                                                           description="No limit to number of ray bounces",
+                                                           default=True)
 
-        cls.max_bounces = bpy.props.IntProperty(name="",
-                                                description="Maximum number of ray bounces (-1 = unlimited)",
+        cls.max_bounces = bpy.props.IntProperty(name="Global",
+                                                description="Maximum number of ray bounces",
                                                 default=8,
                                                 min=0)
 
-        cls.use_separate_bounces = bpy.props.BoolProperty(name="Use Individual Bounce Limits",
-                                                          description="Use individual limits for different ray types",
-                                                          default=False)
+        cls.max_diffuse_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+                                                                   description="No limit to number of diffuse ray bounces",
+                                                                   default=True)
 
-        cls.max_diffuse_bounces_unlimited = bpy.props.BoolProperty(name="",
-                                                        description="No limit to number of diffuse ray bounces",
-                                                        default=True)
-
-        cls.max_diffuse_bounces = bpy.props.IntProperty(name="",
-                                                        description="Maximum total number of diffuse bounces: -1 = Unlimited",
+        cls.max_diffuse_bounces = bpy.props.IntProperty(name="Diffuse",
+                                                        description="Maximum total number of diffuse bounces",
                                                         default=8,
                                                         min=0)
 
-        cls.max_glossy_bounces_unlimited = bpy.props.BoolProperty(name="",
-                                                        description="No limit to number of glossy ray bounces",
-                                                        default=True)
+        cls.max_glossy_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+                                                                  description="No limit to number of glossy ray bounces",
+                                                                  default=True)
 
-        cls.max_glossy_bounces = bpy.props.IntProperty(name="",
-                                                       description="Maximum total number of glossy bounces: -1 = Unlimited",
+        cls.max_glossy_bounces = bpy.props.IntProperty(name="Glossy",
+                                                       description="Maximum total number of glossy bounces",
                                                        default=8,
                                                        min=0)
 
-        cls.max_specular_bounces_unlimited = bpy.props.BoolProperty(name="",
-                                                        description="No limit to number of specular ray bounces",
-                                                        default=True)
+        cls.max_specular_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+                                                                    description="No limit to number of specular ray bounces",
+                                                                    default=True)
 
-        cls.max_specular_bounces = bpy.props.IntProperty(name="",
-                                                         description="Maximum total number of specular bounces: -1 = Unlimited",
+        cls.max_specular_bounces = bpy.props.IntProperty(name="Specular",
+                                                         description="Maximum total number of specular bounces",
                                                          default=8,
                                                          min=0)
 
-        cls.max_volume_bounces_unlimited = bpy.props.BoolProperty(name="",
-                                                        description="No limit to number of volume ray bounces",
-                                                        default=True)
+        cls.max_volume_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+                                                                  description="No limit to number of volume ray bounces",
+                                                                  default=True)
 
-        cls.max_volume_bounces = bpy.props.IntProperty(name="",
-                                                       description="Maximum total number of volume bounces: -1 = Unlimited",
+        cls.max_volume_bounces = bpy.props.IntProperty(name="Volume",
+                                                       description="Maximum total number of volume bounces",
                                                        default=8,
                                                        min=-0)
 
+        cls.max_ray_intensity_unlimited = bpy.props.BoolProperty(name="Unlimited",
+                                                                 description="Unlimited ray intensity",
+                                                                 default=False)
+
         cls.max_ray_intensity = bpy.props.FloatProperty(name="Max Ray Intensity",
-                                                        description="Clamp intensity of rays (after the first bounce) to this value to reduce fireflies (0 = unlimited)",
+                                                        description="Clamp intensity of rays (after the first bounce) to this value to reduce fireflies",
                                                         default=0,
                                                         min=0)
 

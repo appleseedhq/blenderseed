@@ -193,7 +193,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "glass_use_tex", icon="TEXTURE_SHADED", toggle=True)
                     if current_layer.glass_mix_tex != '' and current_layer.glass_use_tex:
-                        mix_tex = bpy.data.textures[current_layer.blinn_mix_tex]
+                        mix_tex = bpy.data.textures[current_layer.glass_mix_tex]
                         layout.prop(mix_tex.image.colorspace_settings, "name", text="Color Space")
 
                     # mdf
@@ -357,6 +357,101 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     # scale
                     col = layout.column()
                     col.prop(current_layer, "glass_volume_scale")
+
+                #------------------------------------------------
+
+                # metal bsdf layout
+                if current_layer.bsdf_type == "metal_brdf":
+
+                    # layer weight
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "metal_weight", text="Layer Weight")
+                    if current_layer.metal_use_tex:
+                        layout.prop_search(current_layer, "metal_mix_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "metal_use_tex", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.metal_mix_tex != '' and current_layer.metal_use_tex:
+                        mix_tex = bpy.data.textures[current_layer.metal_mix_tex]
+                        layout.prop(mix_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # mdf
+                    col = layout.column()
+                    col.prop(current_layer, "metal_mdf")
+
+                    # normal reflectance
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "metal_normal_reflectance")
+
+                    if current_layer.metal_normal_reflectance_use_tex:
+                        layout.prop_search(current_layer, "metal_normal_reflectance_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "metal_normal_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.metal_normal_reflectance_tex != '' and current_layer.metal_normal_reflectance_use_tex:
+                        diffuse_tex = bpy.data.textures[current_layer.metal_normal_reflectance_tex]
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # edge tint
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "metal_edge_tint")
+
+                    if current_layer.metal_edge_tint_use_tex:
+                        layout.prop_search(current_layer, "metal_edge_tint_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "metal_edge_tint_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.metal_edge_tint_tex != '' and current_layer.metal_edge_tint_use_tex:
+                        diffuse_tex = bpy.data.textures[current_layer.metal_edge_tint_tex]
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # reflectance multiplier
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "metal_reflectance_multiplier")
+
+                    if current_layer.metal_reflectance_multiplier_use_tex:
+                        layout.prop_search(current_layer, "metal_reflectance_multiplier_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "metal_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.metal_reflectance_multiplier_tex != '' and current_layer.metal_reflectance_multiplier_use_tex:
+                        diffuse_tex = bpy.data.textures[current_layer.metal_reflectance_multiplier_tex]
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # roughness
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "metal_roughness")
+
+                    if current_layer.metal_roughness_use_tex:
+                        layout.prop_search(current_layer, "metal_roughness_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "metal_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.metal_roughness_tex != '' and current_layer.metal_roughness_use_tex:
+                        diffuse_tex = bpy.data.textures[current_layer.metal_roughness_tex]
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    col = layout.column()
+                    col.prop(current_layer, "highlight_falloff")
+
+                    # anisotropy
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "metal_anisotropy")
+
+                    if current_layer.metal_anisotropy_use_tex:
+                        layout.prop_search(current_layer, "metal_anisotropy_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "metal_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.metal_anisotropy_tex != '' and current_layer.metal_anisotropy_use_tex:
+                        diffuse_tex = bpy.data.textures[current_layer.metal_anisotropy_tex]
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
                 #-------------------------------------------------
 

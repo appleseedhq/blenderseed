@@ -50,9 +50,11 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         asr_scene_props = scene.appleseed
 
         layout.separator()
-        col = layout.column()
+        split = layout.split()
+        col = split.column()
         col.prop(asr_scene_props, "threads_auto")
-        col = layout.column()
+        split = split.split()
+        col = split.column()
         col.enabled = not asr_scene_props.threads_auto
         col.prop(asr_scene_props, "threads")
 
@@ -130,69 +132,56 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
             layout.separator()
 
-            split = layout.split(percentage=0.2)
+            layout.label("Bounces")
+
+            split = layout.split()
             col = split.column()
-            col.label("Bounces")
-            split = split.split(percentage=0.33)
-            col = split.column()
-            col.label("Limit")
-            split = split.split(percentage=0.47)
-            col = split.column()
-            col.label("Unlimited")
-            split = layout.split(percentage=0.2)
-            col = split.column()
-            col.label("Global")
-            split = split.split(percentage=0.33)
+            col.prop(asr_scene_props, "max_bounces_unlimited")
+            split = split.split()
             col = split.column()
             col.enabled = not asr_scene_props.max_bounces_unlimited
             col.prop(asr_scene_props, "max_bounces")
-            split = split.split(percentage=0.47)
+            
+            split = layout.split()
             col = split.column()
-            col.prop(asr_scene_props, "max_bounces_unlimited", text="")
-            split = layout.split(percentage=0.2)
-            col = split.column()
-            col.label("Diffuse")
-            split = split.split(percentage=0.33)
+            col.prop(asr_scene_props, "max_diffuse_bounces_unlimited")
+            split = split.split()
             col = split.column()
             col.enabled = not asr_scene_props.max_diffuse_bounces_unlimited
             col.prop(asr_scene_props, "max_diffuse_bounces")
-            split = split.split(percentage=0.47)
+            
+            split = layout.split()
             col = split.column()
-            col.prop(asr_scene_props, "max_diffuse_bounces_unlimited", text="")
-            split = layout.split(percentage=0.2)
-            col = split.column()
-            col.label("Glossy")
-            split = split.split(percentage=0.33)
+            col.prop(asr_scene_props, "max_glossy_bounces_unlimited")
+            split = split.split()
             col = split.column()
             col.enabled = not asr_scene_props.max_glossy_bounces_unlimited
             col.prop(asr_scene_props, "max_glossy_bounces")
-            split = split.split(percentage=0.47)
+            
+            split = layout.split()
             col = split.column()
-            col.prop(asr_scene_props, "max_glossy_bounces_unlimited", text="")
-            split = layout.split(percentage=0.2)
-            col = split.column()
-            col.label("Specular")
-            split = split.split(percentage=0.33)
+            col.prop(asr_scene_props, "max_specular_bounces_unlimited")
+            split = split.split()
             col = split.column()
             col.enabled = not asr_scene_props.max_specular_bounces_unlimited
             col.prop(asr_scene_props, "max_specular_bounces")
-            split = split.split(percentage=0.47)
+            
+            split = layout.split()
             col = split.column()
-            col.prop(asr_scene_props, "max_specular_bounces_unlimited", text="")
-            split = layout.split(percentage=0.2)
-            col = split.column()
-            col.label("Volume")
-            split = split.split(percentage=0.33)
+            col.prop(asr_scene_props, "max_volume_bounces_unlimited")
+            split = split.split()
             col = split.column()
             col.enabled = not asr_scene_props.max_volume_bounces_unlimited
             col.prop(asr_scene_props, "max_volume_bounces")
-            split = split.split(percentage=0.47)
+
+            split = layout.split()
             col = split.column()
-            col.prop(asr_scene_props, "max_volume_bounces_unlimited", text="")
-
-
+            col.prop(asr_scene_props, "max_ray_intensity_unlimited")
+            split = split.split()
+            col = split.column()
+            col.enabled = not asr_scene_props.max_ray_intensity_unlimited
+            col.prop(asr_scene_props, "max_ray_intensity")
             layout.separator()
-            layout.prop(asr_scene_props, "max_ray_intensity")
             layout.prop(asr_scene_props, "rr_start")
             layout.prop(asr_scene_props, "optimize_for_lights_outside_volumes")
             layout.prop(asr_scene_props, "volume_distance_samples")
