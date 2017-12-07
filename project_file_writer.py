@@ -2120,7 +2120,6 @@ class Exporter(object):
         self.__emit_parameter("bump_amplitude", material_bump_amplitude)
         self.__emit_parameter("displacement_method", method)
         self.__emit_parameter("normal_map_up", "z")
-        self.__emit_parameter("shade_alpha_cutouts", "false")
         self.__emit_parameter("surface_shader", surface_shader_name)
         self.__close_element("material")
 

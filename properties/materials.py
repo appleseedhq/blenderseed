@@ -993,9 +993,6 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
     material_alpha = bpy.props.FloatProperty(
         name="Alpha", description="Alpha", default=1.0, min=0.0, max=1.0, update=refresh_preview)
 
-    shade_alpha_cutouts = bpy.props.BoolProperty(
-        name="Shade Alpha Cutout", description="Shade alpha cutout", default=False, update=refresh_preview)
-
     preview_quality = bpy.props.IntProperty(
         name="Preview Quality", description="Number of samples used for preview rendering", default=2, min=1, max=16, update=refresh_preview)
 
