@@ -57,14 +57,13 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('diffuse_btdf', "Diffuse BTDF", ""),
                                               ('disney_brdf', "Disney BRDF", ""),
                                               ('glass_bsdf', "Glass BSDF", ""),
-                                              ('glossy_brdf', "Glossy BRDF", ""),
                                               ('kelemen_brdf', "Kelemen BRDF", ""),
                                               ('lambertian_brdf',
                                                "Lambertian BRDF", ""),
                                               ('metal_brdf', "Metal BRDF", ""),
                                               ('orennayar_brdf',
                                                "Oren-Nayar BRDF", ""),
-                                              #('plastic_brdf', "Plastic BRDF", ""),
+                                              ('plastic_brdf', "Plastic BRDF", ""),
                                               #('sheen_brdf', "Sheen BRDF", ""),
                                               ('specular_btdf',
                                                "Specular BTDF", ""),
@@ -210,8 +209,8 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
 
     # --------------------------------
 
-    blinn_exponent = bpy.props.FloatVectorProperty(
-        name="Blinn Exponent", description="Blinn exponent", default=(0.8, 0.8, 0.8), subtype="COLOR", min=0.0,
+    blinn_exponent = bpy.props.FloatProperty(
+        name="Exponent", description="Blinn exponent", default=0.8, min=0.0,
         update=refresh_preview)
 
     blinn_exponent_use_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence exponent color", default=False,
@@ -572,6 +571,136 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
 
     # --------------------------------
 
+    plastic_mdf = bpy.props.EnumProperty(name="Microfacet Distribution Function",
+                                         description="",
+                                         items=[('beckmann', "Beckmann", ""),
+                                                ('ggx', "GGX", ""),
+                                                ('std', "STD", ""),
+                                                ('gtr1', "GTR1", "")],
+                                         default='ggx',
+                                         update=refresh_preview)
+
+    plastic_specular_reflectance = bpy.props.FloatVectorProperty(name="Specular Reflectance",
+                                                                 description="Specular reflection", subtype='COLOR',
+                                                                 min=0.0,
+                                                                 max=1.0,
+                                                                 default=(
+                                                                     1.0, 1.0, 1.0),
+                                                                 update=refresh_preview)
+
+    plastic_specular_reflectance_use_tex = bpy.props.BoolProperty(name="",
+                                                                  description="Use a texture to influence the specular reflectance",
+                                                                  default=False,
+                                                                  update=refresh_preview)
+
+    plastic_specular_reflectance_tex = bpy.props.StringProperty(name="",
+                                                                description="Specular reflectance texture",
+                                                                default="",
+                                                                update=refresh_preview)
+
+    plastic_specular_reflectance_multiplier = bpy.props.FloatProperty(name="Specular Reflectance Multiplier",
+                                                                      description="Specular reflection multiplier",
+                                                                      min=0.0,
+                                                                      max=1.0,
+                                                                      default=1.0,
+                                                                      update=refresh_preview)
+
+    plastic_specular_reflectance_multiplier_use_tex = bpy.props.BoolProperty(name="",
+                                                                             description="Use a texture to influence the specular reflectance multiplier",
+                                                                             default=False,
+                                                                             update=refresh_preview)
+
+    plastic_specular_reflectance_multiplier_tex = bpy.props.StringProperty(name="",
+                                                                           description="Specular reflectance multiplier texture",
+                                                                           default="",
+                                                                           update=refresh_preview)
+
+    plastic_roughness = bpy.props.FloatProperty(name="Roughness",
+                                                description="Roughness",
+                                                min=0.0,
+                                                max=1.0,
+                                                default=0.15,
+                                                update=refresh_preview)
+
+    plastic_roughness_use_tex = bpy.props.BoolProperty(name="",
+                                                       description="Use a texture to influence the roughness",
+                                                       default=False,
+                                                       update=refresh_preview)
+
+    plastic_roughness_tex = bpy.props.StringProperty(name="",
+                                                     description="Roughness texture",
+                                                     default="",
+                                                     update=refresh_preview)
+
+    plastic_highlight_falloff = bpy.props.FloatProperty(name="Highlight Falloff",
+                                                        description="",
+                                                        default=0.4,
+                                                        min=0.0,
+                                                        max=1.0,
+                                                        update=refresh_preview)
+
+    plastic_ior = bpy.props.FloatProperty(name="Index of Refraction",
+                                          description="Plastic index of refraction",
+                                          default=1.5,
+                                          min=1.0,
+                                          max=2.5,
+                                          update=refresh_preview)
+
+    plastic_diffuse_reflectance = bpy.props.FloatVectorProperty(name="Diffuse Reflectance",
+                                                                description="Diffuse reflection", subtype='COLOR',
+                                                                min=0.0,
+                                                                max=1.0,
+                                                                default=(
+                                                                     0.8, 0.8, 0.8),
+                                                                update=refresh_preview)
+
+    plastic_diffuse_reflectance_use_tex = bpy.props.BoolProperty(name="",
+                                                                 description="Use a texture to influence the diffuse reflectance",
+                                                                 default=False,
+                                                                 update=refresh_preview)
+
+    plastic_diffuse_reflectance_tex = bpy.props.StringProperty(name="",
+                                                               description="Diffuse reflectance texture",
+                                                               default="",
+                                                               update=refresh_preview)
+
+    plastic_diffuse_reflectance_multiplier = bpy.props.FloatProperty(name="Diffuse Reflectance Multiplier",
+                                                                     description="Diffuse reflection multiplier",
+                                                                     min=0.0,
+                                                                     max=1.0,
+                                                                     default=1.0,
+                                                                     update=refresh_preview)
+
+    plastic_diffuse_reflectance_multiplier_use_tex = bpy.props.BoolProperty(name="",
+                                                                            description="Use a texture to influence the diffuse reflectance multiplier",
+                                                                            default=False,
+                                                                            update=refresh_preview)
+
+    plastic_diffuse_reflectance_multiplier_tex = bpy.props.StringProperty(name="",
+                                                                          description="Diffuse reflectance multiplier texture",
+                                                                          default="",
+                                                                          update=refresh_preview)
+
+    plastic_internal_scattering = bpy.props.FloatProperty(name="Internal Scattering",
+                                                          description="",
+                                                          default=1.0,
+                                                          min=0.0,
+                                                          max=1.0,
+                                                          update=refresh_preview)
+
+    plastic_weight = bpy.props.FloatProperty(name="Plastic Blending Weight",
+                                             description="Blending weight of plastic BRDF in mix", default=1.0, min=0.0, max=1.0,
+                                             update=refresh_preview)
+
+    plastic_use_tex = bpy.props.BoolProperty(name="",
+                                             description="Use texture to influence the layer weight in the BSDF mix", default=False,
+                                             update=refresh_preview)
+
+    plastic_mix_tex = bpy.props.StringProperty(name="", description="Texture to influence layer weight in the BSDF mix", default="",
+                                               update=refresh_preview)
+
+    # --------------------------------
+
     lambertian_reflectance = bpy.props.FloatVectorProperty(
         name="Lambertian Reflectance", description="Lambertian diffuse reflectance", default=(0.8, 0.8, 0.8), subtype="COLOR", min=0.0, max=1.0,
         update=refresh_preview)
@@ -597,31 +726,31 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
 
     # --------------------------------
 
-    orennayar_reflectance = bpy.props.FloatVectorProperty(
-        name="Oren-Nayar Reflectance", description="Oren-Nayar diffuse reflectance", default=(0.8, 0.8, 0.8), subtype="COLOR", min=0.0, max=1.0,
-        update=refresh_preview)
-
     orennayar_multiplier = bpy.props.FloatProperty(
         name="Reflectance Multiplier", description="Oren-Nayar reflectance multiplier", default=1.0, min=0.0, max=2.0, update=refresh_preview)
-
-    orennayar_roughness = bpy.props.FloatProperty(name="Roughness", description="Oren-Nayar roughness", default=0.5, min=0.0, max=1.0,
-                                                  update=refresh_preview)
-
-    orennayar_weight = bpy.props.FloatProperty(name="Oren-Nayar Blending Weight",
-                                               description="Blending weight of Oren-Nayar BRDF in BSDF mix", default=1.0, min=0.0, max=1.0,
-                                               update=refresh_preview)
 
     orennayar_use_diff_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence diffuse color", default=False,
                                                     update=refresh_preview)
 
+    orennayar_reflectance = bpy.props.FloatVectorProperty(
+        name="Oren-Nayar Reflectance", description="Oren-Nayar diffuse reflectance", default=(0.8, 0.8, 0.8), subtype="COLOR", min=0.0, max=1.0,
+        update=refresh_preview)
+
     orennayar_diffuse_tex = bpy.props.StringProperty(
         name="", description="Diffuse color texture", default="", update=refresh_preview)
+
+    orennayar_roughness = bpy.props.FloatProperty(name="Roughness", description="Oren-Nayar roughness", default=0.5, min=0.0, max=1.0,
+                                                  update=refresh_preview)
 
     orennayar_use_rough_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence roughness", default=False,
                                                      update=refresh_preview)
 
     orennayar_rough_tex = bpy.props.StringProperty(
         name="", description="Roughness texture", default="", update=refresh_preview)
+
+    orennayar_weight = bpy.props.FloatProperty(name="Oren-Nayar Blending Weight",
+                                               description="Blending weight of Oren-Nayar BRDF in BSDF mix", default=1.0, min=0.0, max=1.0,
+                                               update=refresh_preview)
 
     orennayar_use_tex = bpy.props.BoolProperty(name="", description="Use texture to influence the layer weight in the BSDF mix", default=False,
                                                update=refresh_preview)
