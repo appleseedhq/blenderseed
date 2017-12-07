@@ -224,7 +224,6 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         layout.prop(asr_scene_props, "shutter_open")
         layout.prop(asr_scene_props, "shutter_close")
-        # layout.prop(asr_scene_props, "mblur_samples")
 
         row = layout.row(align=True)
         row.prop(asr_scene_props, "cam_mblur")
