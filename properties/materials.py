@@ -844,7 +844,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
         min=0, max=10, update=refresh_preview)
 
     export_emitting_obj_as_lights = bpy.props.BoolProperty(name="Export As Mesh Light",
-                                                                   description="Export object with light-emitting materials as mesh (area) lights",
+                                                                   description="Export objects with light-emitting materials as mesh (area) lights",
                                                                    default=True)
 
     light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Radiance Multiplier",
