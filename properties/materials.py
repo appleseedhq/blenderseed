@@ -469,8 +469,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                              description="Reflectance facing the camera", subtype='COLOR',
                                                              min=0.0,
                                                              max=1.0,
-                                                             default=(
-                                                                 0.92, 0.92, 0.92),
+                                                             default=(0.8, 0.8, 0.8),
                                                              update=refresh_preview)
 
     metal_normal_reflectance_use_tex = bpy.props.BoolProperty(name="",
@@ -487,7 +486,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                     description="Tint at glancing angle", subtype='COLOR',
                                                     min=0.0,
                                                     max=1.0,
-                                                    default=(0.98, 0.98, 0.98),
+                                                    default=(0.8, 0.8, 0.8),
                                                     update=refresh_preview)
 
     metal_edge_tint_use_tex = bpy.props.BoolProperty(name="",
@@ -584,8 +583,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                  description="Specular reflection", subtype='COLOR',
                                                                  min=0.0,
                                                                  max=1.0,
-                                                                 default=(
-                                                                     1.0, 1.0, 1.0),
+                                                                 default=(0.8, 0.8, 0.8),
                                                                  update=refresh_preview)
 
     plastic_specular_reflectance_use_tex = bpy.props.BoolProperty(name="",
@@ -650,8 +648,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                 description="Diffuse reflection", subtype='COLOR',
                                                                 min=0.0,
                                                                 max=1.0,
-                                                                default=(
-                                                                     0.8, 0.8, 0.8),
+                                                                default=(0.8, 0.8, 0.8),
                                                                 update=refresh_preview)
 
     plastic_diffuse_reflectance_use_tex = bpy.props.BoolProperty(name="",
@@ -801,7 +798,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                   update=refresh_preview)
 
     spec_btdf_transmittance = bpy.props.FloatVectorProperty(
-        name="Specular Transmittance", description="Specular BTDF transmittance", default=(1, 1, 1), subtype="COLOR", min=0.0, max=1.0,
+        name="Specular Transmittance", description="Specular BTDF transmittance", default=(0.8, 0.8, 0.8), subtype="COLOR", min=0.0, max=1.0,
         update=refresh_preview)
 
     spec_btdf_use_trans_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence specular transmittance", default=False,
@@ -830,7 +827,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     # ---------------------------------
 
     disney_base = bpy.props.FloatVectorProperty(name="Base Coat Color", description="Base coat color",
-                                                default=(0.5, 0.5, 0.5), subtype='COLOR', min=0.0, max=1.0, update=refresh_preview)
+                                                default=(0.8, 0.8, 0.8), subtype='COLOR', min=0.0, max=1.0, update=refresh_preview)
 
     disney_use_base_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence base coat color", default=False,
                                                  update=refresh_preview)
