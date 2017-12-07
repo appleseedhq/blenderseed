@@ -685,7 +685,7 @@ class Exporter(object):
             if material_node.inputs["Emission Strength"].socket_value > 0.0 or material_node.inputs["Emission Strength"].is_linked:
                 return scene.appleseed.export_emitting_obj_as_lights
         else:
-            return asr_mat.use_light_emission and asr_mat.export_emitting_obj_as_lights
+            return asr_mat.use_light_emission and scene.appleseed.export_emitting_obj_as_lights
 
     def __is_node_material(self, asr_mat):
         if asr_mat.node_tree != "" and asr_mat.node_output != "":
@@ -1981,14 +1981,14 @@ class Exporter(object):
                 radiance_name = "{0}_radiance".format(edf_name)
                 self.__emit_solid_linear_rgb_color_element(radiance_name,
                                                            material_node.inputs["Emission Color"].socket_value,
-                                                           asr_mat.light_mats_radiance_multiplier)
+                                                           scene.appleseed.light_mats_radiance_multiplier)
 
         else:
             radiance_name = "{0}_radiance".format(edf_name)
             radiance_multiplier = asr_mat.light_emission
             self.__emit_solid_linear_rgb_color_element(radiance_name,
                                                        asr_mat.light_color,
-                                                       asr_mat.light_mats_radiance_multiplier)
+                                                       scene.appleseed.light_mats_radiance_multiplier)
 
         self.__emit_diffuse_edf_element(asr_mat, edf_name, radiance_name, radiance_multiplier, material_node)
 
@@ -2120,7 +2120,6 @@ class Exporter(object):
         self.__emit_parameter("bump_amplitude", material_bump_amplitude)
         self.__emit_parameter("displacement_method", method)
         self.__emit_parameter("normal_map_up", "z")
-        self.__emit_parameter("shade_alpha_cutouts", "false")
         self.__emit_parameter("surface_shader", surface_shader_name)
         self.__close_element("material")
 

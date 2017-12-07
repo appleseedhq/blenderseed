@@ -469,8 +469,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                              description="Reflectance facing the camera", subtype='COLOR',
                                                              min=0.0,
                                                              max=1.0,
-                                                             default=(
-                                                                 0.92, 0.92, 0.92),
+                                                             default=(0.8, 0.8, 0.8),
                                                              update=refresh_preview)
 
     metal_normal_reflectance_use_tex = bpy.props.BoolProperty(name="",
@@ -487,7 +486,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                     description="Tint at glancing angle", subtype='COLOR',
                                                     min=0.0,
                                                     max=1.0,
-                                                    default=(0.98, 0.98, 0.98),
+                                                    default=(0.8, 0.8, 0.8),
                                                     update=refresh_preview)
 
     metal_edge_tint_use_tex = bpy.props.BoolProperty(name="",
@@ -584,8 +583,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                  description="Specular reflection", subtype='COLOR',
                                                                  min=0.0,
                                                                  max=1.0,
-                                                                 default=(
-                                                                     1.0, 1.0, 1.0),
+                                                                 default=(0.8, 0.8, 0.8),
                                                                  update=refresh_preview)
 
     plastic_specular_reflectance_use_tex = bpy.props.BoolProperty(name="",
@@ -650,8 +648,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                 description="Diffuse reflection", subtype='COLOR',
                                                                 min=0.0,
                                                                 max=1.0,
-                                                                default=(
-                                                                     0.8, 0.8, 0.8),
+                                                                default=(0.8, 0.8, 0.8),
                                                                 update=refresh_preview)
 
     plastic_diffuse_reflectance_use_tex = bpy.props.BoolProperty(name="",
@@ -801,7 +798,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                   update=refresh_preview)
 
     spec_btdf_transmittance = bpy.props.FloatVectorProperty(
-        name="Specular Transmittance", description="Specular BTDF transmittance", default=(1, 1, 1), subtype="COLOR", min=0.0, max=1.0,
+        name="Specular Transmittance", description="Specular BTDF transmittance", default=(0.8, 0.8, 0.8), subtype="COLOR", min=0.0, max=1.0,
         update=refresh_preview)
 
     spec_btdf_use_trans_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence specular transmittance", default=False,
@@ -814,7 +811,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                    description="Specular BTDF transmittance multiplier", default=1.0, min=0.0, max=1.0,
                                                    update=refresh_preview)
 
-    spec_btdf_ior = bpy.props.FloatProperty(name="IOR", description="Index of refraction", default=1.33, min=1.0, max=2.5,
+    spec_btdf_ior = bpy.props.FloatProperty(name="Index of Refraction", description="Index of refraction", default=1.33, min=1.0, max=2.5,
                                             update=refresh_preview)
 
     spec_btdf_weight = bpy.props.FloatProperty(name="Specular BTDF Blending Weight",
@@ -830,7 +827,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     # ---------------------------------
 
     disney_base = bpy.props.FloatVectorProperty(name="Base Coat Color", description="Base coat color",
-                                                default=(0.5, 0.5, 0.5), subtype='COLOR', min=0.0, max=1.0, update=refresh_preview)
+                                                default=(0.8, 0.8, 0.8), subtype='COLOR', min=0.0, max=1.0, update=refresh_preview)
 
     disney_use_base_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence base coat color", default=False,
                                                  update=refresh_preview)
@@ -972,16 +969,6 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
         name="Light Near Start", description="Amount by which to extend the start of light's influence away from the emissive material", default=0.0,
         min=0, max=10, update=refresh_preview)
 
-    export_emitting_obj_as_lights = bpy.props.BoolProperty(name="Export As Mesh Light",
-                                                                   description="Export objects with light-emitting materials as mesh (area) lights",
-                                                                   default=True)
-
-    light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Radiance Multiplier",
-                                                                     description="Multiply the exitance of light-emitting materials by this factor",
-                                                                     min=0.0,
-                                                                     max=100.0,
-                                                                     default=1.0)
-
     material_use_bump_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence bump / normal", default=False,
                                                    update=refresh_preview)
 
@@ -1002,9 +989,6 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
 
     material_alpha = bpy.props.FloatProperty(
         name="Alpha", description="Alpha", default=1.0, min=0.0, max=1.0, update=refresh_preview)
-
-    shade_alpha_cutouts = bpy.props.BoolProperty(
-        name="Shade Alpha Cutout", description="Shade alpha cutout", default=False, update=refresh_preview)
 
     preview_quality = bpy.props.IntProperty(
         name="Preview Quality", description="Number of samples used for preview rendering", default=2, min=1, max=16, update=refresh_preview)

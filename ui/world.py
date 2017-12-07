@@ -66,15 +66,15 @@ class AppleseedWorldPanelOld(bpy.types.Panel):
                 layout.prop(asr_sky_props, "ground_albedo")
 
         elif asr_sky_props.env_type == "gradient":
-            layout.prop(scene.world, "horizon_color", text="")
-            layout.prop(scene.world, "zenith_color", text="")
+            layout.prop(scene.world, "horizon_color", text="Horizon Radiance")
+            layout.prop(scene.world, "zenith_color", text="Zenith Radiance")
 
         elif asr_sky_props.env_type == "constant":
-            layout.prop(scene.world, "horizon_color", text="")
+            layout.prop(scene.world, "horizon_color", text="Radiance")
 
         elif asr_sky_props.env_type == "constant_hemisphere":
-            layout.prop(scene.world, "horizon_color", text="")
-            layout.prop(scene.world, "zenith_color", text="")
+            layout.prop(scene.world, "zenith_color", text="Upper Hemisphere Radiance")
+            layout.prop(scene.world, "horizon_color", text="Lower Hemisphere Radiance")   
 
         elif asr_sky_props.env_type == "mirrorball_map":
             layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="")
