@@ -53,7 +53,7 @@ class AppleseedCameraSettings(bpy.types.PropertyGroup):
                                                  description="Camera lens model",
                                                  default='pinhole')
 
-        cls.camera_dof = bpy.props.FloatProperty(name="F-Stop",
+        cls.camera_dof = bpy.props.FloatProperty(name="F-Number",
                                                  description="Thin lens camera f-stop value",
                                                  default=32.0,
                                                  min=0.0,

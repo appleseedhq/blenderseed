@@ -826,7 +826,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
     use_light_emission = bpy.props.BoolProperty(
         name="", description="Enable material light emission", default=False, update=refresh_preview)
 
-    light_emission = bpy.props.FloatProperty(name="Emission Strength", description="Light emission strength", default=1.0, min=0.0, max=10000.0,
+    light_emission = bpy.props.FloatProperty(name="Emission", description="Light emission", default=1.0, min=0.0, max=10000.0,
                                              update=refresh_preview)
 
     light_color = bpy.props.FloatVectorProperty(name="Emission Color", description="Light emission color",
@@ -843,6 +843,16 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
         name="Light Near Start", description="Amount by which to extend the start of light's influence away from the emissive material", default=0.0,
         min=0, max=10, update=refresh_preview)
 
+    export_emitting_obj_as_lights = bpy.props.BoolProperty(name="Export As Mesh Light",
+                                                                   description="Export objects with light-emitting materials as mesh (area) lights",
+                                                                   default=True)
+
+    light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Radiance Multiplier",
+                                                                     description="Multiply the exitance of light-emitting materials by this factor",
+                                                                     min=0.0,
+                                                                     max=100.0,
+                                                                     default=1.0)
+
     material_use_bump_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence bump / normal", default=False,
                                                    update=refresh_preview)
 
@@ -855,11 +865,11 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
     material_bump_amplitude = bpy.props.FloatProperty(
         name="Bump Amplitude", description="Maximum height influence of bump / normal map", default=1.0, min=0.0, max=1.0, update=refresh_preview)
 
-    material_use_alpha = bpy.props.BoolProperty(
-        name="", description="Use a texture to influence alpha", default=False, update=refresh_preview)
-
     material_alpha_map = bpy.props.StringProperty(
         name="", description="Alpha texture", default="", update=refresh_preview)
+
+    material_use_alpha = bpy.props.BoolProperty(
+        name="", description="Use a texture to influence alpha", default=False, update=refresh_preview)
 
     material_alpha = bpy.props.FloatProperty(
         name="Alpha", description="Alpha", default=1.0, min=0.0, max=1.0, update=refresh_preview)
