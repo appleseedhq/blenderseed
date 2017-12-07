@@ -814,7 +814,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                    description="Specular BTDF transmittance multiplier", default=1.0, min=0.0, max=1.0,
                                                    update=refresh_preview)
 
-    spec_btdf_ior = bpy.props.FloatProperty(name="IOR", description="Index of refraction", default=1.33, min=1.0, max=2.5,
+    spec_btdf_ior = bpy.props.FloatProperty(name="Index of Refraction", description="Index of refraction", default=1.33, min=1.0, max=2.5,
                                             update=refresh_preview)
 
     spec_btdf_weight = bpy.props.FloatProperty(name="Specular BTDF Blending Weight",
