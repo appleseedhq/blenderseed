@@ -85,10 +85,10 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                 max=10.0)
 
         cls.turbidity_multiplier = bpy.props.FloatProperty(name="Turbidity Multiplier",
-                                                    description='',
-                                                    default=2.0,
-                                                    min=0,
-                                                    max=10.0)
+                                                           description='',
+                                                           default=2.0,
+                                                           min=0,
+                                                           max=10.0)
 
         cls.luminance_multiplier = bpy.props.FloatProperty(name="Luminance Multiplier",
                                                            description='',
