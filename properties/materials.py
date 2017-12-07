@@ -826,7 +826,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
     use_light_emission = bpy.props.BoolProperty(
         name="", description="Enable material light emission", default=False, update=refresh_preview)
 
-    light_emission = bpy.props.FloatProperty(name="Radiance Multiplier", description="Light radiance multiplier", default=1.0, min=0.0, max=10000.0,
+    light_emission = bpy.props.FloatProperty(name="Emission", description="Light emission", default=1.0, min=0.0, max=10000.0,
                                              update=refresh_preview)
 
     light_color = bpy.props.FloatVectorProperty(name="Emission Color", description="Light emission color",
@@ -847,7 +847,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                                    description="Export objects with light-emitting materials as mesh (area) lights",
                                                                    default=True)
 
-    light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Exposure",
+    light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Radiance Multiplier",
                                                                      description="Multiply the exitance of light-emitting materials by this factor",
                                                                      min=0.0,
                                                                      max=100.0,
