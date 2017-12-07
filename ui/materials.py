@@ -1001,8 +1001,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     # alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
                     # layout.prop(alpha_tex.image.colorspace_settings, "name", text="Color Space")    
 
-            # layout.prop(asr_mat, "shade_alpha_cutouts")
-
             #----------------------------------------------
 
             # bump/normal mapping
