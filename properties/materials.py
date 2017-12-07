@@ -847,7 +847,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                                    description="Export object with light-emitting materials as mesh (area) lights",
                                                                    default=True)
 
-    light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Radiance Multiplier",
+    light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Exposure",
                                                                      description="Multiply the exitance of light-emitting materials by this factor",
                                                                      min=0.0,
                                                                      max=100.0,
@@ -865,11 +865,11 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
     material_bump_amplitude = bpy.props.FloatProperty(
         name="Bump Amplitude", description="Maximum height influence of bump / normal map", default=1.0, min=0.0, max=1.0, update=refresh_preview)
 
-    material_use_alpha = bpy.props.BoolProperty(
-        name="", description="Use a texture to influence alpha", default=False, update=refresh_preview)
-
     material_alpha_map = bpy.props.StringProperty(
         name="", description="Alpha texture", default="", update=refresh_preview)
+
+    material_use_alpha = bpy.props.BoolProperty(
+        name="", description="Use a texture to influence alpha", default=False, update=refresh_preview)
 
     material_alpha = bpy.props.FloatProperty(
         name="Alpha", description="Alpha", default=1.0, min=0.0, max=1.0, update=refresh_preview)
