@@ -985,8 +985,26 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
             #----------------------------------------------
 
-            # bump/normal mapping
+            # alpha
+            
             layout.separator()
+
+            layout.prop(asr_mat, "material_alpha")
+
+            # split = layout.split(percentage=0.50)
+            # col = split.column()
+            # col.prop(asr_mat, "material_use_alpha", text="Alpha Map", icon="POTATO", toggle=True)
+            # col = split.column()
+            # if asr_mat.material_use_alpha:
+                # col.prop_search(asr_mat, "material_alpha_map", material, "texture_slots", text="")
+                # if asr_mat.material_alpha_map != '':
+                    # alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
+                    # layout.prop(alpha_tex.image.colorspace_settings, "name", text="Color Space")    
+
+            #----------------------------------------------
+
+            # bump/normal mapping
+
             split = layout.split(percentage=0.50)
             col = split.column()
             col.prop(asr_mat, "material_use_bump_tex", text="Bump Map", icon="POTATO", toggle=True)
@@ -1000,21 +1018,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     layout.prop(bump_tex.image.colorspace_settings, "name",  text="Color Space")
                 layout.prop(asr_mat, "material_bump_amplitude", text="Bump Amplitude")
 
-            #----------------------------------------------
-
-            # alpha
-            split = layout.split(percentage=0.50)
-            col = split.column()
-            col.prop(asr_mat, "material_use_alpha", text="Alpha Map", icon="POTATO", toggle=True)
-            col = split.column()
-            if asr_mat.material_use_alpha:
-                col.prop_search(asr_mat, "material_alpha_map", material, "texture_slots", text="")
-                if asr_mat.material_alpha_map != '':
-                    alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
-                    layout.prop(alpha_tex.image.colorspace_settings, "name", text="Color Space")
-            else:
-                col.prop(asr_mat, "material_alpha")
-            layout.prop(asr_mat, "shade_alpha_cutouts")
 
 #---------------------------------------------
 # light material panel
@@ -1052,13 +1055,16 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         col = layout.column()
         col.active = asr_mat.use_light_emission
         col.prop(asr_mat, "light_color", text="")
-        col.prop(asr_mat, "light_emission", text="Radiance Multiplier")
+        col.prop(asr_mat, "light_emission")
+        col.prop(asr_mat, "light_mats_radiance_multiplier")
 
         layout.active = asr_mat.use_light_emission
         row = layout.row(align=True)
         layout.prop(asr_mat, "cast_indirect")
         layout.prop(asr_mat, "importance_multiplier")
         layout.prop(asr_mat, "light_near_start")
+        layout.prop(asr_mat, "export_emitting_obj_as_lights")
+        
 
 
 def register():

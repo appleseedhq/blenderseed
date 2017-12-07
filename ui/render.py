@@ -49,7 +49,6 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         scene = context.scene
         asr_scene_props = scene.appleseed
 
-        layout.separator()
         split = layout.split()
         col = split.column()
         col.prop(asr_scene_props, "threads_auto")
@@ -58,13 +57,13 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col.enabled = not asr_scene_props.threads_auto
         col.prop(asr_scene_props, "threads")
 
-        layout.separator()
         row = layout.row()
         row.prop(asr_scene_props, "generate_mesh_files")
         if asr_scene_props.generate_mesh_files:
             row.prop(asr_scene_props, "export_mode")
             # layout.prop(asr_scene_props, "export_hair")
 
+        layout.prop(asr_scene_props, "tile_ordering")
 
 class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -80,8 +79,8 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         layout.prop(asr_scene_props, "pixel_filter_size")
 
         layout.separator()
-        layout.prop(asr_scene_props, "renderer_passes")
         layout.prop(asr_scene_props, "pixel_sampler")
+        layout.prop(asr_scene_props, "renderer_passes")
 
         if asr_scene_props.pixel_sampler == 'adaptive':
             row = layout.row(align=True)
@@ -95,9 +94,7 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             row.prop(asr_scene_props, "force_aa")
             row.prop(asr_scene_props, "decorrelate_pixels")
 
-        layout.prop(asr_scene_props, "tile_ordering")
-
-
+        
 class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_label = "Lighting"
@@ -118,7 +115,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             col.prop(asr_scene_props, "caustics_enable")
             col.prop(asr_scene_props, "next_event_est")
             col = split.column()
-            col.prop(asr_scene_props, "enable_diagnostics", text="Diagnostics")
+            col.prop(asr_scene_props, "enable_diagnostics")
             col.prop(asr_scene_props, "quality")
             if asr_scene_props.next_event_est:
                 row = layout.row()
@@ -130,10 +127,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
                 if asr_scene_props.direct_lighting:
                     row.prop(asr_scene_props, "dl_light_samples")
 
-            layout.separator()
-
             layout.label("Bounces")
-
             split = layout.split()
             col = split.column()
             col.prop(asr_scene_props, "max_bounces_unlimited")
@@ -181,10 +175,13 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             col = split.column()
             col.enabled = not asr_scene_props.max_ray_intensity_unlimited
             col.prop(asr_scene_props, "max_ray_intensity")
-            layout.separator()
             layout.prop(asr_scene_props, "rr_start")
-            layout.prop(asr_scene_props, "optimize_for_lights_outside_volumes")
+
+            layout.separator()
+
             layout.prop(asr_scene_props, "volume_distance_samples")
+            layout.prop(asr_scene_props, "optimize_for_lights_outside_volumes")
+            
 
         # SPPM UI
         elif asr_scene_props.lighting_engine == 'sppm':
@@ -209,11 +206,6 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             layout.prop(asr_scene_props, "sppm_pt_max_length")
             layout.prop(asr_scene_props, "sppm_pt_rr_start")
 
-        layout.separator()
-        layout.prop(asr_scene_props, "export_emitting_obj_as_lights")
-        if asr_scene_props.export_emitting_obj_as_lights:
-            layout.prop(asr_scene_props, "light_mats_radiance_multiplier")
-
 
 class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -234,9 +226,9 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         layout.prop(asr_scene_props, "shutter_close")
 
         row = layout.row(align=True)
-        row.prop(asr_scene_props, "cam_mblur", text="Camera Blur")
-        row.prop(asr_scene_props, "ob_mblur", text="Object Blur")
-        layout.prop(asr_scene_props, "def_mblur", text="Deformation Blur")
+        row.prop(asr_scene_props, "cam_mblur")
+        row.prop(asr_scene_props, "ob_mblur")
+        layout.prop(asr_scene_props, "def_mblur")
 
 
 def register():

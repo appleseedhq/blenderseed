@@ -106,7 +106,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                         description='Avoid correlation patterns at the expense of slightly more sampling noise',
                                                         default=True)
 
-        cls.pixel_filter = bpy.props.EnumProperty(name="Pixel Filter",
+        cls.pixel_filter = bpy.props.EnumProperty(name="Filter",
                                                   description="Pixel filter to use",
                                                   items=[("box", "Box", "Box"),
                                                          ("triangle", "Triangle",
@@ -124,7 +124,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                          ("blackman-harris", "Blackman-Harris", "Blackman-Harris")],
                                                   default="blackman-harris")
 
-        cls.pixel_filter_size = bpy.props.FloatProperty(name="Pixel Filter Size",
+        cls.pixel_filter_size = bpy.props.FloatProperty(name="Filter Size",
                                                         description="Pixel filter size",
                                                         min=0.0,
                                                         max=16.0,
@@ -266,7 +266,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         cls.max_ray_intensity = bpy.props.FloatProperty(name="Max Ray Intensity",
                                                         description="Clamp intensity of rays (after the first bounce) to this value to reduce fireflies",
-                                                        default=0,
+                                                        default=1.0,
                                                         min=0)
 
         cls.rr_start = bpy.props.IntProperty(name="Russian Roulette Start Bounce",
@@ -370,11 +370,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         # Miscellaneous settings.
 
-        cls.export_emitting_obj_as_lights = bpy.props.BoolProperty(name="Export Emitting Objects As Mesh Lights",
-                                                                   description="Export object with light-emitting materials as mesh (area) lights",
-                                                                   default=True)
-
-        cls.enable_diagnostics = bpy.props.BoolProperty(name="Enable diagnostics",
+        cls.enable_diagnostics = bpy.props.BoolProperty(name="Diagnostics",
                                                         description='',
                                                         default=False)
 
@@ -384,12 +380,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                               min=0.0,
                                               max=20.0,
                                               precision=3)
-
-        cls.light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Global Meshlight Energy Multiplier",
-                                                                     description="Multiply the exitance of light-emitting materials by this factor",
-                                                                     min=0.0,
-                                                                     max=100.0,
-                                                                     default=1.0)
 
         cls.recompute_vertex_normals = bpy.props.BoolProperty(name="Recompute Vertex Normals",
                                                               description="If checked, vertex normals will be recomputed during tessellation",
@@ -426,15 +416,15 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                   description="Number of samples to use for motion blur",
                                                   default=2)
 
-        cls.def_mblur = bpy.props.BoolProperty(name="Deformation",
+        cls.def_mblur = bpy.props.BoolProperty(name="Deformation Blur",
                                                description="Global toggle for rendering of deformation motion blur. Warning - objects with deformation motion blur enabled will add to export time!",
                                                default=False)
 
-        cls.ob_mblur = bpy.props.BoolProperty(name="Object",
+        cls.ob_mblur = bpy.props.BoolProperty(name="Object Blur",
                                               description="Global toggle for rendering of object motion blur",
                                               default=False)
 
-        cls.cam_mblur = bpy.props.BoolProperty(name="Camera",
+        cls.cam_mblur = bpy.props.BoolProperty(name="Camera Blur",
                                                description="Enable rendering of camera motion blur",
                                                default=False)
 

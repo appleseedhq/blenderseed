@@ -51,18 +51,16 @@ class AppleseedWorldPanelOld(bpy.types.Panel):
         layout.prop(asr_sky_props, "env_type", text="")
 
         if asr_sky_props.env_type == "sunsky":
-            layout.label("Sun Lamp:")
-            layout.prop(asr_sky_props, "sun_lamp", text="")
-            layout.prop(asr_sky_props, "sun_model", text="Sky Model")
+            layout.prop(asr_sky_props, "sun_lamp")
+            layout.prop(asr_sky_props, "sun_model")
 
-            layout.prop(asr_sky_props, "luminance_multiplier")
-            layout.prop(asr_sky_props, "radiance_multiplier")
-            layout.prop(asr_sky_props, "saturation_multiplier")
             layout.prop(asr_sky_props, "sun_theta")
             layout.prop(asr_sky_props, "sun_phi")
             layout.prop(asr_sky_props, "turbidity")
-            layout.prop(asr_sky_props, "turbidity_min")
-            layout.prop(asr_sky_props, "turbidity_max")
+            layout.prop(asr_sky_props, "turbidity_multiplier")
+            layout.prop(asr_sky_props, "luminance_multiplier")
+            layout.prop(asr_sky_props, "luminance_gamma")
+            layout.prop(asr_sky_props, "saturation_multiplier")
             layout.prop(asr_sky_props, "horiz_shift")
             if asr_sky_props.sun_model == "hosek_environment_edf":
                 layout.prop(asr_sky_props, "ground_albedo")
