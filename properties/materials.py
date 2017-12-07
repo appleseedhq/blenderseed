@@ -972,16 +972,6 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
         name="Light Near Start", description="Amount by which to extend the start of light's influence away from the emissive material", default=0.0,
         min=0, max=10, update=refresh_preview)
 
-    export_emitting_obj_as_lights = bpy.props.BoolProperty(name="Export As Mesh Light",
-                                                                   description="Export objects with light-emitting materials as mesh (area) lights",
-                                                                   default=True)
-
-    light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Radiance Multiplier",
-                                                                     description="Multiply the exitance of light-emitting materials by this factor",
-                                                                     min=0.0,
-                                                                     max=100.0,
-                                                                     default=1.0)
-
     material_use_bump_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence bump / normal", default=False,
                                                    update=refresh_preview)
 

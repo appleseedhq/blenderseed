@@ -181,6 +181,11 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
             layout.prop(asr_scene_props, "volume_distance_samples")
             layout.prop(asr_scene_props, "optimize_for_lights_outside_volumes")
+
+            layout.separator()
+
+            layout.prop(asr_scene_props, "light_mats_radiance_multiplier")
+            layout.prop(asr_scene_props, "export_emitting_obj_as_lights")
             
 
         # SPPM UI

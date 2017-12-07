@@ -370,6 +370,16 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         # Miscellaneous settings.
 
+        cls.light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Mesh Light Multiplier",
+                                                                     description="Multiply the exitance of light-emitting materials by this factor",
+                                                                     min=0.0,
+                                                                     max=100.0,
+                                                                     default=1.0)
+
+        cls.export_emitting_obj_as_lights = bpy.props.BoolProperty(name="Export Mesh Lights",
+                                                                   description="Export objects with light-emitting materials as mesh (area) lights",
+                                                                   default=True)
+
         cls.enable_diagnostics = bpy.props.BoolProperty(name="Diagnostics",
                                                         description='',
                                                         default=False)
