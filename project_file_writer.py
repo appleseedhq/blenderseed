@@ -2230,14 +2230,14 @@ class Exporter(object):
                 self.__open_element('environment_edf name="{0}" model="{1}"'.format(env_edf_name, asr_sky.sun_model))
                 if asr_sky.sun_model == "hosek_environment_edf":
                     self.__emit_parameter("ground_albedo", asr_sky.ground_albedo)
-                self.__emit_parameter("horizon_shift", asr_sky.horiz_shift)
-                self.__emit_parameter("luminance_multiplier", asr_sky.luminance_multiplier)
-                self.__emit_parameter("saturation_multiplier", asr_sky.saturation_multiplier)
                 self.__emit_parameter("sun_phi", asr_sky.sun_phi)
                 self.__emit_parameter("sun_theta", asr_sky.sun_theta)
                 self.__emit_parameter("turbidity", asr_sky.turbidity)
-                self.__emit_parameter("turbidity_max", asr_sky.turbidity_max)
-                self.__emit_parameter("turbidity_min", asr_sky.turbidity_min)
+                self.__emit_parameter("turbidity_multiplier", asr_sky.turbidity_multiplier)
+                self.__emit_parameter("luminance_multiplier", asr_sky.luminance_multiplier)
+                self.__emit_parameter("luminance_gamma", asr_sky.luminance_gamma)
+                self.__emit_parameter("saturation_multiplier", asr_sky.saturation_multiplier)
+                self.__emit_parameter("horizon_shift", asr_sky.horiz_shift)
                 self.__close_element('environment_edf')
 
             # Write the environment shader.
