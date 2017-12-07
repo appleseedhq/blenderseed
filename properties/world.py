@@ -96,9 +96,9 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                            min=0.0)
 
         cls.luminance_gamma = bpy.props.FloatProperty(name="Luminance Gamma",
-                                                           description='',
-                                                           default=1.0,
-                                                           min=0.0)
+                                                      description='',
+                                                      default=1.0,
+                                                      min=0.0)
 
         cls.saturation_multiplier = bpy.props.FloatProperty(name="Saturation Multiplier",
                                                             description='',
