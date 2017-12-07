@@ -1059,6 +1059,9 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         layout.prop(asr_mat, "cast_indirect")
         layout.prop(asr_mat, "importance_multiplier")
         layout.prop(asr_mat, "light_near_start")
+        layout.prop(asr_mat, "export_emitting_obj_as_lights")
+        if asr_mat.export_emitting_obj_as_lights:
+            layout.prop(asr_mat, "light_mats_radiance_multiplier")
 
 
 def register():

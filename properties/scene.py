@@ -266,7 +266,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         cls.max_ray_intensity = bpy.props.FloatProperty(name="Max Ray Intensity",
                                                         description="Clamp intensity of rays (after the first bounce) to this value to reduce fireflies",
-                                                        default=0,
+                                                        default=1.0,
                                                         min=0)
 
         cls.rr_start = bpy.props.IntProperty(name="Russian Roulette Start Bounce",
@@ -370,10 +370,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         # Miscellaneous settings.
 
-        cls.export_emitting_obj_as_lights = bpy.props.BoolProperty(name="Export Emitting Objects As Mesh Lights",
-                                                                   description="Export object with light-emitting materials as mesh (area) lights",
-                                                                   default=True)
-
         cls.enable_diagnostics = bpy.props.BoolProperty(name="Enable diagnostics",
                                                         description='',
                                                         default=False)
@@ -384,12 +380,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                               min=0.0,
                                               max=20.0,
                                               precision=3)
-
-        cls.light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Global Meshlight Energy Multiplier",
-                                                                     description="Multiply the exitance of light-emitting materials by this factor",
-                                                                     min=0.0,
-                                                                     max=100.0,
-                                                                     default=1.0)
 
         cls.recompute_vertex_normals = bpy.props.BoolProperty(name="Recompute Vertex Normals",
                                                               description="If checked, vertex normals will be recomputed during tessellation",
