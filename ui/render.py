@@ -115,7 +115,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             col.prop(asr_scene_props, "caustics_enable")
             col.prop(asr_scene_props, "next_event_est")
             col = split.column()
-            col.prop(asr_scene_props, "enable_diagnostics", text="Diagnostics")
+            col.prop(asr_scene_props, "enable_diagnostics")
             col.prop(asr_scene_props, "quality")
             if asr_scene_props.next_event_est:
                 row = layout.row()
@@ -224,11 +224,12 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         layout.prop(asr_scene_props, "shutter_open")
         layout.prop(asr_scene_props, "shutter_close")
+        # layout.prop(asr_scene_props, "mblur_samples")
 
         row = layout.row(align=True)
-        row.prop(asr_scene_props, "cam_mblur", text="Camera Blur")
-        row.prop(asr_scene_props, "ob_mblur", text="Object Blur")
-        layout.prop(asr_scene_props, "def_mblur", text="Deformation Blur")
+        row.prop(asr_scene_props, "cam_mblur")
+        row.prop(asr_scene_props, "ob_mblur")
+        layout.prop(asr_scene_props, "def_mblur")
 
 
 def register():

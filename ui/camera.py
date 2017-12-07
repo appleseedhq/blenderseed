@@ -30,7 +30,7 @@ import bpy
 
 
 class AppleseedCameraDoF(bpy.types.Panel):
-    bl_label = "Depth of Field"
+    bl_label = "Camera"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -50,7 +50,7 @@ class AppleseedCameraDoF(bpy.types.Panel):
         row.prop(asr_cam_props, "camera_type", text='Model')
 
         if asr_cam_props.camera_type == "thinlens":
-            layout.prop(asr_cam_props, "camera_dof", text="F-Stop")
+            layout.prop(asr_cam_props, "camera_dof")
 
             layout.prop(context.active_object.data, "dof_distance", text="Focal Distance")
             layout.active = context.active_object.data.dof_object is None

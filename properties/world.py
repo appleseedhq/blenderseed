@@ -58,7 +58,7 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
 
         cls.sun_model = bpy.props.EnumProperty(items=[("hosek_environment_edf", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
                                                       ('preetham_environment_edf', "Preetham", 'Preetham physical sun/sky model')],
-                                               name="Sky Model",
+                                               name="Sun Model",
                                                description="Physical sun/sky model",
                                                default="hosek_environment_edf")
 

@@ -1057,7 +1057,7 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         col = layout.column()
         col.active = asr_mat.use_light_emission
         col.prop(asr_mat, "light_color", text="")
-        col.prop(asr_mat, "light_emission", text="Radiance Multiplier")
+        col.prop(asr_mat, "light_emission")
         col.prop(asr_mat, "light_mats_radiance_multiplier")
 
         layout.active = asr_mat.use_light_emission
