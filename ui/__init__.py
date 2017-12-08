@@ -68,6 +68,87 @@ for member in dir(properties_particle):
         pass
 del properties_particle
 
+import bl_ui.properties_physics_common as properties_physics_common
+for member in dir(properties_physics_common):
+    subclass = getattr(properties_physics_common, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
+del properties_physics_common
+
+import bl_ui.properties_physics_cloth as properties_physics_cloth
+for member in dir(properties_physics_cloth):
+    subclass = getattr(properties_physics_cloth, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
+del properties_physics_cloth
+
+import bl_ui.properties_physics_dynamicpaint as properties_physics_dynamicpaint
+for member in dir(properties_physics_dynamicpaint):
+    subclass = getattr(properties_physics_dynamicpaint, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
+del properties_physics_dynamicpaint
+
+import bl_ui.properties_physics_field as properties_physics_field
+for member in dir(properties_physics_field):
+    subclass = getattr(properties_physics_field, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
+del properties_physics_field
+
+import bl_ui.properties_physics_fluid as properties_physics_fluid
+for member in dir(properties_physics_fluid):
+    subclass = getattr(properties_physics_fluid, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
+del properties_physics_fluid
+
+import bl_ui.properties_physics_rigidbody as properties_physics_rigidbody
+for member in dir(properties_physics_rigidbody):
+    subclass = getattr(properties_physics_rigidbody, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
+del properties_physics_rigidbody
+
+import bl_ui.properties_physics_rigidbody_constraint as properties_physics_rigidbody_constraint
+for member in dir(properties_physics_rigidbody_constraint):
+    subclass = getattr(properties_physics_rigidbody_constraint, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
+del properties_physics_rigidbody_constraint
+
+import bl_ui.properties_physics_smoke as properties_physics_smoke
+for member in dir(properties_physics_smoke):
+    subclass = getattr(properties_physics_smoke, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
+del properties_physics_smoke
+
+import bl_ui.properties_physics_softbody as properties_physics_softbody
+for member in dir(properties_physics_softbody):
+    subclass = getattr(properties_physics_softbody, member)
+    try:
+        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    except:
+        pass
+del properties_physics_softbody
+
 
 def register():
     render.register()
