@@ -64,7 +64,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('orennayar_brdf',
                                                "Oren-Nayar BRDF", ""),
                                               ('plastic_brdf', "Plastic BRDF", ""),
-                                              #('sheen_brdf', "Sheen BRDF", ""),
+                                              ('sheen_brdf', "Sheen BRDF", ""),
                                               ('specular_btdf',
                                                "Specular BTDF", ""),
                                               ('specular_brdf',
@@ -469,7 +469,8 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                              description="Reflectance facing the camera", subtype='COLOR',
                                                              min=0.0,
                                                              max=1.0,
-                                                             default=(0.8, 0.8, 0.8),
+                                                             default=(
+                                                                 0.8, 0.8, 0.8),
                                                              update=refresh_preview)
 
     metal_normal_reflectance_use_tex = bpy.props.BoolProperty(name="",
@@ -583,7 +584,8 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                  description="Specular reflection", subtype='COLOR',
                                                                  min=0.0,
                                                                  max=1.0,
-                                                                 default=(0.8, 0.8, 0.8),
+                                                                 default=(
+                                                                     0.8, 0.8, 0.8),
                                                                  update=refresh_preview)
 
     plastic_specular_reflectance_use_tex = bpy.props.BoolProperty(name="",
@@ -648,7 +650,8 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                 description="Diffuse reflection", subtype='COLOR',
                                                                 min=0.0,
                                                                 max=1.0,
-                                                                default=(0.8, 0.8, 0.8),
+                                                                default=(
+                                                                    0.8, 0.8, 0.8),
                                                                 update=refresh_preview)
 
     plastic_diffuse_reflectance_use_tex = bpy.props.BoolProperty(name="",
@@ -783,6 +786,50 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
 
     # ---------------------------------
 
+    sheen_reflectance = bpy.props.FloatVectorProperty(name="Reflectance",
+                                                      description="Reflectance", subtype='COLOR',
+                                                      default=(0.5, 0.5, 0.5),
+                                                      min=0.0,
+                                                      max=1.0,
+                                                      update=refresh_preview)
+
+    sheen_reflectance_use_tex = bpy.props.BoolProperty(name="",
+                                                       description="Use a texture to influence sheen reflectance",
+                                                       default=False,
+                                                       update=refresh_preview)
+
+    sheen_reflectance_tex = bpy.props.StringProperty(name="",
+                                                     description="Texture to influence sheen reflectance",
+                                                     default="",
+                                                     update=refresh_preview)
+
+    sheen_reflectance_multiplier = bpy.props.FloatProperty(name="Reflectance Multiplier",
+                                                           description="Reflectance multiplier",
+                                                           default=1.0,
+                                                           min=0.0,
+                                                           max=1.0,
+                                                           update=refresh_preview)
+
+    sheen_reflectance_multiplier_use_tex = bpy.props.BoolProperty(name="",
+                                                                  description="Use a texture to influence sheen reflectance multiplier",
+                                                                  default=False,
+                                                                  update=refresh_preview)
+
+    sheen_reflectance_multiplier_tex = bpy.props.StringProperty(name="", description="Texture to influence sheen reflectance multiplier", default="",
+                                                                update=refresh_preview)
+
+    sheen_weight = bpy.props.FloatProperty(name="Sheen Blending Weight",
+                                           description="Blending weight of sheen BRDF in BSDF mix", default=1.0, min=0.0, max=1.0,
+                                           update=refresh_preview)
+
+    sheen_use_tex = bpy.props.BoolProperty(name="", description="Use texture to influence the layer weight in the BSDF mix", default=False,
+                                           update=refresh_preview)
+
+    sheen_mix_tex = bpy.props.StringProperty(name="", description="Texture to influence layer weight in the BSDF mix", default="",
+                                             update=refresh_preview)
+
+    # ---------------------------------
+
     spec_btdf_reflectance = bpy.props.FloatVectorProperty(
         name="Specular Reflectance", description="Specular BTDF reflectance", default=(0.8, 0.8, 0.8), subtype='COLOR', min=0.0, max=1.0,
         update=refresh_preview)
@@ -811,8 +858,35 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                    description="Specular BTDF transmittance multiplier", default=1.0, min=0.0, max=1.0,
                                                    update=refresh_preview)
 
+    spec_fresnel_multiplier = bpy.props.FloatProperty(name="Fresnel Multiplier",
+                                                      description="Fresnel multiplier",
+                                                      default=1.0,
+                                                      min=0.0,
+                                                      max=1.0,
+                                                      update=refresh_preview)
+
+    spec_fresnel_multiplier_use_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence fresnel multiplier", default=False,
+                                                             update=refresh_preview)
+
+    spec_fresnel_multiplier_tex = bpy.props.StringProperty(name="", description="Texture to influence fresnel_multiplier", default="",
+                                                           update=refresh_preview)
+
     spec_btdf_ior = bpy.props.FloatProperty(name="Index of Refraction", description="Index of refraction", default=1.33, min=1.0, max=2.5,
                                             update=refresh_preview)
+
+    spec_volume_density = bpy.props.FloatProperty(name="Volume Density",
+                                                  description="Volume density",
+                                                  default=0.0,
+                                                  min=0.0,
+                                                  max=10.0,
+                                                  update=refresh_preview)
+
+    spec_volume_scale = bpy.props.FloatProperty(name="Volume Scale",
+                                                description="Volume scale",
+                                                default=0.0,
+                                                min=0.0,
+                                                max=10.0,
+                                                update=refresh_preview)
 
     spec_btdf_weight = bpy.props.FloatProperty(name="Specular BTDF Blending Weight",
                                                description="Blending weight of Specular BTDF in BSDF mix", default=1.0, min=0.0, max=1.0,
