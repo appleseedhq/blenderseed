@@ -1355,7 +1355,7 @@ class Exporter(object):
         self.__close_element("bsdf")
 
     #------------------------
-    # Write Sheen BRDF    
+    # Write Sheen BRDF
     #------------------------
     def __emit_sheen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance = ""
@@ -1542,7 +1542,7 @@ class Exporter(object):
                                                            1)
 
         else:
-            
+
             # check for texture in surface_transmittance_name slot
             if layer.glass_surface_transmittance_use_tex and layer.glass_surface_transmittance_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.glass_surface_transmittance_tex]):
@@ -1609,7 +1609,7 @@ class Exporter(object):
                     if anisotropy not in self._textures_set:
                         self._textures_set.add(anisotropy)
                         self.__emit_texture(bpy.data.textures[layer.glass_anisotropy_tex], False, scene)
-            
+
             # check for texture in volume_transmittance slot
             if layer.glass_volume_transmittance_use_tex and layer.glass_volume_transmittance_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.glass_volume_transmittance_tex]):
@@ -1631,7 +1631,7 @@ class Exporter(object):
                     if volume_transmittance_distance not in self._textures_set:
                         self._textures_set.add(volume_transmittance_distance)
                         self.__emit_texture(bpy.data.textures[layer.glass_volume_transmittance_distance_tex], False, scene)
-            
+
             # check for texture in volume_absorption slot
             if layer.glass_volume_absorption_use_tex and layer.glass_volume_absorption_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.glass_volume_absorption_tex]):
@@ -1754,7 +1754,7 @@ class Exporter(object):
         roughness = layer.plastic_roughness
         diffuse_reflectance = ""
         diffuse_reflectance_multiplier = layer.plastic_diffuse_reflectance_multiplier
-        
+
         # check for texture in specular_reflectance slot
         if layer.plastic_specular_reflectance_tex and layer.plastic_specular_reflectance_tex != "":
             if util.is_uv_img(bpy.data.textures[layer.plastic_specular_reflectance_tex]):
@@ -1918,7 +1918,7 @@ class Exporter(object):
             transmittance_multiplier = layer.spec_btdf_trans_mult
 
             fresnel_multiplier = layer.spec_fresnel_multiplier
-            
+
             if layer.spec_fresnel_multiplier_use_tex and layer.spec_fresnel_multiplier_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.spec_fresnel_multiplier_tex]):
                     spec_fresnel_multiplier = layer.spec_fresnel_multiplier_tex + "_inst"
@@ -2634,7 +2634,7 @@ class Exporter(object):
             self.__emit_parameter("ibl_env_samples", scene.appleseed.ibl_env_samples)
             if not scene.appleseed.max_diffuse_bounces_unlimited:
                 self.__emit_parameter("max_diffuse_bounces", scene.appleseed.max_diffuse_bounces)
-            if not scene.appleseed.max_glossy_bounces_unlimited:    
+            if not scene.appleseed.max_glossy_bounces_unlimited:
                 self.__emit_parameter("max_glossy_bounces", scene.appleseed.max_glossy_bounces)
             if not scene.appleseed.max_specular_bounces_unlimited:
                 self.__emit_parameter("max_specular_bounces", scene.appleseed.max_specular_bounces)
