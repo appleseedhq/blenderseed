@@ -57,6 +57,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('diffuse_btdf', "Diffuse BTDF", ""),
                                               ('disney_brdf', "Disney BRDF", ""),
                                               ('glass_bsdf', "Glass BSDF", ""),
+                                              ('glossy_brdf', "Glossy BRDF", ""),
                                               ('kelemen_brdf', "Kelemen BRDF", ""),
                                               ('lambertian_brdf',
                                                "Lambertian BRDF", ""),
@@ -827,6 +828,109 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
 
     sheen_mix_tex = bpy.props.StringProperty(name="", description="Texture to influence layer weight in the BSDF mix", default="",
                                              update=refresh_preview)
+
+    # ---------------------------------
+
+    glossy_mdf = bpy.props.EnumProperty(name="Microfacet Distribution Function",
+                                        description="",
+                                        items=[('beckmann', "Beckmann", ""),
+                                               ('ggx', "GGX", ""),
+                                               ('std', "STD", "")],
+                                        default='ggx',
+                                        update=refresh_preview)
+
+    glossy_reflectance = bpy.props.FloatVectorProperty(name="Reflectance",
+                                                       description="Reflection", subtype='COLOR',
+                                                       min=0.0,
+                                                       max=1.0,
+                                                       default=(
+                                                           0.75, 0.75, 0.75),
+                                                       update=refresh_preview)
+
+    glossy_reflectance_use_tex = bpy.props.BoolProperty(name="",
+                                                        description="Use a texture to influence the reflectance",
+                                                        default=False,
+                                                        update=refresh_preview)
+
+    glossy_reflectance_tex = bpy.props.StringProperty(name="",
+                                                      description="Reflectance texture",
+                                                      default="",
+                                                      update=refresh_preview)
+
+    glossy_reflectance_multiplier = bpy.props.FloatProperty(name="Reflectance Multiplier",
+                                                            description="Reflection multiplier",
+                                                            min=0.0,
+                                                            max=1.0,
+                                                            default=1.0,
+                                                            update=refresh_preview)
+
+    glossy_reflectance_multiplier_use_tex = bpy.props.BoolProperty(name="",
+                                                                   description="Use a texture to influence the reflectance multiplier",
+                                                                   default=False,
+                                                                   update=refresh_preview)
+
+    glossy_reflectance_multiplier_tex = bpy.props.StringProperty(name="",
+                                                                 description="Reflectance multiplier texture",
+                                                                 default="",
+                                                                 update=refresh_preview)
+
+    glossy_roughness = bpy.props.FloatProperty(name="Roughness",
+                                               description="Roughness",
+                                               min=0.0,
+                                               max=1.0,
+                                               default=0.15,
+                                               update=refresh_preview)
+
+    glossy_roughness_use_tex = bpy.props.BoolProperty(name="",
+                                                      description="Use a texture to influence the roughness",
+                                                      default=False,
+                                                      update=refresh_preview)
+
+    glossy_roughness_tex = bpy.props.StringProperty(name="",
+                                                    description="Roughness texture",
+                                                    default="",
+                                                    update=refresh_preview)
+
+    glossy_highlight_falloff = bpy.props.FloatProperty(name="Highlight Falloff",
+                                                       description="",
+                                                       default=0.4,
+                                                       min=0.0,
+                                                       max=1.0,
+                                                       update=refresh_preview)
+
+    glossy_anisotropy = bpy.props.FloatProperty(name="Anisotropy",
+                                                description="Anisotropy",
+                                                min=-1.0,
+                                                max=1.0,
+                                                default=0.0,
+                                                update=refresh_preview)
+
+    glossy_anisotropy_use_tex = bpy.props.BoolProperty(name="",
+                                                       description="Use a texture to influence the anisotropy",
+                                                       default=False,
+                                                       update=refresh_preview)
+
+    glossy_anisotropy_tex = bpy.props.StringProperty(name="",
+                                                     description="Anisotropy texture",
+                                                     default="",
+                                                     update=refresh_preview)
+
+    glossy_ior = bpy.props.FloatProperty(name="Index of Refraction",
+                                         description="Glossy index of refraction",
+                                         default=1.5,
+                                         min=1.0,
+                                         max=2.5,
+                                         update=refresh_preview)
+
+    glossy_weight = bpy.props.FloatProperty(name="Glossy Blending Weight",
+                                            description="Blending weight of Glossy BRDF in BSDF mix", default=1.0, min=0.0, max=1.0,
+                                            update=refresh_preview)
+
+    glossy_use_tex = bpy.props.BoolProperty(name="", description="Use texture to influence the layer weight in the BSDF mix", default=False,
+                                            update=refresh_preview)
+
+    glossy_mix_tex = bpy.props.StringProperty(name="", description="Texture to influence layer weight in the BSDF mix", default="",
+                                              update=refresh_preview)
 
     # ---------------------------------
 
