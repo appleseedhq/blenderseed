@@ -1166,9 +1166,29 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
                     layout.prop(current_layer, "spec_btdf_trans_mult")
 
+                    # Fresnel multiplier
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "spec_fresnel_multiplier")
+
+                    if current_layer.spec_fresnel_multiplier_use_tex:
+                        layout.prop_search(current_layer, "spec_fresnel_multiplier_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "spec_fresnel_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.spec_fresnel_multiplier_tex != '' and current_layer.spec_fresnel_multiplier_use_tex:
+                        diffuse_tex = bpy.data.textures[current_layer.spec_fresnel_multiplier_tex]
+                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
                     # IOR
-                    row = layout.row(align=True)
-                    row.prop(current_layer, "spec_btdf_ior")
+                    layout.prop(current_layer, "spec_btdf_ior")
+
+                    # volume 
+                    layout.prop(current_layer, "spec_volume_density")
+
+                    # volume density
+                    layout.prop(current_layer, "spec_volume_scale")
+
 
             #----------------------------------------------
 

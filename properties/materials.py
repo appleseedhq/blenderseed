@@ -793,10 +793,14 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                       max=1.0,
                                                       update=refresh_preview)
 
-    sheen_reflectance_use_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence sheen reflectance", default=False,
+    sheen_reflectance_use_tex = bpy.props.BoolProperty(name="",
+                                                       description="Use a texture to influence sheen reflectance",
+                                                       default=False,
                                                        update=refresh_preview)
 
-    sheen_reflectance_tex = bpy.props.StringProperty(name="", description="Texture to influence sheen reflectance", default="",
+    sheen_reflectance_tex = bpy.props.StringProperty(name="",
+                                                     description="Texture to influence sheen reflectance",
+                                                     default="",
                                                      update=refresh_preview)
 
     sheen_reflectance_multiplier = bpy.props.FloatProperty(name="Reflectance Multiplier",
@@ -854,8 +858,35 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                    description="Specular BTDF transmittance multiplier", default=1.0, min=0.0, max=1.0,
                                                    update=refresh_preview)
 
+    spec_fresnel_multiplier = bpy.props.FloatProperty(name="Fresnel Multiplier",
+                                                      description="Fresnel multiplier",
+                                                      default=1.0,
+                                                      min=0.0,
+                                                      max=1.0,
+                                                      update=refresh_preview)
+
+    spec_fresnel_multiplier_use_tex = bpy.props.BoolProperty(name="", description="Use a texture to influence fresnel multiplier", default=False,
+                                                             update=refresh_preview)
+
+    spec_fresnel_multiplier_tex = bpy.props.StringProperty(name="", description="Texture to influence fresnel_multiplier", default="",
+                                                           update=refresh_preview)
+
     spec_btdf_ior = bpy.props.FloatProperty(name="Index of Refraction", description="Index of refraction", default=1.33, min=1.0, max=2.5,
                                             update=refresh_preview)
+
+    spec_volume_density = bpy.props.FloatProperty(name="Volume Density",
+                                                  description="Volume density",
+                                                  default=0.0,
+                                                  min=0.0,
+                                                  max=10.0,
+                                                  update=refresh_preview)
+
+    spec_volume_scale = bpy.props.FloatProperty(name="Volume Scale",
+                                                description="Volume scale",
+                                                default=0.0,
+                                                min=0.0,
+                                                max=10.0,
+                                                update=refresh_preview)
 
     spec_btdf_weight = bpy.props.FloatProperty(name="Specular BTDF Blending Weight",
                                                description="Blending weight of Specular BTDF in BSDF mix", default=1.0, min=0.0, max=1.0,

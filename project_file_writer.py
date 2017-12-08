@@ -1355,7 +1355,7 @@ class Exporter(object):
         self.__close_element("bsdf")
 
     #------------------------
-    #Write Sheen BRDF    
+    # Write Sheen BRDF    
     #------------------------
     def __emit_sheen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance = ""
@@ -1917,14 +1917,28 @@ class Exporter(object):
             reflectance_multiplier = layer.spec_btdf_refl_mult
             transmittance_multiplier = layer.spec_btdf_trans_mult
 
+            fresnel_multiplier = layer.spec_fresnel_multiplier
+            
+            if layer.spec_fresnel_multiplier_use_tex and layer.spec_fresnel_multiplier_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.spec_fresnel_multiplier_tex]):
+                    spec_fresnel_multiplier = layer.spec_fresnel_multiplier_tex + "_inst"
+                    if spec_fresnel_multiplier not in self._textures_set:
+                        self._textures_set.add(spec_fresnel_multiplier)
+                        self.__emit_texture(bpy.data.textures[layer.spec_fresnel_multiplier_tex], False, scene)
+
             ior = layer.spec_btdf_ior
+            volume_density = layer.spec_volume_density
+            volume_scale = layer.spec_volume_scale
 
         self.__open_element('bsdf name="{0}" model="specular_btdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance_name)
         self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
         self.__emit_parameter("transmittance", transmittance_name)
         self.__emit_parameter("transmittance_multiplier", transmittance_multiplier)
+        self.__emit_parameter("fresnel_multiplier", fresnel_multiplier)
         self.__emit_parameter("ior", ior)
+        self.__emit_parameter("volume_density", volume_density)
+        self.__emit_parameter("volume_scale", volume_scale)
         self.__close_element("bsdf")
 
     # ----------------------
