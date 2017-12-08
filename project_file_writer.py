@@ -2534,8 +2534,8 @@ class Exporter(object):
         self.__emit_parameter("filter", scene.appleseed.pixel_filter)
         self.__emit_parameter("filter_size", scene.appleseed.pixel_filter_size)
         if scene.render.use_border:
-            X, Y, endX, endY = self.__get_border_limits(scene, width, height)
-            self.__emit_parameter("crop_window", "{0} {1} {2} {3}".format(X, Y, endX, endY))
+            min_x, min_y, max_x, max_y = self.__get_border_limits(scene, width, height)
+            self.__emit_parameter("crop_window", "{0} {1} {2} {3}".format(min_x, min_y, max_x, max_y))
         self.__close_element("frame")
 
     def __get_frame_resolution(self, render):
@@ -2551,11 +2551,11 @@ class Exporter(object):
         return xratio / yratio
 
     def __get_border_limits(self, scene, width, height):
-        X = int(scene.render.border_min_x * width)
-        Y = height - int(scene.render.border_max_y * height)
-        endX = int(scene.render.border_max_x * width)
-        endY = height - int(scene.render.border_min_y * height)
-        return X, Y, endX, endY
+        min_x = int(scene.render.border_min_x * width)
+        max_x = int(scene.render.border_max_x * width)
+        min_y = height - int(scene.render.border_max_y * height) - 1
+        max_y = height - int(scene.render.border_min_y * height) - 1
+        return min_x, min_y, max_x, max_y
 
     # ----------------------------------------------------------------------------------------------
     # Configurations.

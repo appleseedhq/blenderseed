@@ -172,12 +172,16 @@ class RenderAppleseed(bpy.types.RenderEngine):
         (width, height) = util.get_render_resolution(scene)
 
         # Compute render window.
-        x0, y0, x1, y1 = 0, 0, width, height
         if scene.render.use_border:
-            x0 = int(scene.render.border_min_x * width)
-            x1 = int(scene.render.border_max_x * width)
-            y0 = height - int(scene.render.border_min_y * height)
-            y1 = height - int(scene.render.border_max_y * height)
+            min_x = int(scene.render.border_min_x * width)
+            min_y = height - int(scene.render.border_max_y * height)
+            max_x = int(scene.render.border_max_x * width) - 1
+            max_y = height - int(scene.render.border_min_y * height) - 1
+        else:
+            min_x = 0
+            min_y = 0
+            max_x = width - 1
+            max_y = height - 1
 
         # Launch appleseed.cli.
         cmd = (appleseed_exe,
@@ -186,7 +190,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                '--threads', str(scene.appleseed.threads),
                '--message-verbosity', 'warning',
                '--resolution', str(width), str(height),
-               '--window', str(x0), str(y0), str(x1), str(y1))
+               '--window', str(min_x), str(min_y), str(max_x), str(max_y))
         process = subprocess.Popen(cmd, cwd=as_bin_path, env=os.environ.copy(), stdout=subprocess.PIPE)
 
         self.update_stats("", "appleseed: Rendering")
@@ -230,19 +234,36 @@ class RenderAppleseed(bpy.types.RenderEngine):
             if False:
                 print("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
 
-            # Convert tile data to the format expected by Blender.
+            # Ignore tiles completely outside the render window.
+            if tile_x > max_x or tile_x + tile_w - 1 < min_x:
+                continue
+            if tile_y > max_y or tile_y + tile_h - 1 < min_y:
+                continue
+
+            # Image-space coordinates of the intersection between the tile and the render window.
+            x0 = max(tile_x, min_x)
+            y0 = max(tile_y, min_y)
+            x1 = min(tile_x + tile_w - 1, max_x)
+            y1 = min(tile_y + tile_h - 1, max_y)
+
+            # Number of rows and columns to skip in the input tile.
+            skip_x = x0 - tile_x
+            skip_y = y0 - tile_y
+            take_x = x1 - x0 + 1
+            take_y = y1 - y0 + 1
+
+            # Extract relevant tile data and convert them to the format expected by Blender.
             floats = array.array('f')
             floats.fromstring(tile_data)
             pix = []
-            for y in range(tile_h - 1, -1, -1):
-                stride = tile_w * 4
-                start_index = y * stride
-                end_index = start_index + stride
-                pix.extend(floats[i:i + 4] for i in range(start_index, end_index, 4))
+            for y in range(take_y - 1, -1, -1):
+                start_pix = (skip_y + y) * tile_w + skip_x
+                end_pix = start_pix + take_x
+                pix.extend(floats[p*4:p*4+4] for p in range(start_pix, end_pix))
 
             # Update image.
-            result = self.begin_result(tile_x, height - tile_y - tile_h, tile_w, tile_h)
-            layer = result.layers[0] if bpy.app.version < (2, 74, 4) else result.layers[0].passes[0]
+            result = self.begin_result(x0 - min_x, max_y - (y0 + take_y - 1), take_x, take_y)
+            layer = result.layers[0].passes[0]
             layer.rect = pix
             self.end_result(result)
 
