@@ -975,6 +975,20 @@ class Exporter(object):
                         else:
                             bsdfs.append([ashk_bsdf_name, layer.ashikhmin_weight])
 
+                    # Sheen
+                    elif layer.bsdf_type == "sheen_brdf":
+                        sheen_bsdf_name = "{0}|{1}".format(material_name, layer.name)
+                        self.__emit_sheen_brdf(material, sheen_bsdf_name, scene, layer)
+                        # Layer mask textures.
+                        if layer.sheen_use_tex and layer.sheen_mix_tex != '':
+                            bsdfs.append([sheen_bsdf_name, layer.sheen_mix_tex + "_inst"])
+                            mix_tex_name = layer.sheen_mix_tex + "_inst"
+                            if mix_tex_name not in self._textures_set:
+                                self.__emit_texture(bpy.data.textures[layer.sheen_mix_tex], False, scene)
+                                self._textures_set.add(mix_tex_name)
+                        else:
+                            bsdfs.append([sheen_bsdf_name, layer.sheen_weight])
+
                     # Kelemen
                     elif layer.bsdf_type == "kelemen_brdf":
                         kelemen_bsdf_name = "{0}|{1}".format(material_name, layer.name)
@@ -1338,6 +1352,55 @@ class Exporter(object):
         self.__open_element('bsdf name="{0}" model="diffuse_btdf"'.format(bsdf_name))
         self.__emit_parameter("transmittance", transmittance_name)
         self.__emit_parameter("transmittance_multiplier", transmittance)
+        self.__close_element("bsdf")
+
+    #------------------------
+    #Write Sheen BRDF    
+    #------------------------
+    def __emit_sheen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
+        reflectance = ""
+        reflectance_multiplier = layer.sheen_reflectance_multiplier
+
+        # Nodes.
+        if node is not None:
+            inputs = node.inputs
+            transmittance_name = inputs["Reflectance"].get_socket_value(True)
+            transmittance = inputs["Multiplier"].get_socket_value(True)
+
+            # If the socket is not connected.
+            if not inputs["Reflectance"].is_linked:
+                transmittance_color = transmittance_name
+                transmittance_name = "{0}_diffuse_transmittance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(transmittance_name,
+                                                           transmittance_color,
+                                                           1)
+
+        else:
+            # reflectance
+            if layer.sheen_reflectance_use_tex and layer.sheen_reflectance_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.sheen_reflectance_tex]):
+
+                    reflectance = layer.sheen_reflectance_tex + "_inst"
+                    if reflectance not in self._textures_set:
+                        self._textures_set.add(reflectance)
+                        self.__emit_texture(bpy.data.textures[layer.sheen_reflectance_tex], False, scene)
+            if reflectance == "":
+                reflectance = "{0}_reflectance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(reflectance,
+                                                           layer.sheen_reflectance,
+                                                           1)
+
+            # reflectance multiplier
+            if layer.sheen_reflectance_multiplier_use_tex and layer.sheen_reflectance_multiplier_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.sheen_reflectance_multiplier_tex]):
+                    reflectance_multiplier = layer.sheen_reflectance_multiplier_tex + "_inst"
+                    if reflectance_multiplier not in self._textures_set:
+                        self._textures_set.add(reflectance_multiplier)
+                        self.__emit_texture(bpy.data.textures[layer.sheen_reflectance_multiplier_tex], False, scene)
+
+        self.__open_element('bsdf name="{0}" model="sheen_brdf"'.format(bsdf_name))
+        self.__emit_parameter("reflectance", reflectance)
+        self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
         self.__close_element("bsdf")
 
     # -----------------------------
