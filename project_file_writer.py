@@ -1369,7 +1369,7 @@ class Exporter(object):
         self.__close_element("bsdf")
 
     #------------------------
-    # Write Sheen BRDF    
+    # Write Sheen BRDF
     #------------------------
     def __emit_sheen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance = ""
@@ -1615,7 +1615,7 @@ class Exporter(object):
                                                            1)
 
         else:
-            
+
             # check for texture in surface_transmittance_name slot
             if layer.glass_surface_transmittance_use_tex and layer.glass_surface_transmittance_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.glass_surface_transmittance_tex]):
@@ -1682,7 +1682,7 @@ class Exporter(object):
                     if anisotropy not in self._textures_set:
                         self._textures_set.add(anisotropy)
                         self.__emit_texture(bpy.data.textures[layer.glass_anisotropy_tex], False, scene)
-            
+
             # check for texture in volume_transmittance slot
             if layer.glass_volume_transmittance_use_tex and layer.glass_volume_transmittance_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.glass_volume_transmittance_tex]):
@@ -1704,7 +1704,7 @@ class Exporter(object):
                     if volume_transmittance_distance not in self._textures_set:
                         self._textures_set.add(volume_transmittance_distance)
                         self.__emit_texture(bpy.data.textures[layer.glass_volume_transmittance_distance_tex], False, scene)
-            
+
             # check for texture in volume_absorption slot
             if layer.glass_volume_absorption_use_tex and layer.glass_volume_absorption_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.glass_volume_absorption_tex]):
@@ -1827,7 +1827,7 @@ class Exporter(object):
         roughness = layer.plastic_roughness
         diffuse_reflectance = ""
         diffuse_reflectance_multiplier = layer.plastic_diffuse_reflectance_multiplier
-        
+
         # check for texture in specular_reflectance slot
         if layer.plastic_specular_reflectance_tex and layer.plastic_specular_reflectance_tex != "":
             if util.is_uv_img(bpy.data.textures[layer.plastic_specular_reflectance_tex]):
@@ -1991,7 +1991,7 @@ class Exporter(object):
             transmittance_multiplier = layer.spec_btdf_trans_mult
 
             fresnel_multiplier = layer.spec_fresnel_multiplier
-            
+
             if layer.spec_fresnel_multiplier_use_tex and layer.spec_fresnel_multiplier_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.spec_fresnel_multiplier_tex]):
                     spec_fresnel_multiplier = layer.spec_fresnel_multiplier_tex + "_inst"
@@ -2607,8 +2607,8 @@ class Exporter(object):
         self.__emit_parameter("filter", scene.appleseed.pixel_filter)
         self.__emit_parameter("filter_size", scene.appleseed.pixel_filter_size)
         if scene.render.use_border:
-            X, Y, endX, endY = self.__get_border_limits(scene, width, height)
-            self.__emit_parameter("crop_window", "{0} {1} {2} {3}".format(X, Y, endX, endY))
+            min_x, min_y, max_x, max_y = self.__get_border_limits(scene, width, height)
+            self.__emit_parameter("crop_window", "{0} {1} {2} {3}".format(min_x, min_y, max_x, max_y))
         self.__close_element("frame")
 
     def __get_frame_resolution(self, render):
@@ -2624,11 +2624,11 @@ class Exporter(object):
         return xratio / yratio
 
     def __get_border_limits(self, scene, width, height):
-        X = int(scene.render.border_min_x * width)
-        Y = height - int(scene.render.border_max_y * height)
-        endX = int(scene.render.border_max_x * width)
-        endY = height - int(scene.render.border_min_y * height)
-        return X, Y, endX, endY
+        min_x = int(scene.render.border_min_x * width)
+        max_x = int(scene.render.border_max_x * width)
+        min_y = height - int(scene.render.border_max_y * height) - 1
+        max_y = height - int(scene.render.border_min_y * height) - 1
+        return min_x, min_y, max_x, max_y
 
     # ----------------------------------------------------------------------------------------------
     # Configurations.
@@ -2707,7 +2707,7 @@ class Exporter(object):
             self.__emit_parameter("ibl_env_samples", scene.appleseed.ibl_env_samples)
             if not scene.appleseed.max_diffuse_bounces_unlimited:
                 self.__emit_parameter("max_diffuse_bounces", scene.appleseed.max_diffuse_bounces)
-            if not scene.appleseed.max_glossy_bounces_unlimited:    
+            if not scene.appleseed.max_glossy_bounces_unlimited:
                 self.__emit_parameter("max_glossy_bounces", scene.appleseed.max_glossy_bounces)
             if not scene.appleseed.max_specular_bounces_unlimited:
                 self.__emit_parameter("max_specular_bounces", scene.appleseed.max_specular_bounces)
