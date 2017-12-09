@@ -989,6 +989,20 @@ class Exporter(object):
                         else:
                             bsdfs.append([sheen_bsdf_name, layer.sheen_weight])
 
+                    # Glossy
+                    elif layer.bsdf_type == "glossy_brdf":
+                        glossy_bsdf_name = "{0}|{1}".format(material_name, layer.name)
+                        self.__emit_glossy_brdf(material, glossy_bsdf_name, scene, layer)
+                        # Layer mask textures.
+                        if layer.glossy_use_tex and layer.glossy_mix_tex != '':
+                            bsdfs.append([glossy_bsdf_name, layer.glossy_mix_tex + "_inst"])
+                            mix_tex_name = layer.glossy_mix_tex + "_inst"
+                            if mix_tex_name not in self._textures_set:
+                                self.__emit_texture(bpy.data.textures[layer.glossy_mix_tex], False, scene)
+                                self._textures_set.add(mix_tex_name)
+                        else:
+                            bsdfs.append([glossy_bsdf_name, layer.glossy_weight])
+
                     # Kelemen
                     elif layer.bsdf_type == "kelemen_brdf":
                         kelemen_bsdf_name = "{0}|{1}".format(material_name, layer.name)
@@ -1401,6 +1415,65 @@ class Exporter(object):
         self.__open_element('bsdf name="{0}" model="sheen_brdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance)
         self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
+        self.__close_element("bsdf")
+
+    #------------------------
+    # Write glossy BRDF    
+    #------------------------
+    def __emit_glossy_brdf(self, material, bsdf_name, scene, layer=None, node=None):
+        reflectance = ""
+        reflectance_multiplier = layer.glossy_reflectance_multiplier
+        roughness = layer.glossy_roughness
+        anisotropy = layer.glossy_anisotropy
+
+        # reflectance
+        if layer.glossy_reflectance_use_tex and layer.glossy_reflectance_tex != "":
+            if util.is_uv_img(bpy.data.textures[layer.glossy_reflectance_tex]):
+
+                reflectance = layer.glossy_reflectance_tex + "_inst"
+                if reflectance not in self._textures_set:
+                    self._textures_set.add(reflectance)
+                    self.__emit_texture(bpy.data.textures[layer.glossy_reflectance_tex], False, scene)
+        if reflectance == "":
+            reflectance = "{0}_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(reflectance,
+                                                       layer.glossy_reflectance,
+                                                       1)
+
+        # reflectance multiplier
+        if layer.glossy_reflectance_multiplier_use_tex and layer.glossy_reflectance_multiplier_tex != "":
+            if util.is_uv_img(bpy.data.textures[layer.glossy_reflectance_multiplier_tex]):
+                reflectance_multiplier = layer.glossy_reflectance_multiplier_tex + "_inst"
+                if reflectance_multiplier not in self._textures_set:
+                    self._textures_set.add(reflectance_multiplier)
+                    self.__emit_texture(bpy.data.textures[layer.glossy_reflectance_multiplier_tex], False, scene)
+
+        # roughness
+        if layer.glossy_roughness_use_tex and layer.glossy_roughness_tex != "":
+            if util.is_uv_img(bpy.data.textures[layer.glossy_roughness_tex]):
+                roughness = layer.glossy_roughness_tex + "_inst"
+                if roughness not in self._textures_set:
+                    self._textures_set.add(roughness)
+                    self.__emit_texture(bpy.data.textures[layer.glossy_roughness_tex], False, scene)
+
+        # anisotropy
+        if layer.glossy_anisotropy_use_tex and layer.glossy_anisotropy_tex != "":
+            if util.is_uv_img(bpy.data.textures[layer.glossy_anisotropy_tex]):
+                anisotropy = layer.glossy_anisotropy_tex + "_inst"
+                if anisotropy not in self._textures_set:
+                    self._textures_set.add(anisotropy)
+                    self.__emit_texture(bpy.data.textures[layer.glossy_anisotropy_tex], False, scene)
+
+
+
+        self.__open_element('bsdf name="{0}" model="glossy_brdf"'.format(bsdf_name))
+        self.__emit_parameter("mdf", layer.glossy_mdf)
+        self.__emit_parameter("reflectance", reflectance)
+        self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
+        self.__emit_parameter("roughness", roughness)
+        self.__emit_parameter("highlight_falloff", layer.glossy_highlight_falloff)
+        self.__emit_parameter("anisotropy", anisotropy)
+        self.__emit_parameter("ior", layer.glossy_ior)
         self.__close_element("bsdf")
 
     # -----------------------------

@@ -235,6 +235,117 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
                 #-------------------------------------------------
 
+                # glossy brdf layout
+                if current_layer.bsdf_type == "glossy_brdf":
+
+                    # layer weight
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glossy_weight",
+                             text="Layer Weight")
+                    if current_layer.glossy_use_tex:
+                        layout.prop_search(
+                            current_layer, "glossy_mix_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glossy_use_tex",
+                             icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glossy_mix_tex != '' and current_layer.glossy_use_tex:
+                        mix_tex = bpy.data.textures[
+                            current_layer.glossy_mix_tex]
+                        layout.prop(mix_tex.image.colorspace_settings,
+                                    "name", text="Color Space")
+
+                    # mdf
+                    col = layout.column()
+                    col.prop(current_layer, "glossy_mdf")
+
+                    # reflectance
+                    split = layout.split(percentage=0.40)
+                    col = split.column()
+                    col.label("Reflectance:")
+                    split = split.split(percentage=0.83)
+                    col = split.column()
+                    col.prop(current_layer, "glossy_reflectance", text="")
+
+                    if current_layer.glossy_reflectance_use_tex:
+                        layout.prop_search(
+                            current_layer, "glossy_reflectance_tex", material, "texture_slots")
+
+                    split = split.split(percentage=1.0)
+                    col = split.column()
+                    col.prop(current_layer, "glossy_reflectance_use_tex",
+                             text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glossy_reflectance_tex != '' and current_layer.glossy_reflectance_use_tex:
+                        specular_tex = bpy.data.textures[
+                            current_layer.glossy_reflectance_tex]
+                        layout.prop(
+                            specular_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # reflectance multiplier
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glossy_reflectance_multiplier")
+
+                    if current_layer.glossy_reflectance_multiplier_use_tex:
+                        layout.prop_search(
+                            current_layer, "glossy_reflectance_multiplier_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glossy_reflectance_multiplier_use_tex",
+                             text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glossy_reflectance_multiplier_tex != '' and current_layer.glossy_reflectance_multiplier_use_tex:
+                        diffuse_tex = bpy.data.textures[
+                            current_layer.glossy_reflectance_multiplier_tex]
+                        layout.prop(
+                            diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # roughness
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glossy_roughness")
+
+                    if current_layer.glossy_roughness_use_tex:
+                        layout.prop_search(
+                            current_layer, "glossy_roughness_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glossy_roughness_use_tex",
+                             text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glossy_roughness_tex != '' and current_layer.glossy_roughness_use_tex:
+                        diffuse_tex = bpy.data.textures[
+                            current_layer.glossy_roughness_tex]
+                        layout.prop(
+                            diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # highlight falloff
+                    col = layout.column()
+                    col.prop(current_layer, "glossy_highlight_falloff")
+
+                    # anisotropy
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "glossy_anisotropy")
+
+                    if current_layer.glossy_anisotropy_use_tex:
+                        layout.prop_search(
+                            current_layer, "glossy_anisotropy_tex", material, "texture_slots")
+
+                    col = split.column()
+                    col.prop(current_layer, "glossy_anisotropy_use_tex",
+                             text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.glossy_anisotropy_tex != '' and current_layer.glossy_anisotropy_use_tex:
+                        diffuse_tex = bpy.data.textures[
+                            current_layer.glossy_anisotropy_tex]
+                        layout.prop(
+                            diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # ior
+                    col = layout.column()
+                    col.prop(current_layer, "glossy_ior")
+
+                #--------------------------------------------------
+
                 # glass bsdf layout
                 if current_layer.bsdf_type == "glass_bsdf":
 
