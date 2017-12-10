@@ -1418,7 +1418,7 @@ class Exporter(object):
         self.__close_element("bsdf")
 
     #------------------------
-    # Write glossy BRDF    
+    # Write glossy BRDF
     #------------------------
     def __emit_glossy_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance = ""
@@ -2188,7 +2188,7 @@ class Exporter(object):
                 color_space = 'srgb'
 
             filepath = util.realpath(texture.image.filepath)
-            texture_name = texture.name if bump_bool == False else texture.name + "_bump"
+            texture_name = texture.name if bump_bool is False else texture.name + "_bump"
 
         self.__open_element('texture name="{0}" model="disk_texture_2d"'.format(texture_name))
         self.__emit_parameter("color_space", color_space)
