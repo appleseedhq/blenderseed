@@ -391,10 +391,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                               max=20.0,
                                               precision=3)
 
-        cls.recompute_vertex_normals = bpy.props.BoolProperty(name="Recompute Vertex Normals",
-                                                              description="If checked, vertex normals will be recomputed during tessellation",
-                                                              default=True)
-
         cls.specular_multiplier = bpy.props.FloatProperty(name="Specular Components Multiplier",
                                                           description="Multiply the intensity of specular components by this factor",
                                                           min=0.0,
