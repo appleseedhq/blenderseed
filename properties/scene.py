@@ -262,7 +262,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         cls.max_ray_intensity_unlimited = bpy.props.BoolProperty(name="Unlimited",
                                                                  description="Unlimited ray intensity",
-                                                                 default=False)
+                                                                 default=True)
 
         cls.max_ray_intensity = bpy.props.FloatProperty(name="Max Ray Intensity",
                                                         description="Clamp intensity of rays (after the first bounce) to this value to reduce fireflies",
