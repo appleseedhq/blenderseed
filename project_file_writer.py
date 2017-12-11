@@ -1130,7 +1130,7 @@ class Exporter(object):
         # Nodes.
         if node is not None:
             inputs = node.inputs
-            base_coat_name = inputs["Base Coat"].get_socket_value(True)
+            base_coat_name = inputs["Base Color"].get_socket_value(True)
             spec = inputs["Specular"].get_socket_value(True)
             spec_tint = inputs["Specular Tint"].get_socket_value(True)
             aniso = inputs["Anisotropy"].get_socket_value(True)
@@ -1143,7 +1143,7 @@ class Exporter(object):
             subsurface = inputs["Subsurface"].get_socket_value(True)
 
             # If the socket is not connected.
-            if not inputs["Base Coat"].is_linked:
+            if not inputs["Base Color"].is_linked:
                 base_coat_color = base_coat_name
                 base_coat_name = "{0}_disney_base_coat".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(base_coat_name,
@@ -1329,11 +1329,11 @@ class Exporter(object):
         # Nodes.
         if node is not None:
             inputs = node.inputs
-            transmittance_name = inputs["Reflectance"].get_socket_value(True)
+            transmittance_name = inputs["Transmittance"].get_socket_value(True)
             transmittance = inputs["Multiplier"].get_socket_value(True)
 
             # If the socket is not connected.
-            if not inputs["Reflectance"].is_linked:
+            if not inputs["Transmittance"].is_linked:
                 transmittance_color = transmittance_name
                 transmittance_name = "{0}_diffuse_transmittance".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(transmittance_name,

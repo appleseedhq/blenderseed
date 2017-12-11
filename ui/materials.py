@@ -934,19 +934,19 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "transmittance_color", text="")
 
                     if current_layer.transmittance_use_diff_tex:
-                        layout.prop_search(current_layer, "transmittance_diffuse_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "transmittance_diff_tex", material, "texture_slots")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
                     col.prop(current_layer, "transmittance_use_diff_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if current_layer.transmittance_diffuse_tex != '' and current_layer.transmittance_use_diff_tex:
-                        diffuse_tex = bpy.data.textures[current_layer.transmittance_diffuse_tex]
-                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+                    if current_layer.transmittance_diff_tex != '' and current_layer.transmittance_use_diff_tex:
+                        diff_tex = bpy.data.textures[current_layer.transmittance_diff_tex]
+                        layout.prop(diff_tex.image.colorspace_settings, "name", text="Color Space")
 
                     # transmittance
                     split = layout.split(percentage=0.90)
                     col = split.column()
-                    col.prop(current_layer, "transmittance_multiplier", text="Transmittance")
+                    col.prop(current_layer, "transmittance_multiplier", text="Transmittance Multiplier:")
                     if current_layer.transmittance_use_mult_tex:
                         layout.prop_search(current_layer, "transmittance_mult_tex", material, "texture_slots", text="")
 
