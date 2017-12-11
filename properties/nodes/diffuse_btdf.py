@@ -37,7 +37,7 @@ class AppleseedDiffuseBTDFTransmittanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDiffuseBTDFTransmittance"
     bl_label = "Transmittance"
 
-    socket_value = AppleseedMatLayerProps.transmittance_color
+    socket_value = AppleseedMatLayerProps.diffuse_btdf_transmittance_color
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedDiffuseBTDFMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDiffuseBTDFMultiplier"
     bl_label = "Multiplier"
 
-    socket_value = AppleseedMatLayerProps.transmittance_multiplier
+    socket_value = AppleseedMatLayerProps.diffuse_btdf_transmittance_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

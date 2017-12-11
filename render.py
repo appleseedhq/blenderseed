@@ -91,8 +91,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         exporter.export(scene, project_filepath)
 
         # Render project.
-        if scene.appleseed.output_mode == 'render':
-            self.__render_project_file(scene, project_filepath)
+        self.__render_project_file(scene, project_filepath)
 
     def __render_material_preview(self, scene):
         """
@@ -162,7 +161,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
     def __render_project_file(self, scene, project_filepath):
         # Get the absolute path to the executable directory.
-        as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_bin_path)
+        as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory)
         if as_bin_path == '':
             self.report({'ERROR'}, "The path to appleseed.cli executable has not been specified. Set the path in the add-on user preferences.")
             return

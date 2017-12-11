@@ -37,7 +37,7 @@ class AppleseedAshikhminReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminReflectance"
     bl_label = "Diffuse Reflectance"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_reflectance
+    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedAshikhminMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminMultiplier"
     bl_label = "Diffuse Multiplier"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_multiplier
+    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -69,7 +69,7 @@ class AppleseedAshikhminGlossySocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminGlossy"
     bl_label = "Glossy Reflectance"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_glossy
+    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_glossy
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -85,7 +85,7 @@ class AppleseedAshikhminUSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminU"
     bl_label = "Shininess U"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_shininess_u
+    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_shininess_u
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -101,7 +101,7 @@ class AppleseedAshikhminVSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminV"
     bl_label = "Shininess V"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_shininess_v
+    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_shininess_v
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -117,8 +117,8 @@ class AppleseedAshikhminFresnelSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminFresnel"
     bl_label = "Fresnel"
 
-    socket_value = bpy.props.FloatProperty(name="Fresnel Multiplier",
-                                           description="Ashikhmin fresnel multiplier",
+    socket_value = bpy.props.FloatProperty(name="fresnel_multiplier",
+                                           description="Ashikhmin Fresnel multiplier",
                                            default=1,
                                            min=0,
                                            max=1)

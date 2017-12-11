@@ -47,19 +47,18 @@ class AppleseedCameraDoF(bpy.types.Panel):
         asr_cam_props = scene.camera.data.appleseed
 
         row = layout.row()
-        row.prop(asr_cam_props, "camera_type", text='Model')
+        row.prop(asr_cam_props, "camera_model", text="Model")
 
-        if asr_cam_props.camera_type == "thinlens":
-            layout.prop(asr_cam_props, "camera_dof")
+        if asr_cam_props.camera_model == "thinlens":
+            layout.prop(asr_cam_props, "f_number", text="F-Number")
 
             layout.prop(context.active_object.data, "dof_distance", text="Focal Distance")
             layout.active = context.active_object.data.dof_object is None
             layout.prop(context.active_object.data, "dof_object", text='Autofocus')
 
-            layout.prop(asr_cam_props, "diaphragm_blades")
-            layout.prop(asr_cam_props, "diaphragm_angle")
-
-            layout.prop(asr_cam_props, "diaphragm_map")
+            layout.prop(asr_cam_props, "diaphragm_blades", "Diaphragm Blades")
+            layout.prop(asr_cam_props, "diaphragm_angle", "Diaphragm Tilt Angle")
+            layout.prop(asr_cam_props, "diaphragm_map", "Diaphragm Map")
 
 
 def register():

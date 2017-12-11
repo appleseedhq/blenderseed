@@ -42,100 +42,89 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
 
     @classmethod
     def register(cls):
-        bpy.types.Scene.appleseed_sky = bpy.props.PointerProperty(name="appleseed Sky",
+        bpy.types.Scene.appleseed_sky = bpy.props.PointerProperty(name="appleseed_sky",
                                                                   description="appleseed Sky",
                                                                   type=cls)
 
-        cls.env_type = bpy.props.EnumProperty(items=[("constant", "Constant", "Use constant color for sky"),
+        cls.env_type = bpy.props.EnumProperty(name="env_type",
+                                              items=[("constant", "Constant", "Use constant color for sky"),
                                                      ("gradient", "Gradient", "Use sky color gradient"),
                                                      ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere"),
                                                      ("latlong_map", "Latitude-Longitude Map", "Use latlong map texture"),
                                                      ("mirrorball_map", "Mirror Ball Map", "Use mirror ball texture"),
                                                      ("sunsky", "Physical Sun/Sky", "")],
-                                              name="Environment Type",
                                               description="Select environment type",
                                               default="gradient")
 
-        cls.sun_model = bpy.props.EnumProperty(items=[("hosek_environment_edf", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
+        cls.sun_model = bpy.props.EnumProperty(name="sun_model",
+                                               items=[("hosek_environment_edf", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
                                                       ('preetham_environment_edf', "Preetham", 'Preetham physical sun/sky model')],
-                                               name="Sun Model",
                                                description="Physical sun/sky model",
                                                default="hosek_environment_edf")
 
-        cls.sun_lamp = bpy.props.EnumProperty(items=sun_enumerator,
-                                              name="Sun Lamp",
+        cls.sun_lamp = bpy.props.EnumProperty(name="sun_lamp",
+                                              items=sun_enumerator,
                                               description="Sun lamp to export")
 
-        cls.sun_theta = bpy.props.FloatProperty(name="Sun Theta Angle",
+        cls.sun_theta = bpy.props.FloatProperty(name="sun_theta",
                                                 description='',
                                                 default=0.0,
                                                 min=-180,
                                                 max=180)
 
-        cls.sun_phi = bpy.props.FloatProperty(name="Sun Phi Angle",
+        cls.sun_phi = bpy.props.FloatProperty(name="sun_phi",
                                               description='',
                                               default=0.0,
                                               min=-180,
                                               max=180)
 
-        cls.turbidity = bpy.props.FloatProperty(name="Turbidity",
+        cls.turbidity = bpy.props.FloatProperty(name="turbidity",
                                                 description='',
                                                 default=4.0,
                                                 min=0.0,
                                                 max=10.0)
 
-        cls.turbidity_multiplier = bpy.props.FloatProperty(name="Turbidity Multiplier",
+        cls.turbidity_multiplier = bpy.props.FloatProperty(name="turbidity_multiplier",
                                                            description='',
                                                            default=2.0,
                                                            min=0,
                                                            max=10.0)
 
-        cls.luminance_multiplier = bpy.props.FloatProperty(name="Luminance Multiplier",
+        cls.luminance_multiplier = bpy.props.FloatProperty(name="luminance_multiplier",
                                                            description='',
                                                            default=1.0,
                                                            min=0.0)
 
-        cls.luminance_gamma = bpy.props.FloatProperty(name="Luminance Gamma",
+        cls.luminance_gamma = bpy.props.FloatProperty(name="luminance_gamma",
                                                       description='',
                                                       default=1.0,
                                                       min=0.0)
 
-        cls.saturation_multiplier = bpy.props.FloatProperty(name="Saturation Multiplier",
+        cls.saturation_multiplier = bpy.props.FloatProperty(name="saturation_multiplier",
                                                             description='',
                                                             default=1.0,
                                                             min=0.0)
 
-        cls.horiz_shift = bpy.props.FloatProperty(name="Horizon Shift",
-                                                  description='',
-                                                  default=0.0,
-                                                  min=-2.0,
-                                                  max=2.0)
+        cls.horizon_shift = bpy.props.FloatProperty(name="horizon_shift",
+                                                    description='',
+                                                    default=0.0,
+                                                    min=-2.0,
+                                                    max=2.0)
 
-        cls.ground_albedo = bpy.props.FloatProperty(name="Ground Albedo",
+        cls.ground_albedo = bpy.props.FloatProperty(name="ground_albedo",
                                                     description='',
                                                     default=0.3,
                                                     min=0.0,
                                                     max=1.0)
 
-        cls.radiance_multiplier = bpy.props.FloatProperty(name="Radiance Multiplier",
-                                                          description='',
-                                                          default=0.05,
-                                                          min=0.0)
-
-        cls.env_tex_mult = bpy.props.FloatProperty(name="Radiance Multiplier",
+        cls.env_tex_mult = bpy.props.FloatProperty(name="env_tex_mult",
                                                    description="",
                                                    default=1.0,
                                                    min=0.0)
 
-        cls.env_tex = bpy.props.StringProperty(name="Environment Texture",
+        cls.env_tex = bpy.props.StringProperty(name="env_tex",
                                                description="Texture to influence environment",
                                                default="")
-
-        cls.env_radiance_multiplier = bpy.props.FloatProperty(name="Environment Energy Multiplier",
-                                                              description="Multiply the exitance of the environment by this factor",
-                                                              min=0.0,
-                                                              default=1.0,
-                                                              subtype='FACTOR')
 
     @classmethod
     def unregister(cls):

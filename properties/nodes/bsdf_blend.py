@@ -58,7 +58,7 @@ class AppleseedBlendWeightSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBlendWeight"
     bl_label = "Weight"
 
-    socket_value = bpy.props.FloatProperty(name="Weight",
+    socket_value = bpy.props.FloatProperty(name="weight",
                                            description="Blending weight between BSDFs",
                                            default=0.5,
                                            min=0,

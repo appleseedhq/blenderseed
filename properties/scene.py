@@ -53,145 +53,118 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     @classmethod
     def register(cls):
-        bpy.types.Scene.appleseed = bpy.props.PointerProperty(
-            name="appleseed Render Settings",
-            description="appleseed render settings",
-            type=cls)
+        bpy.types.Scene.appleseed = bpy.props.PointerProperty(name="appleseed_render_settings",
+                                                              description="appleseed Render Settings",
+                                                              type=cls)
 
         # Scene render settings.
 
-        cls.selected_scene = bpy.props.EnumProperty(name="Scene",
-                                                    description="Select the scene to export",
-                                                    items=scene_enumerator)
-
-        cls.selected_camera = bpy.props.EnumProperty(name="Camera",
-                                                     description="Select the camera to export",
-                                                     items=camera_enumerator)
-
-        cls.output_mode = bpy.props.EnumProperty(name="Output Mode",
-                                                 description="Set the mode of export",
-                                                 items=[('render', 'Render', ''),
-                                                        ('export_only', 'Export Files Only', '')],
-                                                 default='render')
-
-        cls.threads_auto = bpy.props.BoolProperty(name="Auto Threads",
+        cls.threads_auto = bpy.props.BoolProperty(name="threads_auto",
                                                   description="Automatically determine the number of rendering threads",
                                                   default=True)
 
-        cls.threads = bpy.props.IntProperty(name="Rendering Threads",
+        cls.threads = bpy.props.IntProperty(name="threads",
                                             description="Number of threads to use for rendering",
                                             default=threads,
                                             min=1,
                                             max=max_threads)
 
-        cls.generate_mesh_files = bpy.props.BoolProperty(name="Export Geometry",
+        cls.generate_mesh_files = bpy.props.BoolProperty(name="export_geometry",
                                                          description="Write geometry to disk as .obj files",
                                                          default=True)
 
-        cls.export_mode = bpy.props.EnumProperty(name="",
+        cls.export_mode = bpy.props.EnumProperty(name="geometry_export_mode",
                                                  description="Geometry export mode",
-                                                 items=[
-                                                     ('all', "All", "Export all geometry, overwriting existing .obj files"),
-                                                     ('partial', "Partial", "Only export geometry that has not been written to disk"),
-                                                     ('selected', "Selected", "Only export selected geometry")],
+                                                 items=[('all', "All", "Export all geometry, overwriting existing .obj files"),
+                                                        ('partial', "Partial", "Only export geometry that has not been written to disk"),
+                                                        ('selected', "Selected", "Only export selected geometry")],
                                                  default='all')
 
-        cls.export_hair = bpy.props.BoolProperty(name="Export Hair",
+        cls.export_hair = bpy.props.BoolProperty(name="export_hair",
                                                  description="Export hair particle systems as renderable geometry",
                                                  default=False)
 
         # Sampling.
 
-        cls.decorrelate_pixels = bpy.props.BoolProperty(name="Decorrelate Pixels",
+        cls.decorrelate_pixels = bpy.props.BoolProperty(name="decorrelate_pixels",
                                                         description='Avoid correlation patterns at the expense of slightly more sampling noise',
                                                         default=True)
 
-        cls.pixel_filter = bpy.props.EnumProperty(name="Filter",
+        cls.pixel_filter = bpy.props.EnumProperty(name="pixel_filter",
                                                   description="Pixel filter to use",
                                                   items=[("box", "Box", "Box"),
-                                                         ("triangle", "Triangle",
-                                                          "Triangle"),
-                                                         ("gaussian", "Gaussian",
-                                                          "Gaussian"),
-                                                         ("mitchell", "Mitchell-Netravali",
-                                                          "Mitchell-Netravali"),
-                                                         ("bspline", "Cubic B-spline",
-                                                          "Cubic B-spline"),
-                                                         ("catmull", "Catmull-Rom Spline",
-                                                          "Catmull-Rom Spline"),
-                                                         ("lanczos", "Lanczos",
-                                                          "Lanczos"),
+                                                         ("triangle", "Triangle", "Triangle"),
+                                                         ("gaussian", "Gaussian", "Gaussian"),
+                                                         ("mitchell", "Mitchell-Netravali", "Mitchell-Netravali"),
+                                                         ("bspline", "Cubic B-spline", "Cubic B-spline"),
+                                                         ("catmull", "Catmull-Rom Spline", "Catmull-Rom Spline"),
+                                                         ("lanczos", "Lanczos", "Lanczos"),
                                                          ("blackman-harris", "Blackman-Harris", "Blackman-Harris")],
                                                   default="blackman-harris")
 
-        cls.pixel_filter_size = bpy.props.FloatProperty(name="Filter Size",
+        cls.pixel_filter_size = bpy.props.FloatProperty(name="pixel_filter_size",
                                                         description="Pixel filter size",
                                                         min=0.0,
                                                         max=16.0,
                                                         default=1.5)
 
-        cls.pixel_sampler = bpy.props.EnumProperty(name="Pixel Sampler",
+        cls.pixel_sampler = bpy.props.EnumProperty(name="pixel_sampler",
                                                    description="Sampler",
                                                    items=[("uniform", "Uniform", "Uniform"),
                                                           ("adaptive", "Adaptive", "Adaptive")],
                                                    default="uniform")
 
-        cls.sampler_min_samples = bpy.props.IntProperty(name="Min Samples",
+        cls.sampler_min_samples = bpy.props.IntProperty(name="sampler_min_samples",
                                                         description="Minimum number of anti-aliasing samples",
                                                         min=1,
                                                         max=1000000,
                                                         default=16,
                                                         subtype='UNSIGNED')
 
-        cls.sampler_max_samples = bpy.props.IntProperty(name="Max Samples",
+        cls.sampler_max_samples = bpy.props.IntProperty(name="sampler_max_samples",
                                                         description="Maximum number of anti-aliasing samples",
                                                         min=1,
                                                         max=1000000,
                                                         default=256,
                                                         subtype='UNSIGNED')
 
-        cls.force_aa = bpy.props.BoolProperty(name="Force Anti-Aliasing",
+        cls.adaptive_sampler_enable_diagnostics = bpy.props.BoolProperty(name="adaptive_sampler_enable_diagnostics",
+                                                                         description='',
+                                                                         default=False)
+
+        cls.adaptive_sampler_quality = bpy.props.FloatProperty(name="adaptive_sampler_quality",
+                                                               description='',
+                                                               default=3.0,
+                                                               min=0.0,
+                                                               max=20.0,
+                                                               precision=3)
+
+        cls.force_aa = bpy.props.BoolProperty(name="force_aa",
                                               description="When using 1 sample/pixel and Force Anti-Aliasing is disabled, samples are placed at the center of pixels",
                                               default=True)
 
-        cls.renderer_passes = bpy.props.IntProperty(name="Passes",
+        cls.renderer_passes = bpy.props.IntProperty(name="renderer_passes",
                                                     description="Number of antialiasing passes",
                                                     default=1,
                                                     min=1,
                                                     max=1000000)
 
-        cls.light_sampler = bpy.props.EnumProperty(name="Light Sampler",
+        cls.light_sampler = bpy.props.EnumProperty(name="light_sampler",
                                                    description="The method used for sampling lights",
                                                    items=[('cdf', 'CDF', 'CDF'),
                                                           ('lighttree', 'Light Tree', 'Light Tree')],
                                                    default='cdf')
 
-        cls.tile_ordering = bpy.props.EnumProperty(name="Tile Ordering",
+        cls.tile_ordering = bpy.props.EnumProperty(name="tile_ordering",
                                                    description="Tile ordering",
-                                                   items=[
-                                                       ('linear', "Linear",
-                                                        "Linear"),
-                                                       ('spiral', "Spiral",
-                                                        "Spiral"),
-                                                       ('hilbert', "Hilbert",
-                                                        "Hilbert"),
-                                                       ('random', "Random", "Random")],
+                                                   items=[('linear', "Linear", "Linear"),
+                                                          ('spiral', "Spiral", "Spiral"),
+                                                          ('hilbert', "Hilbert", "Hilbert"),
+                                                          ('random', "Random", "Random")],
                                                    default='spiral')
 
-        cls.sampler_max_contrast = bpy.props.FloatProperty(name="Max Contrast",
-                                                           description="Maximum contrast",
-                                                           min=0,
-                                                           max=1000,
-                                                           default=1)
-
-        cls.sampler_max_variation = bpy.props.FloatProperty(name="Max Variation",
-                                                            description="Maximum variation",
-                                                            min=0,
-                                                            max=1000,
-                                                            default=1)
-
         # Lighting engine.
-        cls.lighting_engine = bpy.props.EnumProperty(name="Engine",
+        cls.lighting_engine = bpy.props.EnumProperty(name="lighting_engine",
                                                      description="Light transport algorithm",
                                                      items=[('pt', "Path Tracing", "Unidirectional path tracing"),
                                                             ('sppm', "SPPM", "Stochastic Progressive Photon Mapping")],
@@ -199,105 +172,105 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         # DRT settings.
 
-        cls.ibl_enable = bpy.props.BoolProperty(name="Image-Based Lighting",
+        cls.enable_ibl = bpy.props.BoolProperty(name="enable_ibl",
                                                 description="Enable Image-based lighting",
                                                 default=True)
 
-        cls.caustics_enable = bpy.props.BoolProperty(name="Caustics",
+        cls.enable_caustics = bpy.props.BoolProperty(name="enable_caustics",
                                                      description="Enable caustics",
                                                      default=False)
 
-        cls.direct_lighting = bpy.props.BoolProperty(name="Direct Lighting",
-                                                     description="Enable direct lighting",
-                                                     default=True)
+        cls.enable_dl = bpy.props.BoolProperty(name="enable_dl",
+                                               description="Enable direct lighting",
+                                               default=True)
 
-        cls.next_event_est = bpy.props.BoolProperty(name="Next Event Estimation",
-                                                    description="Explicitly connect path vertices to light sources to improve efficiency",
-                                                    default=True)
+        cls.next_event_estimation = bpy.props.BoolProperty(name="next_event_estimation",
+                                                           description="Explicitly connect path vertices to light sources to improve efficiency",
+                                                           default=True)
 
-        cls.max_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+        cls.max_bounces_unlimited = bpy.props.BoolProperty(name="max_bounces_unlimited",
                                                            description="No limit to number of ray bounces",
                                                            default=True)
 
-        cls.max_bounces = bpy.props.IntProperty(name="Global",
+        cls.max_bounces = bpy.props.IntProperty(name="max_bounces",
                                                 description="Maximum number of ray bounces",
                                                 default=8,
                                                 min=0)
 
-        cls.max_diffuse_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+        cls.max_diffuse_bounces_unlimited = bpy.props.BoolProperty(name="max_diffuse_bounces_unlimited",
                                                                    description="No limit to number of diffuse ray bounces",
                                                                    default=True)
 
-        cls.max_diffuse_bounces = bpy.props.IntProperty(name="Diffuse",
+        cls.max_diffuse_bounces = bpy.props.IntProperty(name="max_diffuse_bounces",
                                                         description="Maximum total number of diffuse bounces",
                                                         default=8,
                                                         min=0)
 
-        cls.max_glossy_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+        cls.max_glossy_brdf_bounces_unlimited = bpy.props.BoolProperty(name="max_glossy_brdf_bounces_unlimited",
                                                                   description="No limit to number of glossy ray bounces",
                                                                   default=True)
 
-        cls.max_glossy_bounces = bpy.props.IntProperty(name="Glossy",
+        cls.max_glossy_brdf_bounces = bpy.props.IntProperty(name="max_glossy_brdf_bounces",
                                                        description="Maximum total number of glossy bounces",
                                                        default=8,
                                                        min=0)
 
-        cls.max_specular_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+        cls.max_specular_bounces_unlimited = bpy.props.BoolProperty(name="max_specular_bounces_unlimited",
                                                                     description="No limit to number of specular ray bounces",
                                                                     default=True)
 
-        cls.max_specular_bounces = bpy.props.IntProperty(name="Specular",
+        cls.max_specular_bounces = bpy.props.IntProperty(name="max_specular_bounces",
                                                          description="Maximum total number of specular bounces",
                                                          default=8,
                                                          min=0)
 
-        cls.max_volume_bounces_unlimited = bpy.props.BoolProperty(name="Unlimited",
+        cls.max_volume_bounces_unlimited = bpy.props.BoolProperty(name="max_volume_bounces_unlimited",
                                                                   description="No limit to number of volume ray bounces",
                                                                   default=True)
 
-        cls.max_volume_bounces = bpy.props.IntProperty(name="Volume",
+        cls.max_volume_bounces = bpy.props.IntProperty(name="max_volume_bounces",
                                                        description="Maximum total number of volume bounces",
                                                        default=8,
                                                        min=-0)
 
-        cls.max_ray_intensity_unlimited = bpy.props.BoolProperty(name="Unlimited",
+        cls.max_ray_intensity_unlimited = bpy.props.BoolProperty(name="max_ray_intensity_unlimited",
                                                                  description="Unlimited ray intensity",
                                                                  default=True)
 
-        cls.max_ray_intensity = bpy.props.FloatProperty(name="Max Ray Intensity",
+        cls.max_ray_intensity = bpy.props.FloatProperty(name="max_ray_intensity",
                                                         description="Clamp intensity of rays (after the first bounce) to this value to reduce fireflies",
                                                         default=1.0,
                                                         min=0)
 
-        cls.rr_start = bpy.props.IntProperty(name="Russian Roulette Start Bounce",
+        cls.rr_start = bpy.props.IntProperty(name="rr_start",
                                              description="Consider pruning low contribution paths starting with this bounce",
                                              default=6,
                                              min=1,
                                              max=100)
 
-        cls.optimize_for_lights_outside_volumes = bpy.props.BoolProperty(name="Optimize for Lights Outside Volumes",
+        cls.optimize_for_lights_outside_volumes = bpy.props.BoolProperty(name="optimize_for_lights_outside_volumes",
                                                                          description="Use when light sources are outside volumes",
                                                                          default=True)
 
-        cls.volume_distance_samples = bpy.props.IntProperty(name="Volume Distance Samples",
+        cls.volume_distance_samples = bpy.props.IntProperty(name="volume_distance_samples",
                                                             description="Number of depth samples to take in a volume",
                                                             default=2,
                                                             min=0,
                                                             max=100)
 
-        cls.dl_light_samples = bpy.props.IntProperty(name="Direct Lighting Samples",
+        cls.dl_light_samples = bpy.props.IntProperty(name="dl_light_samples",
                                                      description="Number of samples used to estimate direct lighting",
                                                      default=1,
                                                      min=0,
                                                      max=512)
 
-        cls.dl_low_light_threshold = bpy.props.FloatProperty(name="Low Light Threshold",
+        cls.dl_low_light_threshold = bpy.props.FloatProperty(name="dl_low_light_threshold",
                                                              description="Light contribution threshold to disable shadow rays",
                                                              default=0.0,
                                                              min=0.0,
                                                              max=10.0)
 
-        cls.ibl_env_samples = bpy.props.IntProperty(name="IBL Samples",
+        cls.ibl_env_samples = bpy.props.IntProperty(name="ibl_env_samples",
                                                     description="Number of samples used to estimate environment lighting",
                                                     default=1,
                                                     min=0,
@@ -305,7 +278,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         # SPPM settings.
 
-        cls.sppm_dl_mode = bpy.props.EnumProperty(name="Direct Lighting",
+        cls.sppm_dl_mode = bpy.props.EnumProperty(name="sppm_dl_mode",
                                                   description="SPPM Direct Lighting Component",
                                                   items=[('sppm', "Use photon maps to estimate direct lighting", ''),
                                                          ('rt', "Use ray tracing to estimate direct lighting", ''),
@@ -314,55 +287,55 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         # SPPM photon tracing settings.
 
-        cls.sppm_photon_max_length = bpy.props.IntProperty(name="Max Bounces",
+        cls.sppm_photon_max_length = bpy.props.IntProperty(name="sppm_photon_max_length",
                                                            description="Maximum path length for photons (0 = unlimited)",
                                                            default=0,
                                                            min=0,
                                                            max=100)
 
-        cls.sppm_photon_rr_start = bpy.props.IntProperty(name="Photon Tracing Russian Roulette Start Bounce",
+        cls.sppm_photon_rr_start = bpy.props.IntProperty(name="sppm_photon_rr_start",
                                                          description="Consider pruning low contribution photons starting with this bounce",
                                                          default=6,
                                                          min=1,
                                                          max=100)
 
-        cls.sppm_env_photons = bpy.props.IntProperty(name="Environment Photons",
+        cls.sppm_env_photons = bpy.props.IntProperty(name="sppm_env_photons",
                                                      description="Number of environment photons per render pass",
                                                      default=1000000,
                                                      min=0)
 
-        cls.sppm_light_photons = bpy.props.IntProperty(name="Light Photons",
+        cls.sppm_light_photons = bpy.props.IntProperty(name="sppm_light_photons",
                                                        description="Number of light photons per render pass",
                                                        default=1000000,
                                                        min=0)
 
         # SPPM radiance estimation settings.
 
-        cls.sppm_pt_max_length = bpy.props.IntProperty(name="Max Bounces",
+        cls.sppm_pt_max_length = bpy.props.IntProperty(name="sppm_pt_max_length",
                                                        description="Maximum number of path bounces (0 = unlimited)",
                                                        default=0,
                                                        min=0,
                                                        max=100)
 
-        cls.sppm_pt_rr_start = bpy.props.IntProperty(name="Path Tracing Russian Roulette Start Bounce",
+        cls.sppm_pt_rr_start = bpy.props.IntProperty(name="sppm_pt_rr_start",
                                                      description="Consider pruning low contribution paths starting with this bounce",
                                                      default=6,
                                                      min=1,
                                                      max=100)
 
-        cls.sppm_initial_radius = bpy.props.FloatProperty(name="Initial Radius",
+        cls.sppm_initial_radius = bpy.props.FloatProperty(name="sppm_initial_radius",
                                                           description="Initial photon gathering radius in percent of the scene diameter",
                                                           default=0.1,
                                                           min=0.0,
                                                           max=100,
                                                           precision=3)
 
-        cls.sppm_max_per_estimate = bpy.props.IntProperty(name="Max Photons",
+        cls.sppm_max_per_estimate = bpy.props.IntProperty(name="sppm_max_per_estimate",
                                                           description="Maximum number of photons used to estimate radiance",
                                                           default=100,
                                                           min=1)
 
-        cls.sppm_alpha = bpy.props.FloatProperty(name="Alpha",
+        cls.sppm_alpha = bpy.props.FloatProperty(name="sppm_alpha",
                                                  description="Evolution rate of photon gathering radius",
                                                  default=0.7,
                                                  min=0.0,
@@ -370,71 +343,35 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         # Miscellaneous settings.
 
-        cls.light_mats_radiance_multiplier = bpy.props.FloatProperty(name="Mesh Light Multiplier",
+        cls.light_mats_radiance_multiplier = bpy.props.FloatProperty(name="light_mats_radiance_multiplier",
                                                                      description="Multiply the exitance of light-emitting materials by this factor",
                                                                      min=0.0,
                                                                      max=100.0,
                                                                      default=1.0)
 
-        cls.export_emitting_obj_as_lights = bpy.props.BoolProperty(name="Export Mesh Lights",
+        cls.export_emitting_obj_as_lights = bpy.props.BoolProperty(name="export_emitting_obj_as_lights",
                                                                    description="Export objects with light-emitting materials as mesh (area) lights",
                                                                    default=True)
 
-        cls.enable_diagnostics = bpy.props.BoolProperty(name="Diagnostics",
-                                                        description='',
-                                                        default=False)
-
-        cls.quality = bpy.props.FloatProperty(name="Quality",
-                                              description='',
-                                              default=3.0,
-                                              min=0.0,
-                                              max=20.0,
-                                              precision=3)
-
-        cls.specular_multiplier = bpy.props.FloatProperty(name="Specular Components Multiplier",
-                                                          description="Multiply the intensity of specular components by this factor",
-                                                          min=0.0,
-                                                          max=1000.0,
-                                                          default=1.0,
-                                                          subtype='FACTOR')
-
-        cls.point_lights_radiance_multiplier = bpy.props.FloatProperty(name="Point Lights Energy Multiplier",
-                                                                       description="Multiply the exitance of point lights by this factor",
-                                                                       min=0.0,
-                                                                       max=1000.0,
-                                                                       default=1.0,
-                                                                       subtype='FACTOR')
-
-        cls.spot_lights_radiance_multiplier = bpy.props.FloatProperty(name="Spot Lights Energy Multiplier",
-                                                                      description="Multiply the exitance of spot lights by this factor",
-                                                                      min=0.0,
-                                                                      max=1000.0,
-                                                                      default=1.0,
-                                                                      subtype='FACTOR')
-
         # Motion blur settings.
 
-        cls.mblur_enable = bpy.props.BoolProperty(name="",
-                                                  description="Enable rendering of motion blur",
-                                                  default=False)
+        cls.enable_motion_blur = bpy.props.BoolProperty(name="enable_motion_blur",
+                                                        description="Enable rendering of motion blur",
+                                                        default=False)
 
-        cls.mblur_samples = bpy.props.IntProperty(name="Motion Blur Samples",
-                                                  description="Number of samples to use for motion blur",
-                                                  default=2)
+        cls.enable_deformation_blur = bpy.props.BoolProperty(name="enable_deformation_blur",
+                                                             description="Global toggle for rendering of deformation motion blur. Warning: objects with deformation motion blur enabled will add to export time.",
+                                                             default=False)
 
-        cls.def_mblur = bpy.props.BoolProperty(name="Deformation Blur",
-                                               description="Global toggle for rendering of deformation motion blur. Warning - objects with deformation motion blur enabled will add to export time!",
-                                               default=False)
+        cls.enable_object_blur = bpy.props.BoolProperty(name="enable_object_blur",
+                                                        description="Global toggle for rendering of object motion blur",
+                                                        default=False)
 
-        cls.ob_mblur = bpy.props.BoolProperty(name="Object Blur",
-                                              description="Global toggle for rendering of object motion blur",
-                                              default=False)
+        cls.enable_camera_blur = bpy.props.BoolProperty(name="enable_camera_blur",
+                                                        description="Enable rendering of camera motion blur",
+                                                        default=False)
 
-        cls.cam_mblur = bpy.props.BoolProperty(name="Camera Blur",
-                                               description="Enable rendering of camera motion blur",
-                                               default=False)
-
-        cls.shutter_open = bpy.props.FloatProperty(name="Shutter Open",
+        cls.shutter_open = bpy.props.FloatProperty(name="shutter_open",
                                                    description="Shutter open time (relative to start of current frame)",
                                                    default=0.0,
                                                    min=0.0,
@@ -442,7 +379,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                    step=3,
                                                    precision=3)
 
-        cls.shutter_close = bpy.props.FloatProperty(name="Shutter Close",
+        cls.shutter_close = bpy.props.FloatProperty(name="shutter_close",
                                                     description="Shutter close time (relative to end of current frame)",
                                                     default=1.0,
                                                     min=0.001,

@@ -78,7 +78,7 @@ class AppleseedSocket(object):
 
     def get_socket_value(self, texture_only=True):
         """
-        Method to return socket's value, if not linked. 
+        Method to return socket's value, if not linked.
         If linked, return the name of the node with appended pointer.
         """
         if self.is_linked:

@@ -41,41 +41,40 @@ class AppleseedCameraSettings(bpy.types.PropertyGroup):
 
     @classmethod
     def register(cls):
-        bpy.types.Camera.appleseed = bpy.props.PointerProperty(
-            name="appleseed Camera Settings",
-            description="appleseed camera settings",
-            type=cls)
+        bpy.types.Camera.appleseed = bpy.props.PointerProperty(name="appleseed_camera",
+                                                               description="appleseed Camera",
+                                                               type=cls)
 
-        cls.camera_type = bpy.props.EnumProperty(items=[('pinhole', 'Pinhole', 'Pinhole camera - no DoF'),
-                                                        ('thinlens', 'Thin Lens', 'Thin lens - enables DoF'),
-                                                        ('spherical', 'Spherical', '')],
-                                                 name="Camera Type",
-                                                 description="Camera lens model",
-                                                 default='pinhole')
+        cls.camera_model = bpy.props.EnumProperty(name="camera_model",
+                                                  items=[('pinhole', 'Pinhole', 'Pinhole camera - No DOF'),
+                                                         ('thinlens', 'Thin Lens', 'Thin lens - Enables DOF'),
+                                                         ('spherical', 'Spherical', '')],
+                                                  description="Camera model",
+                                                  default='pinhole')
 
-        cls.camera_dof = bpy.props.FloatProperty(name="F-Number",
-                                                 description="Thin lens camera f-stop value",
-                                                 default=32.0,
-                                                 min=0.0,
-                                                 max=32.0,
-                                                 step=3,
-                                                 precision=1)
+        cls.f_number = bpy.props.FloatProperty(name="f_number",
+                                               description="Thin lens camera f-stop value",
+                                               default=32.0,
+                                               min=0.0,
+                                               max=32.0,
+                                               step=3,
+                                               precision=1)
 
-        cls.diaphragm_blades = bpy.props.IntProperty(name="Diaphragm Blades",
+        cls.diaphragm_blades = bpy.props.IntProperty(name="diaphragm_blades",
                                                      description="Number of diaphragm blades. Use minimum of 3 for geometric bokeh",
                                                      default=3,
                                                      max=32,
                                                      min=0)
 
-        cls.diaphragm_angle = bpy.props.FloatProperty(name="Diaphragm Tilt Angle",
+        cls.diaphragm_angle = bpy.props.FloatProperty(name="diaphragm_angle",
                                                       description="Diaphragm tilt angle",
                                                       default=0,
                                                       min=-360,
                                                       max=360,
                                                       precision=3)
 
-        cls.diaphragm_map = bpy.props.StringProperty(name="Diaphragm",
-                                                     description="Image texture to influence bokeh",
+        cls.diaphragm_map = bpy.props.StringProperty(name="diaphragm_map",
+                                                     description="Image texture to define bokeh",
                                                      default='',
                                                      subtype='FILE_PATH')
 
