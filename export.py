@@ -29,7 +29,7 @@
 import bpy
 from bpy_extras.io_utils import ExportHelper
 
-from . import project_file_writer
+from . import projectwriter
 from . import util
 
 
@@ -50,8 +50,8 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
         return renderer.engine == 'APPLESEED_RENDER'
 
     def execute(self, context):
-        exporter = project_file_writer.Exporter()
-        exporter.export(context.scene, util.realpath(self.filepath))
+        writer = projectwriter.Writer()
+        writer.write(context.scene, util.realpath(self.filepath))
         return {'FINISHED'}
 
 

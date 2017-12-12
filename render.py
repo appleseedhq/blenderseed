@@ -37,7 +37,7 @@ from shutil import copyfile
 import bpy
 from extensions_framework import util as efutil
 
-from . import project_file_writer
+from . import projectwriter
 from . import util
 
 
@@ -87,8 +87,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 return
 
         # Generate project on disk.
-        exporter = project_file_writer.Exporter()
-        exporter.export(scene, project_filepath)
+        writer = projectwriter.Writer()
+        writer.write(scene, project_filepath)
 
         # Render project.
         self.__render_project_file(scene, project_filepath)
@@ -145,13 +145,13 @@ class RenderAppleseed(bpy.types.RenderEngine):
         prev_type = prev_mat.preview_render_type.lower()
 
         # Export the project.
-        exporter = project_file_writer.Exporter()
-        file_written = exporter.export_preview(scene,
-                                               preview_project_filepath,
-                                               prev_mat,
-                                               prev_type,
-                                               width,
-                                               height)
+        writer = projectwriter.Writer()
+        file_written = writer.export_preview(scene,
+                                             preview_project_filepath,
+                                             prev_mat,
+                                             prev_type,
+                                             width,
+                                             height)
         if not file_written:
             print('Error while exporting. Check the console for details.')
             return

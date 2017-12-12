@@ -153,15 +153,15 @@ def appleseed_scene_loaded(dummy):
                 bpy.app.handlers.scene_update_pre.remove(f)
 
 # Load the modules after classes have been created.
-from . import ashikhmin_brdf
-from . import bsdf_blend
-from . import diffuse_btdf
-from . import disney_brdf
-from . import kelemen_brdf
-from . import lambertian_brdf
-from . import orennayar_brdf
-from . import specular_brdf
-from . import specular_btdf
+from . import ashikhminbrdf
+from . import bsdfblend
+from . import diffusebtdf
+from . import disneybrdf
+from . import kelemenbrdf
+from . import lambertianbrdf
+from . import orennayarbrdf
+from . import specularbrdf
+from . import specularbtdf
 from . import texture
 from . import normal
 from . import material
@@ -172,15 +172,15 @@ def register():
     bpy.app.handlers.scene_update_pre.append(appleseed_scene_loaded)
     nodeitems_utils.register_node_categories("APPLESEED", appleseed_node_categories)
     bpy.utils.register_class(AppleseedNodeTree)
-    ashikhmin_brdf.register()
-    bsdf_blend.register()
-    diffuse_btdf.register()
-    disney_brdf.register()
-    kelemen_brdf.register()
-    lambertian_brdf.register()
-    orennayar_brdf.register()
-    specular_brdf.register()
-    specular_btdf.register()
+    ashikhminbrdf.register()
+    bsdfblend.register()
+    diffusebtdf.register()
+    disneybrdf.register()
+    kelemenbrdf.register()
+    lambertianbrdf.register()
+    orennayarbrdf.register()
+    specularbrdf.register()
+    specularbtdf.register()
     texture.register()
     normal.register()
     material.register()
@@ -189,15 +189,15 @@ def register():
 def unregister():
     nodeitems_utils.unregister_node_categories("APPLESEED")
     bpy.utils.unregister_class(AppleseedNodeTree)
-    ashikhmin_brdf.unregister()
-    bsdf_blend.unregister()
-    disney_brdf.unregister()
-    diffuse_btdf.unregister()
-    kelemen_brdf.unregister()
-    lambertian_brdf.unregister()
-    orennayar_brdf.unregister()
-    specular_brdf.unregister()
-    specular_btdf.unregister()
+    ashikhminbrdf.unregister()
+    bsdfblend.unregister()
+    disneybrdf.unregister()
+    diffusebtdf.unregister()
+    kelemenbrdf.unregister()
+    lambertianbrdf.unregister()
+    orennayarbrdf.unregister()
+    specularbrdf.unregister()
+    specularbtdf.unregister()
     texture.unregister()
     material.unregister()
     normal.unregister()

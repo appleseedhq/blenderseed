@@ -34,7 +34,7 @@ from datetime import datetime
 import bpy
 import mathutils
 
-from . import mesh_writer
+from . import geometrywriter
 from . import util
 
 identity_matrix = mathutils.Matrix(((1.0, 0.0, 0.0, 0.0),
@@ -63,12 +63,12 @@ def object_enumerator(obj_type):
     return matches
 
 
-class Exporter(object):
+class Writer(object):
     """
     appleseed exporter.
     """
 
-    def export(self, scene, file_path):
+    def write(self, scene, file_path):
         """
         Write the .appleseed project file for rendering.
         """
@@ -444,7 +444,7 @@ class Exporter(object):
                 # Export curves file to disk.
                 self.__progress("Exporting particle system '{0}' to {1}...".format(psys.name, curves_filename))
                 try:
-                    mesh_writer.write_curves_to_disk(object, scene, psys, curves_filepath)
+                    geometrywriter.write_curves_to_disk(object, scene, psys, curves_filepath)
                 except IOError:
                     self.__error("While exporting particle system '{0}': could not write to {1}, skipping particle system.".format(
                         psys.name, curves_filepath))
@@ -485,7 +485,7 @@ class Exporter(object):
                 # Export the mesh to disk.
                 self.__progress("Exporting object '{0}' to {1}...".format(object_name, mesh_filename))
                 try:
-                    mesh_parts = mesh_writer.write_mesh_to_disk(object, scene, mesh, mesh_filepath)
+                    mesh_parts = geometrywriter.write_mesh_to_disk(object, scene, mesh, mesh_filepath)
                 except IOError:
                     self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
                     return []
@@ -566,7 +566,7 @@ class Exporter(object):
                 # Export the mesh to disk.
                 self.__progress("Exporting object '{0}' to {1}...".format(object_name, mesh_filename))
                 try:
-                    mesh_writer.write_mesh_to_disk(object, scene, mesh, mesh_filepath)
+                    geometrywriter.write_mesh_to_disk(object, scene, mesh, mesh_filepath)
                 except IOError:
                     self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
 
@@ -599,7 +599,7 @@ class Exporter(object):
                 # Export curves file to disk.
                 self.__progress("Exporting particle system '{0}' to {1}...".format(psys.name, curves_filename))
                 try:
-                    mesh_writer.write_curves_to_disk(object, scene, psys, curves_filepath)
+                    geometrywriter.write_curves_to_disk(object, scene, psys, curves_filepath)
                 except IOError:
                     self.__error("While exporting particle system '{0}': could not write to {1}, skipping particle system.".format(
                         psys.name, curves_filepath))
