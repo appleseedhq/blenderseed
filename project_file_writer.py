@@ -2875,7 +2875,6 @@ class Exporter(object):
                 self.__emit_file_header()
                 aspect_ratio = self.__get_frame_aspect_ratio(scene.render)
 
-                # Write the following generic scene file.
                 self._output_file.write("""<project>
     <scene>
         <camera name="Camera" model="pinhole_camera">
@@ -2902,9 +2901,7 @@ class Exporter(object):
         </color>
         <environment_edf name="environment_edf" model="constant_environment_edf">
             <parameter name="radiance" value="horizon_radiance" />
-        </environment_edf>
-        <environment_shader name="environment_shader" model="edf_environment_shader">""")
-
+        </environment_edf>""")
                 else:
                     self._output_file.write("""
         <color name="horizon_radiance">
@@ -2920,10 +2917,11 @@ class Exporter(object):
         <environment_edf name="environment_edf" model="gradient_environment_edf">
             <parameter name="horizon_radiance" value="horizon_radiance" />
             <parameter name="zenith_radiance" value="zenith_radiance" />
-        </environment_edf>
-        <environment_shader name="environment_shader" model="edf_environment_shader">""")
+        </environment_edf>""")
 
+                # Environment shader and environment.
                 self._output_file.write("""
+        <environment_shader name="environment_shader" model="edf_environment_shader">
             <parameter name="environment_edf" value="environment_edf" />
         </environment_shader>
         <environment name="environment" model="generic_environment">
@@ -3058,7 +3056,7 @@ class Exporter(object):
             </object_instance>
 """.format(mesh, mat_front, mat_back))
 
-                # Write the material for the preview sphere
+                # Material to preview.
                 self.__emit_material(mat, scene)
 
                 self._output_file.write("""        </assembly>
@@ -3101,7 +3099,8 @@ class Exporter(object):
         </configuration>
     </configurations>
 </project>""".format(int(width), int(height), asr_mat.preview_quality))
-            return True
+                return True
+
         except IOError:
-            self.__error("Could not open %s for writing" % file_path)
+            self.__error("Failed to write to {0}.".format(file_path))
             return False
