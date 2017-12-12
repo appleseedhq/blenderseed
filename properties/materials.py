@@ -105,12 +105,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                      max=1.0,
                                                                      update=refresh_preview)
 
-    diffuse_btdf_use_diff_tex = bpy.props.BoolProperty(name="diffuse_btdf_use_diff_tex",
+    diffuse_btdf_use_diffuse_tex = bpy.props.BoolProperty(name="diffuse_btdf_use_diffuse_tex",
                                                        description="Use texture to influence diffuse color",
                                                        default=False,
                                                        update=refresh_preview)
 
-    diffuse_btdf_diff_tex = bpy.props.StringProperty(name="diffuse_btdf_diff_tex",
+    diffuse_btdf_diffuse_tex = bpy.props.StringProperty(name="diffuse_btdf_diffuse_tex",
                                                      description="Texture to influence diffuse color",
                                                      default="",
                                                      update=refresh_preview)
@@ -142,12 +142,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                    max=1.0,
                                                                    update=refresh_preview)
 
-    kelemen_brdf_use_diff_tex = bpy.props.BoolProperty(name="kelemen_brdf_use_diff_tex",
+    kelemen_brdf_use_diffuse_tex = bpy.props.BoolProperty(name="kelemen_brdf_use_diffuse_tex",
                                                        description="Use texture to influence matte reflectance",
                                                        default=False,
                                                        update=refresh_preview)
 
-    kelemen_brdf_diff_tex = bpy.props.StringProperty(name="kelemen_brdf_diff_tex",
+    kelemen_brdf_diffuse_tex = bpy.props.StringProperty(name="kelemen_brdf_diffuse_tex",
                                                      description="Texture to influence matte reflectance",
                                                      default="",
                                                      update=refresh_preview)
@@ -174,12 +174,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                       max=1.0,
                                                                       update=refresh_preview)
 
-    kelemen_brdf_use_spec_tex = bpy.props.BoolProperty(name="kelemen_brdf_use_spec_tex",
+    kelemen_brdf_use_specular_tex = bpy.props.BoolProperty(name="kelemen_brdf_use_specular_tex",
                                                        description="Use texture to influence specular reflectance",
                                                        default=False,
                                                        update=refresh_preview)
 
-    kelemen_brdf_spec_tex = bpy.props.StringProperty(name="kelemen_brdf_spec_tex",
+    kelemen_brdf_specular_tex = bpy.props.StringProperty(name="kelemen_brdf_specular_tex",
                                                      description="Texture to influence specular reflectance",
                                                      default="",
                                                      update=refresh_preview)
@@ -218,7 +218,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                max=1.0,
                                                                update=refresh_preview)
 
-    ashikhmin_brdf_use_diff_tex = bpy.props.BoolProperty(name="ashikhmin_brdf_use_diff_tex",
+    ashikhmin_brdf_use_diffuse_tex = bpy.props.BoolProperty(name="ashikhmin_brdf_use_diffuse_tex",
                                                          description="Use a texture to influence diffuse reflectance",
                                                          default=False,
                                                          update=refresh_preview)
@@ -250,12 +250,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                           max=1.0,
                                                           update=refresh_preview)
 
-    ashikhmin_brdf_use_gloss_tex = bpy.props.BoolProperty(name="ashikhmin_brdf_use_gloss_tex",
+    ashikhmin_brdf_use_glossy_tex = bpy.props.BoolProperty(name="ashikhmin_brdf_use_glossy_tex",
                                                           description="Use a texture to influence gglossy reflectance",
                                                           default=False,
                                                           update=refresh_preview)
 
-    ashikhmin_brdf_gloss_tex = bpy.props.StringProperty(name="ashikhmin_brdf_gloss_tex",
+    ashikhmin_brdf_glossy_tex = bpy.props.StringProperty(name="ashikhmin_brdf_glossy_tex",
                                                         description="Texture to influence glossy reflectance",
                                                         default="",
                                                         update=refresh_preview)
@@ -847,7 +847,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                      max=1.0,
                                                      update=refresh_preview)
 
-    lambertian_brdf_use_diff_tex = bpy.props.BoolProperty(name="lambertian_brdf_use_diff_tex",
+    lambertian_brdf_use_diffuse_tex = bpy.props.BoolProperty(name="lambertian_brdf_use_diffuse_tex",
                                                           description="Use a texture to influence diffuse color",
                                                           default=False,
                                                           update=refresh_preview)
@@ -876,7 +876,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                         max=2.0,
                                                         update=refresh_preview)
 
-    orennayar_brdf_use_diff_tex = bpy.props.BoolProperty(name="orennayar_brdf_use_diff_tex",
+    orennayar_brdf_use_diffuse_tex = bpy.props.BoolProperty(name="orennayar_brdf_use_diffuse_tex",
                                                          description="Use a texture to influence diffuse color",
                                                          default=False,
                                                          update=refresh_preview)
@@ -938,12 +938,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                               max=1.0,
                                                               update=refresh_preview)
 
-    specular_brdf_use_gloss_tex = bpy.props.BoolProperty(name="specular_brdf_use_gloss_tex",
+    specular_brdf_use_glossy_tex = bpy.props.BoolProperty(name="specular_brdf_use_glossy_tex",
                                                          description="Use a texture to influence specular reflectance",
                                                          default=False,
                                                          update=refresh_preview)
 
-    specular_brdf_gloss_tex = bpy.props.StringProperty(name="specular_brdf_gloss_tex",
+    specular_brdf_glossy_tex = bpy.props.StringProperty(name="specular_brdf_glossy_tex",
                                                        description="Texture to influence specular reflectance",
                                                        default="",
                                                        update=refresh_preview)
@@ -1146,12 +1146,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                               max=1.0,
                                                               update=refresh_preview)
 
-    specular_btdf_use_spec_tex = bpy.props.BoolProperty(name="specular_btdf_use_spec_tex",
+    specular_btdf_use_specular_tex = bpy.props.BoolProperty(name="specular_btdf_use_specular_tex",
                                                         description="Use a texture to influence specular reflectance",
                                                         default=False,
                                                         update=refresh_preview)
 
-    specular_btdf_spec_tex = bpy.props.StringProperty(name="specular_btdf_spec_tex",
+    specular_btdf_specular_tex = bpy.props.StringProperty(name="specular_btdf_specular_tex",
                                                       description="Texture to influence specular reflectance",
                                                       default="",
                                                       update=refresh_preview)
@@ -1304,12 +1304,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                           soft_max=1.0,
                                                           update=refresh_preview)
 
-    disney_brdf_use_clearcoat_gloss_tex = bpy.props.BoolProperty(name="disney_brdf_use_clearcoat_gloss_tex",
+    disney_brdf_use_clearcoat_glossy_tex = bpy.props.BoolProperty(name="disney_brdf_use_clearcoat_glossy_tex",
                                                                  description="Use a texture to influence clear coat gloss",
                                                                  default=False,
                                                                  update=refresh_preview)
 
-    disney_brdf_clearcoat_gloss_tex = bpy.props.StringProperty(name="disney_brdf_clearcoat_gloss_tex",
+    disney_brdf_clearcoat_glossy_tex = bpy.props.StringProperty(name="disney_brdf_clearcoat_glossy_tex",
                                                                description="Texture to influence clear coat gloss",
                                                                default="",
                                                                update=refresh_preview)
@@ -1389,29 +1389,29 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                soft_max=1.0,
                                                update=refresh_preview)
 
-    disney_brdf_use_spec_tex = bpy.props.BoolProperty(name="disney_brdf_use_spec_tex",
+    disney_brdf_use_specular_tex = bpy.props.BoolProperty(name="disney_brdf_use_specular_tex",
                                                       description="Use a texture to influence specular",
                                                       default=False,
                                                       update=refresh_preview)
 
-    disney_brdf_spec_tex = bpy.props.StringProperty(name="disney_brdf_spec_tex",
+    disney_brdf_specular_tex = bpy.props.StringProperty(name="disney_brdf_specular_tex",
                                                     description="Texture to influence specular",
                                                     default="",
                                                     update=refresh_preview)
 
-    disney_brdf_spec_tint = bpy.props.FloatProperty(name="disney_brdf_spec_tint",
+    disney_brdf_specular_tint = bpy.props.FloatProperty(name="disney_brdf_specular_tint",
                                                     description="Specular tint",
                                                     default=0,
                                                     min=0,
                                                     soft_max=1.0,
                                                     update=refresh_preview)
 
-    disney_brdf_use_spec_tint_tex = bpy.props.BoolProperty(name="disney_brdf_use_spec_tint_tex",
+    disney_brdf_use_specular_tint_tex = bpy.props.BoolProperty(name="disney_brdf_use_specular_tint_tex",
                                                            description="Use a texture to influence specular tint",
                                                            default=False,
                                                            update=refresh_preview)
 
-    disney_brdf_spec_tint_tex = bpy.props.StringProperty(name="disney_brdf_spec_tint_tex",
+    disney_brdf_specular_tint_tex = bpy.props.StringProperty(name="disney_brdf_specular_tint_tex",
                                                          description="Texture to influence specular tint",
                                                          default="",
                                                          update=refresh_preview)

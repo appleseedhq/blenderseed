@@ -1101,7 +1101,7 @@ class Writer(object):
             reflectance_multiplier = inputs["Multiplier"].get_socket_value(True)
 
         else:
-            if layer.lambertian_brdf_use_diff_tex and layer.lambertian_brdf_diffuse_tex != '':
+            if layer.lambertian_brdf_use_diffuse_tex and layer.lambertian_brdf_diffuse_tex != '':
                 if util.is_uv_img(bpy.data.textures[layer.lambertian_brdf_diffuse_tex]):
                     reflectance_name = layer.lambertian_brdf_diffuse_tex + "_inst"
                     if reflectance_name not in self._textures_set:
@@ -1132,7 +1132,7 @@ class Writer(object):
             inputs = node.inputs
             base_coat_name = inputs["Base Color"].get_socket_value(True)
             spec = inputs["Specular"].get_socket_value(True)
-            spec_tint = inputs["Specular Tint"].get_socket_value(True)
+            specular_tint = inputs["Specular Tint"].get_socket_value(True)
             aniso = inputs["Anisotropy"].get_socket_value(True)
             metallic = inputs["Metallic"].get_socket_value(True)
             roughness = inputs["Roughness"].get_socket_value(True)
@@ -1166,21 +1166,21 @@ class Writer(object):
 
             # Specular.
             spec = layer.disney_brdf_spec
-            if layer.disney_brdf_use_spec_tex and layer.disney_brdf_spec_tex != '':
-                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_spec_tex]):
-                    spec = layer.disney_brdf_spec_tex + "_inst"
+            if layer.disney_brdf_use_specular_tex and layer.disney_brdf_specular_tex != '':
+                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_specular_tex]):
+                    spec = layer.disney_brdf_specular_tex + "_inst"
                     if spec not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_spec_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_specular_tex], False, scene)
                         self._textures_set.add(spec)
 
             # Specular Tint.
-            spec_tint = layer.disney_brdf_spec_tint
-            if layer.disney_brdf_use_spec_tint_tex and layer.disney_brdf_spec_tint_tex != '':
-                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_spec_tint_tex]):
-                    spec_tint = layer.disney_brdf_spec_tint_tex + "_inst"
-                    if spec_tint not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_spec_tint_tex], False, scene)
-                        self._textures_set.add(spec_tint)
+            specular_tint = layer.disney_brdf_specular_tint
+            if layer.disney_brdf_use_specular_tint_tex and layer.disney_brdf_specular_tint_tex != '':
+                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_specular_tint_tex]):
+                    specular_tint = layer.disney_brdf_specular_tint_tex + "_inst"
+                    if specular_tint not in self._textures_set:
+                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_specular_tint_tex], False, scene)
+                        self._textures_set.add(specular_tint)
 
             # Aniso.
             aniso = layer.disney_brdf_aniso
@@ -1202,11 +1202,11 @@ class Writer(object):
 
             # Clear Coat Gloss.
             clearcoat_gloss = layer.disney_brdf_clearcoat_gloss
-            if layer.disney_brdf_use_clearcoat_gloss_tex and layer.disney_brdf_clearcoat_gloss_tex != '':
-                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_clearcoat_gloss_tex]):
-                    clearcoat_gloss = layer.disney_brdf_clearcoat_gloss_tex + "_inst"
+            if layer.disney_brdf_use_clearcoat_glossy_tex and layer.disney_brdf_clearcoat_glossy_tex != '':
+                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_clearcoat_glossy_tex]):
+                    clearcoat_gloss = layer.disney_brdf_clearcoat_glossy_tex + "_inst"
                     if clearcoat_gloss not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_clearcoat_gloss_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_clearcoat_glossy_tex], False, scene)
                         self._textures_set.add(clearcoat_gloss)
 
             # Metallic.
@@ -1258,7 +1258,7 @@ class Writer(object):
         self.__emit_parameter("anisotropic", aniso)
         self.__emit_parameter("base_color", base_coat_name)
         self.__emit_parameter("specular", spec)
-        self.__emit_parameter("specular_tint", spec_tint)
+        self.__emit_parameter("specular_tint", specular_tint)
         self.__emit_parameter("clearcoat", clearcoat)
         self.__emit_parameter("clearcoat_gloss", clearcoat_gloss)
         self.__emit_parameter("metallic", metallic)
@@ -1291,7 +1291,7 @@ class Writer(object):
 
         else:
             roughness = layer.orennayar_brdf_roughness
-            if layer.orennayar_brdf_use_diff_tex and layer.orennayar_brdf_diffuse_tex != '':
+            if layer.orennayar_brdf_use_diffuse_tex and layer.orennayar_brdf_diffuse_tex != '':
                 if util.is_uv_img(bpy.data.textures[layer.orennayar_brdf_diffuse_tex]):
                     reflectance_name = layer.orennayar_brdf_diffuse_tex + "_inst"
                     if reflectance_name not in self._textures_set:
@@ -1341,12 +1341,12 @@ class Writer(object):
                                                            1)
 
         else:
-            if layer.diffuse_btdf_use_diff_tex and layer.diffuse_btdf_diff_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.diffuse_btdf_diff_tex]):
-                    transmittance_name = layer.diffuse_btdf_diff_tex + "_inst"
+            if layer.diffuse_btdf_use_diffuse_tex and layer.diffuse_btdf_diffuse_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.diffuse_btdf_diffuse_tex]):
+                    transmittance_name = layer.diffuse_btdf_diffuse_tex + "_inst"
                     if transmittance_name not in self._textures_set:
                         self._textures_set.add(transmittance_name)
-                        self.__emit_texture(bpy.data.textures[layer.diffuse_btdf_diff_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.diffuse_btdf_diffuse_tex], False, scene)
 
             if layer.diffuse_btdf_transmittance_use_mult_tex and layer.diffuse_btdf_transmittance_mult_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.diffuse_btdf_transmittance_mult_tex]):
@@ -1506,18 +1506,18 @@ class Writer(object):
                                                            1)
 
         else:
-            if layer.ashikhmin_brdf_use_diff_tex and layer.ashikhmin_brdf_diffuse_tex != "":
+            if layer.ashikhmin_brdf_use_diffuse_tex and layer.ashikhmin_brdf_diffuse_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.ashikhmin_brdf_diffuse_tex]):
                     diffuse_reflectance_name = layer.ashikhmin_brdf_diffuse_tex + "_inst"
                     if diffuse_reflectance_name not in self._textures_set:
                         self._textures_set.add(diffuse_reflectance_name)
                         self.__emit_texture(bpy.data.textures[layer.ashikhmin_brdf_diffuse_tex], False, scene)
 
-            if layer.ashikhmin_brdf_use_gloss_tex and layer.ashikhmin_brdf_gloss_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.ashikhmin_brdf_gloss_tex]):
-                    glossy_brdf_reflectance_name = layer.ashikhmin_brdf_gloss_tex + "_inst"
+            if layer.ashikhmin_brdf_use_glossy_tex and layer.ashikhmin_brdf_glossy_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.ashikhmin_brdf_glossy_tex]):
+                    glossy_brdf_reflectance_name = layer.ashikhmin_brdf_glossy_tex + "_inst"
                     if glossy_brdf_reflectance_name not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.ashikhmin_brdf_gloss_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.ashikhmin_brdf_glossy_tex], False, scene)
                         self._textures_set.add(glossy_brdf_reflectance_name)
 
             # Make sure we found some textures. If not, default to material color.
@@ -1910,13 +1910,13 @@ class Writer(object):
                                                            1)
 
         else:
-            if layer.specular_brdf_use_gloss_tex and layer.specular_brdf_gloss_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.specular_brdf_gloss_tex]):
+            if layer.specular_brdf_use_glossy_tex and layer.specular_brdf_glossy_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.specular_brdf_glossy_tex]):
 
-                    reflectance_name = layer.specular_brdf_gloss_tex + "_inst"
+                    reflectance_name = layer.specular_brdf_glossy_tex + "_inst"
                     if reflectance_name not in self._textures_set:
                         self._textures_set.add(reflectance_name)
-                        self.__emit_texture(bpy.data.textures[layer.specular_brdf_gloss_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.specular_brdf_glossy_tex], False, scene)
             if reflectance_name == "":
                 reflectance_name = "{0}_specular_reflectance".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(reflectance_name,
@@ -1959,12 +1959,12 @@ class Writer(object):
                                                            specular_btdf_transmittance,
                                                            1)
         else:
-            if layer.specular_btdf_use_spec_tex and layer.specular_btdf_spec_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.specular_btdf_spec_tex]):
-                    reflectance_name = layer.specular_btdf_spec_tex + "_inst"
+            if layer.specular_btdf_use_specular_tex and layer.specular_btdf_specular_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.specular_btdf_specular_tex]):
+                    reflectance_name = layer.specular_btdf_specular_tex + "_inst"
                     if reflectance_name not in self._textures_set:
                         self._textures_set.add(reflectance_name)
-                        self.__emit_texture(bpy.data.textures[layer.specular_btdf_spec_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.specular_btdf_specular_tex], False, scene)
 
             if reflectance_name == "":
                 reflectance_name = "{0}_transp_reflectance".format(bsdf_name)
@@ -2017,13 +2017,13 @@ class Writer(object):
     # ----------------------
     def __emit_kelemen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance_name = ""
-        spec_refl_name = ""
+        specular_refl_name = ""
 
         if node is not None:
             inputs = node.inputs
             reflectance_name = inputs[0].get_socket_value(True)
             kelemen_brdf_matte_multiplier = inputs[1].get_socket_value(True)
-            spec_refl_name = inputs[2].get_socket_value(True)
+            specular_refl_name = inputs[2].get_socket_value(True)
             kelemen_brdf_specular_multiplier = inputs[3].get_socket_value(True)
             kelemen_brdf_roughness = inputs[4].get_socket_value(True)
 
@@ -2034,34 +2034,34 @@ class Writer(object):
                                                            kelemen_brdf_matte_reflectance,
                                                            1)
             if not inputs[2].is_linked:
-                kelemen_brdf_specular_reflectance = spec_refl_name
-                spec_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(spec_refl_name,
+                kelemen_brdf_specular_reflectance = specular_refl_name
+                specular_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(specular_refl_name,
                                                            kelemen_brdf_specular_reflectance,
                                                            1)
         else:
-            if layer.kelemen_brdf_use_diff_tex:
-                if layer.kelemen_brdf_diff_tex != "":
-                    if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_diff_tex]):
-                        reflectance_name = layer.kelemen_brdf_diff_tex + "_inst"
+            if layer.kelemen_brdf_use_diffuse_tex:
+                if layer.kelemen_brdf_diffuse_tex != "":
+                    if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_diffuse_tex]):
+                        reflectance_name = layer.kelemen_brdf_diffuse_tex + "_inst"
                         if reflectance_name not in self._textures_set:
                             self._textures_set.add(reflectance_name)
-                            self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_diff_tex], False, scene)
+                            self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_diffuse_tex], False, scene)
 
             if reflectance_name == "":
                 reflectance_name = "{0}_kelemen_brdf_reflectance".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(reflectance_name,
                                                            layer.kelemen_brdf_matte_reflectance,
                                                            1)
-            if layer.kelemen_brdf_use_spec_tex and layer.kelemen_brdf_spec_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_spec_tex]):
-                    spec_refl_name = layer.kelemen_brdf_spec_tex + "_inst"
-                    if spec_refl_name not in self._textures_set:
-                        self._textures_set.add(spec_refl_name)
-                        self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_spec_tex], False, scene)
-            if spec_refl_name == "":
-                spec_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(spec_refl_name,
+            if layer.kelemen_brdf_use_specular_tex and layer.kelemen_brdf_specular_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_specular_tex]):
+                    specular_refl_name = layer.kelemen_brdf_specular_tex + "_inst"
+                    if specular_refl_name not in self._textures_set:
+                        self._textures_set.add(specular_refl_name)
+                        self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_specular_tex], False, scene)
+            if specular_refl_name == "":
+                specular_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(specular_refl_name,
                                                            layer.kelemen_brdf_specular_reflectance,
                                                            1)
             # TODO: add texture support
@@ -2073,7 +2073,7 @@ class Writer(object):
         self.__emit_parameter("matte_reflectance", reflectance_name)
         self.__emit_parameter("matte_reflectance_multiplier", kelemen_brdf_matte_multiplier)
         self.__emit_parameter("roughness", kelemen_brdf_roughness)
-        self.__emit_parameter("specular_reflectance", spec_refl_name)
+        self.__emit_parameter("specular_reflectance", specular_refl_name)
         self.__emit_parameter("specular_reflectance_multiplier", kelemen_brdf_specular_multiplier)
         self.__close_element("bsdf")
 

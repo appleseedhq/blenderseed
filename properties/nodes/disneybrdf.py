@@ -182,7 +182,7 @@ class AppleseedDisneySpecTintSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneySpecTint"
     bl_label = "Specular Tint"
 
-    socket_value = AppleseedMatLayerProps.disney_brdf_spec_tint
+    socket_value = AppleseedMatLayerProps.disney_brdf_specular_tint
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
