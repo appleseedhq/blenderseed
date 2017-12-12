@@ -1025,15 +1025,15 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     # anisotropy
                     split = layout.split(percentage=0.90)
                     col = split.column()
-                    col.prop(current_layer, "disney_brdf_aniso", text="Anisotropy")
-                    if current_layer.disney_brdf_use_aniso_tex:
-                        layout.prop_search(current_layer, "disney_brdf_aniso_tex", material, "texture_slots", text="")
+                    col.prop(current_layer, "disney_brdf_anisotropy", text="Anisotropy")
+                    if current_layer.disney_brdf_use_anisotropy_tex:
+                        layout.prop_search(current_layer, "disney_brdf_anisotropy_tex", material, "texture_slots", text="")
 
                     col = split.column()
-                    col.prop(current_layer, "disney_brdf_use_aniso_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if current_layer.disney_brdf_aniso_tex != '' and current_layer.disney_brdf_use_aniso_tex:
-                        aniso_tex = bpy.data.textures[current_layer.disney_brdf_aniso_tex]
-                        layout.prop(aniso_tex.image.colorspace_settings, "name", text="Color Space")
+                    col.prop(current_layer, "disney_brdf_use_anisotropy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.disney_brdf_anisotropy_tex != '' and current_layer.disney_brdf_use_anisotropy_tex:
+                        anisotropy_tex = bpy.data.textures[current_layer.disney_brdf_anisotropy_tex]
+                        layout.prop(anisotropy_tex.image.colorspace_settings, "name", text="Color Space")
 
                     # roughness
                     split = layout.split(percentage=0.90)

@@ -1133,7 +1133,7 @@ class Writer(object):
             base_coat_name = inputs["Base Color"].get_socket_value(True)
             spec = inputs["Specular"].get_socket_value(True)
             specular_tint = inputs["Specular Tint"].get_socket_value(True)
-            aniso = inputs["Anisotropy"].get_socket_value(True)
+            anisotropy = inputs["Anisotropy"].get_socket_value(True)
             metallic = inputs["Metallic"].get_socket_value(True)
             roughness = inputs["Roughness"].get_socket_value(True)
             clearcoat = inputs["Clear Coat"].get_socket_value(True)
@@ -1183,13 +1183,13 @@ class Writer(object):
                         self._textures_set.add(specular_tint)
 
             # Aniso.
-            aniso = layer.disney_brdf_aniso
-            if layer.disney_brdf_use_aniso_tex and layer.disney_brdf_aniso_tex != '':
-                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_aniso_tex]):
-                    aniso = layer.disney_brdf_aniso_tex + "_inst"
-                    if aniso not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_aniso_tex], False, scene)
-                        self._textures_set.add(aniso)
+            anisotropy = layer.disney_brdf_anisotropy
+            if layer.disney_brdf_use_anisotropy_tex and layer.disney_brdf_anisotropy_tex != '':
+                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_anisotropy_tex]):
+                    anisotropy = layer.disney_brdf_anisotropy_tex + "_inst"
+                    if anisotropy not in self._textures_set:
+                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_anisotropy_tex], False, scene)
+                        self._textures_set.add(anisotropy)
 
             # Clear Coat.
             clearcoat = layer.disney_brdf_clearcoat
@@ -1255,7 +1255,7 @@ class Writer(object):
                         self._textures_set.add(subsurface)
 
         self.__open_element('bsdf name="{0}" model="disney_brdf"'.format(bsdf_name))
-        self.__emit_parameter("anisotropic", aniso)
+        self.__emit_parameter("anisotropic", anisotropy)
         self.__emit_parameter("base_color", base_coat_name)
         self.__emit_parameter("specular", spec)
         self.__emit_parameter("specular_tint", specular_tint)

@@ -54,7 +54,7 @@ class AppleseedDisneyAnisoSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneyAniso"
     bl_label = "Anisotropy"
 
-    socket_value = AppleseedMatLayerProps.disney_brdf_aniso
+    socket_value = AppleseedMatLayerProps.disney_brdf_anisotropy
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
