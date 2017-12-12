@@ -3102,6 +3102,6 @@ class Exporter(object):
     </configurations>
 </project>""".format(int(width), int(height), asr_mat.preview_quality))
             return True
-        except:
+        except IOError:
             self.__error("Could not open %s for writing" % file_path)
             return False
