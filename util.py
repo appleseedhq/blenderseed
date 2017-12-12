@@ -152,11 +152,11 @@ def is_uv_img(tex):
 # Object / instance utilities.
 # ------------------------------------
 def ob_mblur_enabled(object, scene):
-    return object.appleseed.mblur_enable and object.appleseed.mblur_type == 'object' and scene.appleseed.mblur_enable and scene.appleseed.ob_mblur
+    return object.appleseed.enable_motion_blur and object.appleseed.motion_blur_type == 'object' and scene.appleseed.enable_motion_blur and scene.appleseed.enable_object_blur
 
 
 def def_mblur_enabled(object, scene):
-    return object.appleseed.mblur_enable and object.appleseed.mblur_type == 'deformation' and scene.appleseed.mblur_enable and scene.appleseed.def_mblur
+    return object.appleseed.enable_motion_blur and object.appleseed.motion_blur_type == 'deformation' and scene.appleseed.enable_motion_blur and scene.appleseed.enable_deformation_blur
 
 
 def get_instance_materials(ob):
@@ -292,9 +292,9 @@ def get_all_psysobs():
 
 def get_psys_instances(ob, scene):
     """
-    Return a dictionary of 
-    particle: [dupli.object, [matrices]] 
-    pairs. This function assumes particle systems and 
+    Return a dictionary of
+    particle: [dupli.object, [matrices]]
+    pairs. This function assumes particle systems and
     face / verts duplication aren't being used on the same object.
     """
     all_duplis = {}
@@ -358,8 +358,8 @@ def get_psys_instances(ob, scene):
 
 def sample_psys_mblur(ob, scene, psys, index, start, current_total):
     """
-    Return a dictionary of 
-    particle: [dupli.object, [matrices]] 
+    Return a dictionary of
+    particle: [dupli.object, [matrices]]
     pairs
     """
     asr_scn = scene.appleseed

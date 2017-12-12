@@ -53,13 +53,14 @@ class AppleseedPsysPanel(bpy.types.Panel):
         layout = self.layout
         asr_psys = context.particle_system.settings.appleseed
 
-        layout.prop(asr_psys, "shape")
-        layout.prop(asr_psys, "resolution")
+        layout.prop(asr_psys, "shape", text="Strand Shape")
+        layout.prop(asr_psys, "resolution", text="Resolution")
+
         layout.label("Thickness:")
         row = layout.row()
-        row.prop(asr_psys, "root_size")
-        row.prop(asr_psys, "tip_size")
-        layout.prop(asr_psys, "scaling")
+        row.prop(asr_psys, "root_size", text="Root")
+        row.prop(asr_psys, "tip_size", text="Tip")
+        layout.prop(asr_psys, "scaling", text="Scaling")
 
 
 def register():

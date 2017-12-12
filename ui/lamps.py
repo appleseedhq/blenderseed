@@ -85,28 +85,28 @@ class AppleseedLampPanel(bpy.types.Panel):
 
             layout.prop(lamp_data, "spot_blend", text="Inner Angle")
             layout.prop(lamp_data, "spot_size", text="Outer Angle")
-            layout.prop(asr_lamp, "tilt_angle")
+            layout.prop(asr_lamp, "tilt_angle", text="Tilt Angle")
             layout.prop(lamp_data, "show_cone")
-            layout.prop(asr_lamp, "cast_indirect")
-            layout.prop(asr_lamp, "importance_multiplier")
+            layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
+            layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'POINT':
             layout.prop(asr_lamp, "radiance", text="Intensity")
             layout.prop(asr_lamp, "radiance_multiplier", text="Intensity Multiplier")
-            layout.prop(asr_lamp, "cast_indirect")
-            layout.prop(asr_lamp, "importance_multiplier")
+            layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
+            layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'SUN':
-            layout.prop(asr_lamp, "turbidity")
-            layout.prop(asr_lamp, "radiance_multiplier")
-            layout.prop(asr_lamp, "cast_indirect")
-            layout.prop(asr_lamp, "importance_multiplier")
+            layout.prop(asr_lamp, "turbidity", text="Turbidity")
+            layout.prop(asr_lamp, "radiance_multiplier", text="Radiance Multiplier")
+            layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
+            layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'HEMI':
             layout.prop(asr_lamp, "radiance", text="Irradiance")
             layout.prop(asr_lamp, "radiance_multiplier", text="Irradiance Multiplier")
-            layout.prop(asr_lamp, "cast_indirect")
-            layout.prop(asr_lamp, "importance_multiplier")
+            layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
+            layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'AREA':
             layout.label("Area lights are unsupported in blenderseed")

@@ -37,7 +37,7 @@ class AppleseedLambertianReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedLambertianReflectance"
     bl_label = "Reflectance"
 
-    socket_value = AppleseedMatLayerProps.lambertian_reflectance
+    socket_value = AppleseedMatLayerProps.lambertian_brdf_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedLambertianMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedLambertianMultiplier"
     bl_label = "Multiplier"
 
-    socket_value = AppleseedMatLayerProps.lambertian_multiplier
+    socket_value = AppleseedMatLayerProps.lambertian_brdf_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

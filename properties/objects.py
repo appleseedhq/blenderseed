@@ -33,20 +33,19 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
 
     @classmethod
     def register(cls):
-        bpy.types.Object.appleseed = bpy.props.PointerProperty(
-            name="appleseed Object Settings",
-            description="appleseed object settings",
-            type=cls)
+        bpy.types.Object.appleseed = bpy.props.PointerProperty(name="appleseed_object",
+                                                               description="appleseed Object",
+                                                               type=cls)
 
-        cls.mblur_enable = bpy.props.BoolProperty(name="",
-                                                  description="Enable rendering of motion blur",
-                                                  default=False)
+        cls.enable_motion_blur = bpy.props.BoolProperty(name="enable_motion_blur",
+                                                        description="Enable rendering of motion blur",
+                                                        default=False)
 
-        cls.mblur_type = bpy.props.EnumProperty(name="Type",
-                                                items=[('object', 'Object', 'Object motion blur'),
-                                                       ('deformation', 'Deformation', 'Deformation motion blur. Warning - this will increase export time')],
-                                                description="Type of motion blur to render",
-                                                default='object')
+        cls.motion_blur_type = bpy.props.EnumProperty(name="motion_blur_type",
+                                                      items=[('object', 'Object', 'Object motion blur'),
+                                                             ('deformation', 'Deformation', 'Deformation motion blur. Warning: this will increase export time')],
+                                                      description="Type of motion blur to render",
+                                                      default='object')
 
     @classmethod
     def unregister(cls):

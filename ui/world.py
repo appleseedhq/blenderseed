@@ -29,7 +29,7 @@
 import bpy
 
 
-class AppleseedWorldPanelOld(bpy.types.Panel):
+class AppleseedWorldPanel(bpy.types.Panel):
     bl_label = "Environment"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -40,7 +40,7 @@ class AppleseedWorldPanelOld(bpy.types.Panel):
     def poll(cls, context):
         renderer = context.scene.render
         if renderer.engine == 'APPLESEED_RENDER':
-            return context.scene.world != None
+            return context.scene.world is not None
         return False
 
     def draw(self, context):
@@ -48,22 +48,23 @@ class AppleseedWorldPanelOld(bpy.types.Panel):
         scene = context.scene
         asr_sky_props = scene.appleseed_sky
 
-        layout.prop(asr_sky_props, "env_type", text="")
+        layout.prop(asr_sky_props, "env_type", text="Environment Type")
 
         if asr_sky_props.env_type == "sunsky":
-            layout.prop(asr_sky_props, "sun_lamp")
-            layout.prop(asr_sky_props, "sun_model")
+            layout.prop(asr_sky_props, "sun_lamp", text="Sun Lamp")
+            layout.prop(asr_sky_props, "sun_model", text="Sun Model")
 
-            layout.prop(asr_sky_props, "sun_theta")
-            layout.prop(asr_sky_props, "sun_phi")
-            layout.prop(asr_sky_props, "turbidity")
-            layout.prop(asr_sky_props, "turbidity_multiplier")
-            layout.prop(asr_sky_props, "luminance_multiplier")
-            layout.prop(asr_sky_props, "luminance_gamma")
-            layout.prop(asr_sky_props, "saturation_multiplier")
-            layout.prop(asr_sky_props, "horiz_shift")
+            layout.prop(asr_sky_props, "sun_theta", text="Sun Theta Angle")
+            layout.prop(asr_sky_props, "sun_phi", text="Sun Phi Angle")
+            layout.prop(asr_sky_props, "turbidity", text="Turbidity")
+            layout.prop(asr_sky_props, "turbidity_multiplier", text="Turbidity Multiplier")
+            layout.prop(asr_sky_props, "luminance_multiplier", text="Luminance Multiplier")
+            layout.prop(asr_sky_props, "luminance_gamma", text="Luminance Gamma")
+            layout.prop(asr_sky_props, "saturation_multiplier", text="Saturation Multiplier")
+            layout.prop(asr_sky_props, "horizon_shift", text="Horizon Shift")
+
             if asr_sky_props.sun_model == "hosek_environment_edf":
-                layout.prop(asr_sky_props, "ground_albedo")
+                layout.prop(asr_sky_props, "ground_albedo", text="Ground Albedo")
 
         elif asr_sky_props.env_type == "gradient":
             layout.prop(scene.world, "horizon_color", text="Horizon Radiance")
@@ -74,15 +75,15 @@ class AppleseedWorldPanelOld(bpy.types.Panel):
 
         elif asr_sky_props.env_type == "constant_hemisphere":
             layout.prop(scene.world, "zenith_color", text="Upper Hemisphere Radiance")
-            layout.prop(scene.world, "horizon_color", text="Lower Hemisphere Radiance")   
+            layout.prop(scene.world, "horizon_color", text="Lower Hemisphere Radiance")
 
         elif asr_sky_props.env_type == "mirrorball_map":
-            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="")
-            layout.prop(asr_sky_props, "env_tex_mult")
+            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="Environment Texture")
+            layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
 
         elif asr_sky_props.env_type == "latlong_map":
-            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="")
-            layout.prop(asr_sky_props, "env_tex_mult")
+            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="Environment Texture")
+            layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
 
 
 def register():

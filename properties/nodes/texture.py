@@ -42,33 +42,31 @@ class AppleseedTexNode(Node, AppleseedNode):
 
     node_type = 'texture'
 
-    tex_path = bpy.props.StringProperty(name="Texture",
-                                        description="Path to the image texture",
-                                        default='',
-                                        subtype='FILE_PATH')
+    file_path = bpy.props.StringProperty(name="file_path",
+                                         description="Path to the texture file",
+                                         default='',
+                                         subtype='FILE_PATH')
 
-    color_space = bpy.props.EnumProperty(name="",
+    color_space = bpy.props.EnumProperty(name="color_space",
                                          description="Image color space",
-                                         items=[
-                                             ('linear_rgb', 'Linear', ''),
-                                             ('srgb', 'sRGB', ''),
-                                             ('ciexyz', 'CIE-XYZ', '')],
+                                         items=[('linear_rgb', 'Linear', ''),
+                                                ('srgb', 'sRGB', ''),
+                                                ('ciexyz', 'CIE XYZ', '')],
                                          default='srgb')
 
-    mode = bpy.props.EnumProperty(name="",
-                                  description="Tiling mode",
-                                  items=[
-                                      ('wrap', 'Wrap / Tiling', ''),
-                                      ('clamp', 'Clamp', '')],
-                                  default='wrap')
+    addressing_mode = bpy.props.EnumProperty(name="addressing_mode",
+                                             description="Tiling mode",
+                                             items=[('wrap', 'Wrap/Tile', ''),
+                                                    ('clamp', 'Clamp', '')],
+                                             default='wrap')
 
     def init(self, context):
         self.outputs.new('NodeSocketColor', "Color")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "tex_path", text="")
+        layout.prop(self, "file_path", text="")
         layout.prop(self, "color_space")
-        layout.prop(self, "mode")
+        layout.prop(self, "addressing_mode")
 
     def draw_buttons_ext(self, context, layout):
         pass

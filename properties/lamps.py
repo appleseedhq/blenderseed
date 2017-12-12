@@ -37,56 +37,56 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
 
     @classmethod
     def register(cls):
-        bpy.types.Lamp.appleseed = bpy.props.PointerProperty(name="appleseed Lamp",
+        bpy.types.Lamp.appleseed = bpy.props.PointerProperty(name="appleseed_lamp",
                                                              description="appleseed Lamp",
                                                              type=cls)
 
-        cls.radiance = bpy.props.FloatVectorProperty(name="",
+        cls.radiance = bpy.props.FloatVectorProperty(name="radiance",
                                                      description="Color of light emitted by lamp",
                                                      default=(0.8, 0.8, 0.8),
                                                      min=0.0,
                                                      max=1.0,
                                                      subtype='COLOR')
 
-        cls.radiance_use_tex = bpy.props.BoolProperty(name="",
+        cls.radiance_use_tex = bpy.props.BoolProperty(name="radiance_use_tex",
                                                       description="Use texture to influence lamp intensity",
                                                       default=False)
 
-        cls.radiance_tex = bpy.props.StringProperty(name="",
+        cls.radiance_tex = bpy.props.StringProperty(name="radiance_tex",
                                                     description="Texture to influence lamp intensity",
                                                     default="")
 
-        cls.radiance_multiplier = bpy.props.FloatProperty(name="Radiance Multiplier",
+        cls.radiance_multiplier = bpy.props.FloatProperty(name="radiance_multiplier",
                                                           description="Multiplier of lamp intensity",
                                                           default=1,
                                                           min=0,
                                                           soft_max=10)
 
-        cls.radiance_multiplier_use_tex = bpy.props.BoolProperty(name="",
+        cls.radiance_multiplier_use_tex = bpy.props.BoolProperty(name="radiance_multiplier_use_tex",
                                                                  description="Use texture to influence intensity multiplier",
                                                                  default=False)
 
-        cls.radiance_multiplier_tex = bpy.props.StringProperty(name="",
+        cls.radiance_multiplier_tex = bpy.props.StringProperty(name="radiance_multiplier_tex",
                                                                description="Texture to influence intensity multiplier",
                                                                default="")
 
-        cls.cast_indirect = bpy.props.BoolProperty(name="Cast Indirect Light",
+        cls.cast_indirect = bpy.props.BoolProperty(name="cast_indirect",
                                                    description="Lamp casts indirect light",
                                                    default=True)
 
-        cls.importance_multiplier = bpy.props.FloatProperty(name="Importance Multiplier",
+        cls.importance_multiplier = bpy.props.FloatProperty(name="importance_multiplier",
                                                             description="Adjust the sampling effort for this light with respect to the other lights",
                                                             default=1,
                                                             min=0,
                                                             soft_max=10)
 
-        cls.turbidity = bpy.props.FloatProperty(name="Turbidity",
+        cls.turbidity = bpy.props.FloatProperty(name="turbidity",
                                                 description="Sun lamp turbidity. If physical sky environment is also used, environment turbidity value will be used instead",
                                                 default=4,
                                                 min=0,
                                                 max=8)
 
-        cls.tilt_angle = bpy.props.FloatProperty(name="Tilt Angle",
+        cls.tilt_angle = bpy.props.FloatProperty(name="tilt_angle",
                                                  description="Spot lamp tilt angle",
                                                  default=0,
                                                  min=-360,

@@ -98,7 +98,7 @@ class AppleseedNormalSocket(NodeSocket, AppleseedSocket):
 
     def get_socket_value(self, texture_only=True):
         """
-        Method to return socket's value, if not linked. 
+        Method to return socket's value, if not linked.
         If linked, return the name of the node with appended pointer.
         """
         if self.is_linked:
@@ -137,7 +137,7 @@ class AppleseedEmissionStrengthSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedEmissionStrength"
     bl_label = "Emission Strength"
 
-    socket_value = bpy.props.FloatProperty(name="Emission Strength",
+    socket_value = bpy.props.FloatProperty(name="emission_strength",
                                            description="Light emission strength of material",
                                            default=0.0,
                                            min=0.0,
@@ -179,9 +179,9 @@ class AppleseedMaterialNode(Node, AppleseedNode):
             icon = layout.icon(img)
             layout.label(text="appleseed", icon_value=icon)
         if self.inputs["Emission Strength"].socket_value > 0.0 or self.inputs["Emission Strength"].is_linked:
-            layout.prop(self, "cast_indirect")
-            layout.prop(self, "importance_multiplier")
-            layout.prop(self, "light_near_start")
+            layout.prop(self, "cast_indirect", text="Cast Indirect Light")
+            layout.prop(self, "importance_multiplier", text="Importance Multiplier")
+            layout.prop(self, "light_near_start", text="Light Near Start")
 
     def draw_buttons_ext(self, context, layout):
         pass

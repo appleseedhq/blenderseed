@@ -38,7 +38,7 @@ class AppleseedDisneyBaseSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneyBase"
     bl_label = "Base Color"
 
-    socket_value = AppleseedMatLayerProps.disney_base
+    socket_value = AppleseedMatLayerProps.disney_brdf_base
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -54,7 +54,7 @@ class AppleseedDisneyAnisoSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneyAniso"
     bl_label = "Anisotropy"
 
-    socket_value = AppleseedMatLayerProps.disney_aniso
+    socket_value = AppleseedMatLayerProps.disney_brdf_aniso
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -70,7 +70,7 @@ class AppleseedDisneyClearCoatSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneyClearCoat"
     bl_label = "Clear Coat"
 
-    socket_value = AppleseedMatLayerProps.disney_clearcoat
+    socket_value = AppleseedMatLayerProps.disney_brdf_clearcoat
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -86,7 +86,7 @@ class AppleseedDisneyClearCoatGlossSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneyClearCoatGloss"
     bl_label = "Clear Coat Gloss"
 
-    socket_value = AppleseedMatLayerProps.disney_clearcoat_gloss
+    socket_value = AppleseedMatLayerProps.disney_brdf_clearcoat_gloss
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -102,7 +102,7 @@ class AppleseedDisneyMetallicSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneyMetallic"
     bl_label = "Metallic"
 
-    socket_value = AppleseedMatLayerProps.disney_metallic
+    socket_value = AppleseedMatLayerProps.disney_brdf_metallic
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -118,7 +118,7 @@ class AppleseedDisneyRoughnessSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneyRoughness"
     bl_label = "Roughness"
 
-    socket_value = AppleseedMatLayerProps.disney_roughness
+    socket_value = AppleseedMatLayerProps.disney_brdf_roughness
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -134,7 +134,7 @@ class AppleseedDisneySheenSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneySheen"
     bl_label = "Sheen"
 
-    socket_value = AppleseedMatLayerProps.disney_sheen
+    socket_value = AppleseedMatLayerProps.disney_brdf_sheen
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -150,7 +150,7 @@ class AppleseedDisneySheenTintSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneySheenTint"
     bl_label = "Sheen Tint"
 
-    socket_value = AppleseedMatLayerProps.disney_sheen_tint
+    socket_value = AppleseedMatLayerProps.disney_brdf_sheen_brdf_tint
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -166,7 +166,7 @@ class AppleseedDisneySpecSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneySpec"
     bl_label = "Specular"
 
-    socket_value = AppleseedMatLayerProps.disney_spec
+    socket_value = AppleseedMatLayerProps.disney_brdf_spec
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -182,7 +182,7 @@ class AppleseedDisneySpecTintSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneySpecTint"
     bl_label = "Specular Tint"
 
-    socket_value = AppleseedMatLayerProps.disney_spec_tint
+    socket_value = AppleseedMatLayerProps.disney_brdf_spec_tint
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -198,7 +198,7 @@ class AppleseedDisneySubsurfaceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedDisneySubsurface"
     bl_label = "Subsurface"
 
-    socket_value = AppleseedMatLayerProps.disney_subsurface
+    socket_value = AppleseedMatLayerProps.disney_brdf_subsurface
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
