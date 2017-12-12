@@ -252,7 +252,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
                     # mdf
                     col = layout.column()
-                    col.prop(current_layer, "glossy_brdf_mdf", name="Microfacet Distribution Function")
+                    col.prop(current_layer, "glossy_brdf_mdf", text="Microfacet Distribution Function")
 
                     # reflectance
                     split = layout.split(percentage=0.40)
@@ -524,7 +524,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
                 #------------------------------------------------
 
-                # metal bsdf layout
+                # metal brdf layout
                 if current_layer.bsdf_type == "metal_brdf":
 
                     # layer weight
@@ -609,7 +609,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
                     col = layout.column()
-                    col.prop(current_layer, "highlight_falloff")
+                    col.prop(current_layer, "metal_brdf_highlight_falloff", text="Highlight Falloff")
 
                     # anisotropy
                     split = layout.split(percentage=0.90)
@@ -894,7 +894,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     split = layout.split(percentage=0.90)
                     col = split.column()
                     col.prop(current_layer, "diffuse_btdf_weight", text="Layer Weight")
-                    if current_layer.transmittance_use_tex:
+                    if current_layer.diffuse_btdf_transmittance_use_mult_tex:
                         layout.prop_search(current_layer, "diffuse_btdf_mix_tex", material, "texture_slots")
 
                     col = split.column()
@@ -911,20 +911,20 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "diffuse_btdf_transmittance_color", text="Transmittance Color")
 
-                    if current_layer.diffuse_btdf_diff_tex:
+                    if current_layer.diffuse_btdf_use_diff_tex:
                         layout.prop_search(current_layer, "diffuse_btdf_diff_tex", material, "texture_slots")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
                     col.prop(current_layer, "diffuse_btdf_diff_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if current_layer.transmittance_diffuse_tex != '' and current_layer.diffuse_btdf_use_diff_tex:
-                        diffuse_tex = bpy.data.textures[current_layer.transmittance_diffuse_tex]
-                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+                    if current_layer.diffuse_btdf_diff_tex != '' and current_layer.diffuse_btdf_use_diff_tex:
+                        diff_tex = bpy.data.textures[current_layer.diffuse_btdf_diff_tex]
+                        layout.prop(diff_tex.image.colorspace_settings, "name", text="Color Space")
 
                     # transmittance
                     split = layout.split(percentage=0.90)
                     col = split.column()
-                    col.prop(current_layer, "diffuse_btdf_transmittance_multiplier", text="Transmittance")
+                    col.prop(current_layer, "diffuse_btdf_transmittance_multiplier", text="Transmittance Multiplier:")
                     if current_layer.diffuse_btdf_transmittance_use_mult_tex:
                         layout.prop_search(current_layer, "diffuse_btdf_transmittance_mult_tex", material, "texture_slots", text="")
 
