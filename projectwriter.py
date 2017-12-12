@@ -34,7 +34,7 @@ from datetime import datetime
 import bpy
 import mathutils
 
-from . import mesh_writer
+from . import geometrywriter
 from . import util
 
 identity_matrix = mathutils.Matrix(((1.0, 0.0, 0.0, 0.0),
@@ -63,12 +63,12 @@ def object_enumerator(obj_type):
     return matches
 
 
-class Exporter(object):
+class Writer(object):
     """
     appleseed exporter.
     """
 
-    def export(self, scene, file_path):
+    def write(self, scene, file_path):
         """
         Write the .appleseed project file for rendering.
         """
@@ -444,7 +444,7 @@ class Exporter(object):
                 # Export curves file to disk.
                 self.__progress("Exporting particle system '{0}' to {1}...".format(psys.name, curves_filename))
                 try:
-                    mesh_writer.write_curves_to_disk(object, scene, psys, curves_filepath)
+                    geometrywriter.write_curves_to_disk(object, scene, psys, curves_filepath)
                 except IOError:
                     self.__error("While exporting particle system '{0}': could not write to {1}, skipping particle system.".format(
                         psys.name, curves_filepath))
@@ -485,7 +485,7 @@ class Exporter(object):
                 # Export the mesh to disk.
                 self.__progress("Exporting object '{0}' to {1}...".format(object_name, mesh_filename))
                 try:
-                    mesh_parts = mesh_writer.write_mesh_to_disk(object, scene, mesh, mesh_filepath)
+                    mesh_parts = geometrywriter.write_mesh_to_disk(object, scene, mesh, mesh_filepath)
                 except IOError:
                     self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
                     return []
@@ -566,7 +566,7 @@ class Exporter(object):
                 # Export the mesh to disk.
                 self.__progress("Exporting object '{0}' to {1}...".format(object_name, mesh_filename))
                 try:
-                    mesh_writer.write_mesh_to_disk(object, scene, mesh, mesh_filepath)
+                    geometrywriter.write_mesh_to_disk(object, scene, mesh, mesh_filepath)
                 except IOError:
                     self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
 
@@ -599,7 +599,7 @@ class Exporter(object):
                 # Export curves file to disk.
                 self.__progress("Exporting particle system '{0}' to {1}...".format(psys.name, curves_filename))
                 try:
-                    mesh_writer.write_curves_to_disk(object, scene, psys, curves_filepath)
+                    geometrywriter.write_curves_to_disk(object, scene, psys, curves_filepath)
                 except IOError:
                     self.__error("While exporting particle system '{0}': could not write to {1}, skipping particle system.".format(
                         psys.name, curves_filepath))
@@ -917,7 +917,7 @@ class Exporter(object):
                                 self.__emit_texture(bpy.data.textures[layer.diffuse_btdf_mix_tex], False, scene)
                                 self._textures_set.add(mix_tex_name)
                         else:
-                            bsdfs.append([dt_bsdf_name, layer.transmittance_weight])
+                            bsdfs.append([dt_bsdf_name, layer.diffuse_btdf_weight])
 
                     # Disney
                     elif layer.bsdf_type == "disney_brdf":
@@ -1101,7 +1101,7 @@ class Exporter(object):
             reflectance_multiplier = inputs["Multiplier"].get_socket_value(True)
 
         else:
-            if layer.lambertian_brdf_use_diff_tex and layer.lambertian_brdf_diffuse_tex != '':
+            if layer.lambertian_brdf_use_diffuse_tex and layer.lambertian_brdf_diffuse_tex != '':
                 if util.is_uv_img(bpy.data.textures[layer.lambertian_brdf_diffuse_tex]):
                     reflectance_name = layer.lambertian_brdf_diffuse_tex + "_inst"
                     if reflectance_name not in self._textures_set:
@@ -1130,10 +1130,10 @@ class Exporter(object):
         # Nodes.
         if node is not None:
             inputs = node.inputs
-            base_coat_name = inputs["Base Coat"].get_socket_value(True)
+            base_coat_name = inputs["Base Color"].get_socket_value(True)
             spec = inputs["Specular"].get_socket_value(True)
-            spec_tint = inputs["Specular Tint"].get_socket_value(True)
-            aniso = inputs["Anisotropy"].get_socket_value(True)
+            specular_tint = inputs["Specular Tint"].get_socket_value(True)
+            anisotropy = inputs["Anisotropy"].get_socket_value(True)
             metallic = inputs["Metallic"].get_socket_value(True)
             roughness = inputs["Roughness"].get_socket_value(True)
             clearcoat = inputs["Clear Coat"].get_socket_value(True)
@@ -1143,7 +1143,7 @@ class Exporter(object):
             subsurface = inputs["Subsurface"].get_socket_value(True)
 
             # If the socket is not connected.
-            if not inputs["Base Coat"].is_linked:
+            if not inputs["Base Color"].is_linked:
                 base_coat_color = base_coat_name
                 base_coat_name = "{0}_disney_brdf_base_coat".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(base_coat_name,
@@ -1166,30 +1166,30 @@ class Exporter(object):
 
             # Specular.
             spec = layer.disney_brdf_spec
-            if layer.disney_brdf_use_spec_tex and layer.disney_brdf_spec_tex != '':
-                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_spec_tex]):
-                    spec = layer.disney_brdf_spec_tex + "_inst"
+            if layer.disney_brdf_use_specular_tex and layer.disney_brdf_specular_tex != '':
+                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_specular_tex]):
+                    spec = layer.disney_brdf_specular_tex + "_inst"
                     if spec not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_spec_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_specular_tex], False, scene)
                         self._textures_set.add(spec)
 
             # Specular Tint.
-            spec_tint = layer.disney_brdf_spec_tint
-            if layer.disney_brdf_use_spec_tint_tex and layer.disney_brdf_spec_tint_tex != '':
-                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_spec_tint_tex]):
-                    spec_tint = layer.disney_brdf_spec_tint_tex + "_inst"
-                    if spec_tint not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_spec_tint_tex], False, scene)
-                        self._textures_set.add(spec_tint)
+            specular_tint = layer.disney_brdf_specular_tint
+            if layer.disney_brdf_use_specular_tint_tex and layer.disney_brdf_specular_tint_tex != '':
+                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_specular_tint_tex]):
+                    specular_tint = layer.disney_brdf_specular_tint_tex + "_inst"
+                    if specular_tint not in self._textures_set:
+                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_specular_tint_tex], False, scene)
+                        self._textures_set.add(specular_tint)
 
             # Aniso.
-            aniso = layer.disney_brdf_aniso
-            if layer.disney_brdf_use_aniso_tex and layer.disney_brdf_aniso_tex != '':
-                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_aniso_tex]):
-                    aniso = layer.disney_brdf_aniso_tex + "_inst"
-                    if aniso not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_aniso_tex], False, scene)
-                        self._textures_set.add(aniso)
+            anisotropy = layer.disney_brdf_anisotropy
+            if layer.disney_brdf_use_anisotropy_tex and layer.disney_brdf_anisotropy_tex != '':
+                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_anisotropy_tex]):
+                    anisotropy = layer.disney_brdf_anisotropy_tex + "_inst"
+                    if anisotropy not in self._textures_set:
+                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_anisotropy_tex], False, scene)
+                        self._textures_set.add(anisotropy)
 
             # Clear Coat.
             clearcoat = layer.disney_brdf_clearcoat
@@ -1202,11 +1202,11 @@ class Exporter(object):
 
             # Clear Coat Gloss.
             clearcoat_gloss = layer.disney_brdf_clearcoat_gloss
-            if layer.disney_brdf_use_clearcoat_gloss_tex and layer.disney_brdf_clearcoat_gloss_tex != '':
-                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_clearcoat_gloss_tex]):
-                    clearcoat_gloss = layer.disney_brdf_clearcoat_gloss_tex + "_inst"
+            if layer.disney_brdf_use_clearcoat_glossy_tex and layer.disney_brdf_clearcoat_glossy_tex != '':
+                if util.is_uv_img(bpy.data.textures[layer.disney_brdf_clearcoat_glossy_tex]):
+                    clearcoat_gloss = layer.disney_brdf_clearcoat_glossy_tex + "_inst"
                     if clearcoat_gloss not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_clearcoat_gloss_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.disney_brdf_clearcoat_glossy_tex], False, scene)
                         self._textures_set.add(clearcoat_gloss)
 
             # Metallic.
@@ -1255,10 +1255,10 @@ class Exporter(object):
                         self._textures_set.add(subsurface)
 
         self.__open_element('bsdf name="{0}" model="disney_brdf"'.format(bsdf_name))
-        self.__emit_parameter("anisotropic", aniso)
+        self.__emit_parameter("anisotropic", anisotropy)
         self.__emit_parameter("base_color", base_coat_name)
         self.__emit_parameter("specular", spec)
-        self.__emit_parameter("specular_tint", spec_tint)
+        self.__emit_parameter("specular_tint", specular_tint)
         self.__emit_parameter("clearcoat", clearcoat)
         self.__emit_parameter("clearcoat_gloss", clearcoat_gloss)
         self.__emit_parameter("metallic", metallic)
@@ -1291,7 +1291,7 @@ class Exporter(object):
 
         else:
             roughness = layer.orennayar_brdf_roughness
-            if layer.orennayar_brdf_use_diff_tex and layer.orennayar_brdf_diffuse_tex != '':
+            if layer.orennayar_brdf_use_diffuse_tex and layer.orennayar_brdf_diffuse_tex != '':
                 if util.is_uv_img(bpy.data.textures[layer.orennayar_brdf_diffuse_tex]):
                     reflectance_name = layer.orennayar_brdf_diffuse_tex + "_inst"
                     if reflectance_name not in self._textures_set:
@@ -1329,11 +1329,11 @@ class Exporter(object):
         # Nodes.
         if node is not None:
             inputs = node.inputs
-            transmittance_name = inputs["Reflectance"].get_socket_value(True)
+            transmittance_name = inputs["Transmittance"].get_socket_value(True)
             transmittance = inputs["Multiplier"].get_socket_value(True)
 
             # If the socket is not connected.
-            if not inputs["Reflectance"].is_linked:
+            if not inputs["Transmittance"].is_linked:
                 transmittance_color = transmittance_name
                 transmittance_name = "{0}_diffuse_transmittance".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(transmittance_name,
@@ -1341,12 +1341,12 @@ class Exporter(object):
                                                            1)
 
         else:
-            if layer.diffuse_btdf_use_diff_tex and layer.diffuse_btdf_diff_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.diffuse_btdf_diff_tex]):
-                    transmittance_name = layer.diffuse_btdf_diff_tex + "_inst"
+            if layer.diffuse_btdf_use_diffuse_tex and layer.diffuse_btdf_diffuse_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.diffuse_btdf_diffuse_tex]):
+                    transmittance_name = layer.diffuse_btdf_diffuse_tex + "_inst"
                     if transmittance_name not in self._textures_set:
                         self._textures_set.add(transmittance_name)
-                        self.__emit_texture(bpy.data.textures[layer.diffuse_btdf_diff_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.diffuse_btdf_diffuse_tex], False, scene)
 
             if layer.diffuse_btdf_transmittance_use_mult_tex and layer.diffuse_btdf_transmittance_mult_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.diffuse_btdf_transmittance_mult_tex]):
@@ -1506,18 +1506,18 @@ class Exporter(object):
                                                            1)
 
         else:
-            if layer.ashikhmin_brdf_use_diff_tex and layer.ashikhmin_brdf_diffuse_tex != "":
+            if layer.ashikhmin_brdf_use_diffuse_tex and layer.ashikhmin_brdf_diffuse_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.ashikhmin_brdf_diffuse_tex]):
                     diffuse_reflectance_name = layer.ashikhmin_brdf_diffuse_tex + "_inst"
                     if diffuse_reflectance_name not in self._textures_set:
                         self._textures_set.add(diffuse_reflectance_name)
                         self.__emit_texture(bpy.data.textures[layer.ashikhmin_brdf_diffuse_tex], False, scene)
 
-            if layer.ashikhmin_brdf_use_gloss_tex and layer.ashikhmin_brdf_gloss_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.ashikhmin_brdf_gloss_tex]):
-                    glossy_brdf_reflectance_name = layer.ashikhmin_brdf_gloss_tex + "_inst"
+            if layer.ashikhmin_brdf_use_glossy_tex and layer.ashikhmin_brdf_glossy_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.ashikhmin_brdf_glossy_tex]):
+                    glossy_brdf_reflectance_name = layer.ashikhmin_brdf_glossy_tex + "_inst"
                     if glossy_brdf_reflectance_name not in self._textures_set:
-                        self.__emit_texture(bpy.data.textures[layer.ashikhmin_brdf_gloss_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.ashikhmin_brdf_glossy_tex], False, scene)
                         self._textures_set.add(glossy_brdf_reflectance_name)
 
             # Make sure we found some textures. If not, default to material color.
@@ -1910,13 +1910,13 @@ class Exporter(object):
                                                            1)
 
         else:
-            if layer.specular_brdf_use_gloss_tex and layer.specular_brdf_gloss_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.specular_brdf_gloss_tex]):
+            if layer.specular_brdf_use_glossy_tex and layer.specular_brdf_glossy_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.specular_brdf_glossy_tex]):
 
-                    reflectance_name = layer.specular_brdf_gloss_tex + "_inst"
+                    reflectance_name = layer.specular_brdf_glossy_tex + "_inst"
                     if reflectance_name not in self._textures_set:
                         self._textures_set.add(reflectance_name)
-                        self.__emit_texture(bpy.data.textures[layer.specular_brdf_gloss_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.specular_brdf_glossy_tex], False, scene)
             if reflectance_name == "":
                 reflectance_name = "{0}_specular_reflectance".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(reflectance_name,
@@ -1959,12 +1959,12 @@ class Exporter(object):
                                                            specular_btdf_transmittance,
                                                            1)
         else:
-            if layer.specular_btdf_use_spec_tex and layer.specular_btdf_spec_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.specular_btdf_spec_tex]):
-                    reflectance_name = layer.specular_btdf_spec_tex + "_inst"
+            if layer.specular_btdf_use_specular_tex and layer.specular_btdf_specular_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.specular_btdf_specular_tex]):
+                    reflectance_name = layer.specular_btdf_specular_tex + "_inst"
                     if reflectance_name not in self._textures_set:
                         self._textures_set.add(reflectance_name)
-                        self.__emit_texture(bpy.data.textures[layer.specular_btdf_spec_tex], False, scene)
+                        self.__emit_texture(bpy.data.textures[layer.specular_btdf_specular_tex], False, scene)
 
             if reflectance_name == "":
                 reflectance_name = "{0}_transp_reflectance".format(bsdf_name)
@@ -2017,13 +2017,13 @@ class Exporter(object):
     # ----------------------
     def __emit_kelemen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance_name = ""
-        spec_refl_name = ""
+        specular_refl_name = ""
 
         if node is not None:
             inputs = node.inputs
             reflectance_name = inputs[0].get_socket_value(True)
             kelemen_brdf_matte_multiplier = inputs[1].get_socket_value(True)
-            spec_refl_name = inputs[2].get_socket_value(True)
+            specular_refl_name = inputs[2].get_socket_value(True)
             kelemen_brdf_specular_multiplier = inputs[3].get_socket_value(True)
             kelemen_brdf_roughness = inputs[4].get_socket_value(True)
 
@@ -2034,34 +2034,34 @@ class Exporter(object):
                                                            kelemen_brdf_matte_reflectance,
                                                            1)
             if not inputs[2].is_linked:
-                kelemen_brdf_specular_reflectance = spec_refl_name
-                spec_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(spec_refl_name,
+                kelemen_brdf_specular_reflectance = specular_refl_name
+                specular_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(specular_refl_name,
                                                            kelemen_brdf_specular_reflectance,
                                                            1)
         else:
-            if layer.kelemen_brdf_use_diff_tex:
-                if layer.kelemen_brdf_diff_tex != "":
-                    if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_diff_tex]):
-                        reflectance_name = layer.kelemen_brdf_diff_tex + "_inst"
+            if layer.kelemen_brdf_use_diffuse_tex:
+                if layer.kelemen_brdf_diffuse_tex != "":
+                    if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_diffuse_tex]):
+                        reflectance_name = layer.kelemen_brdf_diffuse_tex + "_inst"
                         if reflectance_name not in self._textures_set:
                             self._textures_set.add(reflectance_name)
-                            self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_diff_tex], False, scene)
+                            self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_diffuse_tex], False, scene)
 
             if reflectance_name == "":
                 reflectance_name = "{0}_kelemen_brdf_reflectance".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(reflectance_name,
                                                            layer.kelemen_brdf_matte_reflectance,
                                                            1)
-            if layer.kelemen_brdf_use_spec_tex and layer.kelemen_brdf_spec_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_spec_tex]):
-                    spec_refl_name = layer.kelemen_brdf_spec_tex + "_inst"
-                    if spec_refl_name not in self._textures_set:
-                        self._textures_set.add(spec_refl_name)
-                        self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_spec_tex], False, scene)
-            if spec_refl_name == "":
-                spec_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(spec_refl_name,
+            if layer.kelemen_brdf_use_specular_tex and layer.kelemen_brdf_specular_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_specular_tex]):
+                    specular_refl_name = layer.kelemen_brdf_specular_tex + "_inst"
+                    if specular_refl_name not in self._textures_set:
+                        self._textures_set.add(specular_refl_name)
+                        self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_specular_tex], False, scene)
+            if specular_refl_name == "":
+                specular_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(specular_refl_name,
                                                            layer.kelemen_brdf_specular_reflectance,
                                                            1)
             # TODO: add texture support
@@ -2073,7 +2073,7 @@ class Exporter(object):
         self.__emit_parameter("matte_reflectance", reflectance_name)
         self.__emit_parameter("matte_reflectance_multiplier", kelemen_brdf_matte_multiplier)
         self.__emit_parameter("roughness", kelemen_brdf_roughness)
-        self.__emit_parameter("specular_reflectance", spec_refl_name)
+        self.__emit_parameter("specular_reflectance", specular_refl_name)
         self.__emit_parameter("specular_reflectance_multiplier", kelemen_brdf_specular_multiplier)
         self.__close_element("bsdf")
 
@@ -2875,7 +2875,6 @@ class Exporter(object):
                 self.__emit_file_header()
                 aspect_ratio = self.__get_frame_aspect_ratio(scene.render)
 
-                # Write the following generic scene file.
                 self._output_file.write("""<project>
     <scene>
         <camera name="Camera" model="pinhole_camera">
@@ -2902,9 +2901,7 @@ class Exporter(object):
         </color>
         <environment_edf name="environment_edf" model="constant_environment_edf">
             <parameter name="radiance" value="horizon_radiance" />
-        </environment_edf>
-        <environment_shader name="environment_shader" model="edf_environment_shader">""")
-
+        </environment_edf>""")
                 else:
                     self._output_file.write("""
         <color name="horizon_radiance">
@@ -2920,10 +2917,11 @@ class Exporter(object):
         <environment_edf name="environment_edf" model="gradient_environment_edf">
             <parameter name="horizon_radiance" value="horizon_radiance" />
             <parameter name="zenith_radiance" value="zenith_radiance" />
-        </environment_edf>
-        <environment_shader name="environment_shader" model="edf_environment_shader">""")
+        </environment_edf>""")
 
+                # Environment shader and environment.
                 self._output_file.write("""
+        <environment_shader name="environment_shader" model="edf_environment_shader">
             <parameter name="environment_edf" value="environment_edf" />
         </environment_shader>
         <environment name="environment" model="generic_environment">
@@ -3058,7 +3056,7 @@ class Exporter(object):
             </object_instance>
 """.format(mesh, mat_front, mat_back))
 
-                # Write the material for the preview sphere
+                # Material to preview.
                 self.__emit_material(mat, scene)
 
                 self._output_file.write("""        </assembly>
@@ -3101,7 +3099,8 @@ class Exporter(object):
         </configuration>
     </configurations>
 </project>""".format(int(width), int(height), asr_mat.preview_quality))
-            return True
-        except:
-            self.__error("Could not open %s for writing" % file_path)
+                return True
+
+        except IOError:
+            self.__error("Failed to write to {0}.".format(file_path))
             return False
