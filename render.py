@@ -160,12 +160,19 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.__render_project_file(scene, preview_project_filepath)
 
     def __render_project_file(self, scene, project_filepath):
-        # Get the absolute path to the executable directory.
-        as_bin_path = util.realpath(bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory)
-        if as_bin_path == '':
-            self.report({'ERROR'}, "The path to appleseed.cli executable has not been specified. Set the path in the add-on user preferences.")
+        # Check that the path to the bin folder is set.
+        appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
+        if not appleseed_bin_dir:
+            self.report({'ERROR'}, "The path to the folder containing the appleseed.cli executable has not been specified. Set the path in the add-on user preferences.")
             return
-        appleseed_exe = os.path.join(as_bin_path, "appleseed.cli")
+
+        # Check that the path to the bin folder indeed points to a folder.
+        if not os.path.isdir(appleseed_bin_dir):
+            self.report({'ERROR'}, "The path to the folder containing the appleseed.cli executable was set to {0} but this does not appear to be a valid folder.".format(appleseed_bin_dir))
+            return
+
+        # Compute the path to the appleseed.cli executable.
+        appleseed_bin_path = os.path.join(appleseed_bin_dir, "appleseed.cli")
 
         # Compute render resolution.
         (width, height) = util.get_render_resolution(scene)
@@ -183,14 +190,18 @@ class RenderAppleseed(bpy.types.RenderEngine):
             max_y = height - 1
 
         # Launch appleseed.cli.
-        cmd = (appleseed_exe,
+        cmd = (appleseed_bin_path,
                project_filepath,
                '--to-stdout',
                '--threads', str(scene.appleseed.threads),
                '--message-verbosity', 'warning',
                '--resolution', str(width), str(height),
                '--window', str(min_x), str(min_y), str(max_x), str(max_y))
-        process = subprocess.Popen(cmd, cwd=as_bin_path, env=os.environ.copy(), stdout=subprocess.PIPE)
+        try:
+            process = subprocess.Popen(cmd, cwd=appleseed_bin_dir, env=os.environ.copy(), stdout=subprocess.PIPE)
+        except OSError as e:
+            self.report({'ERROR'}, "Failed to run {0} with project {1}: {2}.".format(appleseed_bin_path, project_filepath, e))
+            return
 
         self.update_stats("", "appleseed: Rendering")
 
