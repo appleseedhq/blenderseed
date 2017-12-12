@@ -1387,9 +1387,9 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                             update=refresh_preview)
 
     specular_btdf_specular_tex = bpy.props.StringProperty(name="specular_btdf_specular_tex",
-                                                         description="Texture to influence specular reflectance",
-                                                         default="",
-                                                         update=refresh_preview)
+                                                          description="Texture to influence specular reflectance",
+                                                          default="",
+                                                          update=refresh_preview)
 
     specular_btdf_refl_mult = bpy.props.FloatProperty(name="specular_btdf_refl_mult",
                                                       description="Specular BTDF reflectance multiplier",
