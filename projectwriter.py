@@ -1550,7 +1550,7 @@ class Writer(object):
     # Write Blinn BRDF.
     # ----------------------
     def __emit_blinn_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        exponent_name = ""
+        exponent_name = layer.blinn_brdf_exponent
 
         # Nodes.
         if node is not None:
