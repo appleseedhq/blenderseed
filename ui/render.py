@@ -91,8 +91,12 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             layout.prop(asr_scene_props, "sampler_max_variation", text="Max Variation")
         else:
             layout.prop(asr_scene_props, "sampler_max_samples", text="Samples")
-            row = layout.row()
+            split = layout.split()
+            row = split.row()
+            row.enabled = asr_scene_props.sampler_max_samples == 1
             row.prop(asr_scene_props, "force_aa", text="Force Anti-Aliasing")
+            split = split.split()
+            row = split.row()
             row.prop(asr_scene_props, "decorrelate_pixels", text="Decorrelate Pixels")
 
 
@@ -116,8 +120,9 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             col.prop(asr_scene_props, "enable_caustics", text="Caustics")
             col.prop(asr_scene_props, "next_event_estimation", text="Next Event Estimation")
             col = split.column()
-            col.prop(asr_scene_props, "adaptive_sampler_enable_diagnostics", text="Diagnostics")
-            col.prop(asr_scene_props, "adaptive_sampler_quality", text="Quality")
+            if asr_scene_props.pixel_sampler == 'adaptive':
+                col.prop(asr_scene_props, "adaptive_sampler_enable_diagnostics", text="Diagnostics")
+                col.prop(asr_scene_props, "adaptive_sampler_quality", text="Quality")
             if asr_scene_props.next_event_estimation:
                 row = layout.row()
                 row.prop(asr_scene_props, "enable_ibl")
