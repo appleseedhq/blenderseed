@@ -1540,7 +1540,7 @@ class Writer(object):
         self.__open_element('bsdf name="{0}" model="ashikhmin_brdf"'.format(bsdf_name))
         self.__emit_parameter("diffuse_reflectance", diffuse_reflectance_name)
         self.__emit_parameter("diffuse_reflectance_multiplier", diffuse_multiplier)
-        self.__emit_parameter("glossy_brdf_reflectance", glossy_brdf_reflectance_name)
+        self.__emit_parameter("glossy_reflectance", glossy_brdf_reflectance_name)
         self.__emit_parameter("shininess_u", shininess_u)
         self.__emit_parameter("shininess_v", shininess_v)
         self.__emit_parameter("fresnel_multiplier", fresnel)
