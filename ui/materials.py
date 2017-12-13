@@ -184,7 +184,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
                     split = split.split(percentage=1.0)
                     col = split.column()
-                    col.prop(current_layer, "ashikhmin_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    col.prop(current_layer, "ashikhmin_brdf_use_glossy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
                     if current_layer.ashikhmin_brdf_glossy_tex != '' and current_layer.ashikhmin_brdf_use_glossy_tex:
                         diffuse_tex = bpy.data.textures[current_layer.ashikhmin_brdf_glossy_tex]
                         layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
@@ -1283,17 +1283,22 @@ class AppleseedMaterialShading(bpy.types.Panel):
             #
 
             layout.separator()
-            layout.prop(asr_mat, "material_alpha", text="Alpha")
 
-            # split = layout.split(percentage=0.50)
-            # col = split.column()
-            # col.prop(asr_mat, "material_use_alpha", text="Alpha Map", icon="POTATO", toggle=True)
-            # col = split.column()
-            # if asr_mat.material_use_alpha:
-                # col.prop_search(asr_mat, "material_alpha_map", material, "texture_slots", text="")
-                # if asr_mat.material_alpha_map != '':
-                    # alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
-                    # layout.prop(alpha_tex.image.colorspace_settings, "name", text="Color Space")
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "material_alpha", text="Alpha")
+
+            if asr_mat.material_use_alpha:
+                layout.prop_search(asr_mat, "material_alpha_map",
+                                   material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "material_use_alpha", text="",
+                     icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.material_alpha_map != '' and asr_mat.material_use_alpha:
+                alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
+                layout.prop(alpha_tex.image.colorspace_settings,
+                            "name", text="Color Space")
 
             #
             # Bump/normal mapping.

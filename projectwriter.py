@@ -1540,7 +1540,7 @@ class Writer(object):
         self.__open_element('bsdf name="{0}" model="ashikhmin_brdf"'.format(bsdf_name))
         self.__emit_parameter("diffuse_reflectance", diffuse_reflectance_name)
         self.__emit_parameter("diffuse_reflectance_multiplier", diffuse_multiplier)
-        self.__emit_parameter("glossy_brdf_reflectance", glossy_brdf_reflectance_name)
+        self.__emit_parameter("glossy_reflectance", glossy_brdf_reflectance_name)
         self.__emit_parameter("shininess_u", shininess_u)
         self.__emit_parameter("shininess_v", shininess_v)
         self.__emit_parameter("fresnel_multiplier", fresnel)
@@ -1550,7 +1550,7 @@ class Writer(object):
     # Write Blinn BRDF.
     # ----------------------
     def __emit_blinn_brdf(self, material, bsdf_name, scene, layer=None, node=None):
-        exponent_name = ""
+        exponent_name = layer.blinn_brdf_exponent
 
         # Nodes.
         if node is not None:
