@@ -184,7 +184,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
                     split = split.split(percentage=1.0)
                     col = split.column()
-                    col.prop(current_layer, "ashikhmin_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    col.prop(current_layer, "ashikhmin_brdf_use_glossy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
                     if current_layer.ashikhmin_brdf_glossy_tex != '' and current_layer.ashikhmin_brdf_use_glossy_tex:
                         diffuse_tex = bpy.data.textures[current_layer.ashikhmin_brdf_glossy_tex]
                         layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
