@@ -80,6 +80,12 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         layout.prop(asr_scene_props, "pixel_filter_size", text="Filter Size")
 
         layout.separator()
+        layout.label("Render Tile Size:")
+        row = layout.row(align=True)
+        row.prop(asr_scene_props, "tile_width", text="Width")
+        row.prop(asr_scene_props, "tile_height", text="Height")
+
+        layout.separator()
         layout.prop(asr_scene_props, "pixel_sampler", text="Pixel Sampler")
         layout.prop(asr_scene_props, "renderer_passes", text="Passes")
 
