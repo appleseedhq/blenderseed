@@ -217,65 +217,142 @@ class RenderAppleseed(bpy.types.RenderEngine):
             chunk_type = chunk_header[0]
             chunk_size = chunk_header[1]
 
-            # Ignore unknown chunks.
-            # Known chunk types:
-            #   1 = tile, protocol version 1
-            if chunk_type != 1:
+            if chunk_type == 1:
+                # Tile data (protocol v1).
+                if not self.__process_tile_data_chunk(process, min_x, min_y, max_x, max_y):
+                    break
+            elif chunk_type == 2:
+                # Tile highlight (protocol v1).
+                if not self.__process_tile_highlight_chunk(process, min_x, min_y, max_x, max_y):
+                    break
+            else:
+                # Ignore unknown chunks.
                 os.read(process.stdout.fileno(), chunk_size)
                 continue
 
-            # Read and decode tile header.
-            tile_header = struct.unpack("IIIII", os.read(process.stdout.fileno(), 5 * 4))
-            tile_x = tile_header[0]
-            tile_y = tile_header[1]
-            tile_w = tile_header[2]
-            tile_h = tile_header[3]
-            tile_c = tile_header[4]
-
-            # Read tile data.
-            tile_size = 4 * tile_w * tile_h * tile_c
-            tile_data = bytes()
-            while len(tile_data) < tile_size and not self.test_break():
-                tile_data += os.read(process.stdout.fileno(), tile_size - len(tile_data))
-            if self.test_break():
-                break
-
-            # Optional debug message.
-            if False:
-                print("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
-
-            # Ignore tiles completely outside the render window.
-            if tile_x > max_x or tile_x + tile_w - 1 < min_x:
-                continue
-            if tile_y > max_y or tile_y + tile_h - 1 < min_y:
-                continue
-
-            # Image-space coordinates of the intersection between the tile and the render window.
-            x0 = max(tile_x, min_x)
-            y0 = max(tile_y, min_y)
-            x1 = min(tile_x + tile_w - 1, max_x)
-            y1 = min(tile_y + tile_h - 1, max_y)
-
-            # Number of rows and columns to skip in the input tile.
-            skip_x = x0 - tile_x
-            skip_y = y0 - tile_y
-            take_x = x1 - x0 + 1
-            take_y = y1 - y0 + 1
-
-            # Extract relevant tile data and convert them to the format expected by Blender.
-            floats = array.array('f')
-            floats.fromstring(tile_data)
-            pix = []
-            for y in range(take_y - 1, -1, -1):
-                start_pix = (skip_y + y) * tile_w + skip_x
-                end_pix = start_pix + take_x
-                pix.extend(floats[p*4:p*4+4] for p in range(start_pix, end_pix))
-
-            # Update image.
-            result = self.begin_result(x0 - min_x, max_y - (y0 + take_y - 1), take_x, take_y)
-            layer = result.layers[0].passes[0]
-            layer.rect = pix
-            self.end_result(result)
-
         # Make sure the appleseed.cli process has terminated.
         process.kill()
+
+    def __process_tile_data_chunk(self, process, min_x, min_y, max_x, max_y):
+        # Read and decode tile header.
+        tile_header = struct.unpack("IIIII", os.read(process.stdout.fileno(), 5 * 4))
+        tile_x = tile_header[0]
+        tile_y = tile_header[1]
+        tile_w = tile_header[2]
+        tile_h = tile_header[3]
+        tile_c = tile_header[4]
+
+        # Read tile data.
+        tile_size = tile_w * tile_h * tile_c * 4
+        tile_data = bytes()
+        while len(tile_data) < tile_size and not self.test_break():
+            tile_data += os.read(process.stdout.fileno(), tile_size - len(tile_data))
+        if self.test_break():
+            return False
+
+        # Optional debug message.
+        if False:
+            print("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
+
+        # Ignore tiles completely outside the render window.
+        if tile_x > max_x or tile_x + tile_w - 1 < min_x:
+            return True
+        if tile_y > max_y or tile_y + tile_h - 1 < min_y:
+            return True
+
+        # Image-space coordinates of the intersection between the tile and the render window.
+        ix0 = max(tile_x, min_x)
+        iy0 = max(tile_y, min_y)
+        ix1 = min(tile_x + tile_w - 1, max_x)
+        iy1 = min(tile_y + tile_h - 1, max_y)
+
+        # Number of rows and columns to skip in the input tile.
+        skip_x = ix0 - tile_x
+        skip_y = iy0 - tile_y
+        take_x = ix1 - ix0 + 1
+        take_y = iy1 - iy0 + 1
+
+        # Extract relevant tile data and convert them to the format expected by Blender.
+        floats = array.array('f')
+        floats.fromstring(tile_data)
+        pix = []
+        for y in range(take_y - 1, -1, -1):
+            start_pix = (skip_y + y) * tile_w + skip_x
+            end_pix = start_pix + take_x
+            pix.extend(floats[p * 4:p * 4 + 4] for p in range(start_pix, end_pix))
+
+        # Window-space coordinates of the intersection between the tile and the render window.
+        x0 = ix0 - min_x    # left
+        y0 = max_y - iy1    # bottom
+
+        # Update image.
+        result = self.begin_result(x0, y0, take_x, take_y)
+        layer = result.layers[0].passes[0]
+        layer.rect = pix
+        self.end_result(result)
+
+        return True
+
+    def __process_tile_highlight_chunk(self, process, min_x, min_y, max_x, max_y):
+        # Read and decode tile header.
+        tile_header = struct.unpack("IIII", os.read(process.stdout.fileno(), 4 * 4))
+        tile_x = tile_header[0]
+        tile_y = tile_header[1]
+        tile_w = tile_header[2]
+        tile_h = tile_header[3]
+
+        # Ignore tiles completely outside the render window.
+        if tile_x > max_x or tile_x + tile_w - 1 < min_x:
+            return True
+        if tile_y > max_y or tile_y + tile_h - 1 < min_y:
+            return True
+
+        # Image-space coordinates of the intersection between the tile and the render window.
+        ix0 = max(tile_x, min_x)
+        iy0 = max(tile_y, min_y)
+        ix1 = min(tile_x + tile_w - 1, max_x)
+        iy1 = min(tile_y + tile_h - 1, max_y)
+
+        # Window-space coordinates of the intersection between the tile and the render window.
+        x0 = ix0 - min_x    # left
+        x1 = ix1 - min_x    # right
+        y0 = max_y - iy1    # bottom
+        y1 = max_y - iy0    # top
+
+        # Bracket parameters.
+        bracket_extent = 5
+        bracket_color = [1.0, 1.0, 1.0, 1.0]
+
+        # Handle tiles smaller than the bracket extent.
+        bracket_width = min(bracket_extent, x1 - x0 + 1)
+        bracket_height = min(bracket_extent, y1 - y0 + 1)
+
+        # Top-left corner.
+        self.__draw_hline(x0, y1, bracket_width, bracket_color)
+        self.__draw_vline(x0, y1 - bracket_height + 1, bracket_height, bracket_color)
+
+        # Top-right corner.
+        self.__draw_hline(x1 - bracket_width + 1, y1, bracket_width, bracket_color)
+        self.__draw_vline(x1, y1 - bracket_height + 1, bracket_height, bracket_color)
+
+        # Bottom-left corner.
+        self.__draw_hline(x0, y0, bracket_width, bracket_color)
+        self.__draw_vline(x0, y0, bracket_height, bracket_color)
+
+        # Bottom-right corner.
+        self.__draw_hline(x1 - bracket_width + 1, y0, bracket_width, bracket_color)
+        self.__draw_vline(x1, y0, bracket_height, bracket_color)
+
+        return True
+
+    def __draw_hline(self, x, y, length, color):
+        result = self.begin_result(x, y, length, 1)
+        layer = result.layers[0].passes[0]
+        layer.rect = [color] * length
+        self.end_result(result)
+
+    def __draw_vline(self, x, y, length, color):
+        result = self.begin_result(x, y, 1, length)
+        layer = result.layers[0].passes[0]
+        layer.rect = [color] * length
+        self.end_result(result)
