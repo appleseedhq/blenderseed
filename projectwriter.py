@@ -2601,6 +2601,7 @@ class Writer(object):
         self.__open_element("frame name=\"beauty\"")
         self.__emit_parameter("camera", "camera" if camera is None else camera.name)
         self.__emit_parameter("resolution", "{0} {1}".format(width, height))
+        self.__emit_parameter("tile_size", "{0} {1}".format(scene.appleseed.tile_width, scene.appleseed.tile_height))
         self.__emit_parameter("filter", scene.appleseed.pixel_filter)
         self.__emit_parameter("filter_size", scene.appleseed.pixel_filter_size)
         if scene.render.use_border:

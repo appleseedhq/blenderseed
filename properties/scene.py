@@ -90,6 +90,16 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                         description='Avoid correlation patterns at the expense of slightly more sampling noise',
                                                         default=True)
 
+        cls.tile_width = bpy.props.IntProperty(name="tile_width",
+                                                description="Set the width of the render tile",
+                                                default=32,
+                                                min=1)
+
+        cls.tile_height = bpy.props.IntProperty(name="tile_height",
+                                                description="Set the height of the render tile",
+                                                default=32,
+                                                min=1)
+
         cls.pixel_filter = bpy.props.EnumProperty(name="pixel_filter",
                                                   description="Pixel filter to use",
                                                   items=[("box", "Box", "Box"),
