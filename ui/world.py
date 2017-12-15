@@ -85,6 +85,8 @@ class AppleseedWorldPanel(bpy.types.Panel):
             layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="Environment Texture")
             layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
 
+        layout.prop(asr_sky_props, "env_alpha", text="Alpha")
+
 
 def register():
     bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.add('APPLESEED_RENDER')

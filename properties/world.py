@@ -126,6 +126,11 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                description="Texture to influence environment",
                                                default="")
 
+        cls.env_alpha = bpy.props.FloatProperty(name="env_alpha",
+                                               description="Alpha value of the environment",
+                                               default=1.0,
+                                               min=0.0,
+                                               max=1.0)
     @classmethod
     def unregister(cls):
         del bpy.types.Scene.appleseed_sky
