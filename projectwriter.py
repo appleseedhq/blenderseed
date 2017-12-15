@@ -2656,9 +2656,6 @@ class Writer(object):
         # Interactive: always use drt
         lighting_engine = 'drt' if type == "interactive" else scene.appleseed.lighting_engine
 
-        if not scene.appleseed.threads_auto:
-            self.__emit_parameter("rendering_threads", scene.appleseed.threads)
-
         self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
         self.__emit_parameter("lighting_engine", lighting_engine)
 
