@@ -84,6 +84,9 @@ class AppleseedWorldPanel(bpy.types.Panel):
         elif asr_sky_props.env_type == "latlong_map":
             layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="Environment Texture")
             layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
+            layout.prop(asr_sky_props, "env_exposure", text="Exposure")
+            layout.prop(asr_sky_props, "horizontal_shift", text="Horizontal Shift")
+            layout.prop(asr_sky_props, "vertical_shift", text="Vertical Shift")
 
         layout.prop(asr_sky_props, "env_alpha", text="Alpha")
 
