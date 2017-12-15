@@ -189,11 +189,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
             max_x = width - 1
             max_y = height - 1
 
-        # Launch appleseed.cli.
+        # Launch appleseed.cli.\
+        threads = 'auto' if scene.appleseed.threads_auto else str(scene.appleseed.threads)
         cmd = (appleseed_bin_path,
                project_filepath,
                '--to-stdout',
-               '--threads', str(scene.appleseed.threads),
+               '--threads', threads,
                '--message-verbosity', 'warning',
                '--resolution', str(width), str(height),
                '--window', str(min_x), str(min_y), str(max_x), str(max_y))
