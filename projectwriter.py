@@ -2283,6 +2283,7 @@ class Writer(object):
         width = scene.render.resolution_x
         height = scene.render.resolution_y
         emit_diaphragm_map = False
+        asr_cam = camera.data.appleseed
 
         if camera is None:
             self.__warning("No camera in the scene, exporting a default camera.")
@@ -2292,23 +2293,33 @@ class Writer(object):
         render = scene.render
 
         film_width = camera.data.sensor_width / 1000
+        ortho_width = camera.data.ortho_scale
         aspect_ratio = self.__get_frame_aspect_ratio(render)
-        lens_unit = "focal_length" if camera.data.lens_unit == 'MILLIMETERS' else "horizontal_fov"
+        # lens_unit = "focal_length" if camera.data.lens_unit == 'MILLIMETERS' else "horizontal_fov"
 
         # Blender's camera focal length is expressed in mm
-        focal_length = camera.data.lens / 1000.0
+        # focal_length = camera.data.lens / 1000.0
         fov = util.calc_fov(camera, width, height)
 
-        # Test if using focal object, get focal distance.
-        if camera.data.dof_object is not None:
-            cam_target = bpy.data.objects[camera.data.dof_object.name]
-            focal_distance = (cam_target.location - camera.location).magnitude
+        # Camera type
+        if camera.data.type == 'PERSP':
+            cam_model = 'pinhole'
+        elif camera.data.type == 'ORTHO':
+            cam_model = 'orthographic'
         else:
-            focal_distance = camera.data.dof_distance
+            cam_model = 'spherical'
 
-        asr_cam = camera.data.appleseed
-        self.__open_element('camera name="' + camera.name + '" model="{}_camera"'.format(asr_cam.camera_model))
-        if asr_cam.camera_model == "thinlens":
+        # Test if using focal object, get focal distance.
+        if cam_model == 'pinhole' and asr_cam.enable_dof:
+            cam_model = 'thinlens'
+            if camera.data.dof_object is not None:
+                cam_target = bpy.data.objects[camera.data.dof_object.name]
+                focal_distance = (cam_target.location - camera.location).magnitude
+            else:
+                focal_distance = camera.data.dof_distance
+
+        self.__open_element('camera name="' + camera.name + '" model="{}_camera"'.format(cam_model))
+        if cam_model == "thinlens":
             self.__emit_parameter("f_stop", asr_cam.f_number)
             self.__emit_parameter("focal_distance", focal_distance)
             self.__emit_parameter("diaphragm_blades", asr_cam.diaphragm_blades)
@@ -2318,11 +2329,16 @@ class Writer(object):
                 emit_diaphragm_map = True
                 texture_name = asr_cam.diaphragm_map.split(util.sep)[-1][:-4]
                 self.__emit_parameter("diaphragm_map", texture_name + "_inst")
-        self.__emit_parameter("film_width", film_width)
-        self.__emit_parameter("aspect_ratio", aspect_ratio)
-        self.__emit_parameter("horizontal_fov", fov)
+        if cam_model != 'spherical':
+            self.__emit_parameter("aspect_ratio", aspect_ratio)
+            if cam_model == 'orthographic':
+                self.__emit_parameter("film_width", ortho_width)
+            else:
+                self.__emit_parameter("film_width", film_width)
+                self.__emit_parameter("horizontal_fov", fov)
         self.__emit_parameter("shutter_open_time", shutter_open)
         self.__emit_parameter("shutter_close_time", shutter_close)
+        self.__emit_parameter("near_z", asr_cam.near_z)
 
         current_frame = scene.frame_current
         scene.frame_set(current_frame, subframe=shutter_open)

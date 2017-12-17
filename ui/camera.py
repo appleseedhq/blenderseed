@@ -29,8 +29,8 @@
 import bpy
 
 
-class AppleseedCameraDoF(bpy.types.Panel):
-    bl_label = "Camera"
+class AppleseedCameraLens(bpy.types.Panel):
+    bl_label = "Lens"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -43,32 +43,76 @@ class AppleseedCameraDoF(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+
+        cam = context.camera
         scene = context.scene
         asr_cam_props = scene.camera.data.appleseed
 
+        layout.row().prop(cam, "type", expand=True)
+
+        split = layout.split()
+
+        col = split.column()
+        if cam.type == 'PERSP':
+            row = col.row()
+            if cam.lens_unit == 'MILLIMETERS':
+                row.prop(cam, "lens")
+            elif cam.lens_unit == 'FOV':
+                row.prop(cam, "angle")
+            row.prop(cam, "lens_unit", text="")
+
+        elif cam.type =='ORTHO':
+            row = col.row()
+            row.prop(cam, "ortho_scale")
+
+        col = layout.column()
+        col.prop(asr_cam_props, "near_z", text="Near Clip")
+
+
+class AppleseedCameraDoF(bpy.types.Panel):
+    bl_label = "Depth of Field"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_context = "data"
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER' and context.active_object.type == 'CAMERA'
+
+    def draw_header(self, context):
+        header = self.layout
+        scene = context.scene
+        asr_cam_props = scene.camera.data.appleseed
+        header.prop(asr_cam_props, "enable_dof", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        asr_cam_props = scene.camera.data.appleseed
+
+        layout.active = asr_cam_props.enable_dof and context.active_object.data.type == 'PERSP'
         row = layout.row()
-        row.prop(asr_cam_props, "camera_model", text="Model")
-
-        if asr_cam_props.camera_model == "thinlens":
-            layout.prop(asr_cam_props, "f_number", text="F-Number")
-
-            layout.prop(context.active_object.data, "dof_distance", text="Focal Distance")
-            layout.active = context.active_object.data.dof_object is None
-            layout.prop(context.active_object.data, "dof_object", text='Autofocus')
-
-            layout.prop(asr_cam_props, "diaphragm_blades", "Diaphragm Blades")
-            layout.prop(asr_cam_props, "diaphragm_angle", "Diaphragm Tilt Angle")
-            layout.prop(asr_cam_props, "diaphragm_map", "Diaphragm Map")
+        row.active = context.active_object.data.dof_object is None
+        row.prop(context.active_object.data, "dof_distance", text="Focal Distance")
+        row = layout.row()
+        row.prop(context.active_object.data, "dof_object", text='Autofocus')
+        layout.prop(asr_cam_props, "f_number", text="F-Number")
+        layout.prop(asr_cam_props, "diaphragm_blades", text="Diaphragm Blades")
+        layout.prop(asr_cam_props, "diaphragm_angle", text="Diaphragm Tilt Angle")
+        layout.prop(asr_cam_props, "diaphragm_map", text="Diaphragm Map")
 
 
 def register():
     bpy.types.DATA_PT_camera.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.DATA_PT_camera_display.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.CAMERA_MT_presets.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    bpy.types.DATA_PT_lens.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    # bpy.types.DATA_PT_lens.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.DATA_PT_custom_props_camera.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.DATA_PT_context_camera.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.utils.register_class(AppleseedCameraDoF)
+    # bpy.utils.register_class(AppleseedCameraLens)
 
 
 def unregister():
