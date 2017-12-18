@@ -2283,7 +2283,7 @@ class Writer(object):
         width = scene.render.resolution_x
         height = scene.render.resolution_y
         emit_diaphragm_map = False
-        asr_cam = camera.data.appleseed
+        appleseed_cam = camera.data.appleseed
 
         if camera is None:
             self.__warning("No camera in the scene, exporting a default camera.")
@@ -2295,10 +2295,8 @@ class Writer(object):
         film_width = camera.data.sensor_width / 1000
         ortho_width = camera.data.ortho_scale
         aspect_ratio = self.__get_frame_aspect_ratio(render)
-        # lens_unit = "focal_length" if camera.data.lens_unit == 'MILLIMETERS' else "horizontal_fov"
 
         # Blender's camera focal length is expressed in mm
-        # focal_length = camera.data.lens / 1000.0
         fov = util.calc_fov(camera, width, height)
 
         # Camera type
@@ -2310,7 +2308,7 @@ class Writer(object):
             cam_model = 'spherical'
 
         # Test if using focal object, get focal distance.
-        if cam_model == 'pinhole' and asr_cam.enable_dof:
+        if cam_model == 'pinhole' and appleseed_cam.enable_dof:
             cam_model = 'thinlens'
             if camera.data.dof_object is not None:
                 cam_target = bpy.data.objects[camera.data.dof_object.name]
@@ -2320,14 +2318,14 @@ class Writer(object):
 
         self.__open_element('camera name="' + camera.name + '" model="{}_camera"'.format(cam_model))
         if cam_model == "thinlens":
-            self.__emit_parameter("f_stop", asr_cam.f_number)
+            self.__emit_parameter("f_stop", appleseed_cam.f_number)
             self.__emit_parameter("focal_distance", focal_distance)
-            self.__emit_parameter("diaphragm_blades", asr_cam.diaphragm_blades)
-            self.__emit_parameter("diaphragm_tilt_angle", asr_cam.diaphragm_angle)
+            self.__emit_parameter("diaphragm_blades", appleseed_cam.diaphragm_blades)
+            self.__emit_parameter("diaphragm_tilt_angle", appleseed_cam.diaphragm_angle)
             emit_diaphragm_map = False
-            if asr_cam.diaphragm_map != '' and asr_cam.diaphragm_map[-3:] in {'png', 'exr'}:
+            if appleseed_cam.diaphragm_map != '' and appleseed_cam.diaphragm_map[-3:] in {'png', 'exr'}:
                 emit_diaphragm_map = True
-                texture_name = asr_cam.diaphragm_map.split(util.sep)[-1][:-4]
+                texture_name = appleseed_cam.diaphragm_map.split(util.sep)[-1][:-4]
                 self.__emit_parameter("diaphragm_map", texture_name + "_inst")
         if cam_model != 'spherical':
             self.__emit_parameter("aspect_ratio", aspect_ratio)
@@ -2338,7 +2336,7 @@ class Writer(object):
                 self.__emit_parameter("horizontal_fov", fov)
         self.__emit_parameter("shutter_open_time", shutter_open)
         self.__emit_parameter("shutter_close_time", shutter_close)
-        self.__emit_parameter("near_z", asr_cam.near_z)
+        self.__emit_parameter("near_z", appleseed_cam.near_z)
 
         current_frame = scene.frame_current
         scene.frame_set(current_frame, subframe=shutter_open)

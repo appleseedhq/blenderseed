@@ -108,12 +108,13 @@ def register():
     bpy.types.DATA_PT_camera.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.DATA_PT_camera_display.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.CAMERA_MT_presets.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    # bpy.types.DATA_PT_lens.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.DATA_PT_custom_props_camera.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.DATA_PT_context_camera.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.utils.register_class(AppleseedCameraLens)
     bpy.utils.register_class(AppleseedCameraDoF)
-    # bpy.utils.register_class(AppleseedCameraLens)
 
 
 def unregister():
+    bpy.utils.unregister_class(AppleseedCameraLens)
     bpy.utils.unregister_class(AppleseedCameraDoF)
+    
