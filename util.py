@@ -67,15 +67,11 @@ def asUpdate(*args):
 
 
 def strip_spaces(name):
-    return ('_').join(name.split(' '))
+    return '_'.join(name.split(' '))
 
 
 def join_names_underscore(name1, name2):
-    return ('_').join((strip_spaces(name1), strip_spaces(name2)))
-
-
-def join_params(params, directive):
-    return ('').join((('').join(params), directive))
+    return '_'.join((strip_spaces(name1), strip_spaces(name2)))
 
 
 def filter_params(params):
@@ -84,11 +80,6 @@ def filter_params(params):
         if p not in filter_list:
             filter_list.append(p)
     return filter_list
-
-
-def get_timestamp():
-    now = datetime.datetime.now()
-    return "%d-%d-%d %d:%d:%d\n" % (now.month, now.day, now.year, now.hour, now.minute, now.second)
 
 
 def realpath(path):
@@ -143,14 +134,13 @@ def calc_fov(camera_ob, width, height):
 
 
 def is_uv_img(tex):
-    if tex and tex.type == 'IMAGE' and tex.image:
-        return True
-    return False
+    return tex and tex.type == 'IMAGE' and tex.image
 
 
 # ------------------------------------
 # Object / instance utilities.
 # ------------------------------------
+
 def ob_mblur_enabled(object, scene):
     return object.appleseed.enable_motion_blur and object.appleseed.motion_blur_type == 'object' and scene.appleseed.enable_motion_blur and scene.appleseed.enable_object_blur
 
@@ -178,14 +168,6 @@ def is_proxy(ob, scene):
             return ob.appleseed.external_instance_mesh != ''
         else:
             return ob.appleseed.instance_mesh is not None and scene.objects[ob.appleseed.instance_mesh].type == 'MESH'
-
-
-def get_all_duplis(scene):
-    obs = set()
-    for ob in scene.objects:
-        if ob.parent and ob.parent.dupli_type in {'FACES', 'VERTS', 'GROUP'}:
-            obs.add(ob)
-    return obs
 
 
 def get_instances(obj_parent, scene):
