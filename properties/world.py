@@ -126,6 +126,28 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                description="Texture to influence environment",
                                                default="")
 
+        cls.horizontal_shift = bpy.props.FloatProperty(name="horizontal_shift",
+                                                       description="Environment texture horizontal shift in degrees",
+                                                       default=0.0,
+                                                       min=-360.0,
+                                                       max=360.0)
+
+        cls.vertical_shift = bpy.props.FloatProperty(name="vertical_shift",
+                                                     description="Environment texture vertical shift in degrees",
+                                                     default=0.0,
+                                                     min=-180.0,
+                                                     max=180.0)
+
+        cls.env_alpha = bpy.props.FloatProperty(name="env_alpha",
+                                               description="Alpha value of the environment",
+                                               default=1.0,
+                                               min=0.0,
+                                               max=1.0)
+
+        cls.env_exposure = bpy.props.FloatProperty(name="env_exposure",
+                                                   description="Environment exposure",
+                                                   default=0.0)
+
     @classmethod
     def unregister(cls):
         del bpy.types.Scene.appleseed_sky

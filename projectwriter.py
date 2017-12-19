@@ -2288,6 +2288,9 @@ class Writer(object):
                     self.__open_element('environment_edf name="{0}" model="latlong_map_environment_edf"'.format(env_edf_name))
                     self.__emit_parameter("radiance", scene.appleseed_sky.env_tex + "_inst")
                     self.__emit_parameter("radiance_multiplier", scene.appleseed_sky.env_tex_mult)
+                    self.__emit_parameter("exposure", scene.appleseed_sky.env_exposure)
+                    self.__emit_parameter("vertical_shift", scene.appleseed_sky.vertical_shift)
+                    self.__emit_parameter("horizontal_shift", scene.appleseed_sky.horizontal_shift)
                     self.__close_element('environment_edf')
                 else:
                     self.__warning("Latitude-Longitude environment texture is enabled, but no texture is assigned. Using gradient environment.")
@@ -2315,6 +2318,7 @@ class Writer(object):
             env_shader_name = "environment_shader"
             self.__open_element('environment_shader name="{0}" model="edf_environment_shader"'.format(env_shader_name))
             self.__emit_parameter("environment_edf", env_edf_name)
+            self.__emit_parameter("alpha_value", scene.appleseed_sky.env_alpha)
             self.__close_element('environment_shader')
 
         # Write the environment element.
