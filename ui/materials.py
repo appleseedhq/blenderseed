@@ -142,7 +142,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "ashikhmin_brdf_weight", text="Layer Weight")
                     if current_layer.ashikhmin_brdf_use_tex:
-                        layout.prop_search(current_layer, "ashikhmin_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "ashikhmin_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "ashikhmin_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -159,7 +159,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "ashikhmin_brdf_reflectance", text="")
 
                     if current_layer.ashikhmin_brdf_use_diffuse_tex:
-                        layout.prop_search(current_layer, "ashikhmin_brdf_diffuse_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "ashikhmin_brdf_diffuse_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -180,7 +180,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "ashikhmin_brdf_glossy", text="")
 
                     if current_layer.ashikhmin_brdf_use_glossy_tex:
-                        layout.prop_search(current_layer, "ashikhmin_brdf_glossy_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "ashikhmin_brdf_glossy_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -209,7 +209,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "blinn_brdf_weight", text="Layer Weight")
                     if current_layer.blinn_brdf_use_tex:
-                        layout.prop_search(current_layer, "blinn_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "blinn_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "blinn_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -223,7 +223,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "blinn_brdf_exponent", text="Exponent")
 
                     if current_layer.blinn_brdf_exponent_use_tex:
-                        layout.prop_search(current_layer, "blinn_brdf_exponent_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "blinn_brdf_exponent_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "blinn_brdf_exponent_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -246,7 +246,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "diffuse_btdf_weight", text="Layer Weight")
                     if current_layer.diffuse_btdf_transmittance_use_mult_tex:
-                        layout.prop_search(current_layer, "diffuse_btdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "diffuse_btdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "diffuse_btdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -261,9 +261,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     split = split.split(percentage=0.83)
                     col = split.column()
                     col.prop(current_layer, "diffuse_btdf_transmittance_color", text="Transmittance Color")
-
                     if current_layer.diffuse_btdf_use_diffuse_tex:
-                        layout.prop_search(current_layer, "diffuse_btdf_diffuse_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "diffuse_btdf_diffuse_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -296,7 +295,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "disney_brdf_weight", text="Layer Weight")
                     if current_layer.disney_brdf_use_tex:
-                        layout.prop_search(current_layer, "disney_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "disney_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "disney_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -313,7 +312,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "disney_brdf_base", text="")
 
                     if current_layer.disney_brdf_use_base_tex:
-                        layout.prop_search(current_layer, "disney_brdf_base_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "disney_brdf_base_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -463,7 +462,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "glass_bsdf_weight", text="Layer Weight")
                     if current_layer.glass_bsdf_use_tex:
-                        layout.prop_search(current_layer, "glass_bsdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glass_bsdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "glass_bsdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -484,7 +483,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glass_bsdf_surface_transmittance", text="")
 
                     if current_layer.glass_bsdf_surface_transmittance_use_tex:
-                        layout.prop_search(current_layer, "glass_bsdf_surface_transmittance_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glass_bsdf_surface_transmittance_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -499,7 +498,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glass_bsdf_surface_transmittance_multiplier", text="Surface Transmittance Multiplier")
 
                     if current_layer.glass_bsdf_surface_transmittance_multiplier_use_tex:
-                        layout.prop_search(current_layer, "glass_bsdf_surface_transmittance_multiplier_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glass_bsdf_surface_transmittance_multiplier_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "glass_bsdf_surface_transmittance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -516,7 +515,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glass_bsdf_reflection_tint", text="")
 
                     if current_layer.glass_bsdf_reflection_tint_use_tex:
-                        layout.prop_search(current_layer, "glass_bsdf_reflection_tint_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glass_bsdf_reflection_tint_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -534,7 +533,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glass_bsdf_refraction_tint", text="")
 
                     if current_layer.glass_bsdf_refraction_tint_use_tex:
-                        layout.prop_search(current_layer, "glass_bsdf_refraction_tint_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glass_bsdf_refraction_tint_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -553,7 +552,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glass_bsdf_roughness", text="Roughness")
 
                     if current_layer.glass_bsdf_roughness_use_tex:
-                        layout.prop_search(current_layer, "glass_bsdf_roughness_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glass_bsdf_roughness_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "glass_bsdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -571,7 +570,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glass_bsdf_anisotropy", text="Anisotropy")
 
                     if current_layer.glass_bsdf_anisotropy_use_tex:
-                        layout.prop_search(current_layer, "glass_bsdf_anisotropy_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glass_bsdf_anisotropy_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "glass_bsdf_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -593,7 +592,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         col.prop(current_layer, "glass_bsdf_volume_transmittance", text="")
 
                         if current_layer.glass_bsdf_volume_transmittance_use_tex:
-                            layout.prop_search(current_layer, "glass_bsdf_volume_transmittance_tex", material, "texture_slots")
+                            layout.prop_search(current_layer, "glass_bsdf_volume_transmittance_tex", material, "texture_slots", text="")
 
                         split = split.split(percentage=1.0)
                         col = split.column()
@@ -608,7 +607,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         col.prop(current_layer, "glass_bsdf_volume_transmittance_distance", text="Volume Transmittance Distance")
 
                         if current_layer.glass_bsdf_volume_transmittance_distance_use_tex:
-                            layout.prop_search(current_layer, "glass_bsdf_volume_transmittance_distance_tex", material, "texture_slots")
+                            layout.prop_search(current_layer, "glass_bsdf_volume_transmittance_distance_tex", material, "texture_slots", text="")
 
                         col = split.column()
                         col.prop(current_layer, "glass_bsdf_volume_transmittance_distance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -623,7 +622,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         col.prop(current_layer, "glass_bsdf_volume_density", text="Volume Density")
 
                         if current_layer.glass_bsdf_volume_density_use_tex:
-                            layout.prop_search(current_layer, "glass_bsdf_volume_density_tex", material, "texture_slots")
+                            layout.prop_search(current_layer, "glass_bsdf_volume_density_tex", material, "texture_slots", text="")
 
                         col = split.column()
                         col.prop(current_layer, "glass_bsdf_volume_density_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -640,7 +639,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         col.prop(current_layer, "glass_bsdf_volume_absorption", text="")
 
                         if current_layer.glass_bsdf_volume_absorption_use_tex:
-                            layout.prop_search(current_layer, "glass_bsdf_volume_absorption_tex", material, "texture_slots")
+                            layout.prop_search(current_layer, "glass_bsdf_volume_absorption_tex", material, "texture_slots", text="")
 
                         split = split.split(percentage=1.0)
                         col = split.column()
@@ -664,7 +663,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "glossy_brdf_weight", text="Layer Weight")
                     if current_layer.glossy_brdf_use_tex:
-                        layout.prop_search(current_layer, "glossy_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glossy_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "glossy_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -685,7 +684,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glossy_brdf_reflectance", text="")
 
                     if current_layer.glossy_brdf_reflectance_use_tex:
-                        layout.prop_search(current_layer, "glossy_brdf_reflectance_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glossy_brdf_reflectance_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -700,7 +699,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glossy_brdf_reflectance_multiplier", text="Reflectance Multiplier")
 
                     if current_layer.glossy_brdf_reflectance_multiplier_use_tex:
-                        layout.prop_search(current_layer, "glossy_brdf_reflectance_multiplier_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glossy_brdf_reflectance_multiplier_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "glossy_brdf_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -714,7 +713,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glossy_brdf_roughness", text="Roughness")
 
                     if current_layer.glossy_brdf_roughness_use_tex:
-                        layout.prop_search(current_layer, "glossy_brdf_roughness_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glossy_brdf_roughness_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "glossy_brdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -732,7 +731,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "glossy_brdf_anisotropy", text="Anisotropy")
 
                     if current_layer.glossy_brdf_anisotropy_use_tex:
-                        layout.prop_search(current_layer, "glossy_brdf_anisotropy_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "glossy_brdf_anisotropy_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "glossy_brdf_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -755,7 +754,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "kelemen_brdf_weight", text="Layer Weight")
                     if current_layer.kelemen_brdf_use_tex:
-                        layout.prop_search(current_layer, "kelemen_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "kelemen_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "kelemen_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -769,10 +768,10 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.label("Matte Reflectance:")
                     split = split.split(percentage=0.83)
                     col = split.column()
-                    col.prop(current_layer, "kelemen_brdf_matte_reflectance", text="Matte Reflectance")
+                    col.prop(current_layer, "kelemen_brdf_matte_reflectance", text="")
 
                     if current_layer.kelemen_brdf_use_diffuse_tex:
-                        layout.prop_search(current_layer, "kelemen_brdf_diffuse_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "kelemen_brdf_diffuse_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -789,10 +788,10 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.label("Specular Reflectance:")
                     split = split.split(percentage=0.83)
                     col = split.column()
-                    col.prop(current_layer, "kelemen_brdf_specular_reflectance", text="Specular Reflectance")
+                    col.prop(current_layer, "kelemen_brdf_specular_reflectance", text="")
 
                     if current_layer.kelemen_brdf_use_specular_tex:
-                        layout.prop_search(current_layer, "kelemen_brdf_specular_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "kelemen_brdf_specular_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -815,7 +814,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "lambertian_brdf_weight", text="Layer Weight")
                     if current_layer.lambertian_brdf_use_tex:
-                        layout.prop_search(current_layer, "lambertian_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "lambertian_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "lambertian_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -832,7 +831,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "lambertian_brdf_reflectance", text="")
 
                     if current_layer.lambertian_brdf_use_diffuse_tex:
-                        layout.prop_search(current_layer, "lambertian_brdf_diffuse_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "lambertian_brdf_diffuse_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -853,7 +852,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "metal_brdf_weight", text="Layer Weight")
                     if current_layer.metal_brdf_use_tex:
-                        layout.prop_search(current_layer, "metal_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "metal_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "metal_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -874,7 +873,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "metal_brdf_normal_reflectance", text="")
 
                     if current_layer.metal_brdf_normal_reflectance_use_tex:
-                        layout.prop_search(current_layer, "metal_brdf_normal_reflectance_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "metal_brdf_normal_reflectance_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -892,7 +891,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "metal_brdf_edge_tint", text="")
 
                     if current_layer.metal_brdf_edge_tint_use_tex:
-                        layout.prop_search(current_layer, "metal_brdf_edge_tint_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "metal_brdf_edge_tint_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -907,7 +906,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "metal_brdf_reflectance_multiplier", text="Reflectance Multiplier")
 
                     if current_layer.metal_brdf_reflectance_multiplier_use_tex:
-                        layout.prop_search(current_layer, "metal_brdf_reflectance_multiplier_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "metal_brdf_reflectance_multiplier_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "metal_brdf_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -921,7 +920,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "metal_brdf_roughness", text="Roughness")
 
                     if current_layer.metal_brdf_roughness_use_tex:
-                        layout.prop_search(current_layer, "metal_brdf_roughness_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "metal_brdf_roughness_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "metal_brdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -938,7 +937,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "metal_brdf_anisotropy", text="Anisotropy")
 
                     if current_layer.metal_brdf_anisotropy_use_tex:
-                        layout.prop_search(current_layer, "metal_brdf_anisotropy_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "metal_brdf_anisotropy_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "metal_brdf_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -957,7 +956,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "orennayar_brdf_weight", text="Layer Weight")
                     if current_layer.orennayar_brdf_use_tex:
-                        layout.prop_search(current_layer, "orennayar_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "orennayar_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "orennayar_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -974,7 +973,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "orennayar_brdf_reflectance", text="")
 
                     if current_layer.orennayar_brdf_use_diffuse_tex:
-                        layout.prop_search(current_layer, "orennayar_brdf_diffuse_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "orennayar_brdf_diffuse_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -988,7 +987,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "orennayar_brdf_roughness", text="Roughness")
                     if current_layer.orennayar_brdf_use_rough_tex:
-                        layout.prop_search(current_layer, "orennayar_brdf_rough_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "orennayar_brdf_rough_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "orennayar_brdf_use_rough_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -1006,7 +1005,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "plastic_brdf_weight", text="Layer Weight")
                     if current_layer.plastic_brdf_use_tex:
-                        layout.prop_search(current_layer, "plastic_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "plastic_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "plastic_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -1027,7 +1026,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "plastic_brdf_specular_reflectance", text="")
 
                     if current_layer.plastic_brdf_specular_reflectance_use_tex:
-                        layout.prop_search(current_layer, "plastic_brdf_specular_reflectance_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "plastic_brdf_specular_reflectance_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -1042,7 +1041,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "plastic_brdf_specular_reflectance_multiplier", text="Specular Reflectance Multiplier")
 
                     if current_layer.plastic_brdf_specular_reflectance_multiplier_use_tex:
-                        layout.prop_search(current_layer, "plastic_brdf_specular_reflectance_multiplier_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "plastic_brdf_specular_reflectance_multiplier_tex", material, "texture_slots", text="")
 
                     split = split.split()
                     col = split.column()
@@ -1057,7 +1056,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "plastic_brdf_roughness", text="Roughness")
 
                     if current_layer.plastic_brdf_roughness_use_tex:
-                        layout.prop_search(current_layer, "plastic_brdf_roughness_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "plastic_brdf_roughness_tex", material, "texture_slots", text="")
 
                     split = split.split()
                     col = split.column()
@@ -1079,7 +1078,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "plastic_brdf_diffuse_reflectance", text="")
 
                     if current_layer.plastic_brdf_diffuse_reflectance_use_tex:
-                        layout.prop_search(current_layer, "plastic_brdf_diffuse_reflectance_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "plastic_brdf_diffuse_reflectance_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -1094,7 +1093,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "plastic_brdf_diffuse_reflectance_multiplier", text="Diffuse Reflectance Multiplier")
 
                     if current_layer.plastic_brdf_diffuse_reflectance_multiplier_use_tex:
-                        layout.prop_search(current_layer, "plastic_brdf_diffuse_reflectance_multiplier_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "plastic_brdf_diffuse_reflectance_multiplier_tex", material, "texture_slots", text="")
 
                     split = split.split()
                     col = split.column()
@@ -1117,7 +1116,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "sheen_brdf_weight", text="Layer Weight")
                     if current_layer.sheen_brdf_use_tex:
-                        layout.prop_search(current_layer, "sheen_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "sheen_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "sheen_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -1134,7 +1133,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "sheen_brdf_reflectance", text="")
 
                     if current_layer.sheen_brdf_reflectance_use_tex:
-                        layout.prop_search(current_layer, "sheen_brdf_reflectance_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "sheen_brdf_reflectance_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -1149,7 +1148,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "sheen_brdf_reflectance_multiplier", text="Reflectance Multiplier")
 
                     if current_layer.sheen_brdf_reflectance_multiplier_use_tex:
-                        layout.prop_search(current_layer, "sheen_brdf_reflectance_multiplier_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "sheen_brdf_reflectance_multiplier_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "sheen_brdf_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -1168,7 +1167,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "specular_brdf_weight", text="Layer Weight")
                     if current_layer.specular_brdf_use_tex:
-                        layout.prop_search(current_layer, "specular_brdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "specular_brdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "specular_brdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -1185,7 +1184,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "specular_brdf_reflectance", text="")
 
                     if current_layer.specular_brdf_use_glossy_tex:
-                        layout.prop_search(current_layer, "specular_brdf_glossy_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "specular_brdf_glossy_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -1207,7 +1206,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "specular_btdf_weight", text="Layer Weight")
                     if current_layer.specular_btdf_use_tex:
-                        layout.prop_search(current_layer, "specular_btdf_mix_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "specular_btdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "specular_btdf_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
@@ -1224,7 +1223,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "specular_btdf_reflectance", text="")
 
                     if current_layer.specular_btdf_use_specular_tex:
-                        layout.prop_search(current_layer, "specular_btdf_specular_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "specular_btdf_specular_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -1244,7 +1243,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "specular_btdf_transmittance", text="")
 
                     if current_layer.specular_btdf_use_trans_tex:
-                        layout.prop_search(current_layer, "specular_btdf_trans_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "specular_btdf_trans_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
@@ -1261,7 +1260,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(current_layer, "specular_btdf_fresnel_multiplier", text="Fresnel Multiplier")
 
                     if current_layer.specular_btdf_fresnel_multiplier_use_tex:
-                        layout.prop_search(current_layer, "specular_btdf_fresnel_multiplier_tex", material, "texture_slots")
+                        layout.prop_search(current_layer, "specular_btdf_fresnel_multiplier_tex", material, "texture_slots", text="")
 
                     col = split.column()
                     col.prop(current_layer, "specular_btdf_fresnel_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)

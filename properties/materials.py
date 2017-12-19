@@ -53,7 +53,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                          default="",
                                          update=refresh_preview)
 
-    bsdf_type = bpy.props.EnumProperty(name="bsdf_model",
+    bsdf_type = bpy.props.EnumProperty(name="BSDF Model",
                                        items=[('ashikhmin_brdf', "Ashikhmin-Shirley BRDF", ""),
                                               ('blinn_brdf', "Blinn BRDF", ""),
                                               ('diffuse_btdf', "Diffuse BTDF", ""),
@@ -66,8 +66,8 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('orennayar_brdf', "Oren-Nayar BRDF", ""),
                                               ('plastic_brdf', "Plastic BRDF", ""),
                                               ('sheen_brdf', "Sheen BRDF", ""),
-                                              ('specular_btdf', "Specular BTDF", ""),
-                                              ('specular_brdf', "Specular BRDF", "")
+                                              ('specular_brdf', "Specular BRDF", ""),
+                                              ('specular_btdf', "Specular BTDF", "")
                                               # ('better_dipole_bssrdf', "Better Dipole BSSRDF", ""),
                                               # ('directional_dipole_bssrdf', "Directional Dipole BSSRDF", ""),
                                               # ('gaussian_bssrdf', "Gaussian BSSRDF", ""),
@@ -483,7 +483,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     # Glass BSDF.
     #
 
-    glass_bsdf_mdf = bpy.props.EnumProperty(name="glass_bsdf_mdf",
+    glass_bsdf_mdf = bpy.props.EnumProperty(name="Microfacet Type",
                                             description="Microfacet distribution",
                                             items=[('beckmann', "Beckmann", ""),
                                                    ('ggx', "GGX", ""),
@@ -608,7 +608,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                          default="",
                                                          update=refresh_preview)
 
-    glass_bsdf_volume_parameterization = bpy.props.EnumProperty(name="glass_bsdf_volume_parameterization",
+    glass_bsdf_volume_parameterization = bpy.props.EnumProperty(name="Volume Type",
                                                                 items=[('absorption', "Absorption", ""),
                                                                        ('transmittance', "Transmittance", "")],
                                                                 default='transmittance',
@@ -712,7 +712,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     # Glossy BRDF.
     #
 
-    glossy_brdf_mdf = bpy.props.EnumProperty(name="glossy_brdf_mdf",
+    glossy_brdf_mdf = bpy.props.EnumProperty(name="Microfacet Type",
                                              description="",
                                              items=[('beckmann', "Beckmann", ""),
                                                     ('ggx', "GGX", ""),
@@ -948,7 +948,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     # Metal BRDF.
     #
 
-    metal_brdf_mdf = bpy.props.EnumProperty(name="metal_brdf_mdf",
+    metal_brdf_mdf = bpy.props.EnumProperty(name="Microfacet Type",
                                             description="",
                                             items=[('beckmann', "Beckmann", ""),
                                                    ('ggx', "GGX", ""),
@@ -1134,7 +1134,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     # Plastic BRDF.
     #
 
-    plastic_brdf_mdf = bpy.props.EnumProperty(name="plastic_brdf_mdf",
+    plastic_brdf_mdf = bpy.props.EnumProperty(name="Microfacet Type",
                                               description="",
                                               items=[('beckmann', "Beckmann", ""),
                                                      ('ggx', "GGX", ""),
