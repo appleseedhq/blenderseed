@@ -856,23 +856,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                      max=1.0,
                                                      update=refresh_preview)
 
-    kelemen_brdf_specular_reflectance = bpy.props.FloatVectorProperty(name="kelemen_brdf_specular_reflectance",
-                                                                      description="Kelemen specular reflectance",
-                                                                      default=(0.8, 0.8, 0.8),
-                                                                      subtype='COLOR',
-                                                                      min=0.0,
-                                                                      max=1.0,
-                                                                      update=refresh_preview)
-
-    kelemen_brdf_use_specular_tex = bpy.props.BoolProperty(name="kelemen_brdf_use_specular_tex",
-                                                           description="Use texture to influence specular reflectance",
-                                                           default=False,
-                                                           update=refresh_preview)
-
-    kelemen_brdf_specular_tex = bpy.props.StringProperty(name="kelemen_brdf_specular_tex",
-                                                         description="Texture to influence specular reflectance",
-                                                         default="",
-                                                         update=refresh_preview)
+    kelemen_brdf_specular_reflectance = bpy.props.FloatProperty(name="kelemen_brdf_specular_reflectance",
+                                                                description="Kelemen specular reflectance",
+                                                                default=0.8,
+                                                                min=0.0,
+                                                                max=1.0,
+                                                                update=refresh_preview)
 
     kelemen_brdf_specular_multiplier = bpy.props.FloatProperty(name="kelemen_brdf_specular_multiplier",
                                                                description="Kelemen specular reflectance multiplier",
@@ -1095,6 +1084,23 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                           description="Diffuse color texture",
                                                           default="",
                                                           update=refresh_preview)
+
+    orennayar_brdf_reflectance_multiplier = bpy.props.FloatProperty(name="orennayar_brdf_reflectance_multiplier",
+                                                                    description="Reflectance multiplier",
+                                                                    default=1.0,
+                                                                    min=0.0,
+                                                                    max=1.0,
+                                                                    update=refresh_preview)
+
+    orennayar_brdf_use_reflect_multiplier_tex = bpy.props.BoolProperty(name="orennayar_brdf_use_rough_tex",
+                                                                       description="Use a texture to influence roughness",
+                                                                       default=False,
+                                                                       update=refresh_preview)
+
+    orennayar_brdf_reflect_multiplier_tex = bpy.props.StringProperty(name="orennayar_brdf_rough_tex",
+                                                                     description="Roughness texture",
+                                                                     default="",
+                                                                     update=refresh_preview)
 
     orennayar_brdf_roughness = bpy.props.FloatProperty(name="orennayar_brdf_roughness",
                                                        description="Oren-Nayar roughness",
@@ -1557,6 +1563,13 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                       min=0.0,
                                                       max=1.0,
                                                       update=refresh_preview)
+
+    material_bump_offset = bpy.props.FloatProperty(name="material_bump_offset",
+                                                   description="Offset value to elevate or reduce bump mapping",
+                                                   default=0.5,
+                                                   min=0.01,
+                                                   max=10,
+                                                   update=refresh_preview)
 
     material_alpha_map = bpy.props.StringProperty(name="material_alpha_map",
                                                   description="Alpha texture",

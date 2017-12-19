@@ -30,7 +30,7 @@ import array
 import os
 import struct
 import subprocess
-import sys
+import shutil
 import threading
 from shutil import copyfile
 
@@ -91,7 +91,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         writer.write(scene, project_filepath)
 
         # Render project.
-        self.__render_project_file(scene, project_filepath)
+        self.__render_project_file(scene, project_filepath, project_dir)
 
     def __render_material_preview(self, scene):
         """
@@ -159,7 +159,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Render the project.
         self.__render_project_file(scene, preview_project_filepath)
 
-    def __render_project_file(self, scene, project_filepath):
+    def __render_project_file(self, scene, project_filepath, project_dir=None):
         # Check that the path to the bin folder is set.
         appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
         if not appleseed_bin_dir:
@@ -177,6 +177,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Compute render resolution.
         (width, height) = util.get_render_resolution(scene)
 
+        # Rendered pixel total
+        self.rendered_pixels = 0
+
         # Compute render window.
         if scene.render.use_border:
             min_x = int(scene.render.border_min_x * width)
@@ -188,6 +191,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
             min_y = 0
             max_x = width - 1
             max_y = height - 1
+
+        # Compute total pixel count.
+        self.total_pixels = (max_x - min_x + 1) * (max_y - min_y + 1) * scene.appleseed.renderer_passes
 
         # Launch appleseed.cli.
         threads = 'auto' if scene.appleseed.threads_auto else str(scene.appleseed.threads)
@@ -233,6 +239,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Make sure the appleseed.cli process has terminated.
         process.kill()
+
+        if scene.appleseed.clean_cache:
+            if os.path.exists(project_dir):
+                try:
+                    shutil.rmtree(project_dir)
+                    self.report({'INFO'}, "Render Cache Deleted")
+                except:
+                    pass
 
     def __process_tile_data_chunk(self, process, min_x, min_y, max_x, max_y):
         # Read and decode tile header.
@@ -291,6 +305,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
         layer = result.layers[0].passes[0]
         layer.rect = pix
         self.end_result(result)
+
+        # Update progress bar.
+        self.rendered_pixels += take_x * take_y
+        self.update_progress(self.rendered_pixels / self.total_pixels)
 
         return True
 

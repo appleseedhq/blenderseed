@@ -46,6 +46,14 @@ class AppleseedNodeTree(NodeTree):
         renderer = context.scene.render.engine
         return renderer == 'APPLESEED_RENDER'
 
+    def update(self):
+        self.refresh = True
+
+    def acknowledge_change(self, context):
+        self.refresh = False
+
+    refresh = bpy.props.BoolProperty(name='update_preview', default=False, update=acknowledge_change)
+
 
 class AppleseedNode:
     """Base class for appleseed nodes."""

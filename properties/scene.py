@@ -80,6 +80,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                         ('selected', "Selected", "Only export selected geometry")],
                                                  default='all')
 
+        cls.clean_cache = bpy.props.BoolProperty(name="clean_cache",
+                                                 description="Delete external files after rendering completes",
+                                                 default=False)
+
         cls.export_hair = bpy.props.BoolProperty(name="export_hair",
                                                  description="Export hair particle systems as renderable geometry",
                                                  default=False)

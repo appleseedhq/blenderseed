@@ -62,6 +62,8 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         if asr_scene_props.generate_mesh_files:
             row.prop(asr_scene_props, "export_mode", text="")
             # layout.prop(asr_scene_props, "export_hair", text="Export Hair")
+        row = layout.row()
+        row.prop(asr_scene_props, "clean_cache", text="Delete External Cache After Render")
 
         layout.prop(asr_scene_props, "tile_ordering", text="Tile Ordering")
 

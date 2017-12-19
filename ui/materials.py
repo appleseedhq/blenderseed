@@ -245,7 +245,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     split = layout.split(percentage=0.90)
                     col = split.column()
                     col.prop(current_layer, "diffuse_btdf_weight", text="Layer Weight")
-                    if current_layer.diffuse_btdf_transmittance_use_mult_tex:
+                    if current_layer.diffuse_btdf_use_tex:
                         layout.prop_search(current_layer, "diffuse_btdf_mix_tex", material, "texture_slots", text="")
 
                     col = split.column()
@@ -260,13 +260,13 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.label("Transmittance:")
                     split = split.split(percentage=0.83)
                     col = split.column()
-                    col.prop(current_layer, "diffuse_btdf_transmittance_color", text="Transmittance Color")
+                    col.prop(current_layer, "diffuse_btdf_transmittance_color", text="")
                     if current_layer.diffuse_btdf_use_diffuse_tex:
                         layout.prop_search(current_layer, "diffuse_btdf_diffuse_tex", material, "texture_slots", text="")
 
                     split = split.split(percentage=1.0)
                     col = split.column()
-                    col.prop(current_layer, "diffuse_btdf_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    col.prop(current_layer, "diffuse_btdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
                     if current_layer.diffuse_btdf_diffuse_tex != '' and current_layer.diffuse_btdf_use_diffuse_tex:
                         diffuse_tex = bpy.data.textures[current_layer.diffuse_btdf_diffuse_tex]
                         layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
@@ -557,7 +557,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "glass_bsdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
                     if current_layer.glass_bsdf_roughness_tex != '' and current_layer.glass_bsdf_roughness_use_tex:
-                        glass_bsdf_roughness = bpy.data.textures[current_layer.glass_bsdf_roughness_tint_tex]
+                        glass_bsdf_roughness = bpy.data.textures[current_layer.glass_bsdf_roughness_tex]
                         layout.prop(glass_bsdf_roughness.image.colorspace_settings, "name", text="Color Space")
 
                     # highlight falloff
@@ -782,24 +782,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     row = layout.row()
                     row.prop(current_layer, "kelemen_brdf_matte_multiplier", text="Matte Reflectance Multiplier")
 
-                    # spec reflectance
-                    split = layout.split(percentage=0.40)
-                    col = split.column()
-                    col.label("Specular Reflectance:")
-                    split = split.split(percentage=0.83)
-                    col = split.column()
-                    col.prop(current_layer, "kelemen_brdf_specular_reflectance", text="")
-
-                    if current_layer.kelemen_brdf_use_specular_tex:
-                        layout.prop_search(current_layer, "kelemen_brdf_specular_tex", material, "texture_slots", text="")
-
-                    split = split.split(percentage=1.0)
-                    col = split.column()
-                    col.prop(current_layer, "kelemen_brdf_use_specular_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if current_layer.kelemen_brdf_specular_tex != '' and current_layer.kelemen_brdf_use_specular_tex:
-                        diffuse_tex = bpy.data.textures[current_layer.kelemen_brdf_specular_tex]
-                        layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
+                    layout.prop(current_layer, "kelemen_brdf_specular_reflectance", text="Specular Reflectance")
                     layout.prop(current_layer, "kelemen_brdf_specular_multiplier", text="Specular Reflectance Multiplier")
                     layout.prop(current_layer, "kelemen_brdf_roughness", text="Roughness")
 
@@ -982,6 +965,19 @@ class AppleseedMaterialShading(bpy.types.Panel):
                         diffuse_tex = bpy.data.textures[current_layer.orennayar_brdf_diffuse_tex]
                         layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
+                    # reflectance multiplier
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "orennayar_brdf_reflectance_multiplier", text="Reflectance Multiplier")
+                    if current_layer.orennayar_brdf_use_reflect_multiplier_tex:
+                        layout.prop_search(current_layer, "orennayar_brdf_reflect_multiplier_tex", material, "texture_slots", text="")
+
+                    col = split.column()
+                    col.prop(current_layer, "orennayar_brdf_use_reflect_multiplier_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.orennayar_brdf_reflect_multiplier_tex != '' and current_layer.orennayar_brdf_use_reflect_multiplier_tex:
+                        reflect_multiplier_tex = bpy.data.textures[current_layer.orennayar_brdf_reflect_multiplier_tex]
+                        layout.prop(reflect_multiplier_tex.image.colorspace_settings, "name", text="Color Space")
+
                     # roughness
                     split = layout.split(percentage=0.90)
                     col = split.column()
@@ -992,7 +988,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col = split.column()
                     col.prop(current_layer, "orennayar_brdf_use_rough_tex", text="", icon="TEXTURE_SHADED", toggle=True)
                     if current_layer.orennayar_brdf_rough_tex != '' and current_layer.orennayar_brdf_use_rough_tex:
-                        rough_tex = bpy.data.textures[current_layer.orennayar_brdf_diffuse_tex]
+                        rough_tex = bpy.data.textures[current_layer.orennayar_brdf_rough_tex]
                         layout.prop(rough_tex.image.colorspace_settings, "name", text="Color Space")
 
                 #
@@ -1292,8 +1288,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                                    material, "texture_slots", text="")
 
             col = split.column()
-            col.prop(asr_mat, "material_use_alpha", text="",
-                     icon="TEXTURE_SHADED", toggle=True)
+            col.prop(asr_mat, "material_use_alpha", text="", icon="TEXTURE_SHADED", toggle=True)
             if asr_mat.material_alpha_map != '' and asr_mat.material_use_alpha:
                 alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
                 layout.prop(alpha_tex.image.colorspace_settings,
@@ -1314,7 +1309,9 @@ class AppleseedMaterialShading(bpy.types.Panel):
                 if asr_mat.material_bump_tex != '':
                     bump_tex = bpy.data.textures[asr_mat.material_bump_tex]
                     layout.prop(bump_tex.image.colorspace_settings, "name",  text="Color Space")
-                layout.prop(asr_mat, "material_bump_amplitude", text="Bump Amplitude")
+                if not asr_mat.material_use_normalmap:
+                    layout.prop(asr_mat, "material_bump_amplitude", text="Bump Amplitude")
+                    layout.prop(asr_mat, "material_bump_offset", text="Bump Offset")
 
 
 class AppleseedMatEmissionPanel(bpy.types.Panel):
