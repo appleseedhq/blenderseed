@@ -55,12 +55,12 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         split = split.split()
         col = split.column()
         col.enabled = not asr_scene_props.threads_auto
-        col.prop(asr_scene_props, "threads", text="Rendering Threads")
+        col.prop(asr_scene_props, "threads", text="Threads")
 
         row = layout.row()
         row.prop(asr_scene_props, "generate_mesh_files", text="Export Geometry")
         if asr_scene_props.generate_mesh_files:
-            row.prop(asr_scene_props, "export_mode")
+            row.prop(asr_scene_props, "export_mode", text="")
             # layout.prop(asr_scene_props, "export_hair", text="Export Hair")
 
         layout.prop(asr_scene_props, "tile_ordering", text="Tile Ordering")
@@ -76,14 +76,13 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         asr_scene_props = scene.appleseed
 
         row = layout.row(align=True)
-        layout.prop(asr_scene_props, "pixel_filter", text="Filter")
-        layout.prop(asr_scene_props, "pixel_filter_size", text="Filter Size")
-
-        layout.separator()
-        layout.label("Render Tile Size:")
-        row = layout.row(align=True)
+        row.label("Tile Size:")
         row.prop(asr_scene_props, "tile_width", text="Width")
         row.prop(asr_scene_props, "tile_height", text="Height")
+
+        row = layout.row(align=True)
+        layout.prop(asr_scene_props, "pixel_filter", text="Filter")
+        layout.prop(asr_scene_props, "pixel_filter_size", text="Filter Size")
 
         layout.separator()
         layout.prop(asr_scene_props, "pixel_sampler", text="Pixel Sampler")
@@ -123,23 +122,24 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         # Path tracing UI
         if asr_scene_props.lighting_engine == 'pt':
             col = split.column()
-            col.prop(asr_scene_props, "enable_caustics", text="Caustics")
-            col.prop(asr_scene_props, "next_event_estimation", text="Next Event Estimation")
-            col = split.column()
             if asr_scene_props.pixel_sampler == 'adaptive':
                 col.prop(asr_scene_props, "adaptive_sampler_enable_diagnostics", text="Diagnostics")
                 col.prop(asr_scene_props, "adaptive_sampler_quality", text="Quality")
             if asr_scene_props.next_event_estimation:
                 row = layout.row()
-                row.prop(asr_scene_props, "enable_ibl")
-                if asr_scene_props.enable_ibl:
-                    row.prop(asr_scene_props, "ibl_env_samples", text="IBL Samples")
-                row = layout.row()
                 row.prop(asr_scene_props, "enable_dl", text="Direct Lighting")
                 if asr_scene_props.enable_dl:
-                    row.prop(asr_scene_props, "dl_light_samples", text="Direct Lighting Samples")
+                    row.prop(asr_scene_props, "dl_light_samples", text="DL Samples")
+                row = layout.row()
+                row.prop(asr_scene_props, "enable_ibl", text="Image-Based Lighting")
+                if asr_scene_props.enable_ibl:
+                    row.prop(asr_scene_props, "ibl_env_samples", text="IBL Samples")
+
+            layout.prop(asr_scene_props, "enable_caustics", text="Caustics")
+            layout.prop(asr_scene_props, "next_event_estimation", text="Next Event Estimation")
 
             layout.label("Bounces")
+
             split = layout.split()
             col = split.column()
             col.prop(asr_scene_props, "max_bounces_unlimited", text="Unlimited")
@@ -202,26 +202,28 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         # SPPM UI
         elif asr_scene_props.lighting_engine == 'sppm':
             layout.prop(asr_scene_props, "sppm_dl_mode", text="Direct Lighting")
-            row = layout.row()
-            row.prop(asr_scene_props, "enable_ibl", text="Image-Based Lighting")
-            row.prop(asr_scene_props, "enable_caustics", text="Caustics")
+            layout.prop(asr_scene_props, "enable_ibl", text="Image-Based Lighting")
+            layout.prop(asr_scene_props, "enable_caustics", text="Caustics")
 
-            layout.separator()
             layout.label("Photon Tracing")
+            
+            layout.prop(asr_scene_props, "sppm_photon_max_length", text="Max Bounces")
+            layout.prop(asr_scene_props, "sppm_photon_rr_start", text="Russian Roulette Start Bounce")
             layout.prop(asr_scene_props, "sppm_light_photons", text="Light Photons")
             layout.prop(asr_scene_props, "sppm_env_photons", text="Environment Photons")
-            layout.prop(asr_scene_props, "sppm_photon_max_length", text="Max Bounces")
-            layout.prop(asr_scene_props, "sppm_photon_rr_start", text="Photon Tracing Russian Roulette Start Bounce")
 
             layout.label("Radiance Estimation")
 
-            layout.prop(asr_scene_props, "sppm_max_per_estimate", text="Max Photons")
-            row = layout.row()
-            row.prop(asr_scene_props, "sppm_initial_radius", text="Initial Radius")
-            row.prop(asr_scene_props, "sppm_alpha", text="Alpha")
             layout.prop(asr_scene_props, "sppm_pt_max_length", text="Max Bounces")
-            layout.prop(asr_scene_props, "sppm_pt_rr_start", text="Path Tracing Russian Roulette Start Bounce")
+            layout.prop(asr_scene_props, "sppm_pt_rr_start", text="Russian Roulette Start Bounce")
+            layout.prop(asr_scene_props, "sppm_initial_radius", text="Initial Radius")
+            layout.prop(asr_scene_props, "sppm_max_per_estimate", text="Max Photons")
+            layout.prop(asr_scene_props, "sppm_alpha", text="Alpha")
 
+            layout.separator()
+
+            layout.prop(asr_scene_props, "light_mats_radiance_multiplier", text="Mesh Light Multiplier")
+            layout.prop(asr_scene_props, "export_emitting_obj_as_lights", text="Export Mesh Lights")
 
 class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -230,7 +232,7 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     def draw_header(self, context):
         header = self.layout
         asr_scene_props = context.scene.appleseed
-        header.prop(asr_scene_props, "enable_motion_blur")
+        header.prop(asr_scene_props, "enable_motion_blur", text="")
 
     def draw(self, context):
         layout = self.layout

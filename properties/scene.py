@@ -69,11 +69,11 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                             min=1,
                                             max=max_threads)
 
-        cls.generate_mesh_files = bpy.props.BoolProperty(name="export_geometry",
+        cls.generate_mesh_files = bpy.props.BoolProperty(name="Export Geometry",
                                                          description="Write geometry to disk as .obj files",
                                                          default=True)
 
-        cls.export_mode = bpy.props.EnumProperty(name="geometry_export_mode",
+        cls.export_mode = bpy.props.EnumProperty(name="Export Mode",
                                                  description="Geometry export mode",
                                                  items=[('all', "All", "Export all geometry, overwriting existing .obj files"),
                                                         ('partial', "Partial", "Only export geometry that has not been written to disk"),
@@ -100,7 +100,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 default=32,
                                                 min=1)
 
-        cls.pixel_filter = bpy.props.EnumProperty(name="pixel_filter",
+        cls.pixel_filter = bpy.props.EnumProperty(name="Pixel Filter",
                                                   description="Pixel filter to use",
                                                   items=[("box", "Box", "Box"),
                                                          ("triangle", "Triangle", "Triangle"),
@@ -118,7 +118,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                         max=16.0,
                                                         default=1.5)
 
-        cls.pixel_sampler = bpy.props.EnumProperty(name="pixel_sampler",
+        cls.pixel_sampler = bpy.props.EnumProperty(name="Pixel Sampler",
                                                    description="Sampler",
                                                    items=[("uniform", "Uniform", "Uniform"),
                                                           ("adaptive", "Adaptive", "Adaptive")],
@@ -159,13 +159,13 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                     min=1,
                                                     max=1000000)
 
-        cls.light_sampler = bpy.props.EnumProperty(name="light_sampler",
+        cls.light_sampler = bpy.props.EnumProperty(name="Light Sampler",
                                                    description="The method used for sampling lights",
                                                    items=[('cdf', 'CDF', 'CDF'),
                                                           ('lighttree', 'Light Tree', 'Light Tree')],
                                                    default='cdf')
 
-        cls.tile_ordering = bpy.props.EnumProperty(name="tile_ordering",
+        cls.tile_ordering = bpy.props.EnumProperty(name="Tile Ordering",
                                                    description="Tile ordering",
                                                    items=[('linear', "Linear", "Linear"),
                                                           ('spiral', "Spiral", "Spiral"),
@@ -174,7 +174,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                    default='spiral')
 
         # Lighting engine.
-        cls.lighting_engine = bpy.props.EnumProperty(name="lighting_engine",
+        cls.lighting_engine = bpy.props.EnumProperty(name="Lighting Engine",
                                                      description="Light transport algorithm",
                                                      items=[('pt', "Path Tracing", "Unidirectional path tracing"),
                                                             ('sppm', "SPPM", "Stochastic Progressive Photon Mapping")],
@@ -288,11 +288,11 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         # SPPM settings.
 
-        cls.sppm_dl_mode = bpy.props.EnumProperty(name="sppm_dl_mode",
+        cls.sppm_dl_mode = bpy.props.EnumProperty(name="Direct Lighting",
                                                   description="SPPM Direct Lighting Component",
-                                                  items=[('sppm', "Use photon maps to estimate direct lighting", ''),
-                                                         ('rt', "Use ray tracing to estimate direct lighting", ''),
-                                                         ('off', "Do not estimate direct lighting", '')],
+                                                  items=[('rt', "RT Direct Lighting", 'Use ray tracing to estimate direct lighting'),
+                                                         ('sppm', "SPPM Direct Lighting", 'Use photon maps to estimate direct lighting'),
+                                                         ('off', "No Direct Lighting", 'Do not estimate direct lighting')],
                                                   default='rt')
 
         # SPPM photon tracing settings.
