@@ -46,11 +46,19 @@ class AppleseedCameraSettings(bpy.types.PropertyGroup):
                                                                type=cls)
 
         cls.camera_model = bpy.props.EnumProperty(name="camera_model",
-                                                  items=[('pinhole', 'Pinhole', 'Pinhole camera - No DOF'),
-                                                         ('thinlens', 'Thin Lens', 'Thin lens - Enables DOF'),
+                                                  items=[('pinhole', 'Pinhole', ''),
+                                                         ('thinlens', 'Thin Lens', ''),
                                                          ('spherical', 'Spherical', '')],
                                                   description="Camera model",
                                                   default='pinhole')
+
+        cls.near_z = bpy.props.FloatProperty(name="near_z",
+                                             description="Near clipping distance",
+                                             default=-0.001)
+
+        cls.enable_dof = bpy.props.BoolProperty(name="enable_dof",
+                                                description="Enable depth of field",
+                                                default=False)
 
         cls.f_number = bpy.props.FloatProperty(name="f_number",
                                                description="Thin lens camera f-stop value",
