@@ -46,7 +46,7 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                                   description="appleseed Sky",
                                                                   type=cls)
 
-        cls.env_type = bpy.props.EnumProperty(name="env_type",
+        cls.env_type = bpy.props.EnumProperty(name="Environment Type",
                                               items=[("constant", "Constant", "Use constant color for sky"),
                                                      ("gradient", "Gradient", "Use sky color gradient"),
                                                      ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere"),
@@ -56,13 +56,13 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                               description="Select environment type",
                                               default="gradient")
 
-        cls.sun_model = bpy.props.EnumProperty(name="sun_model",
+        cls.sun_model = bpy.props.EnumProperty(name="Sun Model",
                                                items=[("hosek_environment_edf", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
                                                       ('preetham_environment_edf', "Preetham", 'Preetham physical sun/sky model')],
                                                description="Physical sun/sky model",
                                                default="hosek_environment_edf")
 
-        cls.sun_lamp = bpy.props.EnumProperty(name="sun_lamp",
+        cls.sun_lamp = bpy.props.EnumProperty(name="Sun Lamp",
                                               items=sun_enumerator,
                                               description="Sun lamp to export")
 

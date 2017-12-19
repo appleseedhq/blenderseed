@@ -62,10 +62,10 @@ class AppleseedLampPanel(bpy.types.Panel):
             col.prop(asr_lamp, "radiance", text="")
 
             col = split.column()
-            col.prop(asr_lamp, "radiance_use_tex", icon="TEXTURE_SHADED", toggle=True)
+            col.prop(asr_lamp, "radiance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
 
             if asr_lamp.radiance_use_tex:
-                layout.prop_search(asr_lamp, "radiance_tex", lamp_data, "texture_slots")
+                layout.prop_search(asr_lamp, "radiance_tex", lamp_data, "texture_slots", text="")
                 if asr_lamp.radiance_tex != '' and asr_lamp.radiance_use_tex:
                     radiance_tex = bpy.data.textures[asr_lamp.radiance_tex]
                     layout.prop(radiance_tex.image.colorspace_settings, "name", text="Color Space")
@@ -75,10 +75,10 @@ class AppleseedLampPanel(bpy.types.Panel):
             col.prop(asr_lamp, "radiance_multiplier", text="Intensity Multiplier")
 
             col = split.column()
-            col.prop(asr_lamp, "radiance_multiplier_use_tex", icon="TEXTURE_SHADED", toggle=True)
+            col.prop(asr_lamp, "radiance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
 
             if asr_lamp.radiance_multiplier_use_tex:
-                layout.prop_search(asr_lamp, "radiance_multiplier_tex", lamp_data, "texture_slots")
+                layout.prop_search(asr_lamp, "radiance_multiplier_tex", lamp_data, "texture_slots", text="")
                 if asr_lamp.radiance_multiplier_tex != '' and asr_lamp.radiance_multiplier_use_tex:
                     radiance_multiplier_tex = bpy.data.textures[asr_lamp.radiance_multiplier_tex]
                     layout.prop(radiance_multiplier_tex.image.colorspace_settings, "name", text="Color Space")

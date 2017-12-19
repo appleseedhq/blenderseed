@@ -45,13 +45,13 @@ class AppleseedObjMBlurPanel(bpy.types.Panel):
     def draw_header(self, context):
         header = self.layout
         asr_obj = context.object.appleseed
-        header.prop(asr_obj, "enable_motion_blur")
+        header.prop(asr_obj, "enable_motion_blur", text="")
 
     def draw(self, context):
         layout = self.layout
         asr_obj = context.object.appleseed
         layout.active = asr_obj.enable_motion_blur
-        layout.prop(asr_obj, "motion_blur_type")
+        layout.prop(asr_obj, "motion_blur_type", text="Type")
 
 
 def register():
