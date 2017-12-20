@@ -95,10 +95,12 @@ class AppleseedCameraDoF(bpy.types.Panel):
         layout.active = asr_cam_props.enable_dof and context.active_object.data.type == 'PERSP'
         row = layout.row()
         row.active = context.active_object.data.dof_object is None
+        row.prop(asr_cam_props, "f_number", text="F-Number")
+        row = layout.row()
         row.prop(context.active_object.data, "dof_distance", text="Focal Distance")
         row = layout.row()
         row.prop(context.active_object.data, "dof_object", text='Autofocus')
-        layout.prop(asr_cam_props, "f_number", text="F-Number")
+
         layout.prop(asr_cam_props, "diaphragm_blades", text="Diaphragm Blades")
         layout.prop(asr_cam_props, "diaphragm_angle", text="Diaphragm Tilt Angle")
         layout.prop(asr_cam_props, "diaphragm_map", text="Diaphragm Map")
