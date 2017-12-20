@@ -1234,7 +1234,11 @@ class Writer(object):
                     self.__emit_texture(bpy.data.textures[layer.orennayar_brdf_rough_tex], False, scene)
 
             # TODO: add texture support for multiplier
-            reflectance_multiplier = layer.orennayar_brdf_multiplier
+            reflectance_multiplier = layer.orennayar_brdf_reflectance_multiplier
+            if layer.orennayar_brdf_use_reflect_multiplier_tex and layer.orennayar_brdf_reflect_multiplier_tex != '':
+                if util.is_uv_img(bpy.data.textures[layer.orennayar_brdf_reflect_multiplier_tex]):
+                    reflectance_multiplier = layer.orennayar_brdf_reflect_multiplier_tex + "_inst"
+                    self.__emit_texture(bpy.data.textures[layer.orennayar_brdf_reflect_multiplier_tex], False, scene)
 
             if reflectance_name == "":
                 reflectance_name = "{0}_orennayar_brdf_reflectance".format(bsdf_name)
@@ -1693,7 +1697,7 @@ class Writer(object):
         diffuse_reflectance_multiplier = layer.plastic_brdf_diffuse_reflectance_multiplier
 
         # check for texture in specular_reflectance slot
-        if layer.plastic_brdf_specular_reflectance_tex and layer.plastic_brdf_specular_reflectance_tex != "":
+        if layer.plastic_brdf_specular_reflectance_use_tex and layer.plastic_brdf_specular_reflectance_tex != "":
             if util.is_uv_img(bpy.data.textures[layer.plastic_brdf_specular_reflectance_tex]):
                 specular_reflectance = layer.plastic_brdf_specular_reflectance_tex + "_inst"
                 self.__emit_texture(bpy.data.textures[layer.plastic_brdf_specular_reflectance_tex], False, scene)
@@ -1716,7 +1720,7 @@ class Writer(object):
                 self.__emit_texture(bpy.data.textures[layer.plastic_brdf_roughness_tex], False, scene)
 
         # check for texture in diffuse_reflectance slot
-        if layer.plastic_brdf_diffuse_reflectance_tex and layer.plastic_brdf_diffuse_reflectance_tex != "":
+        if layer.plastic_brdf_diffuse_reflectance_use_tex and layer.plastic_brdf_diffuse_reflectance_tex != "":
             if util.is_uv_img(bpy.data.textures[layer.plastic_brdf_diffuse_reflectance_tex]):
                 diffuse_reflectance = layer.plastic_brdf_diffuse_reflectance_tex + "_inst"
                 self.__emit_texture(bpy.data.textures[layer.plastic_brdf_diffuse_reflectance_tex], False, scene)
@@ -1839,7 +1843,7 @@ class Writer(object):
 
             if layer.specular_btdf_fresnel_multiplier_use_tex and layer.specular_btdf_fresnel_multiplier_tex != "":
                 if util.is_uv_img(bpy.data.textures[layer.specular_btdf_fresnel_multiplier_tex]):
-                    specular_btdf_fresnel_multiplier = layer.specular_btdf_fresnel_multiplier_tex + "_inst"
+                    fresnel_multiplier = layer.specular_btdf_fresnel_multiplier_tex + "_inst"
                     self.__emit_texture(bpy.data.textures[layer.specular_btdf_fresnel_multiplier_tex], False, scene)
 
             ior = layer.specular_btdf_ior
@@ -1885,36 +1889,27 @@ class Writer(object):
                                                            kelemen_brdf_specular_reflectance,
                                                            1)
         else:
-            if layer.kelemen_brdf_use_diffuse_tex:
-                if layer.kelemen_brdf_diffuse_tex != "":
-                    if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_diffuse_tex]):
-                        reflectance_name = layer.kelemen_brdf_diffuse_tex + "_inst"
-                        self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_diffuse_tex], False, scene)
+            if layer.kelemen_brdf_use_diffuse_tex and layer.kelemen_brdf_diffuse_tex != "":
+                if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_diffuse_tex]):
+                    reflectance_name = layer.kelemen_brdf_diffuse_tex + "_inst"
+                    self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_diffuse_tex], False, scene)
 
             if reflectance_name == "":
                 reflectance_name = "{0}_kelemen_brdf_reflectance".format(bsdf_name)
                 self.__emit_solid_linear_rgb_color_element(reflectance_name,
                                                            layer.kelemen_brdf_matte_reflectance,
                                                            1)
-            if layer.kelemen_brdf_use_specular_tex and layer.kelemen_brdf_specular_tex != "":
-                if util.is_uv_img(bpy.data.textures[layer.kelemen_brdf_specular_tex]):
-                    specular_refl_name = layer.kelemen_brdf_specular_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[layer.kelemen_brdf_specular_tex], False, scene)
-            if specular_refl_name == "":
-                specular_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(specular_refl_name,
-                                                           layer.kelemen_brdf_specular_reflectance,
-                                                           1)
-            # TODO: add texture support
+            
             kelemen_brdf_roughness = layer.kelemen_brdf_roughness
             kelemen_brdf_specular_multiplier = layer.kelemen_brdf_specular_multiplier
+            kelemen_brdf_specular_reflectance = layer.kelemen_brdf_specular_reflectance
             kelemen_brdf_matte_multiplier = layer.kelemen_brdf_matte_multiplier
 
         self.__open_element('bsdf name="{0}" model="kelemen_brdf"'.format(bsdf_name))
         self.__emit_parameter("matte_reflectance", reflectance_name)
         self.__emit_parameter("matte_reflectance_multiplier", kelemen_brdf_matte_multiplier)
         self.__emit_parameter("roughness", kelemen_brdf_roughness)
-        self.__emit_parameter("specular_reflectance", specular_refl_name)
+        self.__emit_parameter("specular_reflectance", kelemen_brdf_specular_reflectance)
         self.__emit_parameter("specular_reflectance_multiplier", kelemen_brdf_specular_multiplier)
         self.__close_element("bsdf")
 
@@ -2022,7 +2017,7 @@ class Writer(object):
             color_space = 'srgb'
         elif node is not None:
             texture_name = node.get_node_name()
-            filepath = util.realpath(node.tex_path)
+            filepath = util.realpath(node.file_path)
             color_space = node.color_space
         else:
             if texture.image.colorspace_settings.name == 'Linear':
@@ -2048,7 +2043,7 @@ class Writer(object):
         if scene_texture:
             mode = "clamp"
         elif node is not None:
-            mode = node.mode
+            mode = node.addressing_mode
         else:
             mode = "wrap" if texture.extension == "REPEAT" else "clamp"
 
@@ -2108,9 +2103,12 @@ class Writer(object):
 
         if bump_map != "":
             self.__emit_parameter("displacement_map", bump_map)
-        self.__emit_parameter("bump_amplitude", material_bump_amplitude)
+            self.__emit_parameter("bump_amplitude", material_bump_amplitude)
+            if method == "bump":
+                self.__emit_parameter("bump_offset", asr_mat.material_bump_offset)
+            else:
+                self.__emit_parameter("normal_map_up", "z")
         self.__emit_parameter("displacement_method", method)
-        self.__emit_parameter("normal_map_up", "z")
         self.__emit_parameter("surface_shader", surface_shader_name)
         self.__close_element("material")
 

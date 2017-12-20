@@ -44,7 +44,7 @@ class AppleseedAddMatLayer(bpy.types.Operator):
 
         collection.add()
         num = collection.__len__()
-        collection[num - 1].name = "BSDF Layer " + str(num)
+        collection[num - 1].bsdf_name = "BSDF Layer " + str(num)
 
         return {'FINISHED'}
 

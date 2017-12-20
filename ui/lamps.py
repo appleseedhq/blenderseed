@@ -104,9 +104,6 @@ class AppleseedLampPanel(bpy.types.Panel):
 
         if lamp_data.type == 'HEMI':
             layout.prop(asr_lamp, "radiance", text="Irradiance")
-            layout.prop(asr_lamp, "radiance_multiplier", text="Irradiance Multiplier")
-            layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
-            layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'AREA':
             layout.label("Area lights are unsupported in blenderseed")
