@@ -60,12 +60,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
             if self.is_preview:
                 if not bpy.app.background:
                     self.__render_material_preview(scene)
-            elif self.is_animation:
-                frame_current = scene.frame_start
-                while frame_current <= scene.frame_end:
-                    scene.frame_set(frame_current)
-                    self.__render_scene(scene)
-                    frame_current += scene.frame_step
             else:
                 self.__render_scene(scene)
 
