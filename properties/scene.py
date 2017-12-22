@@ -180,7 +180,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         # Lighting engine.
         cls.lighting_engine = bpy.props.EnumProperty(name="Lighting Engine",
                                                      description="Light transport algorithm",
-                                                     items=[('pt', "Path Tracing", "Unidirectional path tracing"),
+                                                     items=[('pt', "Path Tracer", "Unidirectional Path Tracer"),
                                                             ('sppm', "SPPM", "Stochastic Progressive Photon Mapping")],
                                                      default='pt')
 
