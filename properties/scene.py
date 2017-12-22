@@ -106,14 +106,14 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         cls.pixel_filter = bpy.props.EnumProperty(name="Pixel Filter",
                                                   description="Pixel filter to use",
-                                                  items=[("box", "Box", "Box"),
-                                                         ("triangle", "Triangle", "Triangle"),
-                                                         ("gaussian", "Gaussian", "Gaussian"),
-                                                         ("mitchell", "Mitchell-Netravali", "Mitchell-Netravali"),
-                                                         ("bspline", "Cubic B-spline", "Cubic B-spline"),
+                                                  items=[("blackman-harris", "Blackman-Harris", "Blackman-Harris"),
+                                                         ("box", "Box", "Box"),
                                                          ("catmull", "Catmull-Rom Spline", "Catmull-Rom Spline"),
+                                                         ("bspline", "Cubic B-spline", "Cubic B-spline"),
+                                                         ("gaussian", "Gaussian", "Gaussian"),
                                                          ("lanczos", "Lanczos", "Lanczos"),
-                                                         ("blackman-harris", "Blackman-Harris", "Blackman-Harris")],
+                                                         ("mitchell", "Mitchell-Netravali", "Mitchell-Netravali"),
+                                                         ("triangle", "Triangle", "Triangle")],
                                                   default="blackman-harris")
 
         cls.pixel_filter_size = bpy.props.FloatProperty(name="pixel_filter_size",
@@ -180,7 +180,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         # Lighting engine.
         cls.lighting_engine = bpy.props.EnumProperty(name="Lighting Engine",
                                                      description="Light transport algorithm",
-                                                     items=[('pt', "Path Tracing", "Unidirectional path tracing"),
+                                                     items=[('pt', "Path Tracer", "Unidirectional Path Tracer"),
                                                             ('sppm', "SPPM", "Stochastic Progressive Photon Mapping")],
                                                      default='pt')
 
