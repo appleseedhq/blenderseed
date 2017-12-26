@@ -123,22 +123,24 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         # Path tracing UI
         if asr_scene_props.lighting_engine == 'pt':
-            col = split.column()
             if asr_scene_props.pixel_sampler == 'adaptive':
-                col.prop(asr_scene_props, "adaptive_sampler_enable_diagnostics", text="Diagnostics")
-                col.prop(asr_scene_props, "adaptive_sampler_quality", text="Quality")
+                row = layout.row()
+                row.prop(asr_scene_props, "adaptive_sampler_enable_diagnostics", text="Diagnostics")
+                row.prop(asr_scene_props, "adaptive_sampler_quality", text="Quality")
+            layout.prop(asr_scene_props, "next_event_estimation", text="Next Event Estimation")
             if asr_scene_props.next_event_estimation:
                 row = layout.row()
                 row.prop(asr_scene_props, "enable_dl", text="Direct Lighting")
                 if asr_scene_props.enable_dl:
                     row.prop(asr_scene_props, "dl_light_samples", text="DL Samples")
+                    row = layout.row()
+                    row.prop(asr_scene_props, "dl_low_light_threshold", text="Low Light Threshold")
                 row = layout.row()
                 row.prop(asr_scene_props, "enable_ibl", text="Image-Based Lighting")
                 if asr_scene_props.enable_ibl:
                     row.prop(asr_scene_props, "ibl_env_samples", text="IBL Samples")
 
             layout.prop(asr_scene_props, "enable_caustics", text="Caustics")
-            layout.prop(asr_scene_props, "next_event_estimation", text="Next Event Estimation")
 
             layout.label("Bounces")
 
