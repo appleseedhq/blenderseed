@@ -2316,7 +2316,7 @@ class Writer(object):
 
         # Write diaphragm texture to Scene, if enabled.
         if emit_diaphragm_map:
-            self.__emit_texture(util.realpath(asr_cam.diaphragm_map), False, scene, scene_texture=True)
+            self.__emit_texture(util.realpath(appleseed_cam.diaphragm_map), False, scene, scene_texture=True)
 
     def __emit_default_camera_element(self):
         self.__open_element('camera name="camera" model="pinhole_camera"')
