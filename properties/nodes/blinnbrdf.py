@@ -33,27 +33,11 @@ from ..materials import AppleseedMatLayerProps
 from . import AppleseedNode, AppleseedSocket
 
 
-class AppleseedOrenNayarReflectanceSocket(NodeSocket, AppleseedSocket):
-    bl_idname = "AppleseedOrenNayarReflectance"
-    bl_label = "Reflectance"
+class AppleseedBlinnExponentSocket(NodeSocket, AppleseedSocket):
+    bl_idname = "AppleseedBlinnExponent"
+    bl_label = "Exponent"
 
-    socket_value = AppleseedMatLayerProps.orennayar_brdf_reflectance
-
-    def draw(self, context, layout, node, text):
-        if self.is_output or self.is_linked:
-            layout.label(text)
-        else:
-            layout.prop(self, "socket_value", text=text)
-
-    def draw_color(self, context, node):
-        return 0.8, 0.8, 0.5, 1.0
-
-
-class AppleseedOrenNayarMultiplierSocket(NodeSocket, AppleseedSocket):
-    bl_idname = "AppleseedOrenNayarMultiplier"
-    bl_label = "Multiplier"
-
-    socket_value = AppleseedMatLayerProps.orennayar_brdf_reflectance_multiplier
+    socket_value = AppleseedMatLayerProps.blinn_brdf_exponent
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -65,37 +49,26 @@ class AppleseedOrenNayarMultiplierSocket(NodeSocket, AppleseedSocket):
         return 0.5, 0.5, 0.5, 1.0
 
 
-class AppleseedOrenNayarRoughnessSocket(NodeSocket, AppleseedSocket):
-    bl_idname = "AppleseedOrenNayarRoughness"
-    bl_label = "Roughness"
-
-    socket_value = AppleseedMatLayerProps.orennayar_brdf_roughness
-
-    def draw(self, context, layout, node, text):
-        if self.is_output or self.is_linked:
-            layout.label(text)
-        else:
-            layout.prop(self, "socket_value", text=text)
-
-    def draw_color(self, context, node):
-        return 0.5, 0.5, 0.5, 1.0
-
-
-class AppleseedOrenNayarNode(Node, AppleseedNode):
-    bl_idname = "AppleseedOrenNayarNode"
-    bl_label = "Oren-Nayar BRDF"
+class AppleseedBlinnNode(Node, AppleseedNode):
+    """appleseed Metal BRDF Node"""
+    bl_idname = "AppleseedBlinnNode"
+    bl_label = "Blinn BRDF"
     bl_icon = 'SMOOTH'
 
-    node_type = 'orennayar'
+    node_type = 'blinn'
+
+    ior = bpy.props.FloatProperty(name="ior",
+                                  description="Index of refraction",
+                                  default=1.5,
+                                  min=1,
+                                  max=2.5)
 
     def init(self, context):
-        self.inputs.new('AppleseedOrenNayarReflectance', "Reflectance")
-        self.inputs.new('AppleseedOrenNayarMultiplier', "Multiplier")
-        self.inputs.new('AppleseedOrenNayarRoughness', "Roughness")
+        self.inputs.new('AppleseedBlinnExponent', "Exponent")
         self.outputs.new('NodeSocketShader', "BRDF")
 
     def draw_buttons(self, context, layout):
-        pass
+        layout.prop(self, "ior", text="Index of Refraction")
 
     def draw_buttons_ext(self, context, layout):
         pass
@@ -111,14 +84,10 @@ class AppleseedOrenNayarNode(Node, AppleseedNode):
 
 
 def register():
-    bpy.utils.register_class(AppleseedOrenNayarMultiplierSocket)
-    bpy.utils.register_class(AppleseedOrenNayarReflectanceSocket)
-    bpy.utils.register_class(AppleseedOrenNayarRoughnessSocket)
-    bpy.utils.register_class(AppleseedOrenNayarNode)
+    bpy.utils.register_class(AppleseedBlinnExponentSocket)
+    bpy.utils.register_class(AppleseedBlinnNode)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedOrenNayarNode)
-    bpy.utils.unregister_class(AppleseedOrenNayarMultiplierSocket)
-    bpy.utils.unregister_class(AppleseedOrenNayarReflectanceSocket)
-    bpy.utils.unregister_class(AppleseedOrenNayarRoughnessSocket)
+    bpy.utils.unregister_class(AppleseedBlinnNode)
+    bpy.utils.unregister_class(AppleseedBlinnExponentSocket)

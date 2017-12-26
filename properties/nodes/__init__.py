@@ -117,11 +117,16 @@ class AppleseedNodeCategory(nodeitems_utils.NodeCategory):
 appleseed_node_categories = [
     AppleseedNodeCategory("BSDF", "BSDF", items=[
         nodeitems_utils.NodeItem("AppleseedAshikhminNode"),
+        nodeitems_utils.NodeItem("AppleseedBlinnNode"),
         nodeitems_utils.NodeItem("AppleseedDiffuseBTDFNode"),
         nodeitems_utils.NodeItem("AppleseedDisneyNode"),
+        nodeitems_utils.NodeItem("AppleseedGlassNode"),
         nodeitems_utils.NodeItem("AppleseedKelemenNode"),
         nodeitems_utils.NodeItem("AppleseedLambertianNode"),
+        nodeitems_utils.NodeItem("AppleseedMetalNode"),
         nodeitems_utils.NodeItem("AppleseedOrenNayarNode"),
+        nodeitems_utils.NodeItem("AppleseedPlasticNode"),
+        nodeitems_utils.NodeItem("AppleseedSheenNode"),
         nodeitems_utils.NodeItem("AppleseedSpecBRDFNode"),
         nodeitems_utils.NodeItem("AppleseedSpecBTDFNode"),
         nodeitems_utils.NodeItem("AppleseedBlendNode")]),
@@ -162,12 +167,17 @@ def appleseed_scene_loaded(dummy):
 
 # Load the modules after classes have been created.
 from . import ashikhminbrdf
+from . import blinnbrdf
 from . import bsdfblend
 from . import diffusebtdf
 from . import disneybrdf
 from . import kelemenbrdf
+from . import glassbrdf
 from . import lambertianbrdf
+from . import metalbrdf
 from . import orennayarbrdf
+from . import plasticbrdf
+from . import sheenbrdf
 from . import specularbrdf
 from . import specularbtdf
 from . import texture
@@ -181,12 +191,17 @@ def register():
     nodeitems_utils.register_node_categories("APPLESEED", appleseed_node_categories)
     bpy.utils.register_class(AppleseedNodeTree)
     ashikhminbrdf.register()
+    blinnbrdf.register()
     bsdfblend.register()
     diffusebtdf.register()
     disneybrdf.register()
     kelemenbrdf.register()
+    glassbrdf.register()
     lambertianbrdf.register()
+    metalbrdf.register()
     orennayarbrdf.register()
+    plasticbrdf.register()
+    sheenbrdf.register()
     specularbrdf.register()
     specularbtdf.register()
     texture.register()
@@ -198,12 +213,17 @@ def unregister():
     nodeitems_utils.unregister_node_categories("APPLESEED")
     bpy.utils.unregister_class(AppleseedNodeTree)
     ashikhminbrdf.unregister()
+    blinnbrdf.unregister()
     bsdfblend.unregister()
     disneybrdf.unregister()
     diffusebtdf.unregister()
     kelemenbrdf.unregister()
+    glassbrdf.unregister()
     lambertianbrdf.unregister()
+    metalbrdf.unregister()
     orennayarbrdf.unregister()
+    plasticbrdf.unregister()
+    sheenbrdf.unregister()
     specularbrdf.unregister()
     specularbtdf.unregister()
     texture.unregister()

@@ -1060,13 +1060,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     # Oren-Nayar BRDF.
     #
 
-    orennayar_brdf_multiplier = bpy.props.FloatProperty(name="orennayar_brdf_multiplier",
-                                                        description="Oren-Nayar reflectance multiplier",
-                                                        default=1.0,
-                                                        min=0.0,
-                                                        max=2.0,
-                                                        update=refresh_preview)
-
     orennayar_brdf_use_diffuse_tex = bpy.props.BoolProperty(name="orennayar_brdf_use_diffuse_tex",
                                                             description="Use a texture to influence diffuse color",
                                                             default=False,
