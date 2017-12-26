@@ -2473,8 +2473,10 @@ class Writer(object):
         self.__open_element('light name="{0}" model="sun_light"'.format(lamp.name))
         if use_sunsky:
             self.__emit_parameter("environment_edf", environment_edf)
-        self.__emit_parameter("radiance_multiplier", sunsky.radiance_multiplier if use_sunsky else asr_light.radiance_multiplier)
-        self.__emit_parameter("turbidity", asr_light.turbidity)
+        self.__emit_parameter("size_multiplier", asr_light.size_multiplier)
+        self.__emit_parameter("distance", asr_light.distance)
+        self.__emit_parameter("radiance_multiplier", asr_light.radiance_multiplier)
+        self.__emit_parameter("turbidity", sunsky.turbidity if use_sunsky else asr_light.turbidity)
         self.__emit_parameter("cast_indirect_light", str(asr_light.cast_indirect).lower())
         self.__emit_parameter("importance_multiplier", asr_light.importance_multiplier)
         self.__emit_transform_element(self._global_matrix * lamp.matrix_world, None)

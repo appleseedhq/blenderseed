@@ -98,7 +98,10 @@ class AppleseedLampPanel(bpy.types.Panel):
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'SUN':
+            layout.prop(asr_lamp, "use_edf", text="Use Environment For Sun Direction")
             layout.prop(asr_lamp, "turbidity", text="Turbidity")
+            layout.prop(asr_lamp, "distance", text="Sun Distance")
+            layout.prop(asr_lamp, "size_multiplier", text="Size Multiplier")
             layout.prop(asr_lamp, "radiance_multiplier", text="Radiance Multiplier")
             layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
