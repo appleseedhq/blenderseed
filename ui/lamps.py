@@ -87,6 +87,7 @@ class AppleseedLampPanel(bpy.types.Panel):
             layout.prop(lamp_data, "spot_size", text="Outer Angle")
             layout.prop(asr_lamp, "tilt_angle", text="Tilt Angle")
             layout.prop(lamp_data, "show_cone")
+            layout.prop(asr_lamp, "exposure", text="Exposure")
             layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 

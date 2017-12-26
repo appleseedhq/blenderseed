@@ -70,6 +70,12 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                                                description="Texture to influence intensity multiplier",
                                                                default="")
 
+        cls.exposure = bpy.props.FloatProperty(name="exposure",
+                                               description="Exposure",
+                                               default=0.0,
+                                               min=-64.0,
+                                               max=64.0)
+
         cls.cast_indirect = bpy.props.BoolProperty(name="cast_indirect",
                                                    description="Lamp casts indirect light",
                                                    default=True)
