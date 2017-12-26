@@ -139,10 +139,10 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                      max=180.0)
 
         cls.env_alpha = bpy.props.FloatProperty(name="env_alpha",
-                                               description="Alpha value of the environment",
-                                               default=1.0,
-                                               min=0.0,
-                                               max=1.0)
+                                                description="Alpha value of the environment",
+                                                default=1.0,
+                                                min=0.0,
+                                                max=1.0)
 
         cls.env_exposure = bpy.props.FloatProperty(name="env_exposure",
                                                    description="Environment exposure",
