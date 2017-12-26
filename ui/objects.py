@@ -27,11 +27,42 @@
 #
 
 import bpy
-import bl_ui
+
+
+class AppleseedObjFlagsPanel(bpy.types.Panel):
+    bl_label = "Appleseed Object Flags"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
+
+    def draw(self, context):
+        layout = self.layout
+        asr_obj = context.object.appleseed
+        layout.prop(asr_obj, "enable_visibility_flags", text="Enable Visibility Flags")
+        col = layout.column()
+        col.active = asr_obj.enable_visibility_flags
+        row = col.row()
+        row.prop(asr_obj, "camera_visible", text="Camera")
+        row.prop(asr_obj, "light_visible", text="Light")
+        row = col.row()
+        row.prop(asr_obj, "shadow_visible", text="Shadow")
+        row.prop(asr_obj, "transparency_visible", text="Transparency")
+        row = col.row()
+        row.prop(asr_obj, "probe_visible", text="Probe")
+        row.prop(asr_obj, "diffuse_visible", text="Diffuse")
+        row = col.row()
+        row.prop(asr_obj, "glossy_visible", text="Glossy")
+        row.prop(asr_obj, "specular_visible", text="Specular")
 
 
 class AppleseedObjMBlurPanel(bpy.types.Panel):
-    bl_label = "Motion Blur"
+    bl_label = "Appleseed Motion Blur"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"

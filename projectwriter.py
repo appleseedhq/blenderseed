@@ -667,7 +667,10 @@ class Writer(object):
         """
         Emit an object instance element to the project file.
         """
+
         self.__open_element('object_instance name="{0}" object="{1}"'.format(instance_name, object_name))
+        if object.appleseed.enable_visibility_flags:
+            self.__emit_visibility_flags(object)
         if util.ob_mblur_enabled(object, scene):
             self.__emit_transform_element(identity_matrix, None)
         else:
@@ -675,6 +678,23 @@ class Writer(object):
         self.__emit_line('<assign_material slot="0" side="front" material="{0}" />'.format(front_material_name))
         self.__emit_line('<assign_material slot="0" side="back" material="{0}" />'.format(back_material_name))
         self.__close_element("object_instance")
+
+    # --------------------------------------------
+    # Emit object visibility flags
+    # --------------------------------------------
+    def __emit_visibility_flags(self, object):
+
+        ob_flags = object.appleseed
+        self.__open_element('parameters name="visibility"')
+        self.__emit_parameter("camera", str(ob_flags.camera_visible).lower())
+        self.__emit_parameter("light", str(ob_flags.light_visible).lower())
+        self.__emit_parameter("shadow", str(ob_flags.shadow_visible).lower())
+        self.__emit_parameter("transparency", str(ob_flags.transparency_visible).lower())
+        self.__emit_parameter("probe", str(ob_flags.probe_visible).lower())
+        self.__emit_parameter("diffuse", str(ob_flags.diffuse_visible).lower())
+        self.__emit_parameter("glossy", str(ob_flags.glossy_visible).lower())
+        self.__emit_parameter("specular", str(ob_flags.specular_visible).lower())
+        self.__close_element("parameters")
 
     # ----------------------------------------------------------------------------------------------
     # Materials.
@@ -803,9 +823,6 @@ class Writer(object):
                 if node.node_type == 'bssrdf':
                     bssrdf_name = material_name + node.get_node_name()
                     self.__emit_bssrdf(material, bssrdf_name, 'front', None, node)
-                if node.node_type == 'volume':
-                    volume_name = material_name + node.get_node_name()
-                    self.__emit_volume(material, volume_name, 'front', None, node)
                 if node.node_type == 'diffuse_btdf':
                     self.__emit_diffuse_btdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'disney':
@@ -830,6 +847,9 @@ class Writer(object):
                     self.__emit_specular_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'texture':
                     self.__emit_texture(None, False, scene, node, material_name)
+                if node.node_type == 'volume':
+                    volume_name = material_name + node.get_node_name()
+                    self.__emit_volume(material, volume_name, 'front', None, node)
             return bsdf_name, bssrdf_name, volume_name
 
         else:
@@ -2135,7 +2155,7 @@ class Writer(object):
         self.__close_element("bssrdf")
 
     # ----------------------
-    # Write BSSRDF.
+    # Write Volume
     # ----------------------
     def __emit_volume(self, material, volume_name, scene, layer=None, node=None):
         volume_absorption_name = "{0}_volume_absorption".format(volume_name)

@@ -47,6 +47,42 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                       description="Type of motion blur to render",
                                                       default='object')
 
+        cls.enable_visibility_flags = bpy.props.BoolProperty(name="enable_visibility_flags",
+                                                             description="Enable visibility flags for object",
+                                                             default=False)
+
+        cls.camera_visible = bpy.props.BoolProperty(name="camera_visible",
+                                                    description="Visibility to camera",
+                                                    default=True)
+
+        cls.light_visible = bpy.props.BoolProperty(name="light_visible",
+                                                   description="Visibility to lights",
+                                                   default=True)
+
+        cls.shadow_visible = bpy.props.BoolProperty(name="shadow_visible",
+                                                    description="Visibility to shadows",
+                                                    default=True)
+
+        cls.transparency_visible = bpy.props.BoolProperty(name="transparency_visible",
+                                                          description="Visibility to transparency",
+                                                          default=True)
+
+        cls.probe_visible = bpy.props.BoolProperty(name="probe_visible",
+                                                   description="Visibility to probes",
+                                                   default=True)
+
+        cls.diffuse_visible = bpy.props.BoolProperty(name="diffuse_visible",
+                                                     description="Visibility to diffuse rays",
+                                                     default=True)
+
+        cls.glossy_visible = bpy.props.BoolProperty(name="glossy_visible",
+                                                    description="Visibility to glossy rays",
+                                                    default=True)
+
+        cls.specular_visible = bpy.props.BoolProperty(name="specular_visible",
+                                                      description="Visibility to specular rays",
+                                                      default=True)
+
     @classmethod
     def unregister(cls):
         del bpy.types.Object.appleseed
