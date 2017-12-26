@@ -171,8 +171,8 @@ from . import blinnbrdf
 from . import bsdfblend
 from . import diffusebtdf
 from . import disneybrdf
-from . import kelemenbrdf
 from . import glassbrdf
+from . import kelemenbrdf
 from . import lambertianbrdf
 from . import metalbrdf
 from . import orennayarbrdf
@@ -195,8 +195,8 @@ def register():
     bsdfblend.register()
     diffusebtdf.register()
     disneybrdf.register()
-    kelemenbrdf.register()
     glassbrdf.register()
+    kelemenbrdf.register()
     lambertianbrdf.register()
     metalbrdf.register()
     orennayarbrdf.register()
@@ -217,8 +217,8 @@ def unregister():
     bsdfblend.unregister()
     disneybrdf.unregister()
     diffusebtdf.unregister()
-    kelemenbrdf.unregister()
     glassbrdf.unregister()
+    kelemenbrdf.unregister()
     lambertianbrdf.unregister()
     metalbrdf.unregister()
     orennayarbrdf.unregister()

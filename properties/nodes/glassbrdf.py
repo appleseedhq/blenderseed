@@ -78,7 +78,7 @@ class AppleseedGlassReflectionTintSocket(NodeSocket, AppleseedSocket):
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return 0.8, 0.8, 0.5, 1.
+        return 0.8, 0.8, 0.5, 1.0
 
 
 class AppleseedGlassRefractionTintSocket(NodeSocket, AppleseedSocket):
@@ -158,7 +158,7 @@ class AppleseedGlassVolumeTransmittanceDistanceSocket(NodeSocket, AppleseedSocke
             layout.prop(self, "socket_value", text=text)
 
     def draw_color(self, context, node):
-        return 0.5, 0.5, 0.5, 1.
+        return 0.5, 0.5, 0.5, 1.0
 
 
 class AppleseedGlassVolumeAbsorptionSocket(NodeSocket, AppleseedSocket):
@@ -201,31 +201,31 @@ class AppleseedGlassNode(Node, AppleseedNode):
 
     node_type = 'glass'
 
-    mdf = bpy.props.EnumProperty(name="Microfacet Type",
+    glass_brdf_mdf = bpy.props.EnumProperty(name="Microfacet Type",
                                  description="",
                                  items=[('beckmann', "Beckmann", ""),
                                         ('ggx', "GGX", ""),
                                         ('std', "STD", "")],
                                  default='ggx')
 
-    ior = bpy.props.FloatProperty(name="glass_bsdf_ior",
+    glass_brdf_ior = bpy.props.FloatProperty(name="glass_bsdf_ior",
                                   description="Glass index of refraction",
                                   default=1.5,
                                   min=1.0,
                                   max=2.5)
 
-    falloff = bpy.props.FloatProperty(name="falloff",
+    glass_brdf_falloff = bpy.props.FloatProperty(name="falloff",
                                       description="",
                                       default=0.4,
                                       min=0.0,
                                       max=1.0)
 
-    volume_parameterization = bpy.props.EnumProperty(name="Volume Type",
+    glass_brdf_volume_parameterization = bpy.props.EnumProperty(name="Volume Type",
                                                      items=[('absorption', "Absorption", ""),
                                                             ('transmittance', "Transmittance", "")],
                                                      default='transmittance')
 
-    volume_scale = bpy.props.FloatProperty(name="glass_bsdf_volume_scale",
+    glass_brdf_volume_scale = bpy.props.FloatProperty(name="glass_bsdf_volume_scale",
                                            description="Scale of the glass volume",
                                            default=1.0,
                                            min=0.0,
@@ -245,11 +245,11 @@ class AppleseedGlassNode(Node, AppleseedNode):
         self.outputs.new('NodeSocketShader', "BRDF")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "mdf")
-        layout.prop(self, "ior", text="Index of Refraction")
-        layout.prop(self, "falloff", text="Highlight Falloff")
-        layout.prop(self, "volume_parameterization")
-        layout.prop(self, "volume_scale", text="Volume Scale")
+        layout.prop(self, "glass_brdf_mdf")
+        layout.prop(self, "glass_brdf_ior", text="Index of Refraction")
+        layout.prop(self, "glass_brdf_falloff", text="Highlight Falloff")
+        layout.prop(self, "glass_brdf_volume_parameterization")
+        layout.prop(self, "glass_brdf_volume_scale", text="Volume Scale")
 
     def draw_buttons_ext(self, context, layout):
         pass

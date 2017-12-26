@@ -121,14 +121,14 @@ class AppleseedMetalNode(Node, AppleseedNode):
 
     node_type = 'metal'
 
-    mdf = bpy.props.EnumProperty(name="Microfacet Type",
+    metal_brdf_mdf = bpy.props.EnumProperty(name="Microfacet Type",
                                  description="",
                                  items=[('beckmann', "Beckmann", ""),
                                         ('ggx', "GGX", ""),
                                         ('std', "STD", "")],
                                  default='ggx')
 
-    falloff = bpy.props.FloatProperty(name="falloff",
+    metal_brdf_falloff = bpy.props.FloatProperty(name="falloff",
                                       description="",
                                       default=0.4,
                                       min=0.0,
@@ -143,8 +143,8 @@ class AppleseedMetalNode(Node, AppleseedNode):
         self.outputs.new('NodeSocketShader', "BRDF")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "mdf")
-        layout.prop(self, "falloff", text="Highlight Falloff")
+        layout.prop(self, "metal_brdf_mdf")
+        layout.prop(self, "metal_brdf_falloff", text="Highlight Falloff")
 
     def draw_buttons_ext(self, context, layout):
         pass

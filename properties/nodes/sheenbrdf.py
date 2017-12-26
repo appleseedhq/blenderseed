@@ -104,4 +104,3 @@ def unregister():
     bpy.utils.unregister_class(AppleseedSheenNode)
     bpy.utils.unregister_class(AppleseedSheenReflectanceMultiplierSocket)
     bpy.utils.unregister_class(AppleseedSheenReflectanceSocket)
-    

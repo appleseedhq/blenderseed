@@ -121,7 +121,7 @@ class AppleseedPlasticNode(Node, AppleseedNode):
 
     node_type = 'plastic'
 
-    mdf = bpy.props.EnumProperty(name="Microfacet Type",
+    plastic_brdf_mdf = bpy.props.EnumProperty(name="Microfacet Type",
                                  description="",
                                  items=[('beckmann', "Beckmann", ""),
                                         ('ggx', "GGX", ""),
@@ -129,13 +129,13 @@ class AppleseedPlasticNode(Node, AppleseedNode):
                                         ('gtr1', "GTR1", "")],
                                  default='ggx')
 
-    ior = bpy.props.FloatProperty(name="ior",
+    plastic_brdf_ior = bpy.props.FloatProperty(name="ior",
                                   description="Plastic index of refraction",
                                   default=1.5,
                                   min=1.0,
                                   max=2.5)
 
-    falloff = bpy.props.FloatProperty(name="falloff",
+    plastic_brdf_falloff = bpy.props.FloatProperty(name="falloff",
                                       description="",
                                       default=0.4,
                                       min=0.0,
@@ -150,9 +150,9 @@ class AppleseedPlasticNode(Node, AppleseedNode):
         self.outputs.new('NodeSocketShader', "BRDF")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "mdf")
-        layout.prop(self, "ior", text="Index of Refraction")
-        layout.prop(self, "falloff", text="Highlight Falloff")
+        layout.prop(self, "plastic_brdf_mdf")
+        layout.prop(self, "plastic_brdf_ior", text="Index of Refraction")
+        layout.prop(self, "plastic_brdf_falloff", text="Highlight Falloff")
 
     def draw_buttons_ext(self, context, layout):
         pass

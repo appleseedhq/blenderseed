@@ -29,15 +29,6 @@
 import bpy
 
 
-def sun_enumerator(self, context):
-    sun = []
-    for object in context.scene.objects:
-        if object.type == 'LAMP':
-            if object.data.type == 'SUN':
-                sun.append((object.name, object.name, ""))
-    return sun
-
-
 class AppleseedSkySettings(bpy.types.PropertyGroup):
 
     @classmethod
@@ -56,24 +47,20 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                               description="Select environment type",
                                               default="gradient")
 
-        cls.sun_model = bpy.props.EnumProperty(name="Sun Model",
+        cls.sun_model = bpy.props.EnumProperty(name="Sky Model",
                                                items=[("hosek_environment_edf", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
                                                       ('preetham_environment_edf', "Preetham", 'Preetham physical sun/sky model')],
                                                description="Physical sun/sky model",
                                                default="hosek_environment_edf")
 
-        cls.sun_lamp = bpy.props.EnumProperty(name="Sun Lamp",
-                                              items=sun_enumerator,
-                                              description="Sun lamp to export")
-
         cls.sun_theta = bpy.props.FloatProperty(name="sun_theta",
-                                                description='',
+                                                description="Sun polar (vertical) angle in degrees",
                                                 default=0.0,
                                                 min=-180,
                                                 max=180)
 
         cls.sun_phi = bpy.props.FloatProperty(name="sun_phi",
-                                              description='',
+                                              description="Sun azimuthal (horizontal) angle in degrees",
                                               default=0.0,
                                               min=-180,
                                               max=180)

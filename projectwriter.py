@@ -793,14 +793,12 @@ class Writer(object):
                     bsdf_name = material_name + node.get_node_name()
                 if node.node_type == 'ashikhmin':
                     self.__emit_ashikhmin_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'bsdf_blend':
-                    self.__emit_bsdf_blend(bsdf_name, material_name, node)
                 if node.node_type == 'blinn':
                     self.__emit_blinn_brdf(material, bsdf_name, 'front', None, node)
+                if node.node_type == 'bsdf_blend':
+                    self.__emit_bsdf_blend(bsdf_name, material_name, node)
                 if node.node_type == 'diffuse_btdf':
                     self.__emit_diffuse_btdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'plastic':
-                    self.__emit_plastic_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'disney':
                     self.__emit_disney_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'glass':
@@ -811,6 +809,8 @@ class Writer(object):
                     self.__emit_lambertian_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'orennayar':
                     self.__emit_orennayar_brdf(material, bsdf_name, 'front', None, node)
+                if node.node_type == 'plastic':
+                    self.__emit_plastic_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'metal':
                     self.__emit_metal_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'sheen':
@@ -1514,11 +1514,11 @@ class Writer(object):
             volume_absorption = inputs["Volume Absorption"].get_socket_value(True)
             volume_transmittance_distance = inputs["Volume Transmittance Distance"].get_socket_value(True)
             volume_density = inputs["Volume Density"].get_socket_value(True)
-            mdf = node.mdf
-            ior = node.ior
-            falloff = node.falloff
-            parameterization = node.volume_parameterization
-            volume_scale = node.volume_scale
+            mdf = node.glass_brdf_mdf
+            ior = node.glass_brdf_ior
+            falloff = node.glass_brdf_falloff
+            parameterization = node.glass_brdf_volume_parameterization
+            volume_scale = node.glass_brdf_volume_scale
 
             # If the socket is not connected.
             if not inputs["Transmittance"].is_linked:
@@ -1682,8 +1682,8 @@ class Writer(object):
         if node is not None:
             inputs = node.inputs
             normal_reflectance = inputs["Normal Reflectance"].get_socket_value(True)
-            mdf = node.mdf
-            highlight_falloff = node.falloff
+            mdf = node.metal_brdf_mdf
+            highlight_falloff = node.metal_brdf_falloff
             reflectance_multiplier = inputs["Reflectance Multiplier"].get_socket_value(True)
             edge_tint = inputs["Edge Tint"].get_socket_value(True)
             roughness = inputs["Roughness"].get_socket_value(True)
@@ -1770,9 +1770,9 @@ class Writer(object):
         # nodes
         if node is not None:
             inputs = node.inputs
-            mdf = node.mdf
-            ior = node.ior
-            falloff = node.falloff
+            mdf = node.plastic_brdf_mdf
+            ior = node.plastic_brdf_ior
+            falloff = node.plastic_brdf_falloff
             specular_reflectance = inputs["Specular Reflectance"].get_socket_value(True)
             specular_reflectance_multiplier = inputs["Specular Reflectance Multiplier"].get_socket_value(True)
             roughness = inputs["Roughness"].get_socket_value(True)
@@ -2334,20 +2334,6 @@ class Writer(object):
         horizon_radiance = [0.0, 0.0, 0.0]
         zenith_radiance = [0.0, 0.0, 0.0]
 
-        # Add the contribution of the first hemi light found in the scene.
-        found_hemi_light = False
-        for object in scene.objects:
-            if util.do_export(object, scene):
-                if object.type == 'LAMP' and object.data.type == 'HEMI':
-                    if not found_hemi_light:
-                        self.__info("Using hemi light '{0}' for environment lighting.".format(object.name))
-                        hemi_radiance = mul(object.data.color, object.data.energy)
-                        horizon_radiance = add(horizon_radiance, hemi_radiance)
-                        zenith_radiance = add(zenith_radiance, hemi_radiance)
-                        found_hemi_light = True
-                    else:
-                        self.__warning("Ignoring hemi light '{0}', multiple hemi lights are not supported yet.".format(object.name))
-
         # Add the contribution of the sky.
         if scene.world is not None:
             horizon_radiance = add(horizon_radiance, scene.world.horizon_color)
@@ -2467,7 +2453,7 @@ class Writer(object):
         lamp_data = lamp.data
         asr_light = lamp_data.appleseed
         sunsky = scene.appleseed_sky
-        use_sunsky = sunsky.env_type == "sunsky"
+        use_sunsky = asr_light.use_edf
         environment_edf = "environment_edf"
 
         self.__open_element('light name="{0}" model="sun_light"'.format(lamp.name))
@@ -2523,9 +2509,9 @@ class Writer(object):
         self.__open_element('light name="{0}" model="spot_light"'.format(lamp.name))
         self.__emit_parameter("radiance", radiance_name)
         self.__emit_parameter("radiance_multiplier", radiance_multiplier)
+        self.__emit_parameter("exposure", asr_light.exposure)
         self.__emit_parameter("inner_angle", inner_angle)
         self.__emit_parameter("outer_angle", outer_angle)
-        self.__emit_parameter("exposure", asr_light.exposure)
         self.__emit_parameter("cast_indirect_light", str(asr_light.cast_indirect).lower())
         self.__emit_parameter("importance_multiplier", asr_light.importance_multiplier)
         self.__emit_transform_element(self._global_matrix * lamp.matrix_world, None)

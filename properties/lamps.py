@@ -93,11 +93,11 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                                 max=8)
 
         cls.use_edf = bpy.props.BoolProperty(name="use_edf",
-                                             description="Use the environment EDF to determine sun angle",
+                                             description="Use the environment EDF to determine Sun angle",
                                              default=False)
 
         cls.size_multiplier = bpy.props.FloatProperty(name="size_multiplier",
-                                                      description="The size multiplier allows to make the sun bigger or smaller, hence making it cast softer or harder shadows",
+                                                      description="The size multiplier allows to make the Sun bigger or smaller, hence making it cast softer or harder shadows",
                                                       default=1.0,
                                                       min=0.0,
                                                       max=100.0)
