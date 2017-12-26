@@ -2064,41 +2064,36 @@ class Writer(object):
         # Nodes.
         if material_node is not None:
             inputs = material_node.inputs
-            radiance_name = inputs["Emission Color"].get_socket_value(True)
+            radiance = inputs["Emission Color"].get_socket_value(True)
             radiance_multiplier = inputs["Emission Strength"].get_socket_value(True)
-
-            if not inputs["Emission Color"].is_linked:
-                radiance_name = "{0}_radiance".format(edf_name)
-                self.__emit_solid_linear_rgb_color_element(radiance_name,
-                                                           material_node.inputs["Emission Color"].socket_value,
-                                                           scene.appleseed.light_mats_radiance_multiplier)
-
-        else:
-            radiance_name = "{0}_radiance".format(edf_name)
-            radiance_multiplier = asr_mat.light_emission
-            self.__emit_solid_linear_rgb_color_element(radiance_name,
-                                                       asr_mat.light_color,
-                                                       scene.appleseed.light_mats_radiance_multiplier)
-
-        self.__emit_diffuse_edf_element(asr_mat, edf_name, radiance_name, radiance_multiplier, material_node)
-
-    def __emit_diffuse_edf_element(self, asr_mat, edf_name, radiance_name, radiance_multiplier, material_node=None):
-        """
-        Emit the EDF to the project file.
-        """
-        if material_node is not None:
+            exposure = inputs["Exposure"].get_socket_value(True)
             cast_indirect = material_node.cast_indirect
             importance_multiplier = material_node.importance_multiplier
             light_near_start = material_node.light_near_start
+
+            if not inputs["Emission Color"].is_linked:
+                radiance_name = radiance
+                radiance = "{0}_radiance".format(edf_name)
+                self.__emit_solid_linear_rgb_color_element(radiance,
+                                                           radiance_name,
+                                                           scene.appleseed.light_mats_radiance_multiplier)
+
         else:
+            radiance = "{0}_radiance".format(edf_name)
+            radiance_multiplier = asr_mat.light_emission
             cast_indirect = str(asr_mat.cast_indirect).lower()
             importance_multiplier = asr_mat.importance_multiplier
+            exposure = asr_mat.light_exposure
             light_near_start = asr_mat.light_near_start
+            self.__emit_solid_linear_rgb_color_element(radiance,
+                                                       asr_mat.light_color,
+                                                       scene.appleseed.light_mats_radiance_multiplier)
 
         self.__open_element('edf name="{0}" model="diffuse_edf"'.format(edf_name))
-        self.__emit_parameter("radiance", radiance_name)
+        self.__emit_parameter("radiance", radiance)
         self.__emit_parameter("radiance_multiplier", radiance_multiplier)
         self.__emit_parameter("cast_indirect_light", cast_indirect)
+        self.__emit_parameter("exposure", exposure)
         self.__emit_parameter("importance_multiplier", importance_multiplier)
         self.__emit_parameter("light_near_start", light_near_start)
         self.__close_element("edf")

@@ -1507,6 +1507,12 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                              max=10000.0,
                                              update=refresh_preview)
 
+    light_exposure = bpy.props.FloatProperty(name="light_exposure",
+                                             description="Light exposure",
+                                             default=0.0,
+                                             min=-64.0,
+                                             max=64.0)
+
     light_color = bpy.props.FloatVectorProperty(name="light_color",
                                                 description="Light emission color",
                                                 default=(0.8, 0.8, 0.8),

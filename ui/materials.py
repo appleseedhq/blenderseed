@@ -1342,13 +1342,12 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         material = context.object.active_material
         asr_mat = material.appleseed
 
+        layout.active = asr_mat.use_light_emission
         col = layout.column()
         col.active = asr_mat.use_light_emission
         col.prop(asr_mat, "light_color", text="")
         col.prop(asr_mat, "light_emission", text="Radiance Multiplier")
-
-        layout.active = asr_mat.use_light_emission
-        row = layout.row(align=True)
+        col.prop(asr_mat, "light_exposure", text="Exposure")
         layout.prop(asr_mat, "cast_indirect", text="Cast Indirect Light")
         layout.prop(asr_mat, "importance_multiplier", text="Importance Multiplier")
         layout.prop(asr_mat, "light_near_start", text="Light Near Start")
