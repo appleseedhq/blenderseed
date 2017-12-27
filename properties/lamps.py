@@ -70,6 +70,12 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                                                description="Texture to influence intensity multiplier",
                                                                default="")
 
+        cls.exposure = bpy.props.FloatProperty(name="exposure",
+                                               description="Exposure",
+                                               default=0.0,
+                                               min=-64.0,
+                                               max=64.0)
+
         cls.cast_indirect = bpy.props.BoolProperty(name="cast_indirect",
                                                    description="Lamp casts indirect light",
                                                    default=True)
@@ -85,6 +91,22 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                                 default=4,
                                                 min=0,
                                                 max=8)
+
+        cls.use_edf = bpy.props.BoolProperty(name="use_edf",
+                                             description="Use the environment EDF to determine Sun angle",
+                                             default=False)
+
+        cls.size_multiplier = bpy.props.FloatProperty(name="size_multiplier",
+                                                      description="The size multiplier allows to make the Sun bigger or smaller, hence making it cast softer or harder shadows",
+                                                      default=1.0,
+                                                      min=0.0,
+                                                      max=100.0)
+
+        cls.distance = bpy.props.FloatProperty(name="distance",
+                                               description="Distance between Sun and scene (millions of km)",
+                                               default=149.6,
+                                               min=0.0,
+                                               max=500.0)
 
         cls.tilt_angle = bpy.props.FloatProperty(name="tilt_angle",
                                                  description="Spot lamp tilt angle",

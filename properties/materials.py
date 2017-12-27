@@ -1060,13 +1060,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     # Oren-Nayar BRDF.
     #
 
-    orennayar_brdf_multiplier = bpy.props.FloatProperty(name="orennayar_brdf_multiplier",
-                                                        description="Oren-Nayar reflectance multiplier",
-                                                        default=1.0,
-                                                        min=0.0,
-                                                        max=2.0,
-                                                        update=refresh_preview)
-
     orennayar_brdf_use_diffuse_tex = bpy.props.BoolProperty(name="orennayar_brdf_use_diffuse_tex",
                                                             description="Use a texture to influence diffuse color",
                                                             default=False,
@@ -1513,6 +1506,12 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                              min=0.0,
                                              max=10000.0,
                                              update=refresh_preview)
+
+    light_exposure = bpy.props.FloatProperty(name="light_exposure",
+                                             description="Light exposure",
+                                             default=0.0,
+                                             min=-64.0,
+                                             max=64.0)
 
     light_color = bpy.props.FloatVectorProperty(name="light_color",
                                                 description="Light emission color",

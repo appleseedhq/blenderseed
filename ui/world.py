@@ -51,9 +51,7 @@ class AppleseedWorldPanel(bpy.types.Panel):
         layout.prop(asr_sky_props, "env_type", text="Type")
 
         if asr_sky_props.env_type == "sunsky":
-            layout.prop(asr_sky_props, "sun_lamp", text="Sun Lamp")
-            layout.prop(asr_sky_props, "sun_model", text="Sun Model")
-
+            layout.prop(asr_sky_props, "sun_model", text="Sky Model")
             layout.prop(asr_sky_props, "sun_theta", text="Sun Theta Angle")
             layout.prop(asr_sky_props, "sun_phi", text="Sun Phi Angle")
             layout.prop(asr_sky_props, "turbidity", text="Turbidity")

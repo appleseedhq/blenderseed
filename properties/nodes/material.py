@@ -43,7 +43,7 @@ class AppleseedBSDFSocket(NodeSocket, AppleseedSocket):
         layout.label(text)
 
     def draw_color(self, context, node):
-        return 0.8, 0.8, 0.5, 1.0
+        return 0.0, 0.8, 0.0, 1.0
 
     def get_socket_value(self, texture_only=True):
         """Method to return socket's value, if not linked.
@@ -153,6 +153,22 @@ class AppleseedEmissionStrengthSocket(NodeSocket, AppleseedSocket):
         return 0.5, 0.5, 0.5, 1.0
 
 
+class AppleseedEmissionExposureSocket(NodeSocket, AppleseedSocket):
+    bl_idname = "AppleseedEmissionExposure"
+    bl_label = "Exposure"
+
+    socket_value = AppleseedMatProps.light_exposure
+
+    def draw(self, context, layout, node, text):
+        if self.is_output or self.is_linked:
+            layout.label(text)
+        else:
+            layout.prop(self, "socket_value", text=text)
+
+    def draw_color(self, context, node):
+        return 0.5, 0.5, 0.5, 1.0
+
+
 class AppleseedMaterialNode(Node, AppleseedNode):
     bl_idname = "AppleseedMaterialNode"
     bl_label = "Material"
@@ -172,6 +188,7 @@ class AppleseedMaterialNode(Node, AppleseedNode):
         self.inputs.new('AppleseedNormal', "Normal")
         self.inputs.new('AppleseedEmissionStrength', "Emission Strength")
         self.inputs.new('AppleseedEmissionColor', "Emission Color")
+        self.inputs.new('AppleseedEmissionExposure', "Exposure")
 
     def draw_buttons(self, context, layout):
         img = bpy.data.images.get('appleseed32')
@@ -214,6 +231,7 @@ def register():
     bpy.utils.register_class(AppleseedAlphaSocket)
     bpy.utils.register_class(AppleseedEmissionColorSocket)
     bpy.utils.register_class(AppleseedEmissionStrengthSocket)
+    bpy.utils.register_class(AppleseedEmissionExposureSocket)
     bpy.utils.register_class(AppleseedBSDFSocket)
     bpy.utils.register_class(AppleseedMaterialNode)
 
@@ -223,5 +241,6 @@ def unregister():
     bpy.utils.unregister_class(AppleseedNormalSocket)
     bpy.utils.unregister_class(AppleseedAlphaSocket)
     bpy.utils.unregister_class(AppleseedEmissionColorSocket)
-    bpy.utils.unregister_class(AppleseedBSDFSocket)
+    bpy.utils.unregister_class(AppleseedEmissionExposureSocket)
     bpy.utils.unregister_class(AppleseedEmissionStrengthSocket)
+    bpy.utils.unregister_class(AppleseedBSDFSocket)

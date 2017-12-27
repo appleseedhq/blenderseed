@@ -95,9 +95,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                         default=True)
 
         cls.tile_width = bpy.props.IntProperty(name="tile_width",
-                                                description="Set the width of the render tile",
-                                                default=32,
-                                                min=1)
+                                               description="Set the width of the render tile",
+                                               default=32,
+                                               min=1)
 
         cls.tile_height = bpy.props.IntProperty(name="tile_height",
                                                 description="Set the height of the render tile",
@@ -221,13 +221,13 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                         min=0)
 
         cls.max_glossy_brdf_bounces_unlimited = bpy.props.BoolProperty(name="max_glossy_brdf_bounces_unlimited",
-                                                                  description="No limit to number of glossy ray bounces",
-                                                                  default=True)
+                                                                       description="No limit to number of glossy ray bounces",
+                                                                       default=True)
 
         cls.max_glossy_brdf_bounces = bpy.props.IntProperty(name="max_glossy_brdf_bounces",
-                                                       description="Maximum total number of glossy bounces",
-                                                       default=8,
-                                                       min=0)
+                                                            description="Maximum total number of glossy bounces",
+                                                            default=8,
+                                                            min=0)
 
         cls.max_specular_bounces_unlimited = bpy.props.BoolProperty(name="max_specular_bounces_unlimited",
                                                                     description="No limit to number of specular ray bounces",
