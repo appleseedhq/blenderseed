@@ -67,13 +67,8 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('plastic_brdf', "Plastic BRDF", ""),
                                               ('sheen_brdf', "Sheen BRDF", ""),
                                               ('specular_brdf', "Specular BRDF", ""),
-                                              ('specular_btdf', "Specular BTDF", "")
-                                              # ('better_dipole_bssrdf', "Better Dipole BSSRDF", ""),
-                                              # ('directional_dipole_bssrdf', "Directional Dipole BSSRDF", ""),
-                                              # ('gaussian_bssrdf', "Gaussian BSSRDF", ""),
-                                              # ('normalized_diffusion_bssrdf', "Normalized Diffusion BSSRDF", ""),
-                                              # ('standard_dipole_bssrdf', "Standard Dipole BSSRDF", "")
-                                              ],
+                                              ('specular_btdf', "Specular BTDF", ""),
+                                              ('bssrdf', "Subsurface scattering BSSRDF", "")],
                                        description="BSDF model for current material layer",
                                        default="lambertian_brdf",
                                        update=refresh_preview)
@@ -1476,6 +1471,119 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                      description="Texture to influence layer weight in the BSDF mix",
                                                      default="",
                                                      update=refresh_preview)
+
+    #
+    # BSSDF
+    #
+
+    bssrdf_model = bpy.props.EnumProperty(name="BSSRDF Model",
+                                          description="BSSRDF model",
+                                          items=[('normalized_diffusion_bssrdf', "Normalized Diffusion", ""),
+                                                 ('better_dipole_bssrdf', "Dipole", ""),
+                                                 ('gaussian_bssrdf', "Gaussian", "")],
+                                          default='normalized_diffusion_bssrdf',
+                                          update=refresh_preview)
+
+    bssrdf_weight = bpy.props.FloatProperty(name="bssrdf_weight",
+                                            description="Weight of the BSSRDF",
+                                            default=1.0,
+                                            min=0.0,
+                                            max=1.0,
+                                            update=refresh_preview)
+
+    bssrdf_weight_use_texture = bpy.props.BoolProperty(name="bssrdf_weight_use_texture",
+                                                       description="Use a texture for the BSSRDF weight",
+                                                       default=False,
+                                                       update=refresh_preview)
+
+    bssrdf_weight_texture = bpy.props.StringProperty(name="bssrdf_weight_texture",
+                                                     description="Texture to influence bssrdf weight",
+                                                     default="",
+                                                     update=refresh_preview)
+
+    bssrdf_reflectance = bpy.props.FloatVectorProperty(name="bssrdf_reflectance",
+                                                       description="Diffuse Surface Reflectance",
+                                                       default=(0.5, 0.5, 0.5),
+                                                       subtype='COLOR',
+                                                       min=0.0,
+                                                       max=1.0,
+                                                       update=refresh_preview)
+
+    bssrdf_reflectance_use_texture = bpy.props.BoolProperty(name="bssrdf_reflectance_use_texture",
+                                                            description="Use a texture for the BSSRDF reflectance",
+                                                            default=False,
+                                                            update=refresh_preview)
+
+    bssrdf_reflectance_texture = bpy.props.StringProperty(name="bssrdf_reflectance_texture",
+                                                          description="Texture to influence bssrdf reflectance",
+                                                          default="",
+                                                          update=refresh_preview)
+
+    bssrdf_reflectance_multiplier = bpy.props.FloatProperty(name="bssrdf_reflectance_multiplier",
+                                                            description="Diffuse Surface Reflectance Multiplier",
+                                                            default=1.0,
+                                                            min=0.0,
+                                                            max=1.0,
+                                                            update=refresh_preview)
+
+    bssrdf_reflectance_multiplier_use_texture = bpy.props.BoolProperty(name="bssrdf_reflectance_multiplier_use_texture",
+                                                                       description="Use a texture for the BSSRDF reflectance multiplier",
+                                                                       default=False,
+                                                                       update=refresh_preview)
+
+    bssrdf_reflectance_multiplier_texture = bpy.props.StringProperty(name="bssrdf_reflectance_multiplier_texture",
+                                                                     description="Texture to influence bssrdf reflectance multiplier",
+                                                                     default="",
+                                                                     update=refresh_preview)
+
+    bssrdf_mfp = bpy.props.FloatVectorProperty(name="bssrdf_mfp",
+                                               description="Mean Free Path",
+                                               default=(0.5, 0.5, 0.5),
+                                               subtype='COLOR',
+                                               min=0.0,
+                                               max=1.0,
+                                               update=refresh_preview)
+
+    bssrdf_mfp_use_texture = bpy.props.BoolProperty(name="bssrdf_mfp_use_texture",
+                                                    description="Use a texture for the BSSRDF mfp",
+                                                    default=False,
+                                                    update=refresh_preview)
+
+    bssrdf_mfp_texture = bpy.props.StringProperty(name="bssrdf_mfp_texture",
+                                                  description="Texture to influence bssrdf mfp",
+                                                  default="",
+                                                  update=refresh_preview)
+
+    bssrdf_mfp_multiplier = bpy.props.FloatProperty(name="bssrdf_mfp_multiplier",
+                                                    description="Mean Free Path Multiplier",
+                                                    default=1.0,
+                                                    min=0.0,
+                                                    max=1.0,
+                                                    update=refresh_preview)
+
+    bssrdf_mfp_multiplier_use_texture = bpy.props.BoolProperty(name="bssrdf_mfp_multiplier_use_texture",
+                                                               description="Use a texture for the BSSRDF mfp multiplier",
+                                                               default=False,
+                                                               update=refresh_preview)
+
+    bssrdf_mfp_multiplier_texture = bpy.props.StringProperty(name="bssrdf_mfp_multiplier_texture",
+                                                             description="Texture to influence bssrdf mfp multiplier",
+                                                             default="",
+                                                             update=refresh_preview)
+
+    bssrdf_ior = bpy.props.FloatProperty(name="bssrdf_ior",
+                                         description="Index of Refraction",
+                                         default=1.3,
+                                         min=1.0,
+                                         max=2.5,
+                                         update=refresh_preview)
+
+    bssrdf_fresnel_weight = bpy.props.FloatProperty(name="bssrdf_fresnel_weight",
+                                                    description="Fresnel Weight",
+                                                    default=1.0,
+                                                    min=0.0,
+                                                    max=1.0,
+                                                    update=refresh_preview)
 
 
 class AppleseedMatProps(bpy.types.PropertyGroup):

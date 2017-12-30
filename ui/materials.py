@@ -1273,6 +1273,85 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     # volume density
                     layout.prop(current_layer, "specular_btdf_volume_scale", text="Volume Scale")
 
+                #
+                # BSSRDF
+                #
+
+                elif current_layer.bsdf_type == 'bssrdf':
+
+                    # Model
+                    layout.prop(current_layer, "bssrdf_model")
+
+                    # Reflectance
+                    split = layout.split(percentage=0.40)
+                    col = split.column()
+                    col.label("Reflectance:")
+                    split = split.split(percentage=0.83)
+                    col = split.column()
+                    col.prop(current_layer, "bssrdf_reflectance", text="")
+
+                    if current_layer.bssrdf_reflectance_use_texture:
+                        layout.prop_search(current_layer, "bssrdf_reflectance_texture", material, "texture_slots", text="")
+
+                    split = split.split(percentage=1.0)
+                    col = split.column()
+                    col.prop(current_layer, "bssrdf_reflectance_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.bssrdf_reflectance_texture != '' and current_layer.bssrdf_reflectance_use_texture:
+                        specular_texture = bpy.data.textures[current_layer.bssrdf_reflectance_texture]
+                        layout.prop(specular_texture.image.colorspace_settings, "name", text="Color Space")
+
+                    # Reflectance multiplier
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "bssrdf_reflectance_multiplier", text="Reflectance Multiplier")
+
+                    if current_layer.bssrdf_reflectance_multiplier_use_texture:
+                        layout.prop_search(current_layer, "bssrdf_reflectance_multiplier_texture", material, "texture_slots", text="")
+
+                    col = split.column()
+                    col.prop(current_layer, "bssrdf_reflectance_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.bssrdf_reflectance_multiplier_texture != '' and current_layer.bssrdf_reflectance_multiplier_use_texture:
+                        reflect_mult_tex = bpy.data.textures[current_layer.bssrdf_reflectance_multiplier_texture]
+                        layout.prop(reflect_mult_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # MFP
+                    split = layout.split(percentage=0.40)
+                    col = split.column()
+                    col.label("Mean Free Path:")
+                    split = split.split(percentage=0.83)
+                    col = split.column()
+                    col.prop(current_layer, "bssrdf_mfp", text="")
+
+                    if current_layer.bssrdf_mfp_use_texture:
+                        layout.prop_search(current_layer, "bssrdf_mfp_texture", material, "texture_slots", text="")
+
+                    split = split.split(percentage=1.0)
+                    col = split.column()
+                    col.prop(current_layer, "bssrdf_mfp_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.bssrdf_mfp_texture != '' and current_layer.bssrdf_mfp_use_texture:
+                        meanfp_texture = bpy.data.textures[current_layer.bssrdf_mfp_texture]
+                        layout.prop(meanfp_texture.image.colorspace_settings, "name", text="Color Space")
+
+                    # MFP multiplier
+                    split = layout.split(percentage=0.90)
+                    col = split.column()
+                    col.prop(current_layer, "bssrdf_mfp_multiplier", text="Mean Free Path Multiplier")
+
+                    if current_layer.bssrdf_mfp_multiplier_use_texture:
+                        layout.prop_search(current_layer, "bssrdf_mfp_multiplier_texture", material, "texture_slots", text="")
+
+                    col = split.column()
+                    col.prop(current_layer, "bssrdf_mfp_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+                    if current_layer.bssrdf_mfp_multiplier_texture != '' and current_layer.bssrdf_mfp_multiplier_use_texture:
+                        mfp_mult_tex = bpy.data.textures[current_layer.bssrdf_mfp_multiplier_texture]
+                        layout.prop(mfp_mult_tex.image.colorspace_settings, "name", text="Color Space")
+
+                    # IOR
+                    layout.prop(current_layer, "bssrdf_ior", text="Index of Refraction")
+
+                    # Fresnel weight
+                    layout.prop(current_layer, "bssrdf_fresnel_weight", text="Fresnel Weight")
+
             #
             # Alpha mapping.
             #
@@ -1308,7 +1387,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
                 if asr_mat.material_bump_tex != '':
                     bump_tex = bpy.data.textures[asr_mat.material_bump_tex]
-                    layout.prop(bump_tex.image.colorspace_settings, "name",  text="Color Space")
+                    layout.prop(bump_tex.image.colorspace_settings, "name", text="Color Space")
                 if not asr_mat.material_use_normalmap:
                     layout.prop(asr_mat, "material_bump_amplitude", text="Bump Amplitude")
                     layout.prop(asr_mat, "material_bump_offset", text="Bump Offset")
