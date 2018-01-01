@@ -702,7 +702,7 @@ class Writer(object):
         self.__emit_parameter("reflectance", "__default_material_bsdf_reflectance")
         self.__close_element("bsdf")
 
-        self.__emit_material_element("__default_material", "__default_material_bsdf", "", "", "physical_surface_shader", scene, "")
+        self.__emit_material_element("__default_material", "__default_material_bsdf", "", "", "", "physical_surface_shader", scene, "")
 
     # -------------------------------------------
     # Write the material.
@@ -755,7 +755,7 @@ class Writer(object):
     # Emit front material.
     def __emit_front_material(self, material, material_name, scene, layers, material_node=None, node_list=None):
         # material_name here is material.name + "_front"
-        bsdf_name, bssrdf_name = self.__emit_front_material_tree(material, material_name, scene, layers, material_node, node_list)
+        bsdf_name, bssrdf_name, volume_name = self.__emit_front_material_tree(material, material_name, scene, layers, material_node, node_list)
 
         if self.__is_light_emitting_material(material.appleseed, scene, material_node):
             edf_name = "{0}_edf".format(material_name)
@@ -763,14 +763,14 @@ class Writer(object):
         else:
             edf_name = ""
 
-        self.__emit_material_element(material_name, bsdf_name, edf_name, bssrdf_name, "physical_surface_shader", scene, material, material_node)
+        self.__emit_material_element(material_name, bsdf_name, edf_name, bssrdf_name, volume_name, "physical_surface_shader", scene, material, material_node)
 
     # Emit back material.
     def __emit_back_material(self, material, material_name, scene, layers, material_node=None, node_list=None):
         # material_name here is material.name + "_back"
         bsdf_name = self.__emit_back_material_bsdf_tree(material, material_name, scene, layers, material_node, node_list)
 
-        self.__emit_material_element(material_name, bsdf_name, "", "", "physical_surface_shader", scene, material, material_node)
+        self.__emit_material_element(material_name, bsdf_name, "", "", "", "physical_surface_shader", scene, material, material_node)
 
     # --------------------------------
     # Write front material BSDF tree.
@@ -783,12 +783,13 @@ class Writer(object):
         bsdfs = []
         bsdf_name = ""
         bssrdf_name = ""
+        volume_name = ""
 
         # If using nodes.
         if material_node is not None:
             if not material_node.inputs[0].is_linked and not material_node.inputs[1].is_linked:
                 bsdf_name = "__default_material_bsdf"
-                return bsdf_name
+                return bsdf_name, bssrdf_name, volume_name
 
             for node in node_list:
                 if node.node_type not in {'texture', 'normal', 'bssrdf'}:
@@ -826,13 +827,13 @@ class Writer(object):
                     self.__emit_specular_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'texture':
                     self.__emit_texture(None, False, scene, node, material_name)
-            return bsdf_name, bssrdf_name
+            return bsdf_name, bssrdf_name, volume_name
 
         else:
             # Iterate through layers and export their types, append names and weights to bsdfs list
             if len(layers) == 0:
                 bsdf_name = "__default_material_bsdf"
-                return bsdf_name
+                return bsdf_name, bssrdf_name, volume_name
             else:
                 for layer in layers:
                     # Spec BTDF
@@ -994,7 +995,12 @@ class Writer(object):
                         bssrdf_name = "{0}|{1}".format(material_name, layer.bsdf_name)
                         self.__emit_bssrdf(material, bssrdf_name, scene, layer)
 
-                return self.__emit_bsdf_mixes(bsdfs), bssrdf_name
+                    # Volume
+                    if layer.bsdf_type == 'volume':
+                        volume_name = "{0}|{1}".format(material_name, layer.bsdf_name)
+                        self.__emit_volume(material, volume_name, scene, layer)
+
+                return self.__emit_bsdf_mixes(bsdfs), bssrdf_name, volume_name
 
     # ----------------------
     # Write back material.
@@ -2126,6 +2132,39 @@ class Writer(object):
         self.__close_element("bssrdf")
 
     # ----------------------
+    # Write BSSRDF.
+    # ----------------------
+    def __emit_volume(self, material, volume_name, scene, layer=None, node=None):
+        volume_absorption = ""
+        volume_absorption_multiplier = layer.volume_absorption_multiplier
+        volume_scattering = ""
+        volume_scattering_multiplier = layer.volume_scattering_multiplier
+        volume_phase_function_model = layer.volume_phase_function_model
+        volume_average_cosine = layer.volume_average_cosine
+
+        if volume_absorption == "":
+            volume_absorption = "{0}_volume_absorption".format(volume_name)
+            self.__emit_solid_linear_rgb_color_element(volume_absorption,
+                                                       layer.volume_absorption,
+                                                       1)
+
+        if volume_scattering == "":
+            volume_scattering = "{0}_volume_scattering".format(volume_name)
+            self.__emit_solid_linear_rgb_color_element(volume_scattering,
+                                                       layer.volume_scattering,
+                                                       1)
+
+        self.__open_element('volume name="{0}" model="generic_volume"'.format(volume_name))
+        self.__emit_parameter("absorption", volume_absorption)
+        self.__emit_parameter("absorption_multiplier", volume_absorption_multiplier)
+        self.__emit_parameter("scattering", volume_scattering)
+        self.__emit_parameter("scattering_multiplier", volume_scattering_multiplier)
+        self.__emit_parameter("phase_function_model", volume_phase_function_model)
+        if volume_phase_function_model == 'henyey':
+            self.__emit_parameter("average_cosine", volume_average_cosine)
+        self.__close_element("volume")
+
+    # ----------------------
     # Write BSDF Mixes.
     # ----------------------
     def __emit_bsdf_mix(self, bsdf_name, bsdf0_name, bsdf0_weight, bsdf1_name, bsdf1_weight):
@@ -2263,7 +2302,7 @@ class Writer(object):
     # Create the material
     # ----------------------------------------------------------------------------------------------
 
-    def __emit_material_element(self, material_name, bsdf_name, edf_name, bssrdf_name, surface_shader_name, scene, material, material_node=None):
+    def __emit_material_element(self, material_name, bsdf_name, edf_name, bssrdf_name, volume_name, surface_shader_name, scene, material, material_node=None):
         if material != "":
             asr_mat = material.appleseed
         bump_map = ""
@@ -2309,6 +2348,8 @@ class Writer(object):
             self.__emit_parameter("bssrdf", bssrdf_name)
         if len(edf_name) > 0:
             self.__emit_parameter("edf", edf_name)
+        if len(volume_name) > 0:
+            self.__emit_parameter("volume", volume_name)
 
         if bump_map != "":
             self.__emit_parameter("displacement_map", bump_map)

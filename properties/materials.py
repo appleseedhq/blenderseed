@@ -68,7 +68,8 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('sheen_brdf', "Sheen BRDF", ""),
                                               ('specular_brdf', "Specular BRDF", ""),
                                               ('specular_btdf', "Specular BTDF", ""),
-                                              ('bssrdf', "Subsurface Scattering BSSRDF", "")],
+                                              ('bssrdf', "Subsurface Scattering BSSRDF", ""),
+                                              ('volume', "Volume", "")],
                                        description="BSDF model for current material layer",
                                        default="lambertian_brdf",
                                        update=refresh_preview)
@@ -1582,6 +1583,54 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                     description="Fresnel Weight",
                                                     default=1.0,
                                                     min=0.0,
+                                                    max=1.0,
+                                                    update=refresh_preview)
+
+    #
+    # Volume
+    #
+
+    volume_absorption = bpy.props.FloatVectorProperty(name="volume_absorption",
+                                                      description="Volume absorption",
+                                                      default=(0.5, 0.5, 0.5),
+                                                      subtype='COLOR',
+                                                      min=0.0,
+                                                      max=1.0,
+                                                      update=refresh_preview)
+
+    volume_absorption_multiplier = bpy.props.FloatProperty(name="volume_absorption_multiplier",
+                                                           description="Volume absorption multiplier",
+                                                           default=1.0,
+                                                           min=0.0,
+                                                           max=200.0,
+                                                           update=refresh_preview)
+
+    volume_scattering = bpy.props.FloatVectorProperty(name="volume_scattering",
+                                                      description="Volume scattering",
+                                                      default=(0.5, 0.5, 0.5),
+                                                      subtype='COLOR',
+                                                      min=0.0,
+                                                      max=1.0,
+                                                      update=refresh_preview)
+
+    volume_scattering_multiplier = bpy.props.FloatProperty(name="volume_scattering_multiplier",
+                                                           description="Volume absorption multiplier",
+                                                           default=1.0,
+                                                           min=0.0,
+                                                           max=200.0,
+                                                           update=refresh_preview)
+
+    volume_phase_function_model = bpy.props.EnumProperty(name="Phase Function Model",
+                                                         description="Volume phase function model",
+                                                         items=[('henyey', "Henyey-Greenstein", ""),
+                                                                ('isotropic', "Isotropic", "")],
+                                                         default="isotropic",
+                                                         update=refresh_preview)
+
+    volume_average_cosine = bpy.props.FloatProperty(name="volume_average_cosine",
+                                                    description="Volume average cosine",
+                                                    default=0.0,
+                                                    min=-1.0,
                                                     max=1.0,
                                                     update=refresh_preview)
 

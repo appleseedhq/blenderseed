@@ -1355,6 +1355,40 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     # Fresnel weight
                     layout.prop(current_layer, "bssrdf_fresnel_weight", text="Fresnel Weight")
 
+                #
+                # Volume
+                #
+
+                elif current_layer.bsdf_type == 'volume':
+
+                    # Absorption
+                    split = layout.split(percentage=0.40)
+                    col = split.column()
+                    col.label("Absorption:")
+                    col = split.column()
+                    col.prop(current_layer, "volume_absorption", text="")
+
+                    # Absorption Multiplier
+                    col = layout.column()
+                    col.prop(current_layer, "volume_absorption_multiplier", text="Absorption Multiplier")
+
+                    # Volume Scattering
+                    split = layout.split(percentage=0.40)
+                    col = split.column()
+                    col.label("Scattering:")
+                    col = split.column()
+                    col.prop(current_layer, "volume_scattering", text="")
+
+                    # Scattering Multiplier
+                    col = layout.column()
+                    col.prop(current_layer, "volume_scattering_multiplier", text="Scattering Multiplier")
+
+                    col = layout.column()
+                    col.prop(current_layer, "volume_phase_function_model")
+
+                    if current_layer.volume_phase_function_model == 'henyey':
+                        col.prop(current_layer, "volume_average_cosine", text="Average Cosine")
+
             #
             # Alpha mapping.
             #
