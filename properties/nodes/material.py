@@ -53,17 +53,43 @@ class AppleseedBSDFSocket(NodeSocket, AppleseedSocket):
         if self.is_linked:
             linked_node = self.links[0].from_node
             if linked_node.node_type in {'ashikhmin',
+                                         'blinn',
                                          'bsdf_blend',
                                          'diffuse_btdf',
+                                         'disney',
+                                         'glass',
                                          'lambertian',
                                          'kelemen',
-                                         'microfacet',
+                                         'metal',
                                          'orennayar',
+                                         'plastic',
+                                         'sheen',
                                          'specular_btdf',
                                          'specular_brdf'}:
                 return linked_node.get_node_name()
         # Return a default BSDF if not linked, or if the incoming node is incompatible.
         return self.socket_value
+
+
+class AppleseedBSSRDFSocket(NodeSocket, AppleseedSocket):
+    bl_idname = "AppleseedMaterialBSSRDF"
+    bl_label = "BSSRDF"
+
+    socket_value = ""
+
+    def draw(self, context, layout, node, text):
+        layout.label(text)
+
+    def draw_color(self, context, node):
+        return 0.0, 0.8, 0.0, 1.0
+
+    def get_socket_value(self,texture_only=True):
+        if self.is_linked:
+                linked_node = self.links[0].from_node
+                if linked_node.node_type == 'bssrdf':
+                    return linked_node.get_node_name()
+        # Return blank if not linked, or if the incoming node is incompatible.             
+        return self.socket_value    
 
 
 class AppleseedAlphaSocket(NodeSocket, AppleseedSocket):
@@ -184,7 +210,8 @@ class AppleseedMaterialNode(Node, AppleseedNode):
 
     def init(self, context):
         self.inputs.new('AppleseedMaterialBSDF', "BSDF")
-        self.inputs.new('AppleseedAlpha', "Alpha")
+        self.inputs.new('AppleseedMaterialBSSRDF', "BSSRDF")
+        self.inputs.new('AppleseedAlpha', "Alpha")                                 
         self.inputs.new('AppleseedNormal', "Normal")
         self.inputs.new('AppleseedEmissionStrength', "Emission Strength")
         self.inputs.new('AppleseedEmissionColor', "Emission Color")
@@ -233,6 +260,7 @@ def register():
     bpy.utils.register_class(AppleseedEmissionStrengthSocket)
     bpy.utils.register_class(AppleseedEmissionExposureSocket)
     bpy.utils.register_class(AppleseedBSDFSocket)
+    bpy.utils.register_class(AppleseedBSSRDFSocket)
     bpy.utils.register_class(AppleseedMaterialNode)
 
 
@@ -243,4 +271,5 @@ def unregister():
     bpy.utils.unregister_class(AppleseedEmissionColorSocket)
     bpy.utils.unregister_class(AppleseedEmissionExposureSocket)
     bpy.utils.unregister_class(AppleseedEmissionStrengthSocket)
+    bpy.utils.unregister_class(AppleseedBSSRDFSocket)
     bpy.utils.unregister_class(AppleseedBSDFSocket)

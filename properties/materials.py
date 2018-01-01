@@ -68,7 +68,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('sheen_brdf', "Sheen BRDF", ""),
                                               ('specular_brdf', "Specular BRDF", ""),
                                               ('specular_btdf', "Specular BTDF", ""),
-                                              ('bssrdf', "Subsurface scattering BSSRDF", "")],
+                                              ('bssrdf', "Subsurface Scattering BSSRDF", "")],
                                        description="BSDF model for current material layer",
                                        default="lambertian_brdf",
                                        update=refresh_preview)

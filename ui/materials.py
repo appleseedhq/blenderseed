@@ -1282,6 +1282,9 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     # Model
                     layout.prop(current_layer, "bssrdf_model")
 
+                    # Weight
+                    layout.prop(current_layer, "bssrdf_weight", text="Weight")
+
                     # Reflectance
                     split = layout.split(percentage=0.40)
                     col = split.column()

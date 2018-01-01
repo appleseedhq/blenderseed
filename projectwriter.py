@@ -755,8 +755,7 @@ class Writer(object):
     # Emit front material.
     def __emit_front_material(self, material, material_name, scene, layers, material_node=None, node_list=None):
         # material_name here is material.name + "_front"
-        bsdf_name = self.__emit_front_material_bsdf_tree(material, material_name, scene, layers, material_node, node_list)
-        bssrdf_name = self.__emit_front_material_bssrdf(material, material_name, scene, layers, material_node, node_list)
+        bsdf_name, bssrdf_name = self.__emit_front_material_tree(material, material_name, scene, layers, material_node, node_list)
 
         if self.__is_light_emitting_material(material.appleseed, scene, material_node):
             edf_name = "{0}_edf".format(material_name)
@@ -774,37 +773,25 @@ class Writer(object):
         self.__emit_material_element(material_name, bsdf_name, "", "", "physical_surface_shader", scene, material, material_node)
 
     # --------------------------------
-    # Write front material BSSRDF
-    # --------------------------------
-    def __emit_front_material_bssrdf(self, material, material_name, scene, layers, material_node=None, node_list=None):
-        bssrdf_name = ""
-
-        for layer in layers:
-            # BSSRDF
-            if layer.bsdf_type == "bssrdf":
-                bssrdf_name = "{0}|{1}".format(material_name, layer.bsdf_name)
-                self.__emit_bssrdf(material, bssrdf_name, scene, layer)
-
-        return bssrdf_name
-
-    # --------------------------------
     # Write front material BSDF tree.
     # --------------------------------
-    def __emit_front_material_bsdf_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
+    def __emit_front_material_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
         """
         Emit the front material's BSDF tree and return the last BSDF name to the calling function (__emit_front_material).
         """
         # material_name here is material.name + "_front"
         bsdfs = []
+        bsdf_name = ""
+        bssrdf_name = ""
 
         # If using nodes.
         if material_node is not None:
-            if not material_node.inputs[0].is_linked:
-                default_bsdf_name = "__default_material_bsdf"
-                return default_bsdf_name
+            if not material_node.inputs[0].is_linked and not material_node.inputs[1].is_linked:
+                bsdf_name = "__default_material_bsdf"
+                return bsdf_name
 
             for node in node_list:
-                if node.node_type not in {'texture', 'normal'}:
+                if node.node_type not in {'texture', 'normal', 'bssrdf'}:
                     bsdf_name = material_name + node.get_node_name()
                 if node.node_type == 'ashikhmin':
                     self.__emit_ashikhmin_brdf(material, bsdf_name, 'front', None, node)
@@ -812,6 +799,9 @@ class Writer(object):
                     self.__emit_blinn_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'bsdf_blend':
                     self.__emit_bsdf_blend(bsdf_name, material_name, node)
+                if node.node_type == 'bssrdf':
+                    bssrdf_name = material_name + node.get_node_name()
+                    self.__emit_bssrdf(material, bssrdf_name, 'front', None, node)
                 if node.node_type == 'diffuse_btdf':
                     self.__emit_diffuse_btdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'disney':
@@ -836,13 +826,13 @@ class Writer(object):
                     self.__emit_specular_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'texture':
                     self.__emit_texture(None, False, scene, node, material_name)
-            return bsdf_name
+            return bsdf_name, bssrdf_name
 
         else:
             # Iterate through layers and export their types, append names and weights to bsdfs list
             if len(layers) == 0:
-                default_bsdf_name = "__default_material_bsdf"
-                return default_bsdf_name
+                bsdf_name = "__default_material_bsdf"
+                return bsdf_name
             else:
                 for layer in layers:
                     # Spec BTDF
@@ -999,7 +989,12 @@ class Writer(object):
                         else:
                             bsdfs.append([kelemen_brdf_bsdf_name, layer.kelemen_brdf_weight])
 
-                return self.__emit_bsdf_mixes(bsdfs)
+                    # Subsurface
+                    if layer.bsdf_type == "bssrdf":
+                        bssrdf_name = "{0}|{1}".format(material_name, layer.bsdf_name)
+                        self.__emit_bssrdf(material, bssrdf_name, scene, layer)
+
+                return self.__emit_bsdf_mixes(bsdfs), bssrdf_name
 
     # ----------------------
     # Write back material.
@@ -2043,61 +2038,88 @@ class Writer(object):
     # Write BSSRDF.
     # ----------------------
     def __emit_bssrdf(self, material, bsdf_name, scene, layer=None, node=None):
-        reflectance_name = ""
-        mfp_name = ""
+        bssrdf_reflectance = ""
+        bssrdf_mfp = ""
 
-        if layer.bssrdf_reflectance_use_texture and layer.bssrdf_reflectance_texture != "":
-            if util.is_uv_img(bpy.data.textures[layer.bssrdf_reflectance_texture]):
-                reflectance_name = layer.bssrdf_reflectance_texture + "_inst"
-                self.__emit_texture(bpy.data.textures[layer.bssrdf_reflectance_texture], False, scene)
+        if node is not None:
+            inputs = node.inputs
+            bssrdf_reflectance = inputs['Reflectance'].get_socket_value(True)
+            bssrdf_reflectance_multiplier = inputs['Reflectance Multiplier'].get_socket_value(True)
+            bssrdf_mfp = inputs['Mean Free Path'].get_socket_value(True)
+            bssrdf_mfp_multiplier = inputs['Mean Free Path Multiplier'].get_socket_value(True)
+            bssrdf_ior = node.bssrdf_ior
+            bssrdf_fresnel_weight = node.bssrdf_fresnel_weight
+            bssrdf_model = node.bssrdf_model
+            bssrdf_weight = inputs['Weight'].get_socket_value(True)
 
-        if reflectance_name == "":
-            reflectance_name = "{0}_bssrdf_reflectance".format(bsdf_name)
-            self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                       layer.bssrdf_reflectance,
-                                                       1)
+            # If the socket is not connected.
+            if not inputs["Reflectance"].is_linked:
+                bssrdf_reflectance_name = bssrdf_reflectance
+                bssrdf_reflectance = "{0}_bssrdf_reflectance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(bssrdf_reflectance,
+                                                           bssrdf_reflectance_name,
+                                                           1)
 
-        if layer.bssrdf_mfp_use_texture and layer.bssrdf_mfp_texture != "":
-            if util.is_uv_img(bpy.data.textures[layer.bssrdf_mfp_texture]):
-                mfp_name = layer.bssrdf_mfp_texture + "_inst"
-                self.__emit_texture(bpy.data.textures[layer.bssrdf_mfp_texture], False, scene)
+            if not inputs["Mean Free Path"].is_linked:
+                bssrdf_mfp_name = bssrdf_mfp
+                bssrdf_mfp = "{0}_bssrdf_mfp".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(bssrdf_mfp,
+                                                           bssrdf_mfp_name,
+                                                           1)
 
-        if mfp_name == "":
-            mfp_name = "{0}_bssrdf_mfp".format(bsdf_name)
-            self.__emit_solid_linear_rgb_color_element(mfp_name,
-                                                       layer.bssrdf_mfp,
-                                                       1)
+        else:
+            if layer.bssrdf_reflectance_use_texture and layer.bssrdf_reflectance_texture != "":
+                if util.is_uv_img(bpy.data.textures[layer.bssrdf_reflectance_texture]):
+                    bssrdf_reflectance = layer.bssrdf_reflectance_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[layer.bssrdf_reflectance_texture], False, scene)
 
-        bssrdf_reflectance_multiplier = layer.bssrdf_reflectance_multiplier
+            if bssrdf_reflectance == "":
+                bssrdf_reflectance = "{0}_bssrdf_reflectance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(bssrdf_reflectance,
+                                                           layer.bssrdf_reflectance,
+                                                           1)
 
-        if layer.bssrdf_reflectance_multiplier_use_texture and layer.bssrdf_reflectance_multiplier_texture != "":
-            if util.is_uv_img(bpy.data.textures[layer.bssrdf_reflectance_multiplier_texture]):
-                bssrdf_reflectance_multiplier = layer.bssrdf_reflectance_multiplier_texture + "_inst"
-                self.__emit_texture(bpy.data.textures[layer.bssrdf_reflectance_multiplier_texture], False, scene)
+            if layer.bssrdf_mfp_use_texture and layer.bssrdf_mfp_texture != "":
+                if util.is_uv_img(bpy.data.textures[layer.bssrdf_mfp_texture]):
+                    bssrdf_mfp_name = layer.bssrdf_mfp_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[layer.bssrdf_mfp_texture], False, scene)
 
-        bssrdf_mfp_multiplier = layer.bssrdf_mfp_multiplier
+            if bssrdf_mfp == "":
+                bssrdf_mfp = "{0}_bssrdf_mfp".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(bssrdf_mfp,
+                                                           layer.bssrdf_mfp,
+                                                           1)
 
-        if layer.bssrdf_mfp_multiplier_use_texture and layer.bssrdf_mfp_multiplier_texture != "":
-            if util.is_uv_img(bpy.data.textures[layer.bssrdf_mfp_multiplier_texture]):
-                bssrdf_mfp_multiplier = layer.bssrdf_mfp_multiplier_texture + "_inst"
-                self.__emit_texture(bpy.data.textures[layer.bssrdf_mfp_multiplier_texture], False, scene)
+            bssrdf_reflectance_multiplier = layer.bssrdf_reflectance_multiplier
 
-        bssrdf_weight = layer.bssrdf_weight
+            if layer.bssrdf_reflectance_multiplier_use_texture and layer.bssrdf_reflectance_multiplier_texture != "":
+                if util.is_uv_img(bpy.data.textures[layer.bssrdf_reflectance_multiplier_texture]):
+                    bssrdf_reflectance_multiplier = layer.bssrdf_reflectance_multiplier_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[layer.bssrdf_reflectance_multiplier_texture], False, scene)
 
-        if layer.bssrdf_weight_use_texture and layer.bssrdf_weight_texture != "":
-            if util.is_uv_img(bpy.data.textures[layer.bssrdf_weight_texture]):
-                bssrdf_weight = layer.bssrdf_weight_texture + "_inst"
-                self.__emit_texture(bpy.data.textures[layer.bssrdf_weight_texture], False, scene)
+            bssrdf_mfp_multiplier = layer.bssrdf_mfp_multiplier
 
-        bssrdf_ior = layer.bssrdf_ior
-        bssrdf_fresnel_weight = layer.bssrdf_fresnel_weight
-        bssrdf_model = layer.bssrdf_model
+            if layer.bssrdf_mfp_multiplier_use_texture and layer.bssrdf_mfp_multiplier_texture != "":
+                if util.is_uv_img(bpy.data.textures[layer.bssrdf_mfp_multiplier_texture]):
+                    bssrdf_mfp_multiplier = layer.bssrdf_mfp_multiplier_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[layer.bssrdf_mfp_multiplier_texture], False, scene)
+
+            bssrdf_weight = layer.bssrdf_weight
+
+            if layer.bssrdf_weight_use_texture and layer.bssrdf_weight_texture != "":
+                if util.is_uv_img(bpy.data.textures[layer.bssrdf_weight_texture]):
+                    bssrdf_weight = layer.bssrdf_weight_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[layer.bssrdf_weight_texture], False, scene)
+
+            bssrdf_ior = layer.bssrdf_ior
+            bssrdf_fresnel_weight = layer.bssrdf_fresnel_weight
+            bssrdf_model = layer.bssrdf_model
 
         self.__open_element('bssrdf name="{0}" model="%s"'.format(bsdf_name) % bssrdf_model)
         self.__emit_parameter("weight", bssrdf_weight)
-        self.__emit_parameter("reflectance", reflectance_name)
+        self.__emit_parameter("reflectance", bssrdf_reflectance)
         self.__emit_parameter("reflectance_multiplier", bssrdf_reflectance_multiplier)
-        self.__emit_parameter("mfp", mfp_name)
+        self.__emit_parameter("mfp", bssrdf_mfp)
         self.__emit_parameter("mfp_multiplier", bssrdf_mfp_multiplier)
         self.__emit_parameter("ior", bssrdf_ior)
         self.__emit_parameter("fresnel_weight", bssrdf_fresnel_weight)
@@ -2254,11 +2276,11 @@ class Writer(object):
             # Node material.
             if material_node is not None:
                 inputs = material_node.inputs
-                material_alpha_map = inputs[1].get_socket_value(True)
-                bump_map = inputs[2].get_socket_value(False)
+                material_alpha_map = inputs[2].get_socket_value(True)
+                bump_map = inputs[3].get_socket_value(False)
                 if bump_map != "":
                     bump_map = bump_map + "_inst"
-                    material_bump_amplitude, use_normalmap = inputs[2].get_normal_params()
+                    material_bump_amplitude, use_normalmap = inputs[3].get_normal_params()
                     method = "normal" if use_normalmap else "bump"
             else:
                 if asr_mat.material_use_bump_tex:

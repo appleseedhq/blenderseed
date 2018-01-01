@@ -133,6 +133,8 @@ appleseed_node_categories = [
         nodeitems_utils.NodeItem("AppleseedSpecBRDFNode"),
         nodeitems_utils.NodeItem("AppleseedSpecBTDFNode"),
         nodeitems_utils.NodeItem("AppleseedBlendNode")]),
+    AppleseedNodeCategory("BSSRDF", "BSSRDF", items=[
+        nodeitems_utils.NodeItem("AppleseedBSSRDFNode")]),
     AppleseedNodeCategory("TEXTURES", "Texture", items=[
         nodeitems_utils.NodeItem("AppleseedTexNode"),
         nodeitems_utils.NodeItem("AppleseedNormalNode")]),
@@ -170,6 +172,7 @@ def appleseed_scene_loaded(dummy):
 
 # Load the modules after classes have been created.
 from . import ashikhminbrdf
+from . import bssrdf
 from . import blinnbrdf
 from . import bsdfblend
 from . import diffusebtdf
@@ -194,6 +197,7 @@ def register():
     nodeitems_utils.register_node_categories("APPLESEED", appleseed_node_categories)
     bpy.utils.register_class(AppleseedNodeTree)
     ashikhminbrdf.register()
+    bssrdf.register()
     blinnbrdf.register()
     bsdfblend.register()
     diffusebtdf.register()
@@ -216,6 +220,7 @@ def unregister():
     nodeitems_utils.unregister_node_categories("APPLESEED")
     bpy.utils.unregister_class(AppleseedNodeTree)
     ashikhminbrdf.unregister()
+    bssrdf.unregister()
     blinnbrdf.unregister()
     bsdfblend.unregister()
     disneybrdf.unregister()
