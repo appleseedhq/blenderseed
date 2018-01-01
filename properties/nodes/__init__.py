@@ -46,6 +46,7 @@ class AppleseedNodeTree(NodeTree):
         renderer = context.scene.render.engine
         return renderer == 'APPLESEED_RENDER'
 
+    # This following code is required to avoid a max recursion error when Blender checks for node updates
     def update(self):
         self.refresh = True
 
