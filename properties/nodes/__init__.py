@@ -49,10 +49,12 @@ class AppleseedNodeTree(NodeTree):
     def update(self):
         self.refresh = True
 
-    def acknowledge_change(self, context):
-        self.refresh = False
+    def acknowledge_connection(self, context):
+        while self.refresh:
+            self.refresh = False
+            break
 
-    refresh = bpy.props.BoolProperty(name='update_preview', default=False, update=acknowledge_change)
+    refresh = bpy.props.BoolProperty(name='Links Changed', default=False, update=acknowledge_connection)
 
 
 class AppleseedNode:
