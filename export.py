@@ -28,6 +28,9 @@
 
 import bpy
 from bpy_extras.io_utils import ExportHelper
+import os
+import subprocess
+import shutil
 
 from . import projectwriter
 from . import util
@@ -44,14 +47,34 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
     filename_ext = ".appleseed"
     filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'})
 
+    compress_export = bpy.props.BoolProperty(name="Create compressed archive",
+                                             description="Compress export (including all textures) into archive file",
+                                             default=False)
+
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render
         return renderer.engine == 'APPLESEED_RENDER'
 
     def execute(self, context):
+        export_path = util.realpath(self.filepath)
         writer = projectwriter.Writer()
-        writer.write(context.scene, util.realpath(self.filepath))
+        writer.write(context.scene, export_path)
+
+        if self.compress_export:
+            appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
+            appleseed_bin_path = os.path.join(appleseed_bin_dir, "projecttool")
+            cmd = (appleseed_bin_path, 'pack', export_path)
+            try:
+                process = subprocess.Popen(cmd, cwd=appleseed_bin_dir, env=os.environ.copy(), stdout=subprocess.PIPE)
+                process.wait()
+            except OSError as e:
+                self.report({'ERROR'}, "Failed to run {0} with project {1}: {2}.".format(appleseed_bin_path, export_path, e))
+                return
+            dir_path = os.path.dirname(export_path)
+            shutil.rmtree(os.path.join(dir_path, "meshes"))
+            os.remove(export_path)
+
         return {'FINISHED'}
 
 

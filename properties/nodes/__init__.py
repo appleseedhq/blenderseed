@@ -135,6 +135,8 @@ appleseed_node_categories = [
         nodeitems_utils.NodeItem("AppleseedBlendNode")]),
     AppleseedNodeCategory("BSSRDF", "BSSRDF", items=[
         nodeitems_utils.NodeItem("AppleseedBSSRDFNode")]),
+    AppleseedNodeCategory("Volume", "Volume", items=[
+        nodeitems_utils.NodeItem("AppleseedVolumeNode")]),
     AppleseedNodeCategory("TEXTURES", "Texture", items=[
         nodeitems_utils.NodeItem("AppleseedTexNode"),
         nodeitems_utils.NodeItem("AppleseedNormalNode")]),
@@ -188,6 +190,7 @@ from . import specularbrdf
 from . import specularbtdf
 from . import texture
 from . import normal
+from . import volume
 from . import material
 
 
@@ -213,6 +216,7 @@ def register():
     specularbtdf.register()
     texture.register()
     normal.register()
+    volume.register()
     material.register()
 
 
@@ -235,6 +239,7 @@ def unregister():
     specularbrdf.unregister()
     specularbtdf.unregister()
     texture.unregister()
+    volume.unregister()
     material.unregister()
     normal.unregister()
     bpy.app.handlers.load_post.remove(appleseed_scene_loaded)

@@ -1474,7 +1474,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                      update=refresh_preview)
 
     #
-    # BSSDF
+    # BSSRDF
     #
 
     bssrdf_model = bpy.props.EnumProperty(name="BSSRDF Model",
@@ -1498,7 +1498,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                        update=refresh_preview)
 
     bssrdf_weight_texture = bpy.props.StringProperty(name="bssrdf_weight_texture",
-                                                     description="Texture to influence bssrdf weight",
+                                                     description="Texture to influence BSSRDF weight",
                                                      default="",
                                                      update=refresh_preview)
 
@@ -1516,7 +1516,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                             update=refresh_preview)
 
     bssrdf_reflectance_texture = bpy.props.StringProperty(name="bssrdf_reflectance_texture",
-                                                          description="Texture to influence bssrdf reflectance",
+                                                          description="Texture to influence BSSRDF reflectance",
                                                           default="",
                                                           update=refresh_preview)
 
@@ -1533,7 +1533,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                        update=refresh_preview)
 
     bssrdf_reflectance_multiplier_texture = bpy.props.StringProperty(name="bssrdf_reflectance_multiplier_texture",
-                                                                     description="Texture to influence bssrdf reflectance multiplier",
+                                                                     description="Texture to influence BSSRDF reflectance multiplier",
                                                                      default="",
                                                                      update=refresh_preview)
 
@@ -1546,12 +1546,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                update=refresh_preview)
 
     bssrdf_mfp_use_texture = bpy.props.BoolProperty(name="bssrdf_mfp_use_texture",
-                                                    description="Use a texture for the BSSRDF mfp",
+                                                    description="Use a texture for the Mean Free Path",
                                                     default=False,
                                                     update=refresh_preview)
 
     bssrdf_mfp_texture = bpy.props.StringProperty(name="bssrdf_mfp_texture",
-                                                  description="Texture to influence bssrdf mfp",
+                                                  description="Texture to influence the Mean Free Path",
                                                   default="",
                                                   update=refresh_preview)
 
@@ -1563,12 +1563,12 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                     update=refresh_preview)
 
     bssrdf_mfp_multiplier_use_texture = bpy.props.BoolProperty(name="bssrdf_mfp_multiplier_use_texture",
-                                                               description="Use a texture for the BSSRDF mfp multiplier",
+                                                               description="Use a texture for the Mean Free Path multiplier",
                                                                default=False,
                                                                update=refresh_preview)
 
     bssrdf_mfp_multiplier_texture = bpy.props.StringProperty(name="bssrdf_mfp_multiplier_texture",
-                                                             description="Texture to influence bssrdf mfp multiplier",
+                                                             description="Texture to influence the Mean Free Path multiplier",
                                                              default="",
                                                              update=refresh_preview)
 

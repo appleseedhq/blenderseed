@@ -787,12 +787,12 @@ class Writer(object):
 
         # If using nodes.
         if material_node is not None:
-            if not material_node.inputs[0].is_linked and not material_node.inputs[1].is_linked:
+            if not material_node.inputs[0].is_linked and not material_node.inputs[1].is_linked and not material_node.inputs[2].is_linked:
                 bsdf_name = "__default_material_bsdf"
                 return bsdf_name, bssrdf_name, volume_name
 
             for node in node_list:
-                if node.node_type not in {'texture', 'normal', 'bssrdf'}:
+                if node.node_type not in {'texture', 'normal', 'bssrdf', 'volume'}:
                     bsdf_name = material_name + node.get_node_name()
                 if node.node_type == 'ashikhmin':
                     self.__emit_ashikhmin_brdf(material, bsdf_name, 'front', None, node)
@@ -803,6 +803,9 @@ class Writer(object):
                 if node.node_type == 'bssrdf':
                     bssrdf_name = material_name + node.get_node_name()
                     self.__emit_bssrdf(material, bssrdf_name, 'front', None, node)
+                if node.node_type == 'volume':
+                    volume_name = material_name + node.get_node_name()
+                    self.__emit_volume(material, volume_name, 'front', None, node)
                 if node.node_type == 'diffuse_btdf':
                     self.__emit_diffuse_btdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'disney':
@@ -2041,7 +2044,7 @@ class Writer(object):
         self.__close_element("bsdf")
 
     # ----------------------
-    # Write BSSRDF.
+    # Write BSSRDF
     # ----------------------
     def __emit_bssrdf(self, material, bsdf_name, scene, layer=None, node=None):
         bssrdf_reflectance = ""
@@ -2135,29 +2138,36 @@ class Writer(object):
     # Write BSSRDF.
     # ----------------------
     def __emit_volume(self, material, volume_name, scene, layer=None, node=None):
-        volume_absorption = ""
-        volume_absorption_multiplier = layer.volume_absorption_multiplier
-        volume_scattering = ""
-        volume_scattering_multiplier = layer.volume_scattering_multiplier
-        volume_phase_function_model = layer.volume_phase_function_model
-        volume_average_cosine = layer.volume_average_cosine
+        volume_absorption_name = "{0}_volume_absorption".format(volume_name)
+        volume_scattering_name = "{0}_volume_scattering".format(volume_name)
 
-        if volume_absorption == "":
-            volume_absorption = "{0}_volume_absorption".format(volume_name)
-            self.__emit_solid_linear_rgb_color_element(volume_absorption,
-                                                       layer.volume_absorption,
-                                                       1)
+        if node is not None:
+            volume_absorption = node.volume_absorption
+            volume_absorption_multiplier = node.volume_absorption_multiplier
+            volume_scattering = node.volume_scattering
+            volume_scattering_multiplier = node.volume_scattering_multiplier
+            volume_phase_function_model = node.volume_phase_function_model
+            volume_average_cosine = node.volume_average_cosine
 
-        if volume_scattering == "":
-            volume_scattering = "{0}_volume_scattering".format(volume_name)
-            self.__emit_solid_linear_rgb_color_element(volume_scattering,
-                                                       layer.volume_scattering,
-                                                       1)
+        else:
+            volume_absorption = layer.volume_absorption
+            volume_absorption_multiplier = layer.volume_absorption_multiplier
+            volume_scattering = layer.volume_scattering
+            volume_scattering_multiplier = layer.volume_scattering_multiplier
+            volume_phase_function_model = layer.volume_phase_function_model
+            volume_average_cosine = layer.volume_average_cosine
+
+        self.__emit_solid_linear_rgb_color_element(volume_absorption_name,
+                                                   volume_absorption,
+                                                   1)
+        self.__emit_solid_linear_rgb_color_element(volume_scattering_name,
+                                                   volume_scattering,
+                                                   1)
 
         self.__open_element('volume name="{0}" model="generic_volume"'.format(volume_name))
-        self.__emit_parameter("absorption", volume_absorption)
+        self.__emit_parameter("absorption", volume_absorption_name)
         self.__emit_parameter("absorption_multiplier", volume_absorption_multiplier)
-        self.__emit_parameter("scattering", volume_scattering)
+        self.__emit_parameter("scattering", volume_scattering_name)
         self.__emit_parameter("scattering_multiplier", volume_scattering_multiplier)
         self.__emit_parameter("phase_function_model", volume_phase_function_model)
         if volume_phase_function_model == 'henyey':
@@ -2315,11 +2325,11 @@ class Writer(object):
             # Node material.
             if material_node is not None:
                 inputs = material_node.inputs
-                material_alpha_map = inputs[2].get_socket_value(True)
-                bump_map = inputs[3].get_socket_value(False)
+                material_alpha_map = inputs[3].get_socket_value(True)
+                bump_map = inputs[4].get_socket_value(False)
                 if bump_map != "":
                     bump_map = bump_map + "_inst"
-                    material_bump_amplitude, use_normalmap = inputs[3].get_normal_params()
+                    material_bump_amplitude, use_normalmap = inputs[4].get_normal_params()
                     method = "normal" if use_normalmap else "bump"
             else:
                 if asr_mat.material_use_bump_tex:
