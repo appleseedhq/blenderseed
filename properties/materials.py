@@ -68,8 +68,7 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('sheen_brdf', "Sheen BRDF", ""),
                                               ('specular_brdf', "Specular BRDF", ""),
                                               ('specular_btdf', "Specular BTDF", ""),
-                                              ('bssrdf', "Subsurface Scattering BSSRDF", ""),
-                                              ('volume', "Volume", "")],
+                                              ('none', "None", "")],
                                        description="BSDF model for current material layer",
                                        default="lambertian_brdf",
                                        update=refresh_preview)
@@ -1473,16 +1472,35 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                      default="",
                                                      update=refresh_preview)
 
+
+class AppleseedMatProps(bpy.types.PropertyGroup):
+    """
+    appleseed Material Properties.
+    """
+
+    # Per-layer properties are stored in AppleseedMatLayerProps.
+    layers = bpy.props.CollectionProperty(type=AppleseedMatLayerProps,
+                                          name="appleseed Material Layers",
+                                          description="")
+
+    layer_index = bpy.props.IntProperty(name="layer_index",
+                                        description="",
+                                        default=0,
+                                        min=0,
+                                        max=16,
+                                        update=refresh_preview)
+
     #
     # BSSRDF
     #
 
     bssrdf_model = bpy.props.EnumProperty(name="BSSRDF Model",
                                           description="BSSRDF model",
-                                          items=[('normalized_diffusion_bssrdf', "Normalized Diffusion", ""),
+                                          items=[('none', "None", ""),
+                                                 ('normalized_diffusion_bssrdf', "Normalized Diffusion", ""),
                                                  ('better_dipole_bssrdf', "Dipole", ""),
                                                  ('gaussian_bssrdf', "Gaussian", "")],
-                                          default='normalized_diffusion_bssrdf',
+                                          default="none",
                                           update=refresh_preview)
 
     bssrdf_weight = bpy.props.FloatProperty(name="bssrdf_weight",
@@ -1590,6 +1608,14 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
     # Volume
     #
 
+    volume_phase_function_model = bpy.props.EnumProperty(name="Volumetric Model",
+                                                         description="Volume phase function model",
+                                                         items=[('none', "None", ""),
+                                                                ('henyey', "Henyey-Greenstein", ""),
+                                                                ('isotropic', "Isotropic", "")],
+                                                         default="none",
+                                                         update=refresh_preview)
+
     volume_absorption = bpy.props.FloatVectorProperty(name="volume_absorption",
                                                       description="Volume absorption",
                                                       default=(0.5, 0.5, 0.5),
@@ -1620,13 +1646,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                            max=200.0,
                                                            update=refresh_preview)
 
-    volume_phase_function_model = bpy.props.EnumProperty(name="Phase Function Model",
-                                                         description="Volume phase function model",
-                                                         items=[('henyey', "Henyey-Greenstein", ""),
-                                                                ('isotropic', "Isotropic", "")],
-                                                         default="isotropic",
-                                                         update=refresh_preview)
-
     volume_average_cosine = bpy.props.FloatProperty(name="volume_average_cosine",
                                                     description="Volume average cosine",
                                                     default=0.0,
@@ -1634,23 +1653,9 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                     max=1.0,
                                                     update=refresh_preview)
 
-
-class AppleseedMatProps(bpy.types.PropertyGroup):
-    """
-    appleseed Material Properties.
-    """
-
-    # Per-layer properties are stored in AppleseedMatLayerProps.
-    layers = bpy.props.CollectionProperty(type=AppleseedMatLayerProps,
-                                          name="appleseed Material Layers",
-                                          description="")
-
-    layer_index = bpy.props.IntProperty(name="layer_index",
-                                        description="",
-                                        default=0,
-                                        min=0,
-                                        max=16,
-                                        update=refresh_preview)
+    #
+    # EDF
+    #
 
     use_light_emission = bpy.props.BoolProperty(name="use_light_emission",
                                                 description="Enable material light emission",
@@ -1699,6 +1704,10 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                max=10,
                                                update=refresh_preview)
 
+    #
+    # Bump/Normal
+    #
+
     material_use_bump_tex = bpy.props.BoolProperty(name="material_use_bump_tex",
                                                    description="Use a texture to influence bump / normal",
                                                    default=False,
@@ -1727,6 +1736,10 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                    min=0.01,
                                                    max=10,
                                                    update=refresh_preview)
+
+    #
+    # Alpha
+    #
 
     material_alpha_map = bpy.props.StringProperty(name="material_alpha_map",
                                                   description="Alpha texture",

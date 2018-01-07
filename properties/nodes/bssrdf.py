@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedBSSRDFReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBSSRDFReflectance"
     bl_label = "Reflectance"
 
-    socket_value = AppleseedMatLayerProps.bssrdf_reflectance
+    socket_value = AppleseedMatProps.bssrdf_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedBSSDFReflectanceMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBSSDFReflectanceMultiplier"
     bl_label = "Reflectance Multiplier"
 
-    socket_value = AppleseedMatLayerProps.bssrdf_reflectance_multiplier
+    socket_value = AppleseedMatProps.bssrdf_reflectance_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -69,7 +69,7 @@ class AppleseedBSSRDFMfpSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBSSRDFMfp"
     bl_label = "Mean Free Path"
 
-    socket_value = AppleseedMatLayerProps.bssrdf_mfp
+    socket_value = AppleseedMatProps.bssrdf_mfp
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -85,7 +85,7 @@ class AppleseedBSSRDFMfpMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBSSRDFMfpMultiplier"
     bl_label = "Mean Free Path Multiplier"
 
-    socket_value = AppleseedMatLayerProps.bssrdf_mfp_multiplier
+    socket_value = AppleseedMatProps.bssrdf_mfp_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -101,7 +101,7 @@ class AppleseedBSSRDFWeightSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBSSRDFWeight"
     bl_label = "Weight"
 
-    socket_value = AppleseedMatLayerProps.bssrdf_weight
+    socket_value = AppleseedMatProps.bssrdf_weight
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

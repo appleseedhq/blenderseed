@@ -33,7 +33,8 @@ from . import AppleseedNode
 
 
 class AppleseedVolumeNode(Node, AppleseedNode):
-    """appleseed Metal BRDF Node"""
+    """appleseed Volume Node"""
+
     bl_idname = "AppleseedVolumeNode"
     bl_label = "Volume"
     bl_icon = 'SMOOTH'
@@ -88,7 +89,7 @@ class AppleseedVolumeNode(Node, AppleseedNode):
         layout.prop(self, "volume_scattering_multiplier", text="Scattering Multiplier")
         layout.prop(self, "volume_phase_function_model", text="Phase Function Model")
         if self.volume_phase_function_model == 'henyey':
-            layout.prop(self, "volume_average_cosine", text="Avergage Cosine")
+            layout.prop(self, "volume_average_cosine", text="Average Cosine")
 
     def draw_buttons_ext(self, context, layout):
         pass

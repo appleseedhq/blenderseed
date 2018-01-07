@@ -88,9 +88,9 @@ class MATERIAL_UL_BSDF_slots(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         BSDF = item
         bsdf_type = BSDF.bsdf_type
-        bsdf_type_name = bsdf_type[0].upper() + bsdf_type[1:-5] + " " + bsdf_type[-4:].upper()
+        bsdf_type_name = bsdf_type[0].upper() + bsdf_type[1:-5] + " " + bsdf_type[-4:].upper() if bsdf_type != "none" else "None"
         if 'DEFAULT' in self.layout_type:
-            layout.label(text=BSDF.name + "  |  " + bsdf_type_name, translate=False, icon_value=icon)
+            layout.label(text=BSDF.bsdf_name + "  |  " + bsdf_type_name, translate=False, icon_value=icon)
 
 
 class AppleseedMaterialShading(bpy.types.Panel):
@@ -1273,121 +1273,120 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     # volume density
                     layout.prop(current_layer, "specular_btdf_volume_scale", text="Volume Scale")
 
-                #
-                # BSSRDF
-                #
+            layout.separator()
 
-                elif current_layer.bsdf_type == 'bssrdf':
+            #
+            # BSSRDF
+            #
 
-                    # Model
-                    layout.prop(current_layer, "bssrdf_model")
+            # Model
+            layout.prop(asr_mat, "bssrdf_model")
+            if asr_mat.bssrdf_model != 'none':
+                # Weight
+                layout.prop(asr_mat, "bssrdf_weight", text="Weight")
 
-                    # Weight
-                    layout.prop(current_layer, "bssrdf_weight", text="Weight")
+                # Reflectance
+                split = layout.split(percentage=0.40)
+                col = split.column()
+                col.label("Reflectance:")
+                split = split.split(percentage=0.83)
+                col = split.column()
+                col.prop(asr_mat, "bssrdf_reflectance", text="")
 
-                    # Reflectance
-                    split = layout.split(percentage=0.40)
-                    col = split.column()
-                    col.label("Reflectance:")
-                    split = split.split(percentage=0.83)
-                    col = split.column()
-                    col.prop(current_layer, "bssrdf_reflectance", text="")
+                if asr_mat.bssrdf_reflectance_use_texture:
+                    layout.prop_search(asr_mat, "bssrdf_reflectance_texture", material, "texture_slots", text="")
 
-                    if current_layer.bssrdf_reflectance_use_texture:
-                        layout.prop_search(current_layer, "bssrdf_reflectance_texture", material, "texture_slots", text="")
+                split = split.split(percentage=1.0)
+                col = split.column()
+                col.prop(asr_mat, "bssrdf_reflectance_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+                if asr_mat.bssrdf_reflectance_texture != '' and asr_mat.bssrdf_reflectance_use_texture:
+                    specular_texture = bpy.data.textures[asr_mat.bssrdf_reflectance_texture]
+                    layout.prop(specular_texture.image.colorspace_settings, "name", text="Color Space")
 
-                    split = split.split(percentage=1.0)
-                    col = split.column()
-                    col.prop(current_layer, "bssrdf_reflectance_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if current_layer.bssrdf_reflectance_texture != '' and current_layer.bssrdf_reflectance_use_texture:
-                        specular_texture = bpy.data.textures[current_layer.bssrdf_reflectance_texture]
-                        layout.prop(specular_texture.image.colorspace_settings, "name", text="Color Space")
+                # Reflectance multiplier
+                split = layout.split(percentage=0.90)
+                col = split.column()
+                col.prop(asr_mat, "bssrdf_reflectance_multiplier", text="Reflectance Multiplier")
 
-                    # Reflectance multiplier
-                    split = layout.split(percentage=0.90)
-                    col = split.column()
-                    col.prop(current_layer, "bssrdf_reflectance_multiplier", text="Reflectance Multiplier")
+                if asr_mat.bssrdf_reflectance_multiplier_use_texture:
+                    layout.prop_search(asr_mat, "bssrdf_reflectance_multiplier_texture", material, "texture_slots", text="")
 
-                    if current_layer.bssrdf_reflectance_multiplier_use_texture:
-                        layout.prop_search(current_layer, "bssrdf_reflectance_multiplier_texture", material, "texture_slots", text="")
+                col = split.column()
+                col.prop(asr_mat, "bssrdf_reflectance_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+                if asr_mat.bssrdf_reflectance_multiplier_texture != '' and asr_mat.bssrdf_reflectance_multiplier_use_texture:
+                    reflect_mult_tex = bpy.data.textures[asr_mat.bssrdf_reflectance_multiplier_texture]
+                    layout.prop(reflect_mult_tex.image.colorspace_settings, "name", text="Color Space")
 
-                    col = split.column()
-                    col.prop(current_layer, "bssrdf_reflectance_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if current_layer.bssrdf_reflectance_multiplier_texture != '' and current_layer.bssrdf_reflectance_multiplier_use_texture:
-                        reflect_mult_tex = bpy.data.textures[current_layer.bssrdf_reflectance_multiplier_texture]
-                        layout.prop(reflect_mult_tex.image.colorspace_settings, "name", text="Color Space")
+                # MFP
+                split = layout.split(percentage=0.40)
+                col = split.column()
+                col.label("Mean Free Path:")
+                split = split.split(percentage=0.83)
+                col = split.column()
+                col.prop(asr_mat, "bssrdf_mfp", text="")
 
-                    # MFP
-                    split = layout.split(percentage=0.40)
-                    col = split.column()
-                    col.label("Mean Free Path:")
-                    split = split.split(percentage=0.83)
-                    col = split.column()
-                    col.prop(current_layer, "bssrdf_mfp", text="")
+                if asr_mat.bssrdf_mfp_use_texture:
+                    layout.prop_search(asr_mat, "bssrdf_mfp_texture", material, "texture_slots", text="")
 
-                    if current_layer.bssrdf_mfp_use_texture:
-                        layout.prop_search(current_layer, "bssrdf_mfp_texture", material, "texture_slots", text="")
+                split = split.split(percentage=1.0)
+                col = split.column()
+                col.prop(asr_mat, "bssrdf_mfp_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+                if asr_mat.bssrdf_mfp_texture != '' and asr_mat.bssrdf_mfp_use_texture:
+                    meanfp_texture = bpy.data.textures[asr_mat.bssrdf_mfp_texture]
+                    layout.prop(meanfp_texture.image.colorspace_settings, "name", text="Color Space")
 
-                    split = split.split(percentage=1.0)
-                    col = split.column()
-                    col.prop(current_layer, "bssrdf_mfp_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if current_layer.bssrdf_mfp_texture != '' and current_layer.bssrdf_mfp_use_texture:
-                        meanfp_texture = bpy.data.textures[current_layer.bssrdf_mfp_texture]
-                        layout.prop(meanfp_texture.image.colorspace_settings, "name", text="Color Space")
+                # MFP multiplier
+                split = layout.split(percentage=0.90)
+                col = split.column()
+                col.prop(asr_mat, "bssrdf_mfp_multiplier", text="Mean Free Path Multiplier")
 
-                    # MFP multiplier
-                    split = layout.split(percentage=0.90)
-                    col = split.column()
-                    col.prop(current_layer, "bssrdf_mfp_multiplier", text="Mean Free Path Multiplier")
+                if asr_mat.bssrdf_mfp_multiplier_use_texture:
+                    layout.prop_search(asr_mat, "bssrdf_mfp_multiplier_texture", material, "texture_slots", text="")
 
-                    if current_layer.bssrdf_mfp_multiplier_use_texture:
-                        layout.prop_search(current_layer, "bssrdf_mfp_multiplier_texture", material, "texture_slots", text="")
+                col = split.column()
+                col.prop(asr_mat, "bssrdf_mfp_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+                if asr_mat.bssrdf_mfp_multiplier_texture != '' and asr_mat.bssrdf_mfp_multiplier_use_texture:
+                    mfp_mult_tex = bpy.data.textures[asr_mat.bssrdf_mfp_multiplier_texture]
+                    layout.prop(mfp_mult_tex.image.colorspace_settings, "name", text="Color Space")
 
-                    col = split.column()
-                    col.prop(current_layer, "bssrdf_mfp_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if current_layer.bssrdf_mfp_multiplier_texture != '' and current_layer.bssrdf_mfp_multiplier_use_texture:
-                        mfp_mult_tex = bpy.data.textures[current_layer.bssrdf_mfp_multiplier_texture]
-                        layout.prop(mfp_mult_tex.image.colorspace_settings, "name", text="Color Space")
+                # IOR
+                layout.prop(asr_mat, "bssrdf_ior", text="Index of Refraction")
 
-                    # IOR
-                    layout.prop(current_layer, "bssrdf_ior", text="Index of Refraction")
+                # Fresnel weight
+                layout.prop(asr_mat, "bssrdf_fresnel_weight", text="Fresnel Weight")
 
-                    # Fresnel weight
-                    layout.prop(current_layer, "bssrdf_fresnel_weight", text="Fresnel Weight")
+            layout.separator()
 
-                #
-                # Volume
-                #
+            #
+            # Volume
+            #
+            col = layout.column()
+            col.prop(asr_mat, "volume_phase_function_model")
+            if asr_mat.volume_phase_function_model != 'none':
+                # Absorption
+                split = layout.split(percentage=0.40)
+                col = split.column()
+                col.label("Absorption:")
+                col = split.column()
+                col.prop(asr_mat, "volume_absorption", text="")
 
-                elif current_layer.bsdf_type == 'volume':
+                # Absorption Multiplier
+                col = layout.column()
+                col.prop(asr_mat, "volume_absorption_multiplier", text="Absorption Multiplier")
 
-                    # Absorption
-                    split = layout.split(percentage=0.40)
-                    col = split.column()
-                    col.label("Absorption:")
-                    col = split.column()
-                    col.prop(current_layer, "volume_absorption", text="")
+                # Volume Scattering
+                split = layout.split(percentage=0.40)
+                col = split.column()
+                col.label("Scattering:")
+                col = split.column()
+                col.prop(asr_mat, "volume_scattering", text="")
 
-                    # Absorption Multiplier
-                    col = layout.column()
-                    col.prop(current_layer, "volume_absorption_multiplier", text="Absorption Multiplier")
+                # Scattering Multiplier
+                col = layout.column()
+                col.prop(asr_mat, "volume_scattering_multiplier", text="Scattering Multiplier")
 
-                    # Volume Scattering
-                    split = layout.split(percentage=0.40)
-                    col = split.column()
-                    col.label("Scattering:")
-                    col = split.column()
-                    col.prop(current_layer, "volume_scattering", text="")
-
-                    # Scattering Multiplier
-                    col = layout.column()
-                    col.prop(current_layer, "volume_scattering_multiplier", text="Scattering Multiplier")
-
-                    col = layout.column()
-                    col.prop(current_layer, "volume_phase_function_model")
-
-                    if current_layer.volume_phase_function_model == 'henyey':
-                        col.prop(current_layer, "volume_average_cosine", text="Average Cosine")
+                if asr_mat.volume_phase_function_model == 'henyey':
+                    col.prop(asr_mat, "volume_average_cosine", text="Average Cosine")
 
             #
             # Alpha mapping.

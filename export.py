@@ -63,13 +63,13 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
 
         if self.compress_export:
             appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
-            appleseed_bin_path = os.path.join(appleseed_bin_dir, "projecttool")
-            cmd = (appleseed_bin_path, 'pack', export_path)
+            projecttool_path = os.path.join(appleseed_bin_dir, "projecttool")
+            cmd = (projecttool_path, 'pack', export_path)
             try:
                 process = subprocess.Popen(cmd, cwd=appleseed_bin_dir, env=os.environ.copy(), stdout=subprocess.PIPE)
                 process.wait()
             except OSError as e:
-                self.report({'ERROR'}, "Failed to run {0} with project {1}: {2}.".format(appleseed_bin_path, export_path, e))
+                self.report({'ERROR'}, "Failed to run {0} with project {1}: {2}.".format(projecttool_path, export_path, e))
                 return
             dir_path = os.path.dirname(export_path)
             shutil.rmtree(os.path.join(dir_path, "meshes"))

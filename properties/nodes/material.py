@@ -85,11 +85,11 @@ class AppleseedBSSRDFSocket(NodeSocket, AppleseedSocket):
 
     def get_socket_value(self,texture_only=True):
         if self.is_linked:
-                linked_node = self.links[0].from_node
-                if linked_node.node_type == 'bssrdf':
-                    return linked_node.get_node_name()
-        # Return blank if not linked, or if the incoming node is incompatible.             
-        return self.socket_value 
+            linked_node = self.links[0].from_node
+            if linked_node.node_type == 'bssrdf':
+                return linked_node.get_node_name()
+        # Return blank if not linked, or if the incoming node is incompatible.
+        return self.socket_value
 
 
 class AppleseedVolumeSocket(NodeSocket, AppleseedSocket):
@@ -104,13 +104,13 @@ class AppleseedVolumeSocket(NodeSocket, AppleseedSocket):
     def draw_color(self, context, node):
         return 0.0, 0.8, 0.0, 1.0
 
-    def get_socket_value(self,texture_only=True):
+    def get_socket_value(self, texture_only=True):
         if self.is_linked:
-                linked_node = self.links[0].from_node
-                if linked_node.node_type == 'volume':
-                    return linked_node.get_node_name()
-        # Return blank if not linked, or if the incoming node is incompatible.             
-        return self.socket_value    
+            linked_node = self.links[0].from_node
+            if linked_node.node_type == 'volume':
+                return linked_node.get_node_name()
+        # Return blank if not linked, or if the incoming node is incompatible.
+        return self.socket_value
 
 
 class AppleseedAlphaSocket(NodeSocket, AppleseedSocket):
@@ -233,7 +233,7 @@ class AppleseedMaterialNode(Node, AppleseedNode):
         self.inputs.new('AppleseedMaterialBSDF', "BSDF")
         self.inputs.new('AppleseedMaterialBSSRDF', "BSSRDF")
         self.inputs.new('AppleseedVolume', "Volume")
-        self.inputs.new('AppleseedAlpha', "Alpha")                                 
+        self.inputs.new('AppleseedAlpha', "Alpha")
         self.inputs.new('AppleseedNormal', "Normal")
         self.inputs.new('AppleseedEmissionStrength', "Emission Strength")
         self.inputs.new('AppleseedEmissionColor', "Emission Color")
