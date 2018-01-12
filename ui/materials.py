@@ -1389,27 +1389,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
                     col.prop(asr_mat, "volume_average_cosine", text="Average Cosine")
 
             #
-            # Alpha mapping.
-            #
-
-            layout.separator()
-
-            split = layout.split(percentage=0.90)
-            col = split.column()
-            col.prop(asr_mat, "material_alpha", text="Alpha")
-
-            if asr_mat.material_use_alpha:
-                layout.prop_search(asr_mat, "material_alpha_map",
-                                   material, "texture_slots", text="")
-
-            col = split.column()
-            col.prop(asr_mat, "material_use_alpha", text="", icon="TEXTURE_SHADED", toggle=True)
-            if asr_mat.material_alpha_map != '' and asr_mat.material_use_alpha:
-                alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
-                layout.prop(alpha_tex.image.colorspace_settings,
-                            "name", text="Color Space")
-
-            #
             # Bump/normal mapping.
             #
 

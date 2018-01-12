@@ -726,7 +726,7 @@ class Writer(object):
         return front_material_name, back_material_name
 
     def __emit_front_material(self, material, material_name, scene, layers, material_node=None, node_list=None):
-        """Material_name here is material.name + "_front"""
+        """Material_name here is material.name + _front"""
 
         bsdf_name, bssrdf_name, volume_name = self.__emit_front_material_tree(material, material_name, scene, layers, material_node, node_list)
 
@@ -2227,7 +2227,6 @@ class Writer(object):
         if material != "":
             asr_mat = material.appleseed
         bump_map = ""
-        material_alpha_map = 1.0
         material_bump_amplitude = 1.0
         method = "bump"
 
@@ -2236,17 +2235,11 @@ class Writer(object):
             # Node material.
             if material_node is not None:
                 inputs = material_node.inputs
-                material_alpha_map = inputs[3].get_socket_value(True)
-                bump_map = inputs[4].get_socket_value(False)
+                bump_map = inputs[3].get_socket_value(False)
                 if bump_map != "":
                     bump_map = bump_map + "_inst"
-                    material_bump_amplitude, use_normalmap = inputs[4].get_normal_params()
+                    material_bump_amplitude, use_normalmap = inputs[3].get_normal_params()
                     method = "normal" if use_normalmap else "bump"
-            else:
-                if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
-                    if util.is_uv_img(bpy.data.textures[asr_mat.material_alpha_map]):
-                        material_alpha_map = asr_mat.material_alpha_map + "_inst"
-                        self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
 
                 if asr_mat.material_use_bump_tex:
                     if asr_mat.material_bump_tex != "":
@@ -2282,8 +2275,6 @@ class Writer(object):
                 self.__emit_parameter("bump_offset", asr_mat.material_bump_offset)
             else:
                 self.__emit_parameter("normal_map_up", "z")
-        if material_alpha_map != 1.0:
-            self.__emit_parameter("alpha_map", material_alpha_map)
         self.__emit_parameter("displacement_method", method)
         self.__emit_parameter("surface_shader", surface_shader_name)
         self.__close_element("material")

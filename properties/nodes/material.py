@@ -113,22 +113,6 @@ class AppleseedVolumeSocket(NodeSocket, AppleseedSocket):
         return self.socket_value
 
 
-class AppleseedAlphaSocket(NodeSocket, AppleseedSocket):
-    bl_idname = "AppleseedAlpha"
-    bl_label = "Alpha"
-
-    socket_value = AppleseedMatProps.material_alpha
-
-    def draw(self, context, layout, node, text):
-        if self.is_output or self.is_linked:
-            layout.label(text)
-        else:
-            layout.prop(self, "socket_value", text=text)
-
-    def draw_color(self, context, node):
-        return 0.5, 0.5, 0.5, 1.0
-
-
 class AppleseedNormalSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedNormal"
     bl_label = "Normal"
@@ -233,7 +217,6 @@ class AppleseedMaterialNode(Node, AppleseedNode):
         self.inputs.new('AppleseedMaterialBSDF', "BSDF")
         self.inputs.new('AppleseedMaterialBSSRDF', "BSSRDF")
         self.inputs.new('AppleseedVolume', "Volume")
-        self.inputs.new('AppleseedAlpha', "Alpha")
         self.inputs.new('AppleseedNormal', "Normal")
         self.inputs.new('AppleseedEmissionStrength', "Emission Strength")
         self.inputs.new('AppleseedEmissionColor', "Emission Color")
@@ -277,7 +260,6 @@ class AppleseedMaterialNode(Node, AppleseedNode):
 
 def register():
     bpy.utils.register_class(AppleseedNormalSocket)
-    bpy.utils.register_class(AppleseedAlphaSocket)
     bpy.utils.register_class(AppleseedEmissionColorSocket)
     bpy.utils.register_class(AppleseedEmissionStrengthSocket)
     bpy.utils.register_class(AppleseedEmissionExposureSocket)
@@ -290,7 +272,6 @@ def register():
 def unregister():
     bpy.utils.unregister_class(AppleseedMaterialNode)
     bpy.utils.unregister_class(AppleseedNormalSocket)
-    bpy.utils.unregister_class(AppleseedAlphaSocket)
     bpy.utils.unregister_class(AppleseedVolumeSocket)
     bpy.utils.unregister_class(AppleseedEmissionColorSocket)
     bpy.utils.unregister_class(AppleseedEmissionExposureSocket)
