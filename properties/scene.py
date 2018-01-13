@@ -96,12 +96,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
         cls.tile_width = bpy.props.IntProperty(name="tile_width",
                                                description="Set the width of the render tile",
-                                               default=32,
+                                               default=64,
                                                min=1)
 
         cls.tile_height = bpy.props.IntProperty(name="tile_height",
                                                 description="Set the height of the render tile",
-                                                default=32,
+                                                default=64,
                                                 min=1)
 
         cls.pixel_filter = bpy.props.EnumProperty(name="Pixel Filter",
@@ -139,7 +139,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                         description="Maximum number of anti-aliasing samples",
                                                         min=1,
                                                         max=1000000,
-                                                        default=256,
+                                                        default=64,
                                                         subtype='UNSIGNED')
 
         cls.adaptive_sampler_enable_diagnostics = bpy.props.BoolProperty(name="adaptive_sampler_enable_diagnostics",
