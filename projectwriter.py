@@ -64,14 +64,10 @@ def object_enumerator(obj_type):
 
 
 class Writer(object):
-    """
-    appleseed exporter.
-    """
+    """appleseed exporter."""
 
     def write(self, scene, file_path):
-        """
-        Write the .appleseed project file for rendering.
-        """
+        """Write the .appleseed project file for rendering."""
 
         if scene is None:
             self.__error("No scene to export.")
@@ -125,9 +121,7 @@ class Writer(object):
 
         self.__info("Finished exporting in {0}".format(elapsed_time))
 
-    # ----------------------------------------------------------------------------------------------
-    # Export the project.
-    # ----------------------------------------------------------------------------------------------
+    """Export the project."""
 
     def __get_selected_camera(self, scene):
         if scene.camera is not None and scene.camera.name in bpy.data.objects:
@@ -146,10 +140,6 @@ class Writer(object):
         self.__emit_configurations(scene)
         self.__close_element("project")
 
-    # ----------------------------------------------------------------------------------------------
-    # Scene.
-    # ----------------------------------------------------------------------------------------------
-
     def __emit_scene(self, scene):
         self.__open_element("scene")
         self.__emit_camera(scene)
@@ -158,23 +148,21 @@ class Writer(object):
         self.__emit_assembly_instance(scene)
         self.__close_element("scene")
 
-    # --------------------------------
     def __emit_assembly(self, scene):
-        """
-        Write the scene assembly.
-        """
+        """Write the scene assembly."""
+
         self.__open_element('assembly name="%s"' % scene.name)
         self.__emit_physical_surface_shader_element()
         self.__emit_default_material(scene)
         self.__emit_objects(scene)
         self.__close_element("assembly")
 
-    # --------------------------------
     def __emit_assembly_instance(self, scene, obj=None):
         """
-        Write a scene assembly instance,
-        or write an assembly instance for an object with transformation motion blur.
+        Write a scene assembly instance, or write an assembly
+        instance for an object with transformation motion blur.
         """
+
         asr_scn = scene.appleseed
         shutter_open = asr_scn.shutter_open if asr_scn.enable_motion_blur else 0
         shutter_close = asr_scn.shutter_close if asr_scn.enable_motion_blur else 1
@@ -205,9 +193,8 @@ class Writer(object):
 
     # --------------------------------
     def __emit_object_assembly(self, scene, object):
-        """
-        Write an assembly for an object with transformation motion blur.
-        """
+        """Write an assembly for an object with transformation motion blur."""
+
         object_name = object.name
         self.__open_element('assembly name="%s"' % object_name)
         self.__emit_physical_surface_shader_element()
@@ -217,9 +204,8 @@ class Writer(object):
 
     # --------------------------------
     def __emit_dupli_assembly(self, scene, object, matrices):
-        """
-        Write an assembly for a dupli/particle with transformation motion blur.
-        """
+        """Write an assembly for a dupli/particle with transformation motion blur."""
+
         object_name = object.name
         # Figure out the instance number of this assembly instance.
         if object_name in self._assembly_count:
@@ -239,9 +225,8 @@ class Writer(object):
 
     # --------------------------------
     def __emit_dupli_assembly_instance(self, scene, assembly_name, matrices):
-        """
-        Write an instance of the dupli object assembly (for duplis/particles with motion blur).
-        """
+        """Write an instance of the dupli object assembly (for duplis/particles with motion blur)."""
+
         asr_scn = scene.appleseed
         # Figure out the instance number of this assembly instance.
         if assembly_name in self._assembly_instance_count:
@@ -262,9 +247,8 @@ class Writer(object):
 
     # --------------------------------
     def __emit_objects(self, scene):
-        """
-        Emit the objects in the scene.
-        """
+        """Emit the objects in the scene."""
+
         for object in scene.objects:
             if util.do_export(object, scene):  # Skip objects marked as non-renderable.
                 if object.type == 'LAMP':
@@ -300,16 +284,13 @@ class Writer(object):
                         # No motion blur enabled.
                         self.__emit_geometric_object(scene, object, False)
 
-    # ----------------------------------------------------------------------------------------------
-    # Geometry.
-    # ----------------------------------------------------------------------------------------------
-
     def __emit_geometric_object(self, scene, object, enable_object_blur=False):
         """
         Get scene objects and instances for emitting.
         Only emit dupli- objects if the object doesn't have moblur enabled.
         Dupli- objects with object motion blur are handled separately.
         """
+
         if not enable_object_blur:
             self._dupli_objects.clear()
 
@@ -336,14 +317,15 @@ class Writer(object):
 
     # --------------------------------
     def __emit_dupli_object(self, scene, object, object_matrix, enable_object_blur, new_assembly=False):
-        """
-        Emit objects / dupli objects.
-        """
+        """Emit objects / dupli objects."""
+
         asr_scn = scene.appleseed
         shutter_open = asr_scn.shutter_open if asr_scn.enable_motion_blur else 0
         current_frame = scene.frame_current
-        # Emit the mesh object (and write it to disk) only the first time it is encountered.
-        # If it's a new assembly (for dupli motion blur), only emit the object without tesselating mesh.
+        """
+        Emit the mesh object (and write it to disk) only the first time it is encountered.
+        If it's a new assembly (for dupli motion blur), only emit the object without tesselating mesh.
+        """
         export_mesh = True
         if new_assembly or object.name not in self._instance_count:
             try:
@@ -353,7 +335,6 @@ class Writer(object):
                     if not util.render_emitter(object):
                         export_mesh = False
 
-                # -----------------------------------------------------------------------
                 # If deformation motion blur is enabled, write deformation mesh to disk.
                 if util.def_mblur_enabled(object, scene):
                     scene.frame_set(current_frame, subframe=asr_scn.shutter_close)
@@ -379,7 +360,6 @@ class Writer(object):
 
                     # Reset the timeline to current frame
                     scene.frame_set(current_frame)
-                # -----------------------------------------------------------------------
 
                 # Tessellate the object at shutter open.
                 scene.frame_set(current_frame, subframe=shutter_open)
@@ -417,12 +397,12 @@ class Writer(object):
         if export_mesh:
             self.__emit_mesh_object_instance(scene, object, object_matrix, new_assembly)
 
-    # --------------------------------
     def __emit_curves_object(self, scene, object, psys, new_assembly=False):
         """
         Emit the curves object element and write to disk.
         Return mesh parts to self._mesh_parts["_".join( [object.name, psys.name])]
         """
+
         curves_name = "_".join([object.name, psys.name])
         curves_filename = curves_name + ".curves"
 
@@ -454,12 +434,12 @@ class Writer(object):
         # Hard code one mesh part for now, since particle systems aren't split into materials.
         return [(0, "part_0")]
 
-    # --------------------------------
     def __emit_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex, new_assembly):
         """
         Emit the mesh object element and write to disk.
         Return mesh parts to self._mesh_parts[object.name]
         """
+
         if len(mesh_faces) == 0:
             self.__info("Skipping object '{0}' since it has no faces once converted to a mesh.".format(object.name))
             return []
@@ -502,11 +482,9 @@ class Writer(object):
 
         return mesh_parts
 
-    # --------------------------------
     def __emit_object_element(self, object_name, mesh_file, object, scene):
-        """
-        Emit an object element to the project file.
-        """
+        """Emit an object element to the project file."""
+
         mesh_filename = "meshes" + os.path.sep + mesh_file
         self.__open_element('object name="' + object_name + '" model="mesh_object"')
         if util.def_mblur_enabled(object, scene):
@@ -518,11 +496,9 @@ class Writer(object):
             self.__emit_parameter("filename", mesh_filename)
         self.__close_element("object")
 
-    # --------------------------------
     def __emit_curves_element(self, curves_name, curves_file, object, scene):
-        """
-        Emit a curves object element to the project file.
-        """
+        """Emit a curves object element to the project file."""
+
         curves_filename = "meshes" + os.path.sep + curves_file
         self.__open_element('object name="' + curves_name + '" model="curve_object"')
         if util.def_mblur_enabled(object, scene):
@@ -534,13 +510,9 @@ class Writer(object):
             self.__emit_parameter("filepath", curves_filename)
         self.__close_element("object")
 
-    # --------------------------------------------------
-    # Emit object mesh for deformation mblur evaluation.
-    # --------------------------------------------------
     def __emit_def_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex):
-        """
-        Emit a deformation mesh object and write to disk.
-        """
+        """Emit a deformation mesh object and write to disk."""
+
         if len(mesh_faces) == 0:
             self.__info("Skipping object '{0}' since it has no faces once converted to a mesh.".format(object.name))
             return []
@@ -570,13 +542,8 @@ class Writer(object):
                 except IOError:
                     self.__error("While exporting object '{0}': could not write to {1}, skipping this object.".format(object.name, mesh_filepath))
 
-    # --------------------------------------------------
-    # Emit curves object for deformation mblur evaluation.
-    # --------------------------------------------------
     def __emit_def_curves_object(self, scene, object, psys):
-        """
-        Emit a curves deformation mesh object and write to disk.
-        """
+        """Emit a curves deformation mesh object and write to disk."""
 
         curves_name = "_".join([object.name, psys.name])
         curves_filename = curves_name + "_deform.curves"
@@ -604,13 +571,9 @@ class Writer(object):
                     self.__error("While exporting particle system '{0}': could not write to {1}, skipping particle system.".format(
                         psys.name, curves_filepath))
 
-    # ---------------------------
-    # Emit mesh object instance.
-    # ---------------------------
     def __emit_mesh_object_instance(self, scene, object, object_matrix, new_assembly, hair=False, hair_material=None, psys_name=None):
-        """
-        Calls __emit_object_instance_element to emit an object instance.
-        """
+        """Calls __emit_object_instance_element to emit an object instance."""
+
         object_name = "_".join([object.name, psys_name]) if hair else object.name
         if new_assembly:
             object_matrix = self._global_matrix * identity_matrix
@@ -660,14 +623,12 @@ class Writer(object):
                 util.debug(object_name, object_matrix)
             self.__emit_object_instance_element(part_name, instance_name, object_matrix, front_material_name, back_material_name, object, scene)
 
-    # ---------------------------------------------
-    # Emit an object instance to the project file.
-    # ---------------------------------------------
     def __emit_object_instance_element(self, object_name, instance_name, instance_matrix, front_material_name, back_material_name, object, scene):
-        """
-        Emit an object instance element to the project file.
-        """
+        """Emit an object instance element to the project file."""
+
         self.__open_element('object_instance name="{0}" object="{1}"'.format(instance_name, object_name))
+        if object.appleseed.enable_visibility_flags:
+            self.__emit_visibility_flags(object)
         if util.ob_mblur_enabled(object, scene):
             self.__emit_transform_element(identity_matrix, None)
         else:
@@ -676,9 +637,22 @@ class Writer(object):
         self.__emit_line('<assign_material slot="0" side="back" material="{0}" />'.format(back_material_name))
         self.__close_element("object_instance")
 
-    # ----------------------------------------------------------------------------------------------
-    # Materials.
-    # ----------------------------------------------------------------------------------------------
+    def __emit_visibility_flags(self, object):
+        """Emit visibility flags into the object instance"""
+
+        ob_flags = object.appleseed
+        self.__open_element('parameters name="visibility"')
+        self.__emit_parameter("camera", str(ob_flags.camera_visible).lower())
+        self.__emit_parameter("light", str(ob_flags.light_visible).lower())
+        self.__emit_parameter("shadow", str(ob_flags.shadow_visible).lower())
+        self.__emit_parameter("transparency", str(ob_flags.transparency_visible).lower())
+        self.__emit_parameter("probe", str(ob_flags.probe_visible).lower())
+        self.__emit_parameter("diffuse", str(ob_flags.diffuse_visible).lower())
+        self.__emit_parameter("glossy", str(ob_flags.glossy_visible).lower())
+        self.__emit_parameter("specular", str(ob_flags.specular_visible).lower())
+        self.__close_element("parameters")
+
+    """Material(s) writing"""
 
     def __is_light_emitting_material(self, asr_mat, scene, material_node=None):
         if material_node is not None:
@@ -702,12 +676,11 @@ class Writer(object):
         self.__emit_parameter("reflectance", "__default_material_bsdf_reflectance")
         self.__close_element("bsdf")
 
-        self.__emit_material_element("__default_material", "__default_material_bsdf", "", "physical_surface_shader", scene, "")
+        self.__emit_material_element("__default_material", "__default_material_bsdf", "", "", "", "physical_surface_shader", scene, "")
 
-    # -------------------------------------------
-    # Write the material.
-    # -------------------------------------------
     def __emit_material(self, material, scene):
+        """Write the material."""
+
         asr_mat = material.appleseed
         asr_node_tree = asr_mat.node_tree
         use_nodes = self.__is_node_material(asr_mat)
@@ -752,10 +725,10 @@ class Writer(object):
 
         return front_material_name, back_material_name
 
-    # Emit front material.
     def __emit_front_material(self, material, material_name, scene, layers, material_node=None, node_list=None):
-        # material_name here is material.name + "_front"
-        bsdf_name = self.__emit_front_material_bsdf_tree(material, material_name, scene, layers, material_node, node_list)
+        """Material_name here is material.name + _front"""
+
+        bsdf_name, bssrdf_name, volume_name = self.__emit_front_material_tree(material, material_name, scene, layers, material_node, node_list)
 
         if self.__is_light_emitting_material(material.appleseed, scene, material_node):
             edf_name = "{0}_edf".format(material_name)
@@ -763,33 +736,34 @@ class Writer(object):
         else:
             edf_name = ""
 
-        self.__emit_material_element(material_name, bsdf_name, edf_name, "physical_surface_shader", scene, material, material_node)
+        self.__emit_material_element(material_name, bsdf_name, edf_name, bssrdf_name, volume_name, "physical_surface_shader", scene, material, material_node)
 
-    # Emit back material.
     def __emit_back_material(self, material, material_name, scene, layers, material_node=None, node_list=None):
-        # material_name here is material.name + "_back"
+        """Material_name here is material.name + "_back"""
+
         bsdf_name = self.__emit_back_material_bsdf_tree(material, material_name, scene, layers, material_node, node_list)
 
-        self.__emit_material_element(material_name, bsdf_name, "", "physical_surface_shader", scene, material, material_node)
+        self.__emit_material_element(material_name, bsdf_name, "", "", "", "physical_surface_shader", scene, material, material_node)
 
-    # --------------------------------
-    # Write front material BSDF tree.
-    # --------------------------------
-    def __emit_front_material_bsdf_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
+    def __emit_front_material_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
         """
         Emit the front material's BSDF tree and return the last BSDF name to the calling function (__emit_front_material).
         """
+
         # material_name here is material.name + "_front"
         bsdfs = []
+        bsdf_name = ""
+        bssrdf_name = ""
+        volume_name = ""
 
         # If using nodes.
         if material_node is not None:
-            if not material_node.inputs[0].is_linked:
-                default_bsdf_name = "__default_material_bsdf"
-                return default_bsdf_name
+            if not material_node.inputs[0].is_linked and not material_node.inputs[1].is_linked and not material_node.inputs[2].is_linked:
+                bsdf_name = "__default_material_bsdf"
+                return bsdf_name, bssrdf_name, volume_name
 
             for node in node_list:
-                if node.node_type not in {'texture', 'normal'}:
+                if node.node_type not in {'texture', 'normal', 'bssrdf', 'volume'}:
                     bsdf_name = material_name + node.get_node_name()
                 if node.node_type == 'ashikhmin':
                     self.__emit_ashikhmin_brdf(material, bsdf_name, 'front', None, node)
@@ -797,6 +771,9 @@ class Writer(object):
                     self.__emit_blinn_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'bsdf_blend':
                     self.__emit_bsdf_blend(bsdf_name, material_name, node)
+                if node.node_type == 'bssrdf':
+                    bssrdf_name = material_name + node.get_node_name()
+                    self.__emit_bssrdf(material, bssrdf_name, 'front', node)
                 if node.node_type == 'diffuse_btdf':
                     self.__emit_diffuse_btdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'disney':
@@ -821,13 +798,17 @@ class Writer(object):
                     self.__emit_specular_brdf(material, bsdf_name, 'front', None, node)
                 if node.node_type == 'texture':
                     self.__emit_texture(None, False, scene, node, material_name)
-            return bsdf_name
+                if node.node_type == 'volume':
+                    volume_name = material_name + node.get_node_name()
+                    self.__emit_volume(material, volume_name, 'front', node)
+            return bsdf_name, bssrdf_name, volume_name
 
         else:
+            asr_mat = material.appleseed
             # Iterate through layers and export their types, append names and weights to bsdfs list
-            if len(layers) == 0:
-                default_bsdf_name = "__default_material_bsdf"
-                return default_bsdf_name
+            if len(layers) == 0 and asr_mat.bssrdf_model == 'none' and asr_mat.volume_phase_function_model == 'none':
+                bsdf_name = "__default_material_bsdf"
+                return bsdf_name, bssrdf_name, volume_name
             else:
                 for layer in layers:
                     # Spec BTDF
@@ -984,12 +965,23 @@ class Writer(object):
                         else:
                             bsdfs.append([kelemen_brdf_bsdf_name, layer.kelemen_brdf_weight])
 
-                return self.__emit_bsdf_mixes(bsdfs)
+                bsdf_name = self.__emit_bsdf_mixes(bsdfs)
 
-    # ----------------------
-    # Write back material.
-    # ----------------------
+                # Subsurface
+                if asr_mat.bssrdf_model != 'none':
+                    bssrdf_name = "{0}|{1}_bssrdf".format(material_name, layer.bsdf_name)
+                    self.__emit_bssrdf(material, bssrdf_name, scene)
+
+                # Volume
+                if asr_mat.volume_phase_function_model != 'none':
+                    volume_name = "{0}|{1}_volume".format(material_name, layer.bsdf_name)
+                    self.__emit_volume(material, volume_name, scene)
+
+                return bsdf_name, bssrdf_name, volume_name
+
     def __emit_back_material_bsdf_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
+        """Emits mateiral tree for the back side of the object."""
+
         transp_bsdf_name = None
         if material_node is not None:
             for node in node_list:
@@ -1013,42 +1005,42 @@ class Writer(object):
                     break
         return transp_bsdf_name
 
-    # -----------------------------
-    # Write BSDF blends / weights.
-    # -----------------------------
     def __emit_bsdf_mixes(self, bsdfs):
+        """Creates BSDF mixes when layered material editor is used."""
+
+        # No BSDF
+        if not bsdfs:
+            return None
 
         # Only one BSDF, no blending.
-        if len(bsdfs) == 1:
+        elif len(bsdfs) == 1:
             return bsdfs[0][0]
 
-        # Normalize weights if necessary.
-        total_weight = 0.0
-        for bsdf in bsdfs:
-            if isinstance(bsdf[1], (float, int)):
-                total_weight += bsdf[1]
-        if total_weight > 1.0:
+        else:
+            # Normalize weights if necessary.
+            total_weight = 0.0
             for bsdf in bsdfs:
                 if isinstance(bsdf[1], (float, int)):
-                    bsdf[1] /= total_weight
+                    total_weight += bsdf[1]
+            if total_weight > 1.0:
+                for bsdf in bsdfs:
+                    if isinstance(bsdf[1], (float, int)):
+                        bsdf[1] /= total_weight
 
-        # The left branch is simply the first BSDF.
-        bsdf0_name = bsdfs[0][0]
-        bsdf0_weight = bsdfs[0][1]
+            # The left branch is simply the first BSDF.
+            bsdf0_name = bsdfs[0][0]
+            bsdf0_weight = bsdfs[0][1]
 
-        # The right branch is a blend of all the other BSDFs (recurse).
-        bsdf1_name = self.__emit_bsdf_mixes(bsdfs[1:])
-        bsdf1_weight = 1.0 - bsdf0_weight if isinstance(bsdf0_weight, (float, int)) else 1.0
+            # The right branch is a blend of all the other BSDFs (recurse).
+            bsdf1_name = self.__emit_bsdf_mixes(bsdfs[1:])
+            bsdf1_weight = 1.0 - bsdf0_weight if isinstance(bsdf0_weight, (float, int)) else 1.0
 
-        # Blend the left and right branches together.
-        mix_name = "{0}+{1}".format(bsdf0_name, bsdf1_name)
-        self.__emit_bsdf_mix(mix_name, bsdf0_name, bsdf0_weight, bsdf1_name, bsdf1_weight)
+            # Blend the left and right branches together.
+            mix_name = "{0}+{1}".format(bsdf0_name, bsdf1_name)
+            self.__emit_bsdf_mix(mix_name, bsdf0_name, bsdf0_weight, bsdf1_name, bsdf1_weight)
 
-        return mix_name
+            return mix_name
 
-    # ----------------------
-    # Write Lambertian BRDF.
-    # ----------------------
     def __emit_lambertian_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance_name = ""
 
@@ -1085,9 +1077,6 @@ class Writer(object):
         self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
         self.__close_element("bsdf")
 
-    # -----------------------
-    # Write Disney BRDF.
-    # -----------------------
     def __emit_disney_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         base_coat_name = ""
 
@@ -1210,9 +1199,6 @@ class Writer(object):
         self.__emit_parameter("subsurface", subsurface)
         self.__close_element("bsdf")
 
-    # -----------------------
-    # Write Oren-Nayar BRDF.
-    # -----------------------
     def __emit_orennayar_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance_name = ""
 
@@ -1262,9 +1248,6 @@ class Writer(object):
         self.__emit_parameter("roughness", roughness)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write Diffuse BTDF.
-    # ----------------------
     def __emit_diffuse_btdf(self, material, bsdf_name, scene, layer=None, node=None):
         transmittance_name = ""
 
@@ -1306,9 +1289,6 @@ class Writer(object):
         self.__emit_parameter("transmittance_multiplier", transmittance)
         self.__close_element("bsdf")
 
-    #------------------------
-    # Write Sheen BRDF
-    #------------------------
     def __emit_sheen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance = ""
 
@@ -1350,9 +1330,6 @@ class Writer(object):
         self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
         self.__close_element("bsdf")
 
-    #------------------------
-    # Write glossy BRDF
-    #------------------------
     def __emit_glossy_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance = ""
         reflectance_multiplier = layer.glossy_brdf_reflectance_multiplier
@@ -1398,9 +1375,6 @@ class Writer(object):
         self.__emit_parameter("ior", layer.glossy_brdf_ior)
         self.__close_element("bsdf")
 
-    # -----------------------------
-    # Write Ashikhmin-Shirley BRDF.
-    # -----------------------------
     def __emit_ashikhmin_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         diffuse_reflectance_name = ""
         glossy_brdf_reflectance_name = ""
@@ -1466,9 +1440,6 @@ class Writer(object):
         self.__emit_parameter("fresnel_multiplier", fresnel)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write Blinn BRDF.
-    # ----------------------
     def __emit_blinn_brdf(self, material, bsdf_name, scene, layer=None, node=None):
 
         # Nodes.
@@ -1491,9 +1462,6 @@ class Writer(object):
         self.__emit_parameter("ior", ior)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write Glass BRDF.
-    # ----------------------
     def __emit_glass_bsdf(self, material, bsdf_name, scene, layer=None, node=None):
         surface_transmittance = ""
         reflection_tint = ""
@@ -1672,13 +1640,10 @@ class Writer(object):
         self.__emit_parameter("volume_scale", volume_scale)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write Metal BRDF
-    # ----------------------
     def __emit_metal_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         normal_reflectance = ""
         edge_tint = ""
-        
+
         if node is not None:
             inputs = node.inputs
             normal_reflectance = inputs["Normal Reflectance"].get_socket_value(True)
@@ -1760,9 +1725,6 @@ class Writer(object):
         self.__emit_parameter("anisotropy", anisotropy)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write Plastic BRDF
-    # ----------------------
     def __emit_plastic_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         specular_reflectance = ""
         diffuse_reflectance = ""
@@ -1853,9 +1815,6 @@ class Writer(object):
         self.__emit_parameter("diffuse_reflectance_multiplier", diffuse_reflectance_multiplier)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write Specular BRDF.
-    # ----------------------
     def __emit_specular_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance_name = ""
 
@@ -1891,9 +1850,6 @@ class Writer(object):
         self.__emit_parameter("reflectance_multiplier", multiplier)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write Specular BTDF.
-    # ----------------------
     def __emit_specular_btdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance_name = ""
         transmittance_name = ""
@@ -1967,9 +1923,6 @@ class Writer(object):
         self.__emit_parameter("volume_scale", volume_scale)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write Kelemen BRDF.
-    # ----------------------
     def __emit_kelemen_brdf(self, material, bsdf_name, scene, layer=None, node=None):
         reflectance_name = ""
         specular_refl_name = ""
@@ -2005,7 +1958,7 @@ class Writer(object):
                 self.__emit_solid_linear_rgb_color_element(reflectance_name,
                                                            layer.kelemen_brdf_matte_reflectance,
                                                            1)
-            
+
             kelemen_brdf_roughness = layer.kelemen_brdf_roughness
             kelemen_brdf_specular_multiplier = layer.kelemen_brdf_specular_multiplier
             kelemen_brdf_specular_reflectance = layer.kelemen_brdf_specular_reflectance
@@ -2019,13 +1972,136 @@ class Writer(object):
         self.__emit_parameter("specular_reflectance_multiplier", kelemen_brdf_specular_multiplier)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write BSDF Mixes.
-    # ----------------------
+    def __emit_bssrdf(self, material, bsdf_name, scene, node=None):
+        bssrdf_reflectance = ""
+        bssrdf_mfp = ""
+
+        if node is not None:
+            inputs = node.inputs
+            bssrdf_reflectance = inputs['Reflectance'].get_socket_value(True)
+            bssrdf_reflectance_multiplier = inputs['Reflectance Multiplier'].get_socket_value(True)
+            bssrdf_mfp = inputs['Mean Free Path'].get_socket_value(True)
+            bssrdf_mfp_multiplier = inputs['Mean Free Path Multiplier'].get_socket_value(True)
+            bssrdf_ior = node.bssrdf_ior
+            bssrdf_fresnel_weight = node.bssrdf_fresnel_weight
+            bssrdf_model = node.bssrdf_model
+            bssrdf_weight = inputs['Weight'].get_socket_value(True)
+
+            # If the socket is not connected.
+            if not inputs["Reflectance"].is_linked:
+                bssrdf_reflectance_name = bssrdf_reflectance
+                bssrdf_reflectance = "{0}_bssrdf_reflectance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(bssrdf_reflectance,
+                                                           bssrdf_reflectance_name,
+                                                           1)
+
+            if not inputs["Mean Free Path"].is_linked:
+                bssrdf_mfp_name = bssrdf_mfp
+                bssrdf_mfp = "{0}_bssrdf_mfp".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(bssrdf_mfp,
+                                                           bssrdf_mfp_name,
+                                                           1)
+
+        else:
+            asr_mat = material.appleseed
+            if asr_mat.bssrdf_reflectance_use_texture and asr_mat.bssrdf_reflectance_texture != "":
+                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_reflectance_texture]):
+                    bssrdf_reflectance = asr_mat.bssrdf_reflectance_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_reflectance_texture], False, scene)
+
+            if bssrdf_reflectance == "":
+                bssrdf_reflectance = "{0}_bssrdf_reflectance".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(bssrdf_reflectance,
+                                                           asr_mat.bssrdf_reflectance,
+                                                           1)
+
+            if asr_mat.bssrdf_mfp_use_texture and asr_mat.bssrdf_mfp_texture != "":
+                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_mfp_texture]):
+                    bssrdf_mfp_name = asr_mat.bssrdf_mfp_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_mfp_texture], False, scene)
+
+            if bssrdf_mfp == "":
+                bssrdf_mfp = "{0}_bssrdf_mfp".format(bsdf_name)
+                self.__emit_solid_linear_rgb_color_element(bssrdf_mfp,
+                                                           asr_mat.bssrdf_mfp,
+                                                           1)
+
+            bssrdf_reflectance_multiplier = asr_mat.bssrdf_reflectance_multiplier
+
+            if asr_mat.bssrdf_reflectance_multiplier_use_texture and asr_mat.bssrdf_reflectance_multiplier_texture != "":
+                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_reflectance_multiplier_texture]):
+                    bssrdf_reflectance_multiplier = asr_mat.bssrdf_reflectance_multiplier_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_reflectance_multiplier_texture], False, scene)
+
+            bssrdf_mfp_multiplier = asr_mat.bssrdf_mfp_multiplier
+
+            if asr_mat.bssrdf_mfp_multiplier_use_texture and asr_mat.bssrdf_mfp_multiplier_texture != "":
+                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_mfp_multiplier_texture]):
+                    bssrdf_mfp_multiplier = asr_mat.bssrdf_mfp_multiplier_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_mfp_multiplier_texture], False, scene)
+
+            bssrdf_weight = asr_mat.bssrdf_weight
+
+            if asr_mat.bssrdf_weight_use_texture and asr_mat.bssrdf_weight_texture != "":
+                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_weight_texture]):
+                    bssrdf_weight = asr_mat.bssrdf_weight_texture + "_inst"
+                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_weight_texture], False, scene)
+
+            bssrdf_ior = asr_mat.bssrdf_ior
+            bssrdf_fresnel_weight = asr_mat.bssrdf_fresnel_weight
+            bssrdf_model = asr_mat.bssrdf_model
+
+        self.__open_element('bssrdf name="{0}" model="%s"'.format(bsdf_name) % bssrdf_model)
+        self.__emit_parameter("weight", bssrdf_weight)
+        self.__emit_parameter("reflectance", bssrdf_reflectance)
+        self.__emit_parameter("reflectance_multiplier", bssrdf_reflectance_multiplier)
+        self.__emit_parameter("mfp", bssrdf_mfp)
+        self.__emit_parameter("mfp_multiplier", bssrdf_mfp_multiplier)
+        self.__emit_parameter("ior", bssrdf_ior)
+        self.__emit_parameter("fresnel_weight", bssrdf_fresnel_weight)
+        self.__close_element("bssrdf")
+
+    def __emit_volume(self, material, volume_name, scene, node=None):
+        volume_absorption_name = "{0}_volume_absorption".format(volume_name)
+        volume_scattering_name = "{0}_volume_scattering".format(volume_name)
+
+        if node is not None:
+            volume_absorption = node.volume_absorption
+            volume_absorption_multiplier = node.volume_absorption_multiplier
+            volume_scattering = node.volume_scattering
+            volume_scattering_multiplier = node.volume_scattering_multiplier
+            volume_phase_function_model = node.volume_phase_function_model
+            volume_average_cosine = node.volume_average_cosine
+
+        else:
+            asr_mat = material.appleseed
+            volume_absorption = asr_mat.volume_absorption
+            volume_absorption_multiplier = asr_mat.volume_absorption_multiplier
+            volume_scattering = asr_mat.volume_scattering
+            volume_scattering_multiplier = asr_mat.volume_scattering_multiplier
+            volume_phase_function_model = asr_mat.volume_phase_function_model
+            volume_average_cosine = asr_mat.volume_average_cosine
+
+        self.__emit_solid_linear_rgb_color_element(volume_absorption_name,
+                                                   volume_absorption,
+                                                   1)
+        self.__emit_solid_linear_rgb_color_element(volume_scattering_name,
+                                                   volume_scattering,
+                                                   1)
+
+        self.__open_element('volume name="{0}" model="generic_volume"'.format(volume_name))
+        self.__emit_parameter("absorption", volume_absorption_name)
+        self.__emit_parameter("absorption_multiplier", volume_absorption_multiplier)
+        self.__emit_parameter("scattering", volume_scattering_name)
+        self.__emit_parameter("scattering_multiplier", volume_scattering_multiplier)
+        self.__emit_parameter("phase_function_model", volume_phase_function_model)
+        if volume_phase_function_model == 'henyey':
+            self.__emit_parameter("average_cosine", volume_average_cosine)
+        self.__close_element("volume")
+
     def __emit_bsdf_mix(self, bsdf_name, bsdf0_name, bsdf0_weight, bsdf1_name, bsdf1_weight):
-        """
-        Emit BSDF mix to project file.
-        """
+        """Emit BSDF mix to project file."""
+
         self.__open_element('bsdf name="{0}" model="bsdf_mix"'.format(bsdf_name))
         self.__emit_parameter("bsdf0", bsdf0_name)
         self.__emit_parameter("weight0", bsdf0_weight)
@@ -2033,13 +2109,9 @@ class Writer(object):
         self.__emit_parameter("weight1", bsdf1_weight)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write BSDF Blend.
-    # ----------------------
     def __emit_bsdf_blend(self, bsdf_name, material_name, node=None):
-        """
-        Emit BSDF blend to project file.
-        """
+        """Emit BSDF blend to project file."""
+
         if node is not None:
             inputs = node.inputs
             weight = inputs[0].get_socket_value(True)
@@ -2055,11 +2127,9 @@ class Writer(object):
         self.__emit_parameter("weight", weight)
         self.__close_element("bsdf")
 
-    # ----------------------
-    # Write material emission.
-    # ----------------------
-
     def __emit_edf(self, material, edf_name, scene, material_node=None):
+        """Writes the emissive component of a material."""
+
         asr_mat = material.appleseed
         # Nodes.
         if material_node is not None:
@@ -2098,12 +2168,9 @@ class Writer(object):
         self.__emit_parameter("light_near_start", light_near_start)
         self.__close_element("edf")
 
-    # ----------------------------------------------------------------------------------------------
-    # Export textures, if any exist on the material
-    # ----------------------------------------------------------------------------------------------
-
-    # Write texture.
     def __emit_texture(self, texture, bump_bool, scene, node=None, material_name=None, scene_texture=False):
+        """Emits a reference to a texture file."""
+
         # Nothing to do if this texture was already emitted.
         if texture in self._textures_set:
             return
@@ -2139,8 +2206,9 @@ class Writer(object):
         # Now create texture instance.
         self.__emit_texture_instance(texture, texture_name, bump_bool, node, material_name, scene_texture)
 
-    # Write texture instance.
     def __emit_texture_instance(self, texture, texture_name, bump_bool, node=None, material_name=None, scene_texture=False):
+        """Write the instance for the texture"""
+
         if scene_texture:
             mode = "clamp"
         elif node is not None:
@@ -2153,15 +2221,12 @@ class Writer(object):
         self.__emit_parameter("filtering_mode", "bilinear")
         self.__close_element("texture_instance")
 
-    # ----------------------------------------------------------------------------------------------
-    # Create the material
-    # ----------------------------------------------------------------------------------------------
+    def __emit_material_element(self, material_name, bsdf_name, edf_name, bssrdf_name, volume_name, surface_shader_name, scene, material, material_node=None):
+        """This writes the material definition."""
 
-    def __emit_material_element(self, material_name, bsdf_name, edf_name, surface_shader_name, scene, material, material_node=None):
         if material != "":
             asr_mat = material.appleseed
         bump_map = ""
-        material_alpha_map = 1.0
         material_bump_amplitude = 1.0
         method = "bump"
 
@@ -2170,13 +2235,12 @@ class Writer(object):
             # Node material.
             if material_node is not None:
                 inputs = material_node.inputs
-                material_alpha_map = inputs[1].get_socket_value(True)
-                bump_map = inputs[2].get_socket_value(False)
+                bump_map = inputs[3].get_socket_value(False)
                 if bump_map != "":
                     bump_map = bump_map + "_inst"
-                    material_bump_amplitude, use_normalmap = inputs[2].get_normal_params()
+                    material_bump_amplitude, use_normalmap = inputs[3].get_normal_params()
                     method = "normal" if use_normalmap else "bump"
-            else:
+
                 if asr_mat.material_use_bump_tex:
                     if asr_mat.material_bump_tex != "":
                         if util.is_uv_img(bpy.data.textures[asr_mat.material_bump_tex]):
@@ -2188,19 +2252,21 @@ class Writer(object):
                     bump_map += "_inst"
                     method = "normal" if asr_mat.material_use_normalmap else "bump"
 
-                if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
-                    material_alpha_map = asr_mat.material_alpha_map + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
-                else:
-                    material_alpha_map = asr_mat.material_alpha
+                # if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
+                #     material_alpha_map = asr_mat.material_alpha_map + "_inst"
+                #     self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
+                # else:
+                #     material_alpha_map = asr_mat.material_alpha
 
         self.__open_element('material name="{0}" model="generic_material"'.format(material_name))
-        if material_alpha_map != 1.0:
-            self.__emit_parameter("alpha_map", material_alpha_map)
-        if len(bsdf_name) > 0:
+        if bsdf_name:
             self.__emit_parameter("bsdf", bsdf_name)
+        if bssrdf_name:
+            self.__emit_parameter("bssrdf", bssrdf_name)
         if len(edf_name) > 0:
             self.__emit_parameter("edf", edf_name)
+        if len(volume_name) > 0:
+            self.__emit_parameter("volume", volume_name)
 
         if bump_map != "":
             self.__emit_parameter("displacement_map", bump_map)
@@ -2213,11 +2279,9 @@ class Writer(object):
         self.__emit_parameter("surface_shader", surface_shader_name)
         self.__close_element("material")
 
-    # ----------------------------------------------------------------------------------------------
-    # Camera.
-    # ----------------------------------------------------------------------------------------------
-
     def __emit_camera(self, scene):
+        """Emit the camera into the scene file."""
+
         asr_scn = scene.appleseed
         shutter_open = asr_scn.shutter_open if asr_scn.enable_motion_blur else 0
         shutter_close = asr_scn.shutter_close if asr_scn.enable_motion_blur else 1
@@ -2319,16 +2383,14 @@ class Writer(object):
             self.__emit_texture(util.realpath(appleseed_cam.diaphragm_map), False, scene, scene_texture=True)
 
     def __emit_default_camera_element(self):
+        """If no camera is defined in the Blender scene, this default is exported."""
+
         self.__open_element('camera name="camera" model="pinhole_camera"')
         self.__emit_parameter("film_width", 0.024892)
         self.__emit_parameter("film_height", 0.018669)
         self.__emit_parameter("focal_length", 0.035)
         self.__close_element("camera")
         return
-
-    # ----------------------------------------------------------------------------------------------
-    # Environment.
-    # ----------------------------------------------------------------------------------------------
 
     def __emit_environment(self, scene):
         horizon_radiance = [0.0, 0.0, 0.0]
@@ -2428,11 +2490,9 @@ class Writer(object):
             self.__emit_parameter("environment_shader", env_shader_name)
         self.__close_element('environment')
 
-    # ----------------------------------------------------------------------------------------------
-    # Lights.
-    # ----------------------------------------------------------------------------------------------
-
     def __emit_light(self, scene, object):
+        """This determines what export function to call based on what the light type is."""
+
         light_type = object.data.type
 
         if light_type == 'POINT':
@@ -2450,6 +2510,8 @@ class Writer(object):
             self.__warning("While exporting light '{0}': unsupported light type '{1}', skipping this light.".format(object.name, light_type))
 
     def __emit_sun_light(self, scene, lamp):
+        """Emits a sun lamp into the scene file."""
+
         lamp_data = lamp.data
         asr_light = lamp_data.appleseed
         sunsky = scene.appleseed_sky
@@ -2469,6 +2531,8 @@ class Writer(object):
         self.__close_element("light")
 
     def __emit_point_light(self, scene, lamp):
+        """Emits a point light into the scene file"""
+
         lamp_data = lamp.data
         asr_light = lamp_data.appleseed
         radiance_name = "{0}_radiance".format(lamp.name)
@@ -2485,6 +2549,8 @@ class Writer(object):
         self.__close_element("light")
 
     def __emit_spot_light(self, scene, lamp):
+        """Emits a spot lamp into the scene file."""
+
         lamp_data = lamp.data
         asr_light = lamp_data.appleseed
 
@@ -2518,6 +2584,8 @@ class Writer(object):
         self.__close_element("light")
 
     def __emit_directional_light(self, scene, lamp):
+        """This emits a directional light into the scene file."""
+
         lamp_data = lamp.data
         asr_light = lamp_data.appleseed
         radiance_name = "{0}_radiance".format(lamp.name)
@@ -2533,11 +2601,9 @@ class Writer(object):
         self.__emit_transform_element(self._global_matrix * lamp.matrix_world, None)
         self.__close_element("light")
 
-    # ----------------------------------------------------------------------------------------------
-    # Output.
-    # ----------------------------------------------------------------------------------------------
-
     def __emit_output(self, scene):
+        """This writes the output section of the scene file"""
+
         self.__open_element("output")
         self.__emit_frame_element(scene)
         self.__close_element("output")
@@ -2574,10 +2640,6 @@ class Writer(object):
         min_y = height - int(scene.render.border_max_y * height) - 1
         max_y = height - int(scene.render.border_min_y * height) - 1
         return min_x, min_y, max_x, max_y
-
-    # ----------------------------------------------------------------------------------------------
-    # Configurations.
-    # ----------------------------------------------------------------------------------------------
 
     def __emit_configurations(self, scene):
         self.__open_element("configurations")
@@ -2681,10 +2743,6 @@ class Writer(object):
 
         self.__close_element('parameters')
 
-    # ----------------------------------------------------------------------------------------------
-    # Common elements.
-    # ----------------------------------------------------------------------------------------------
-
     def __emit_color_element(self, name, color_space, values, alpha, multiplier):
         self.__open_element('color name="{0}"'.format(name))
         self.__emit_parameter("color_space", color_space)
@@ -2694,14 +2752,14 @@ class Writer(object):
             self.__emit_line("<alpha>{0}</alpha>".format(" ".join(map(str, alpha))))
         self.__close_element("color")
 
-    #
-    # A note on color spaces:
-    #
-    # Internally, Blender stores colors as linear RGB values, and the numeric color values
-    # we get from color pickers are linear RGB values, although the color swatches and color
-    # pickers show gamma corrected colors. This explains why we pretty much exclusively use
-    # __emit_solid_linear_rgb_color_element() instead of __emit_solid_srgb_color_element().
-    #
+    """
+    A note on color spaces:
+    
+    Internally, Blender stores colors as linear RGB values, and the numeric color values
+    we get from color pickers are linear RGB values, although the color swatches and color
+    pickers show gamma corrected colors. This explains why we pretty much exclusively use
+    __emit_solid_linear_rgb_color_element() instead of __emit_solid_srgb_color_element().
+    """
 
     def __emit_solid_linear_rgb_color_element(self, name, values, multiplier):
         self.__emit_color_element(name, "linear_rgb", values, None, multiplier)
@@ -2710,20 +2768,20 @@ class Writer(object):
         self.__emit_color_element(name, "srgb", values, None, multiplier)
 
     def __emit_transform_element(self, m, time):
-        #
-        # We have the following conventions:
-        #
-        #   Both Blender and appleseed use right-hand coordinate systems.
-        #   Both Blender and appleseed use column-major matrices.
-        #   Both Blender and appleseed use pre-multiplication.
-        #   In Blender, given a matrix m, m[i][j] is the element at the i'th row, j'th column.
-        #
+        """
+        We have the following conventions:
 
-        # The only difference between the coordinate systems of Blender and appleseed is the up vector:
-        # in Blender, up is Z+; in appleseed, up is Y+. We can go from Blender's coordinate system to
-        # appleseed's one by rotating by +90 degrees around the X axis. That means that Blender
-        # objects must be rotated by -90 degrees around X before being exported to appleseed.
-        #
+        Both Blender and appleseed use right-hand coordinate systems.
+        Both Blender and appleseed use column-major matrices.
+        Both Blender and appleseed use pre-multiplication.
+        In Blender, given a matrix m, m[i][j] is the element at the i'th row, j'th column.
+
+        The only difference between the coordinate systems of Blender and appleseed is the up vector:
+        in Blender, up is Z+; in appleseed, up is Y+. We can go from Blender's coordinate system to
+        appleseed's one by rotating by +90 degrees around the X axis. That means that Blender
+        objects must be rotated by -90 degrees around X before being exported to appleseed.
+        """
+
         if time is not None:
             self.__open_element('transform time="%.2f"' % time)
         else:
@@ -2748,10 +2806,6 @@ class Writer(object):
 
     def __emit_parameter(self, name, value):
         self.__emit_line("<parameter name=\"" + name + "\" value=\"" + str(value) + "\" />")
-
-    # ----------------------------------------------------------------------------------------------
-    # Utilities.
-    # ----------------------------------------------------------------------------------------------
 
     def __open_element(self, name):
         self.__emit_line("<" + name + ">")
@@ -2799,10 +2853,6 @@ class Writer(object):
         padding_count = max_length - len(severity)
         padding = " " * padding_count
         print("{0}{1} : {2}".format(severity, padding, message))
-
-    # ----------------------------------------------------------------------------------------------
-    #   Preview render .appleseed file export
-    # ----------------------------------------------------------------------------------------------
 
     def export_preview(self, scene, file_path, mat, mesh, width, height):
         """

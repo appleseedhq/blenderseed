@@ -67,13 +67,8 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               ('plastic_brdf', "Plastic BRDF", ""),
                                               ('sheen_brdf', "Sheen BRDF", ""),
                                               ('specular_brdf', "Specular BRDF", ""),
-                                              ('specular_btdf', "Specular BTDF", "")
-                                              # ('better_dipole_bssrdf', "Better Dipole BSSRDF", ""),
-                                              # ('directional_dipole_bssrdf', "Directional Dipole BSSRDF", ""),
-                                              # ('gaussian_bssrdf', "Gaussian BSSRDF", ""),
-                                              # ('normalized_diffusion_bssrdf', "Normalized Diffusion BSSRDF", ""),
-                                              # ('standard_dipole_bssrdf', "Standard Dipole BSSRDF", "")
-                                              ],
+                                              ('specular_btdf', "Specular BTDF", ""),
+                                              ('none', "None", "")],
                                        description="BSDF model for current material layer",
                                        default="lambertian_brdf",
                                        update=refresh_preview)
@@ -1495,6 +1490,173 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                         max=16,
                                         update=refresh_preview)
 
+    #
+    # BSSRDF
+    #
+
+    bssrdf_model = bpy.props.EnumProperty(name="BSSRDF Model",
+                                          description="BSSRDF model",
+                                          items=[('none', "None", ""),
+                                                 ('normalized_diffusion_bssrdf', "Normalized Diffusion", ""),
+                                                 ('better_dipole_bssrdf', "Dipole", ""),
+                                                 ('gaussian_bssrdf', "Gaussian", "")],
+                                          default="none",
+                                          update=refresh_preview)
+
+    bssrdf_weight = bpy.props.FloatProperty(name="bssrdf_weight",
+                                            description="Weight of the BSSRDF",
+                                            default=1.0,
+                                            min=0.0,
+                                            max=1.0,
+                                            update=refresh_preview)
+
+    bssrdf_weight_use_texture = bpy.props.BoolProperty(name="bssrdf_weight_use_texture",
+                                                       description="Use a texture for the BSSRDF weight",
+                                                       default=False,
+                                                       update=refresh_preview)
+
+    bssrdf_weight_texture = bpy.props.StringProperty(name="bssrdf_weight_texture",
+                                                     description="Texture to influence BSSRDF weight",
+                                                     default="",
+                                                     update=refresh_preview)
+
+    bssrdf_reflectance = bpy.props.FloatVectorProperty(name="bssrdf_reflectance",
+                                                       description="Diffuse Surface Reflectance",
+                                                       default=(0.5, 0.5, 0.5),
+                                                       subtype='COLOR',
+                                                       min=0.0,
+                                                       max=1.0,
+                                                       update=refresh_preview)
+
+    bssrdf_reflectance_use_texture = bpy.props.BoolProperty(name="bssrdf_reflectance_use_texture",
+                                                            description="Use a texture for the BSSRDF reflectance",
+                                                            default=False,
+                                                            update=refresh_preview)
+
+    bssrdf_reflectance_texture = bpy.props.StringProperty(name="bssrdf_reflectance_texture",
+                                                          description="Texture to influence BSSRDF reflectance",
+                                                          default="",
+                                                          update=refresh_preview)
+
+    bssrdf_reflectance_multiplier = bpy.props.FloatProperty(name="bssrdf_reflectance_multiplier",
+                                                            description="Diffuse Surface Reflectance Multiplier",
+                                                            default=1.0,
+                                                            min=0.0,
+                                                            max=1.0,
+                                                            update=refresh_preview)
+
+    bssrdf_reflectance_multiplier_use_texture = bpy.props.BoolProperty(name="bssrdf_reflectance_multiplier_use_texture",
+                                                                       description="Use a texture for the BSSRDF reflectance multiplier",
+                                                                       default=False,
+                                                                       update=refresh_preview)
+
+    bssrdf_reflectance_multiplier_texture = bpy.props.StringProperty(name="bssrdf_reflectance_multiplier_texture",
+                                                                     description="Texture to influence BSSRDF reflectance multiplier",
+                                                                     default="",
+                                                                     update=refresh_preview)
+
+    bssrdf_mfp = bpy.props.FloatVectorProperty(name="bssrdf_mfp",
+                                               description="Mean Free Path",
+                                               default=(0.5, 0.5, 0.5),
+                                               subtype='COLOR',
+                                               min=0.0,
+                                               max=1.0,
+                                               update=refresh_preview)
+
+    bssrdf_mfp_use_texture = bpy.props.BoolProperty(name="bssrdf_mfp_use_texture",
+                                                    description="Use a texture for the Mean Free Path",
+                                                    default=False,
+                                                    update=refresh_preview)
+
+    bssrdf_mfp_texture = bpy.props.StringProperty(name="bssrdf_mfp_texture",
+                                                  description="Texture to influence the Mean Free Path",
+                                                  default="",
+                                                  update=refresh_preview)
+
+    bssrdf_mfp_multiplier = bpy.props.FloatProperty(name="bssrdf_mfp_multiplier",
+                                                    description="Mean Free Path Multiplier",
+                                                    default=1.0,
+                                                    min=0.0,
+                                                    max=1.0,
+                                                    update=refresh_preview)
+
+    bssrdf_mfp_multiplier_use_texture = bpy.props.BoolProperty(name="bssrdf_mfp_multiplier_use_texture",
+                                                               description="Use a texture for the Mean Free Path multiplier",
+                                                               default=False,
+                                                               update=refresh_preview)
+
+    bssrdf_mfp_multiplier_texture = bpy.props.StringProperty(name="bssrdf_mfp_multiplier_texture",
+                                                             description="Texture to influence the Mean Free Path multiplier",
+                                                             default="",
+                                                             update=refresh_preview)
+
+    bssrdf_ior = bpy.props.FloatProperty(name="bssrdf_ior",
+                                         description="Index of Refraction",
+                                         default=1.3,
+                                         min=1.0,
+                                         max=2.5,
+                                         update=refresh_preview)
+
+    bssrdf_fresnel_weight = bpy.props.FloatProperty(name="bssrdf_fresnel_weight",
+                                                    description="Fresnel Weight",
+                                                    default=1.0,
+                                                    min=0.0,
+                                                    max=1.0,
+                                                    update=refresh_preview)
+
+    #
+    # Volume
+    #
+
+    volume_phase_function_model = bpy.props.EnumProperty(name="Volumetric Model",
+                                                         description="Volume phase function model",
+                                                         items=[('none', "None", ""),
+                                                                ('henyey', "Henyey-Greenstein", ""),
+                                                                ('isotropic', "Isotropic", "")],
+                                                         default="none",
+                                                         update=refresh_preview)
+
+    volume_absorption = bpy.props.FloatVectorProperty(name="volume_absorption",
+                                                      description="Volume absorption",
+                                                      default=(0.5, 0.5, 0.5),
+                                                      subtype='COLOR',
+                                                      min=0.0,
+                                                      max=1.0,
+                                                      update=refresh_preview)
+
+    volume_absorption_multiplier = bpy.props.FloatProperty(name="volume_absorption_multiplier",
+                                                           description="Volume absorption multiplier",
+                                                           default=1.0,
+                                                           min=0.0,
+                                                           max=200.0,
+                                                           update=refresh_preview)
+
+    volume_scattering = bpy.props.FloatVectorProperty(name="volume_scattering",
+                                                      description="Volume scattering",
+                                                      default=(0.5, 0.5, 0.5),
+                                                      subtype='COLOR',
+                                                      min=0.0,
+                                                      max=1.0,
+                                                      update=refresh_preview)
+
+    volume_scattering_multiplier = bpy.props.FloatProperty(name="volume_scattering_multiplier",
+                                                           description="Volume absorption multiplier",
+                                                           default=1.0,
+                                                           min=0.0,
+                                                           max=200.0,
+                                                           update=refresh_preview)
+
+    volume_average_cosine = bpy.props.FloatProperty(name="volume_average_cosine",
+                                                    description="Volume average cosine",
+                                                    default=0.0,
+                                                    min=-1.0,
+                                                    max=1.0,
+                                                    update=refresh_preview)
+
+    #
+    # EDF
+    #
+
     use_light_emission = bpy.props.BoolProperty(name="use_light_emission",
                                                 description="Enable material light emission",
                                                 default=False,
@@ -1542,6 +1704,10 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                max=10,
                                                update=refresh_preview)
 
+    #
+    # Bump/Normal
+    #
+
     material_use_bump_tex = bpy.props.BoolProperty(name="material_use_bump_tex",
                                                    description="Use a texture to influence bump / normal",
                                                    default=False,
@@ -1570,6 +1736,10 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                    min=0.01,
                                                    max=10,
                                                    update=refresh_preview)
+
+    #
+    # Alpha
+    #
 
     material_alpha_map = bpy.props.StringProperty(name="material_alpha_map",
                                                   description="Alpha texture",
