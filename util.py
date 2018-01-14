@@ -26,14 +26,12 @@
 # THE SOFTWARE.
 #
 
-import datetime
 import multiprocessing
 import os
 from math import tan, atan, degrees
 
 import bpy
 import mathutils
-from extensions_framework import util as efutil
 
 from . import bl_info
 
@@ -83,7 +81,17 @@ def filter_params(params):
 
 
 def realpath(path):
-    return os.path.realpath(efutil.filesystem_path(path))
+    """Resolve a relative Blender path to a real filesystem path"""
+
+    if path.startswith('//'):
+        path = bpy.path.abspath(path)
+    else:
+        path = os.path.realpath(path)
+
+    path = path.replace('\\', '/')
+    path = os.path.realpath(path)
+
+    return path
 
 
 # ------------------------------------

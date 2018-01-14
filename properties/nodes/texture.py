@@ -28,9 +28,8 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import strip_spaces, realpath, join_names_underscore, filter_params, debug, asUpdate, sep
-from ..materials import AppleseedMatProps
-from . import AppleseedNode, AppleseedSocket
+from ...util import asUpdate
+from . import AppleseedNode
 
 
 class AppleseedTexNode(Node, AppleseedNode):

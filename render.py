@@ -31,11 +31,11 @@ import os
 import struct
 import subprocess
 import shutil
+import tempfile
 import threading
 from shutil import copyfile
 
 import bpy
-from extensions_framework import util as efutil
 
 from . import projectwriter
 from . import util
@@ -69,7 +69,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         # Name and location of the exported project.
-        project_dir = os.path.join(efutil.temp_directory(), "blenderseed", "render")
+        project_dir = os.path.join(tempfile.gettempdir(), "blenderseed", "render")
         project_filepath = os.path.join(project_dir, "render.appleseed")
 
         # Create target directories if necessary.
@@ -117,7 +117,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             return
 
         # Build the path to the output preview project.
-        preview_output_dir = os.path.join(efutil.temp_directory(), "blenderseed", "material_preview")
+        preview_output_dir = os.path.join(tempfile.gettempdir(), "blenderseed", "material_preview")
         preview_project_filepath = os.path.join(preview_output_dir, "material_preview.appleseed")
 
         # Create target directories if necessary.
@@ -159,6 +159,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         if not appleseed_bin_dir:
             self.report({'ERROR'}, "The path to the folder containing the appleseed.cli executable has not been specified. Set the path in the add-on user preferences.")
             return
+
+        # Properly handle relative Blender paths.
+        appleseed_bin_dir = util.realpath(appleseed_bin_dir)
 
         # Check that the path to the bin folder indeed points to a folder.
         if not os.path.isdir(appleseed_bin_dir):
