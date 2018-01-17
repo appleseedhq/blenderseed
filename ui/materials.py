@@ -1439,7 +1439,12 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         layout.active = asr_mat.use_light_emission
         col = layout.column()
         col.active = asr_mat.use_light_emission
-        col.prop(asr_mat, "light_color", text="Color")
+        split = layout.split(percentage=0.40)
+        col = split.column()
+        col.label("Radiance:")
+        col = split.column()
+        col.prop(asr_mat, "light_color", text="")
+        col = layout.column()
         col.prop(asr_mat, "light_emission", text="Radiance Multiplier")
         col.prop(asr_mat, "light_exposure", text="Exposure")
         layout.prop(asr_mat, "cast_indirect", text="Cast Indirect Light")
