@@ -42,8 +42,8 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                      ("gradient", "Gradient", "Use sky color gradient"),
                                                      ("latlong_map", "Latitude-Longitude Map", "Use latlong map texture"),
                                                      ("mirrorball_map", "Mirror Ball Map", "Use mirror ball texture"),
-                                                     ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere"),
-                                                     ("sunsky", "Physical Sun/Sky", "")],
+                                                     ("sunsky", "Physical Sun/Sky", ""),
+                                                     ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere")],
                                               description="Select environment type",
                                               default="gradient")
 
