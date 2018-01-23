@@ -2172,10 +2172,12 @@ class Writer(object):
         """Emits a reference to a texture file."""
 
         # Nothing to do if this texture was already emitted.
-        if texture in self._textures_set:
-            return
 
-        self._textures_set.add(texture)
+        if not node:
+            if texture in self._textures_set:
+                return
+
+            self._textures_set.add(texture)
 
         if scene_texture:
             # texture is an absolute file path string.
