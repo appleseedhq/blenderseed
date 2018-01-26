@@ -2221,6 +2221,7 @@ class Writer(object):
         self.__open_element('texture_instance name="{0}_inst" texture="{1}"'.format(texture_name, texture_name))
         self.__emit_parameter("addressing_mode", mode)
         self.__emit_parameter("filtering_mode", "bilinear")
+        self.__emit_parameter("alpha_mode", "detect")
         self.__close_element("texture_instance")
 
     def __emit_material_element(self, material_name, bsdf_name, edf_name, bssrdf_name, volume_name, surface_shader_name, scene, material, material_node=None):
@@ -2229,6 +2230,7 @@ class Writer(object):
         if material != "":
             asr_mat = material.appleseed
         bump_map = ""
+        material_alpha_map = 1.0
         material_bump_amplitude = 1.0
         method = "bump"
 
@@ -2237,11 +2239,17 @@ class Writer(object):
             # Node material.
             if material_node is not None:
                 inputs = material_node.inputs
-                bump_map = inputs[3].get_socket_value(False)
+                material_alpha_map = inputs[3].get_socket_value(True)
+                bump_map = inputs[4].get_socket_value(False)
                 if bump_map != "":
                     bump_map = bump_map + "_inst"
-                    material_bump_amplitude, use_normalmap = inputs[3].get_normal_params()
+                    material_bump_amplitude, use_normalmap = inputs[4].get_normal_params()
                     method = "normal" if use_normalmap else "bump"
+            else:
+                if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
+                    if util.is_uv_img(bpy.data.textures[asr_mat.material_alpha_map]):
+                        material_alpha_map = asr_mat.material_alpha_map + "_inst"
+                        self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
 
                 if asr_mat.material_use_bump_tex:
                     if asr_mat.material_bump_tex != "":
@@ -2254,11 +2262,11 @@ class Writer(object):
                     bump_map += "_inst"
                     method = "normal" if asr_mat.material_use_normalmap else "bump"
 
-                # if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
-                #     material_alpha_map = asr_mat.material_alpha_map + "_inst"
-                #     self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
-                # else:
-                #     material_alpha_map = asr_mat.material_alpha
+                if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
+                    material_alpha_map = asr_mat.material_alpha_map + "_inst"
+                    self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
+                else:
+                    material_alpha_map = asr_mat.material_alpha
 
         self.__open_element('material name="{0}" model="generic_material"'.format(material_name))
         if bsdf_name:
@@ -2277,6 +2285,8 @@ class Writer(object):
                 self.__emit_parameter("bump_offset", asr_mat.material_bump_offset)
             else:
                 self.__emit_parameter("normal_map_up", "z")
+        if material_alpha_map != 1.0:
+            self.__emit_parameter("alpha_map", material_alpha_map)
         self.__emit_parameter("displacement_method", method)
         self.__emit_parameter("surface_shader", surface_shader_name)
         self.__close_element("material")
