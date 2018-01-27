@@ -83,6 +83,10 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                       description="Visibility to specular rays",
                                                       default=True)
 
+        cls.medium_priority = bpy.props.IntProperty(name="medium_priority",
+                                                    description="Medium priority for nested dielectrics.  Higher numbers take priority over lower numbers.",
+                                                    default=0)
+
     @classmethod
     def unregister(cls):
         del bpy.types.Object.appleseed
