@@ -77,6 +77,12 @@ class AppleseedObjRaytracePanel(bpy.types.Panel):
         layout = self.layout
         asr_obj = context.object.appleseed
         layout.prop(asr_obj, "medium_priority", text="Nested Dielectric Medium Priority")
+        layout.prop(asr_obj, "ray_bias_method")
+        row = layout.row()
+        row.enabled = asr_obj.ray_bias_method != 'none'
+        row.prop(asr_obj, "ray_bias_distance", text="Ray Bias Distance")
+
+
 class AppleseedObjMBlurPanel(bpy.types.Panel):
     bl_label = "Appleseed Motion Blur"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
