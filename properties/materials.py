@@ -1735,6 +1735,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                    default=0.5,
                                                    min=0.01,
                                                    max=10,
+                                                   precision=4,
                                                    update=refresh_preview)
 
     #

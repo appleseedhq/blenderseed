@@ -61,6 +61,28 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         row.prop(asr_obj, "specular_visible", text="Specular")
 
 
+class AppleseedObjRaytracePanel(bpy.types.Panel):
+    bl_label = "Appleseed Object Options"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
+
+    def draw(self, context):
+        layout = self.layout
+        asr_obj = context.object.appleseed
+        layout.prop(asr_obj, "medium_priority", text="Nested Dielectric Medium Priority")
+        layout.prop(asr_obj, "ray_bias_method")
+        row = layout.row()
+        row.enabled = asr_obj.ray_bias_method != 'none'
+        row.prop(asr_obj, "ray_bias_distance", text="Ray Bias Distance")
+
+
 class AppleseedObjMBlurPanel(bpy.types.Panel):
     bl_label = "Appleseed Motion Blur"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}

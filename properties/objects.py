@@ -83,6 +83,22 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                       description="Visibility to specular rays",
                                                       default=True)
 
+        cls.medium_priority = bpy.props.IntProperty(name="medium_priority",
+                                                    description="Medium priority for nested dielectrics.  Higher numbers take priority over lower numbers.",
+                                                    default=0)
+
+        cls.ray_bias_distance = bpy.props.FloatProperty(name="ray_bias_distance",
+                                                        description="Ray bias distance",
+                                                        default=0.0)
+
+        cls.ray_bias_method = bpy.props.EnumProperty(name="Ray Bias Method",
+                                                     description="Ray bias method",
+                                                     items=[('none', "None", ""),
+                                                            ('incoming_direction', "Shift Along Incoming Direction", ""),
+                                                            ('outgoing_direction', "Shift Along Outgoing Direction", ""),
+                                                            ('normal', "Shift Along Surface Normal", "")],
+                                                     default='none')
+
     @classmethod
     def unregister(cls):
         del bpy.types.Object.appleseed

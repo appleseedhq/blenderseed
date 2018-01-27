@@ -629,6 +629,11 @@ class Writer(object):
         self.__open_element('object_instance name="{0}" object="{1}"'.format(instance_name, object_name))
         if object.appleseed.enable_visibility_flags:
             self.__emit_visibility_flags(object)
+        if object.appleseed.medium_priority > 0:
+            self.__emit_parameter("medium_priority", object.appleseed.medium_priority)
+        if object.appleseed.ray_bias_method != 'none':
+            self.__emit_parameter("ray_bias_method", object.appleseed.ray_bias_method)
+            self.__emit_parameter("ray_bias_distance", object.appleseed.ray_bias_distance)
         if util.ob_mblur_enabled(object, scene):
             self.__emit_transform_element(identity_matrix, None)
         else:
