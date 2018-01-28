@@ -35,6 +35,129 @@ import mathutils
 
 from . import bl_info
 
+
+import subprocess
+import sys
+
+
+
+# ------------------------------------
+# OSL shader reader
+# ------------------------------------
+
+def read_osl_shaders():
+    if bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory == "":
+        print("appleseed binary path not set.  Rendering and OSL features will not be avaialable")
+        return
+            
+    osl_reader_path = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
+    appleseed_parent_dir = osl_reader_path.strip("\\bin")
+    shader_directories = (os.path.join(appleseed_parent_dir, 'shaders', 'appleseed'), os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed'))
+
+    osl_nodes = []
+
+    for shader_dir in shader_directories:
+        for file in os.listdir(shader_dir):
+            if file.endswith(".oso"):
+                filename = os.path.join(shader_dir, file)
+                content = []
+                cmd = ('%s\\oslinfo -v %s' % (osl_reader_path, filename))
+                process = subprocess.Popen(cmd, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                while 1:
+                    line = process.stdout.readline()
+                    line = line.strip()
+                    content.append(line)
+                    if not line: 
+                        break
+                shader_params = create_osl_dict(filename, content)
+                osl_nodes.append(shader_params)
+
+    return osl_nodes
+
+def create_osl_dict(filename, content=None):
+
+    d = {}
+    currentElement = None
+    for line in content:
+        line = line.decode("utf-8")
+        if len(line) == 0:
+            continue
+        if line.startswith("shader") or line.startswith("surface"):
+            d['name'] = line.split(" ")[1].replace("\"", "")
+            d['inputs'] = []
+            d['outputs'] = []
+            d['non_connectable_props'] = []
+            d['filename'] = filename.replace(".oso", "")
+            currentElement = d
+        else:
+            if line.startswith("Default value"):
+                currentElement['default'] = line.split(" ")[-1].replace("\"", "")
+                if "type" in currentElement:
+                    if currentElement["type"] in ["color", "vector", "output vector"]:
+                        vector = line.split("[")[-1].split("]")[0]
+                        currentElement['default'] = vector.strip()
+            if line.startswith("metadata"):
+                if "widget = " in line:
+                    currentElement['widget'] = line.split(" = ")[-1].replace("\"", "")
+                    if currentElement['widget'] == 'null' and currentElement['type'] not in ('vector', 'point[4]', 'point', 'normal', 'matrix', 'float[2]'):
+                        currentElement['connectable'] = False
+                    if currentElement['widget'] == 'filename':
+                        currentElement['use_file_picker'] = True
+                if "options = " in line:    
+                    currentElement['type'] = 'intenum'
+                    currentElement['options'] = line.split(" = ")[-1].replace("\"", "").split("|")
+                    currentElement['connectable'] = False
+                if "min = " in line:
+                    currentElement['min'] = line.split(" ")[-1]
+                if "max = " in line:
+                    currentElement['max'] = line.split(" ")[-1]
+                if "label = " in line:
+                    currentElement['label'] = " ".join(line.split("=")[1:]).replace("\"", "").strip()
+                if "as_maya_attribute_connectable" in line:
+                    currentElement['connectable'] = False
+                if "help = " in line:
+                    currentElement['help'] = line.split(" = ")[-1].replace("\"", "")
+            if line.startswith("\""):  # found a parameter
+                currentElement = {}
+                elementName = line.split(" ")[0].replace("\"", "")
+                currentElement['name'] = reverseValidate(elementName)
+                currentElement['type'] = " ".join(line.split(" ")[1:]).replace("\"", "")
+                currentElement['connectable'] = True
+                currentElement['hidden'] = False
+                currentElement['use_file_picker'] = False
+                if 'in_' not in currentElement['name']:
+                    currentElement['hidden'] = True
+                if 'FilePath' in elementName:
+                    currentElement['use_file_picker'] = True
+                if currentElement['type'] == "string":
+                    currentElement['connectable'] = False
+
+                if "out_" in line:
+                    d['outputs'].append(currentElement)
+                    currentElement = d['outputs'][-1]
+                else:
+                    d['inputs'].append(currentElement)
+                    currentElement = d['inputs'][-1]
+
+    return d
+
+def reverseValidate(pname):
+    if pname == "inMin":
+        return "min"
+    if pname == "inMax":
+        return "max";
+    if pname == "inVector":
+        return "vector";
+    if pname == "inMatrix":
+        return "matrix";
+    if pname == "inDiffuse":
+        return "diffuse";
+    if pname == "inColor":
+        return "color";
+    if pname == "outOutput":
+        return "output";
+    return pname;
+
 # ------------------------------------
 # Generic utilities and settings.
 # ------------------------------------

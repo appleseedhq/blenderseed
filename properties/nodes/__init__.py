@@ -28,9 +28,10 @@
 
 import bpy
 import nodeitems_utils
+from nodeitems_utils import NodeItem, NodeCategory
 from bpy.types import NodeTree
 from bpy.app.handlers import persistent
-from ...util import addon_dir, join_names_underscore
+from ...util import addon_dir, join_names_underscore, read_osl_shaders
 import os
 
 
@@ -103,7 +104,7 @@ class AppleseedSocket(object):
         return self.socket_value
 
 
-class AppleseedNodeCategory(nodeitems_utils.NodeCategory):
+class AppleseedNodeCategory(NodeCategory):
     """Node category for extending the Add menu, toolbar panels and search operator.
 
     Base class for node categories.
@@ -117,31 +118,43 @@ class AppleseedNodeCategory(nodeitems_utils.NodeCategory):
 
 # appleseed node categories
 # Format: (identifier, label, items list)
-appleseed_node_categories = [
-    AppleseedNodeCategory("BSDF", "BSDF", items=[
-        nodeitems_utils.NodeItem("AppleseedAshikhminNode"),
-        nodeitems_utils.NodeItem("AppleseedBlinnNode"),
-        nodeitems_utils.NodeItem("AppleseedDiffuseBTDFNode"),
-        nodeitems_utils.NodeItem("AppleseedDisneyNode"),
-        nodeitems_utils.NodeItem("AppleseedGlassNode"),
-        nodeitems_utils.NodeItem("AppleseedKelemenNode"),
-        nodeitems_utils.NodeItem("AppleseedLambertianNode"),
-        nodeitems_utils.NodeItem("AppleseedMetalNode"),
-        nodeitems_utils.NodeItem("AppleseedOrenNayarNode"),
-        nodeitems_utils.NodeItem("AppleseedPlasticNode"),
-        nodeitems_utils.NodeItem("AppleseedSheenNode"),
-        nodeitems_utils.NodeItem("AppleseedSpecBRDFNode"),
-        nodeitems_utils.NodeItem("AppleseedSpecBTDFNode"),
-        nodeitems_utils.NodeItem("AppleseedBlendNode")]),
-    AppleseedNodeCategory("BSSRDF", "BSSRDF", items=[
-        nodeitems_utils.NodeItem("AppleseedBSSRDFNode")]),
-    AppleseedNodeCategory("Volume", "Volume", items=[
-        nodeitems_utils.NodeItem("AppleseedVolumeNode")]),
-    AppleseedNodeCategory("TEXTURES", "Texture", items=[
-        nodeitems_utils.NodeItem("AppleseedTexNode"),
-        nodeitems_utils.NodeItem("AppleseedNormalNode")]),
-    AppleseedNodeCategory("OUTPUTS", "Output", items=[
-        nodeitems_utils.NodeItem("AppleseedMaterialNode")])]
+def node_categories(osl_node_names):
+
+    osl_nodes = []
+
+    for node in osl_node_names:
+        node_item = NodeItem(node)
+        osl_nodes.append(node_item)
+
+    appleseed_node_categories = [
+        AppleseedNodeCategory("BSDF", "BSDF", items=[
+            NodeItem("AppleseedAshikhminNode"),
+            NodeItem("AppleseedBlinnNode"),
+            NodeItem("AppleseedDiffuseBTDFNode"),
+            NodeItem("AppleseedDisneyNode"),
+            NodeItem("AppleseedGlassNode"),
+            NodeItem("AppleseedKelemenNode"),
+            NodeItem("AppleseedLambertianNode"),
+            NodeItem("AppleseedMetalNode"),
+            NodeItem("AppleseedOrenNayarNode"),
+            NodeItem("AppleseedPlasticNode"),
+            NodeItem("AppleseedSheenNode"),
+            NodeItem("AppleseedSpecBRDFNode"),
+            NodeItem("AppleseedSpecBTDFNode"),
+            NodeItem("AppleseedBlendNode")]),
+        AppleseedNodeCategory("BSSRDF", "BSSRDF", items=[
+            NodeItem("AppleseedBSSRDFNode")]),
+        AppleseedNodeCategory("Volume", "Volume", items=[
+            NodeItem("AppleseedVolumeNode")]),
+        AppleseedNodeCategory("TEXTURES", "Texture", items=[
+            NodeItem("AppleseedTexNode"),
+            NodeItem("AppleseedNormalNode")]),
+        AppleseedNodeCategory("OUTPUTS", "Output", items=[
+            NodeItem("AppleseedMaterialNode")]),
+        AppleseedNodeCategory("OSL", "Osl", items=osl_nodes)
+        ]
+
+    return appleseed_node_categories
 
 
 @persistent
@@ -192,12 +205,16 @@ from . import texture
 from . import normal
 from . import volume
 from . import material
+from . import oslnode
 
 
 def register():
+    node_list = read_osl_shaders()
+
+    osl_node_names = []
+
     bpy.app.handlers.load_post.append(appleseed_scene_loaded)
     bpy.app.handlers.scene_update_pre.append(appleseed_scene_loaded)
-    nodeitems_utils.register_node_categories("APPLESEED", appleseed_node_categories)
     bpy.utils.register_class(AppleseedNodeTree)
     ashikhminbrdf.register()
     bssrdf.register()
@@ -218,6 +235,10 @@ def register():
     normal.register()
     volume.register()
     material.register()
+    if node_list:
+        for node in node_list:
+            osl_node_names.append(oslnode.generate_node(node))
+    nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
 
 
 def unregister():
@@ -241,5 +262,6 @@ def unregister():
     texture.unregister()
     volume.unregister()
     material.unregister()
+    oslnode.unregister()
     normal.unregister()
     bpy.app.handlers.load_post.remove(appleseed_scene_loaded)

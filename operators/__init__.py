@@ -93,6 +93,22 @@ class AppleseedNewNodeTree(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class AppleseedNewOSLNodeTree(bpy.types.Operator):
+
+    bl_idname = "appleseed.add_osl_material_nodetree"
+    bl_label = "Add appleseed OSL Material Node Tree"
+    bl_description = "Create an appleseed osl material node tree and link it to the current material"
+
+    def execute(self, context):
+        material = context.object.active_material
+        nodetree = bpy.data.node_groups.new('%s appleseed Nodetree' % material.name, 'AppleseedNodeTree')
+        nodetree.use_fake_user = True
+        node = nodetree.nodes.new('Appleseedas_closure2surfaceNode')
+        material.appleseed.node_tree = nodetree.name
+        material.appleseed.node_output = node.name
+        return {'FINISHED'} 
+
+
 def register():
     bpy.utils.register_class(AppleseedAddMatLayer)
     bpy.utils.register_class(AppleseedRemoveMatLayer)

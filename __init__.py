@@ -63,11 +63,11 @@ import bpy
 
 
 def register():
+    preferences.register()
     properties.register()
     operators.register()
     export.register()
     ui.register()
-    preferences.register()
     bpy.utils.register_module(__name__)
 
 
