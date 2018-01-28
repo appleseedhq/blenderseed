@@ -61,7 +61,7 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         row.prop(asr_obj, "specular_visible", text="Specular")
 
 
-class AppleseedObjRaytracePanel(bpy.types.Panel):
+class AppleseedObjOptionsPanel(bpy.types.Panel):
     bl_label = "Appleseed Object Options"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
@@ -76,6 +76,11 @@ class AppleseedObjRaytracePanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         asr_obj = context.object.appleseed
+        scene = context.scene
+        sss_lists = scene.appleseed_sss_sets
+        
+        layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
+        layout.label(text="SSS sets are created in the world tab")
         layout.prop(asr_obj, "medium_priority", text="Nested Dielectric Medium Priority")
         layout.prop(asr_obj, "ray_bias_method")
         row = layout.row()

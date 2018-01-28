@@ -654,6 +654,8 @@ class Writer(object):
         if object.appleseed.ray_bias_method != 'none':
             self.__emit_parameter("ray_bias_method", object.appleseed.ray_bias_method)
             self.__emit_parameter("ray_bias_distance", object.appleseed.ray_bias_distance)
+        if object.appleseed.object_sss_set != "":
+            self.__emit_parameter("sss_set_id", object.appleseed.object_sss_set)
         if util.ob_mblur_enabled(object, scene):
             self.__emit_transform_element(identity_matrix, None)
         else:
