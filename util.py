@@ -45,15 +45,19 @@ import sys
 # OSL shader reader
 # ------------------------------------
 
+def get_osl_searchpaths():
+    osl_reader_path = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
+    appleseed_parent_dir = osl_reader_path.strip("\\bin")
+    shader_directories = (os.path.join(appleseed_parent_dir, 'shaders', 'appleseed'), os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed'))
+
+    return osl_reader_path, shader_directories
+
 def read_osl_shaders():
     if bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory == "":
         print("appleseed binary path not set.  Rendering and OSL features will not be avaialable")
         return
             
-    osl_reader_path = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
-    appleseed_parent_dir = osl_reader_path.strip("\\bin")
-    shader_directories = (os.path.join(appleseed_parent_dir, 'shaders', 'appleseed'), os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed'))
-
+    osl_reader_path, shader_directories = get_osl_searchpaths()
     osl_nodes = []
 
     for shader_dir in shader_directories:

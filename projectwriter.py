@@ -135,10 +135,18 @@ class Writer(object):
 
     def __emit_project(self, scene):
         self.__open_element("project")
+        self.__emit_searchpaths()
         self.__emit_scene(scene)
         self.__emit_output(scene)
         self.__emit_configurations(scene)
         self.__close_element("project")
+
+    def __emit_searchpaths(self):
+        osl_reader_path, shader_directories = util.get_osl_searchpaths()
+        self.__open_element("search_paths")
+        for path in shader_directories:
+            self.__emit_path(path)
+        self.__close_element("search_paths")
 
     def __emit_scene(self, scene):
         self.__open_element("scene")
@@ -669,7 +677,12 @@ class Writer(object):
     def __is_node_material(self, asr_mat):
         if asr_mat.node_tree != "" and asr_mat.node_output != "":
             node = bpy.data.node_groups[asr_mat.node_tree].nodes[asr_mat.node_output]
-            return node.node_type == 'material'
+            return node.node_type == 'material' or node.bl_idname == 'Appleseedas_closure2surfaceNode'
+
+    def __is_osl_material(self, asr_mat):
+        if asr_mat.node_tree != "" and asr_mat.node_output != "":
+            node = bpy.data.node_groups[asr_mat.node_tree].nodes[asr_mat.node_output]
+            return node.bl_idname == 'Appleseedas_closure2surfaceNode'
 
     def __emit_physical_surface_shader_element(self):
         self.__emit_line('<surface_shader name="physical_surface_shader" model="physical_surface_shader" />')
@@ -689,6 +702,7 @@ class Writer(object):
         asr_mat = material.appleseed
         asr_node_tree = asr_mat.node_tree
         use_nodes = self.__is_node_material(asr_mat)
+        use_osl = self.__is_osl_material(asr_mat)
         layers = asr_mat.layers
 
         material_node = None
@@ -720,15 +734,25 @@ class Writer(object):
         # If we didn't find any, then we're only exporting front material.
         if front_material_name == "":
             front_material_name = material.name
-            self.__emit_front_material(material, front_material_name, scene, layers, material_node, node_list)
-            if self.__is_light_emitting_material(asr_mat, scene, material_node):
-                # Assign the default material to the back face if the front face emits light,
-                # as we don't want mesh lights to emit from both faces.
-                back_material_name = "__default_material"
-            else:
+            if use_osl:
+                surface_name = front_material_name + "_surface"
+                self.__emit_osl_material(material, front_material_name, surface_name, scene, material_node, node_list)
                 back_material_name = front_material_name
+            else:
+                self.__emit_front_material(material, front_material_name, scene, layers, material_node, node_list)
+                if self.__is_light_emitting_material(asr_mat, scene, material_node):
+                    # Assign the default material to the back face if the front face emits light,
+                    # as we don't want mesh lights to emit from both faces.
+                    back_material_name = "__default_material"
+                else:
+                    back_material_name = front_material_name
 
         return front_material_name, back_material_name
+
+    def __emit_osl_material(self, material, front_material_name, surface_name, scene, material_node, node_list):
+
+        self.__emit_osl_shader_group(surface_name, node_list, material_node)
+        self.__emit_osl_element(front_material_name, surface_name)
 
     def __emit_front_material(self, material, material_name, scene, layers, material_node=None, node_list=None):
         """Material_name here is material.name + _front"""
@@ -749,6 +773,61 @@ class Writer(object):
         bsdf_name = self.__emit_back_material_bsdf_tree(material, material_name, scene, layers, material_node, node_list)
 
         self.__emit_material_element(material_name, bsdf_name, "", "", "", "physical_surface_shader", scene, material, material_node)
+
+    def __emit_osl_shader_group(self, front_material_name, node_list, material_node):
+
+        node_connections = []
+
+        self.__open_element('shader_group name="{0}"'.format(front_material_name))
+        for node in node_list:
+            self.__open_element('shader type="shader" name="%s" layer="%s"' % (node.file_name, node.name))
+            params = self.__get_osl_node_params(node)
+            for param in params:
+                self.__emit_parameter(param, params[param])
+            self.__close_element("shader")
+            node_connections.append(self.__get_socket_links(node))
+        self.__open_element('shader type="surface" name="%s" layer="%s"' % (material_node.file_name, material_node.name))
+        self.__close_element("shader")
+        for connection in node_connections:
+            self.__emit_shader_connection(connection[0], connection[1], connection[2], connection[3])
+        self.__close_element("shader_group")
+
+    def __get_osl_node_params(self, node):
+        parameters = {}
+        parameter_types = node.parameter_types
+        for item in dir(node):
+            if item not in ['__doc__', '__module__', 'bl_description', 'bl_height_default', 'parameter_types',
+                            'bl_height_max', 'bl_height_min', 'bl_icon', 'bl_idname', 'bl_label', 'bl_rna', 'bl_static_type',
+                            'bl_width_default', 'bl_width_max', 'bl_width_min', 'color', 'copy', 'dimensions', 'draw_buttons',
+                            'draw_buttons_ext', 'draw_label', 'file_name', 'free', 'height', 'hide', 'init', 'inputs', 'internal_links',
+                            'is_registered_node_type', 'label', 'location', 'mute', 'name', 'outputs', 'parent', 'rna_type', 'select',
+                            'shading_compatibility', 'show_options', 'show_preview', 'show_texture', 'socket_value_update', 'type', 'use_custom_color', 'width',
+                            'width_hidden']:
+                parameter_value = "{0}".format(parameter_types[item])
+                parameter = getattr(node, item)
+                if parameter_value == "int checkbox":
+                    parameter_value = "int"
+                    parameter = int(parameter)
+                if parameter_value in ('color', 'vector', 'normal'):
+                    parameter = "{0}".format(" ".join(map(str, parameter)))
+                parameters[item] = parameter_value + " " + str(parameter)
+
+        for socket in node.inputs:
+            if not socket.is_linked:
+                if socket.socket_value != "":
+                    parameter_value = "{0}".format(parameter_types[socket.socket_osl_id])
+                    parameter = socket.get_socket_value(True)
+                    if parameter_value in ('color', 'vector', 'normal'):
+                        parameter = "{0}".format(" ".join(map(str, parameter)))
+                    parameters[socket.socket_osl_id] = parameter_value + " " + str(parameter)
+
+        return parameters
+
+    def __get_socket_links(self, node):
+        for output in node.outputs:
+            if output.is_linked:
+                connections = [node.name, output.socket_osl_id, output.links[0].to_node.name, output.links[0].to_socket.socket_osl_id]
+        return connections
 
     def __emit_front_material_tree(self, material, material_name, scene, layers, material_node=None, node_list=None):
         """
@@ -2235,6 +2314,13 @@ class Writer(object):
         self.__emit_parameter("alpha_mode", "detect")
         self.__close_element("texture_instance")
 
+    def __emit_osl_element(self, front_material_name, surface_name):
+
+        self.__open_element('material name="{0}" model="osl_material"'.format(front_material_name))
+        self.__emit_parameter("surface_shader", "physical_surface_shader")
+        self.__emit_parameter("osl_surface", surface_name)
+        self.__close_element("material")
+
     def __emit_material_element(self, material_name, bsdf_name, edf_name, bssrdf_name, volume_name, surface_shader_name, scene, material, material_node=None):
         """This writes the material definition."""
 
@@ -2830,6 +2916,9 @@ class Writer(object):
     def __emit_parameter(self, name, value):
         self.__emit_line("<parameter name=\"" + name + "\" value=\"" + str(value) + "\" />")
 
+    def __emit_shader_connection(self, src_layer, src_param, dest_layer, dest_param):
+        self.__emit_line('<connect_shaders src_layer="%s" src_param="%s" dst_layer="%s" dst_param="%s" />' % (src_layer, src_param, dest_layer, dest_param))
+
     def __open_element(self, name):
         self.__emit_line("<" + name + ">")
         self.__indent()
@@ -2841,6 +2930,15 @@ class Writer(object):
     def __emit_line(self, line):
         self.__emit_indent()
         self._output_file.write(line + "\n")
+
+    def __emit_line_no_ind(self, line):
+        self._output_file.write(line + "\n")
+
+    def __emit_path(self, path):
+        self.__emit_line("<search_path>")
+        self.__indent()
+        self.__emit_line(path)
+        self.__close_element("search_path")
 
     def __indent(self):
         self._indent += 1
@@ -2884,6 +2982,9 @@ class Writer(object):
 
         self._textures_set = set()
 
+        osl_reader_path, shader_directories = util.get_osl_searchpaths()
+        appleseed_parent_dir = osl_reader_path.strip("\\bin")
+
         asr_mat = mat.appleseed
         sphere_a = True if mesh == 'sphere_a' else False
         mesh = 'sphere' if mesh in {'sphere', 'sphere_a'} else mesh
@@ -2895,6 +2996,15 @@ class Writer(object):
                 aspect_ratio = self.__get_frame_aspect_ratio(scene.render)
 
                 self._output_file.write("""<project>
+    <search_paths>
+        <search_path>""")
+                os.path.join(appleseed_parent_dir, 'shaders', 'appleseed')
+                self._output_file.write("""
+        </search_path>
+        <search_path>""")
+                os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed')
+                self._output_file.write("""</search_path>
+    </search_paths>
     <scene>
         <camera name="Camera" model="pinhole_camera">
             <parameter name="film_width" value="0.032" />
