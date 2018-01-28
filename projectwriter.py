@@ -485,8 +485,15 @@ class Writer(object):
     def __emit_object_element(self, object_name, mesh_file, object, scene):
         """Emit an object element to the project file."""
 
+        if object.appleseed.object_alpha_use_texture:
+            self.__emit_texture(None, False, scene, None, None, False, object)
+            alpha = object.name + "_alpha_inst"
+        else:
+            alpha = object.appleseed.object_alpha
+
         mesh_filename = "meshes" + os.path.sep + mesh_file
         self.__open_element('object name="' + object_name + '" model="mesh_object"')
+        self.__emit_parameter("alpha_map", alpha)
         if util.def_mblur_enabled(object, scene):
             self.__open_element('parameters name="filename"')
             self.__emit_parameter("0", mesh_filename)
@@ -2179,7 +2186,7 @@ class Writer(object):
         self.__emit_parameter("light_near_start", light_near_start)
         self.__close_element("edf")
 
-    def __emit_texture(self, texture, bump_bool, scene, node=None, material_name=None, scene_texture=False):
+    def __emit_texture(self, texture, bump_bool, scene, node=None, material_name=None, scene_texture=False, object=None):
         """Emits a reference to a texture file."""
 
         # Nothing to do if this texture was already emitted.
@@ -2200,6 +2207,10 @@ class Writer(object):
             texture_name = node.get_node_name()
             filepath = util.realpath(node.file_path)
             color_space = node.color_space
+        elif object is not None:
+            filepath = util.realpath(object.appleseed.object_alpha_texture)
+            texture_name = object.name + "_alpha"
+            color_space = object.appleseed.object_alpha_texture_colorspace
         else:
             if texture.image.colorspace_settings.name == 'Linear':
                 color_space = 'linear_rgb'
@@ -2217,15 +2228,17 @@ class Writer(object):
         self.__close_element("texture")
 
         # Now create texture instance.
-        self.__emit_texture_instance(texture, texture_name, bump_bool, node, material_name, scene_texture)
+        self.__emit_texture_instance(texture, texture_name, bump_bool, node, material_name, scene_texture, object)
 
-    def __emit_texture_instance(self, texture, texture_name, bump_bool, node=None, material_name=None, scene_texture=False):
+    def __emit_texture_instance(self, texture, texture_name, bump_bool, node=None, material_name=None, scene_texture=False, object=None):
         """Write the instance for the texture"""
 
         if scene_texture:
             mode = "clamp"
         elif node is not None:
             mode = node.addressing_mode
+        elif object is not None:
+            mode = object.appleseed.object_alpha_texture_wrap_mode
         else:
             mode = "wrap" if texture.extension == "REPEAT" else "clamp"
 

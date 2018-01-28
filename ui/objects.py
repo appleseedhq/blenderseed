@@ -82,6 +82,18 @@ class AppleseedObjRaytracePanel(bpy.types.Panel):
         row.enabled = asr_obj.ray_bias_method != 'none'
         row.prop(asr_obj, "ray_bias_distance", text="Ray Bias Distance")
 
+        split = layout.split(percentage=0.90)
+        col = split.column()
+        col.prop(asr_obj, "object_alpha", text="Object Alpha")
+
+        if asr_obj.object_alpha_use_texture:
+            layout.prop(asr_obj, "object_alpha_texture", text="Alpha Texture")
+            layout.prop(asr_obj, "object_alpha_texture_colorspace")
+            layout.prop(asr_obj, "object_alpha_texture_wrap_mode")
+
+        col = split.column()
+        col.prop(asr_obj, "object_alpha_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+
 
 class AppleseedObjMBlurPanel(bpy.types.Panel):
     bl_label = "Appleseed Motion Blur"
