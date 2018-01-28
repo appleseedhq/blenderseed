@@ -1466,6 +1466,9 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         col = split.column()
         col.prop(asr_mat, "light_color", text="")
         col = layout.column()
+        col.prop(asr_mat, "light_emission_profile")
+        if asr_mat.light_emission_profile == 'cone_edf':
+            col.prop(asr_mat, "light_cone_edf_angle", text="Cone EDF Angle")
         col.prop(asr_mat, "light_emission", text="Radiance Multiplier")
         col.prop(asr_mat, "light_exposure", text="Exposure")
         layout.prop(asr_mat, "cast_indirect", text="Cast Indirect Light")

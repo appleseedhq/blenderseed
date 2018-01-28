@@ -1662,6 +1662,20 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                 default=False,
                                                 update=refresh_preview)
 
+    light_emission_profile = bpy.props.EnumProperty(name="Profile",
+                                                    description="Profile for emission",
+                                                    items=[('diffuse_edf', "Diffuse EDF", ""),
+                                                           ('cone_edf', "Cone EDF", "")],
+                                                    default='diffuse_edf',
+                                                    update=refresh_preview)
+
+    light_cone_edf_angle = bpy.props.FloatProperty(name="light_cone_edf_angle",
+                                                   description="Angle of spread for cone EDF",
+                                                   default=90.0,
+                                                   min=0.0,
+                                                   max=180.0,
+                                                   update=refresh_preview)
+
     light_emission = bpy.props.FloatProperty(name="light_emission",
                                              description="Light radiance multiplier",
                                              default=1.0,

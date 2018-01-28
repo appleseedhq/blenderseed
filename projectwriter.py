@@ -2142,6 +2142,8 @@ class Writer(object):
             radiance = inputs["Emission Color"].get_socket_value(True)
             radiance_multiplier = inputs["Emission Strength"].get_socket_value(True)
             exposure = inputs["Exposure"].get_socket_value(True)
+            model = material_node.light_emission_profile
+            angle = material_node.light_cone_edf_angle
             cast_indirect = material_node.cast_indirect
             importance_multiplier = material_node.importance_multiplier
             light_near_start = material_node.light_near_start
@@ -2155,6 +2157,8 @@ class Writer(object):
 
         else:
             radiance = "{0}_radiance".format(edf_name)
+            model = asr_mat.light_emission_profile
+            angle = asr_mat.light_cone_edf_angle
             radiance_multiplier = asr_mat.light_emission
             cast_indirect = str(asr_mat.cast_indirect).lower()
             importance_multiplier = asr_mat.importance_multiplier
@@ -2164,8 +2168,10 @@ class Writer(object):
                                                        asr_mat.light_color,
                                                        scene.appleseed.light_mats_radiance_multiplier)
 
-        self.__open_element('edf name="{0}" model="diffuse_edf"'.format(edf_name))
+        self.__open_element('edf name="{0}" model="{1}"'.format(edf_name, model))
         self.__emit_parameter("radiance", radiance)
+        if model == 'cone_edf':
+            self.__emit_parameter("angle", angle)
         self.__emit_parameter("radiance_multiplier", radiance_multiplier)
         self.__emit_parameter("cast_indirect_light", cast_indirect)
         self.__emit_parameter("exposure", exposure)
