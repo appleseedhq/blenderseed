@@ -116,15 +116,27 @@ class AppleseedNodeCategory(NodeCategory):
         return context.space_data.tree_type == 'AppleseedNodeTree' and renderer == 'APPLESEED_RENDER'
 
 
-# appleseed node categories
-# Format: (identifier, label, items list)
-def node_categories(osl_node_names):
+    """
+    appleseed node categories
+    Format: (identifier, label, items list)
+    """
+def node_categories(osl_nodes):
+    osl_shaders = []
+    osl_textures = []
+    osl_utilities = []
+    osl_3d_textures = []
 
-    osl_nodes = []
-
-    for node in osl_node_names:
-        node_item = NodeItem(node)
-        osl_nodes.append(node_item)
+    for node in osl_nodes:
+        node_item = NodeItem(node[0])
+        node_category = node[1]
+        if node_category == 'shader':
+            osl_shaders.append(node_item)
+        elif node_category == 'texture':
+            osl_textures.append(node_item)
+        elif node_category == 'utility':
+            osl_utilities.append(node_item)
+        elif node_category == '3d_texture':
+            osl_3d_textures.append(node_item)
 
     appleseed_node_categories = [
         AppleseedNodeCategory("BSDF", "BSDF", items=[
@@ -151,7 +163,10 @@ def node_categories(osl_node_names):
             NodeItem("AppleseedNormalNode")]),
         AppleseedNodeCategory("OUTPUTS", "Output", items=[
             NodeItem("AppleseedMaterialNode")]),
-        AppleseedNodeCategory("OSL", "Osl", items=osl_nodes)
+        AppleseedNodeCategory("OSL_Shaders", "OSL Shaders", items=osl_shaders),
+        AppleseedNodeCategory("OSL_Textures", "OSL Textures", items=osl_textures),
+        AppleseedNodeCategory("OSL_3D_Textures", "OSL 3D Textures", items=osl_3d_textures),
+        AppleseedNodeCategory("OSL_Utilities", "OSL Utilities", items=osl_utilities)
         ]
 
     return appleseed_node_categories
@@ -207,12 +222,9 @@ from . import volume
 from . import material
 from . import oslnode
 
+osl_node_names = []
 
 def register():
-    node_list = read_osl_shaders()
-
-    osl_node_names = []
-
     bpy.app.handlers.load_post.append(appleseed_scene_loaded)
     bpy.app.handlers.scene_update_pre.append(appleseed_scene_loaded)
     bpy.utils.register_class(AppleseedNodeTree)
@@ -235,9 +247,11 @@ def register():
     normal.register()
     volume.register()
     material.register()
+    node_list = read_osl_shaders()
     if node_list:
         for node in node_list:
-            osl_node_names.append(oslnode.generate_node(node))
+            node_name, node_category = oslnode.generate_node(node)
+            osl_node_names.append([node_name, node_category])
     nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
 
 

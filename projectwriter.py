@@ -135,18 +135,23 @@ class Writer(object):
 
     def __emit_project(self, scene):
         self.__open_element("project")
-        self.__emit_searchpaths()
+        self.__emit_search_paths()
         self.__emit_scene(scene)
         self.__emit_output(scene)
         self.__emit_configurations(scene)
         self.__close_element("project")
 
-    def __emit_searchpaths(self):
-        osl_reader_path, shader_directories = util.get_osl_searchpaths()
+    def __emit_search_paths(self):
+        osl_path, shader_directories = util.get_osl_search_paths()
         self.__open_element("search_paths")
         for path in shader_directories:
-            self.__emit_path(path)
+            self.__emit_search_path(path)
         self.__close_element("search_paths")
+
+    def __emit_search_path(self, path):
+        self.__open_element("search_path")
+        self.__emit_line(path)
+        self.__close_element("search_path")
 
     def __emit_scene(self, scene):
         self.__open_element("scene")
@@ -677,7 +682,7 @@ class Writer(object):
     def __is_node_material(self, asr_mat):
         if asr_mat.node_tree != "" and asr_mat.node_output != "":
             node = bpy.data.node_groups[asr_mat.node_tree].nodes[asr_mat.node_output]
-            return node.node_type == 'material' or node.bl_idname == 'Appleseedas_closure2surfaceNode'
+            return node.bl_idname == 'Appleseedas_closure2surfaceNode' or node.bl_idname == 'AppleseedMaterialNode'
 
     def __is_osl_material(self, asr_mat):
         if asr_mat.node_tree != "" and asr_mat.node_output != "":
@@ -775,7 +780,6 @@ class Writer(object):
         self.__emit_material_element(material_name, bsdf_name, "", "", "", "physical_surface_shader", scene, material, material_node)
 
     def __emit_osl_shader_group(self, front_material_name, node_list, material_node):
-
         node_connections = []
 
         self.__open_element('shader_group name="{0}"'.format(front_material_name))
@@ -2315,7 +2319,6 @@ class Writer(object):
         self.__close_element("texture_instance")
 
     def __emit_osl_element(self, front_material_name, surface_name):
-
         self.__open_element('material name="{0}" model="osl_material"'.format(front_material_name))
         self.__emit_parameter("surface_shader", "physical_surface_shader")
         self.__emit_parameter("osl_surface", surface_name)
@@ -2931,15 +2934,6 @@ class Writer(object):
         self.__emit_indent()
         self._output_file.write(line + "\n")
 
-    def __emit_line_no_ind(self, line):
-        self._output_file.write(line + "\n")
-
-    def __emit_path(self, path):
-        self.__emit_line("<search_path>")
-        self.__indent()
-        self.__emit_line(path)
-        self.__close_element("search_path")
-
     def __indent(self):
         self._indent += 1
 
@@ -2982,9 +2976,6 @@ class Writer(object):
 
         self._textures_set = set()
 
-        osl_reader_path, shader_directories = util.get_osl_searchpaths()
-        appleseed_parent_dir = osl_reader_path.strip("\\bin")
-
         asr_mat = mat.appleseed
         sphere_a = True if mesh == 'sphere_a' else False
         mesh = 'sphere' if mesh in {'sphere', 'sphere_a'} else mesh
@@ -2996,16 +2987,10 @@ class Writer(object):
                 aspect_ratio = self.__get_frame_aspect_ratio(scene.render)
 
                 self._output_file.write("""<project>
-    <search_paths>
-        <search_path>""")
-                os.path.join(appleseed_parent_dir, 'shaders', 'appleseed')
-                self._output_file.write("""
-        </search_path>
-        <search_path>""")
-                os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed')
-                self._output_file.write("""</search_path>
-    </search_paths>
-    <scene>
+""")
+                self.__emit_search_paths()
+                self._output_file.write(
+                    """<scene>
         <camera name="Camera" model="pinhole_camera">
             <parameter name="film_width" value="0.032" />
             <parameter name="aspect_ratio" value="{0}" />

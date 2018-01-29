@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2017 The appleseedhq Organization
+# Copyright (c) 2014-2018 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -79,7 +79,21 @@ class AppleseedOSLNode(Node, AppleseedNode):
     bl_label = "OSL Material"
     bl_icon = 'SMOOTH'
 
-    node_type = ''
+    node_type = 'osl'
+
+    def traverse_tree(self, material_node):
+        """Iterate inputs and traverse the tree backward if any inputs are connected.
+
+        Nodes are added to a list attribute of the material output node.
+        """
+        for socket in self.inputs:
+            if socket.is_linked:
+                linked_node = socket.links[0].from_node
+                if linked_node.node_type != 'osl':
+                    print("ERROR: {0} cannot be used with OSL nodes.  All nodes upstream of {0} will be skipped".format(linked_node.name))
+                else:
+                    linked_node.traverse_tree(material_node)
+        material_node.tree.append(self)
 
 
 def generate_node(node):
@@ -114,6 +128,7 @@ def generate_node(node):
 
     parameter_types = {}
     name = node['name']
+    category = node['category']
     input_sockets = node['inputs']
     output_sockets = node['outputs']
     non_connected_props = []
@@ -441,4 +456,12 @@ def generate_node(node):
 
     bpy.utils.register_class(ntype)
 
-    return ntype.bl_idname
+    return ntype.bl_idname, category
+
+
+def register():
+    pass
+
+
+def unregister():
+    pass

@@ -97,7 +97,7 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
 
     bl_idname = "appleseed.add_osl_material_nodetree"
     bl_label = "Add appleseed OSL Material Node Tree"
-    bl_description = "Create an appleseed osl material node tree and link it to the current material"
+    bl_description = "Create an appleseed OSL material node tree and link it to the current material"
 
     def execute(self, context):
         material = context.object.active_material
