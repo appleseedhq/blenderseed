@@ -228,6 +228,8 @@ class AppleseedMaterialNode(Node, AppleseedNode):
     importance_multiplier = AppleseedMatProps.importance_multiplier
     cast_indirect = AppleseedMatProps.cast_indirect
     light_near_start = AppleseedMatProps.light_near_start
+    light_emission_profile = AppleseedMatProps.light_emission_profile
+    light_cone_edf_angle = AppleseedMatProps.light_cone_edf_angle
 
     def init(self, context):
         self.inputs.new('AppleseedMaterialBSDF', "BSDF")
@@ -245,6 +247,9 @@ class AppleseedMaterialNode(Node, AppleseedNode):
             icon = layout.icon(img)
             layout.label(text="appleseed", icon_value=icon)
         if self.inputs["Emission Strength"].socket_value > 0.0 or self.inputs["Emission Strength"].is_linked:
+            layout.prop(self, "light_emission_profile")
+            if self.light_emission_profile == 'cone_edf':
+                layout.prop(self, "light_cone_edf_angle", text="Cone Angle")
             layout.prop(self, "cast_indirect", text="Cast Indirect Light")
             layout.prop(self, "importance_multiplier", text="Importance Multiplier")
             layout.prop(self, "light_near_start", text="Light Near Start")
