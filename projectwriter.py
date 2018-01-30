@@ -2209,7 +2209,7 @@ class Writer(object):
                 color_space = 'srgb'
 
             filepath = util.realpath(texture.image.filepath)
-            texture_name = texture.name + "_bump" if bump_bool is True else texture.name
+            texture_name = texture.name
 
         self.__open_element('texture name="{0}" model="disk_texture_2d"'.format(texture_name))
         self.__emit_parameter("color_space", color_space)
@@ -2265,7 +2265,7 @@ class Writer(object):
                 if asr_mat.material_use_bump_tex:
                     if asr_mat.material_bump_tex != "":
                         if util.is_uv_img(bpy.data.textures[asr_mat.material_bump_tex]):
-                            bump_map = asr_mat.material_bump_tex + "_bump"
+                            bump_map = asr_mat.material_bump_tex
 
                 if bump_map != "":
                     self.__emit_texture(bpy.data.textures[asr_mat.material_bump_tex], True, scene)
