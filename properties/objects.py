@@ -99,6 +99,33 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                             ('normal', "Shift Along Surface Normal", "")],
                                                      default='none')
 
+        cls.object_alpha = bpy.props.FloatProperty(name="object_alpha",
+                                                   description="Object Alpha",
+                                                   default=1.0,
+                                                   min=0.0,
+                                                   max=1.0)
+
+        cls.object_alpha_use_texture = bpy.props.BoolProperty(name="object_alpha_use_texture",
+                                                              description="Use a texture to influence object alpha",
+                                                              default=False)
+
+        cls.object_alpha_texture = bpy.props.StringProperty(name="object_alpha_texture",
+                                                            description="Texture to use for alpha channel",
+                                                            default="",
+                                                            subtype='FILE_PATH')
+
+        cls.object_alpha_texture_colorspace = bpy.props.EnumProperty(name="Color Space",
+                                                                     description="Color space",
+                                                                     items=[('srgb', "sRGB", ""),
+                                                                            ('linear_rgb', "Linear", "")],
+                                                                     default='linear_rgb')
+
+        cls.object_alpha_texture_wrap_mode = bpy.props.EnumProperty(name="Texture Wrapping",
+                                                                    description="Texture wrapping method",
+                                                                    items=[('clamp', "Clamp", ""),
+                                                                           ('wrap', "Wrap", "")],
+                                                                    default='wrap')
+
     @classmethod
     def unregister(cls):
         del bpy.types.Object.appleseed
