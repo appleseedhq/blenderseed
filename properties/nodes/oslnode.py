@@ -242,7 +242,7 @@ def generate_node(node):
 
             parameter_types[in_socket['name']] = in_socket['type']
             if 'default' in in_socket.keys():
-                    stype.socket_default_value = in_socket['default']
+                stype.socket_default_value = in_socket['default']
             bpy.utils.register_class(stype)
 
             socket_input_names.append([socket_name, socket_label])
@@ -450,9 +450,10 @@ def generate_node(node):
     ntype.copy = copy
     ntype.free = free
     ntype.draw_label = draw_label
-    if node_name == 'Appleseedas_closure2surfaceNode':
+    if category == 'surface':
         ntype.traverse_tree = traverse_tree
         ntype.tree = []
+        ntype.node_type = 'osl_surface'
 
     bpy.utils.register_class(ntype)
 

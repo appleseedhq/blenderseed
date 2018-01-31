@@ -45,11 +45,15 @@ import sys
 # ------------------------------------
 
 def get_osl_search_paths():
-    osl_path = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
-    appleseed_parent_dir = os.path.dirname(os.path.dirname(osl_path))
+    appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
+    appleseed_parent_dir = appleseed_bin_dir
+    while os.path.basename(appleseed_parent_dir) != 'bin':
+        appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
+    appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
+
     shader_directories = (os.path.join(appleseed_parent_dir, 'shaders', 'appleseed'), os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed'))
 
-    return osl_path, shader_directories
+    return appleseed_bin_dir, shader_directories
 
 
 def read_osl_shaders():
@@ -59,42 +63,48 @@ def read_osl_shaders():
         print("appleseed binary path not set.  Rendering and OSL features will not be available")
         return
 
-    osl_path, shader_directories = get_osl_search_paths()
-    print("appleseed OSL Search Paths:")
-    for shader_dir in shader_directories:
-        print(shader_dir)
+    appleseed_bin_dir, shader_directories = get_osl_search_paths()
 
     nodes = []
 
     for shader_dir in shader_directories:
-        for file in os.listdir(shader_dir):
-            if file.endswith(".osl"):
-                print("appleseed Compiling {0}".format(file))
-                filename = os.path.join(shader_dir, file)
-                oslc_path = os.path.join(osl_path, "oslc")
-                cmd = (oslc_path, filename)
-                process = subprocess.Popen(cmd, cwd=shader_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                print("appleseed Compiled {0}".format(file))
+        if os.path.isdir(shader_dir):
+            for file in os.listdir(shader_dir):
+                if file.endswith(".osl"):
+                    print("appleseed Compiling {0}".format(file))
+                    filename = os.path.join(shader_dir, file)
+                    oslc_path = os.path.join(appleseed_bin_dir, "oslc")
+                    cmd = (oslc_path, filename)
+                    try:
+                        process = subprocess.Popen(cmd, cwd=shader_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        print("appleseed Compiled {0}".format(file))
+                    except:
+                        print("ERROR: Failed to compile {0}".format(file))
 
-    print("appleseed Reading OSL shaders")
+    print("appleseed Parsin OSL shaders")
     for shader_dir in shader_directories:
-        for file in os.listdir(shader_dir):
-            if file.endswith(".oso"):
-                print("appleseed Reading {0}".format(file))
-                filename = os.path.join(shader_dir, file)
-                content = []
-                oslinfo_path = os.path.join(osl_path, "oslinfo")
-                cmd = (oslinfo_path, '-v', filename)
-                process = subprocess.Popen(cmd, cwd=osl_path, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                while True:
-                    line = process.stdout.readline()
-                    line = line.strip()
-                    content.append(line)
-                    if not line:
-                        break
-                shader_params = create_osl_dict(file, content)
-                if shader_params != {}:
-                    nodes.append(shader_params)
+        if os.path.isdir(shader_dir):
+            for file in os.listdir(shader_dir):
+                if file.endswith(".oso"):
+                    print("appleseed Reading {0}".format(file))
+                    filename = os.path.join(shader_dir, file)
+                    content = []
+                    oslinfo_path = os.path.join(appleseed_bin_dir, "oslinfo")
+                    cmd = (oslinfo_path, '-v', filename)
+                    try:
+                        process = subprocess.Popen(cmd, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        while True:
+                            line = process.stdout.readline()
+                            if not line:
+                                break
+                            line = line.strip()
+                            content.append(line)
+                        shader_params = create_osl_dict(file, content)
+                        if shader_params:
+                            nodes.append(shader_params)
+                    except:
+                        print("ERROR: Failed to read {0}".format(file))
+                        continue
 
     print("appleseed OSL Parsing Complete")
     return nodes
@@ -108,12 +118,15 @@ def create_osl_dict(file, content=None):
         if len(line) == 0:
             continue
         if line.startswith("shader") or line.startswith("surface"):
-            d['name'] = line.split(" ")[1].replace("\"", "")
             d['inputs'] = []
             d['outputs'] = []
             d['non_connectable_props'] = []
             d['filename'] = file.replace(".oso", "")
             currentElement = d
+            if line.startswith("surface"):
+                currentElement['category'] = 'surface'
+            else:
+                currentElement['category'] = 'shader'
         else:
             if line.startswith("Default value"):
                 currentElement['default'] = line.split(" ")[-1].replace("\"", "")
@@ -122,6 +135,8 @@ def create_osl_dict(file, content=None):
                         vector = line.split("[")[-1].split("]")[0]
                         currentElement['default'] = vector.strip()
             if line.startswith("metadata"):
+                if 'as_maya_node_name' in line:
+                    currentElement['name'] = line.split(" = ")[-1].replace("\"", "")
                 if "widget = " in line:
                     currentElement['widget'] = line.split(" = ")[-1].replace("\"", "")
                     if currentElement['widget'] == 'null' and currentElement['type'] not in ('vector', 'point[4]', 'point', 'normal', 'matrix', 'float[2]'):
@@ -131,8 +146,6 @@ def create_osl_dict(file, content=None):
                 if "as_maya_classification" in line:
                     if 'drawdb/shader:rendernode/appleseed/utility' in line:
                         currentElement['category'] = 'utility'
-                    if 'drawdb/shader/surface:rendernode/appleseed/surface:shader/surface:swatch/AppleseedRenderSwatch' in line:
-                        currentElement['category'] = 'shader'
                     if 'drawdb/shader:rendernode/appleseed/texture/2d:swatch/AppleseedRenderSwatch:texture' in line:
                         currentElement['category'] = 'texture'
                     if 'drawdb/shader:rendernode/appleseed/texture/3d:swatch/AppleseedRenderSwatch:texture' in line:

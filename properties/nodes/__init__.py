@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2017 The appleseedhq Organization
+# Copyright (c) 2018 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -125,6 +125,7 @@ def node_categories(osl_nodes):
     osl_textures = []
     osl_utilities = []
     osl_3d_textures = []
+    osl_surface = []
 
     for node in osl_nodes:
         node_item = NodeItem(node[0])
@@ -137,6 +138,8 @@ def node_categories(osl_nodes):
             osl_utilities.append(node_item)
         elif node_category == '3d_texture':
             osl_3d_textures.append(node_item)
+        else:
+            osl_surface.append(node_item)
 
     appleseed_node_categories = [
         AppleseedNodeCategory("BSDF", "BSDF", items=[
@@ -163,10 +166,11 @@ def node_categories(osl_nodes):
             NodeItem("AppleseedNormalNode")]),
         AppleseedNodeCategory("OUTPUTS", "Output", items=[
             NodeItem("AppleseedMaterialNode")]),
-        AppleseedNodeCategory("OSL_Shaders", "OSL Shaders", items=osl_shaders),
-        AppleseedNodeCategory("OSL_Textures", "OSL Textures", items=osl_textures),
-        AppleseedNodeCategory("OSL_3D_Textures", "OSL 3D Textures", items=osl_3d_textures),
-        AppleseedNodeCategory("OSL_Utilities", "OSL Utilities", items=osl_utilities)
+        AppleseedNodeCategory("OSL_Surfaces", "OSL Surface", items=osl_surface),
+        AppleseedNodeCategory("OSL_Shaders", "OSL Shader", items=osl_shaders),
+        AppleseedNodeCategory("OSL_Textures", "OSL Texture", items=osl_textures),
+        AppleseedNodeCategory("OSL_3D_Textures", "OSL 3D Texture", items=osl_3d_textures),
+        AppleseedNodeCategory("OSL_Utilities", "OSL Utility", items=osl_utilities)
         ]
 
     return appleseed_node_categories
@@ -248,10 +252,9 @@ def register():
     volume.register()
     material.register()
     node_list = read_osl_shaders()
-    if node_list:
-        for node in node_list:
-            node_name, node_category = oslnode.generate_node(node)
-            osl_node_names.append([node_name, node_category])
+    for node in node_list:
+        node_name, node_category = oslnode.generate_node(node)
+        osl_node_names.append([node_name, node_category])
     nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
 
 
