@@ -38,7 +38,7 @@ def node_tree_selector_draw(layout, mat, output_type):
     node = find_node(mat, output_type)
     if not node:
         if mat.appleseed.node_tree == '':
-            layout.operator('appleseed.add_material_nodetree', text="appleseed Node", icon='NODETREE')
+            layout.operator('appleseed.add_nodetree', text="appleseed Node", icon='NODETREE')
             return False
     return True
 
@@ -112,9 +112,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
         asr_mat = material.appleseed
 
         node_tree_selector_draw(layout, material, 'AppleseedMaterialNode')
-        if asr_mat.node_tree != '':
-            node_tree = bpy.data.node_groups[asr_mat.node_tree]
-            layout.prop_search(asr_mat, "node_output", node_tree, "nodes", text="Node Output")
 
         if asr_mat.node_tree == '':
             row = layout.row()
