@@ -1785,10 +1785,6 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                          description="Material node tree to link to the current material",
                                          update=refresh_preview)
 
-    node_output = bpy.props.StringProperty(name="node_output",
-                                           description="Material node tree output node to link to the current material",
-                                           update=refresh_preview)
-
 
 def register():
     bpy.utils.register_class(AppleseedMatLayerProps)

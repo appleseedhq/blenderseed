@@ -680,14 +680,20 @@ class Writer(object):
             return asr_mat.use_light_emission and scene.appleseed.export_emitting_obj_as_lights
 
     def __is_node_material(self, asr_mat):
-        if asr_mat.node_tree != "" and asr_mat.node_output != "":
-            node = bpy.data.node_groups[asr_mat.node_tree].nodes[asr_mat.node_output]
-            return node.bl_idname == 'Appleseedas_closure2surfaceNode' or node.bl_idname == 'AppleseedMaterialNode'
+        if asr_mat.node_tree != "":
+            for node in bpy.data.node_groups[asr_mat.node_tree].nodes:
+                if node.node_type == "osl_surface":
+                    return True
+                elif node.node_type == 'material':
+                    return True
+        return False
 
     def __is_osl_material(self, asr_mat):
-        if asr_mat.node_tree != "" and asr_mat.node_output != "":
-            node = bpy.data.node_groups[asr_mat.node_tree].nodes[asr_mat.node_output]
-            return node.bl_idname == 'Appleseedas_closure2surfaceNode'
+        if asr_mat.node_tree != "":
+            for node in bpy.data.node_groups[asr_mat.node_tree].nodes:
+                if node.node_type == "osl_surface":
+                    return True
+        return False
 
     def __emit_physical_surface_shader_element(self):
         self.__emit_line('<surface_shader name="physical_surface_shader" model="physical_surface_shader" />')
@@ -717,7 +723,9 @@ class Writer(object):
         # If using nodes.
         if use_nodes:
             # Get all nodes. If specular btdf or diffuse btdf in the list, emit back material as well.
-            material_node = bpy.data.node_groups[asr_node_tree].nodes[asr_mat.node_output]
+            for node in bpy.data.node_groups[asr_node_tree].nodes:
+                if node.node_type == 'osl_surface' or node.node_type == 'material':
+                    material_node = node
             node_list = material_node.traverse_tree()
             for node in node_list:
                 if node.node_type in ['specular_btdf', 'diffuse_btdf']:
@@ -3139,7 +3147,13 @@ class Writer(object):
                 mat_front = mat.name
                 mat_back = mat.name
                 if self.__is_node_material(asr_mat):
-                    material_node = bpy.data.node_groups[asr_mat.node_tree].nodes[asr_mat.node_output]
+                    asr_node_tree = asr_mat.node_tree
+                    for node in bpy.data.node_groups[asr_node_tree].nodes:
+                        if node.node_type == 'osl_surface':
+                            material_node = node
+                        else:
+                            if node.node_type == 'material':
+                                material_node = node
                     node_list = material_node.traverse_tree()
                     for node in node_list:
                         if node.node_type in ['specular_btdf', 'diffuse_btdf']:

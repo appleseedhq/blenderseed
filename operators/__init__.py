@@ -79,7 +79,7 @@ class AppleseedNewNodeTree(bpy.types.Operator):
     appleseed material node tree generator.
     """
 
-    bl_idname = "appleseed.add_material_nodetree"
+    bl_idname = "appleseed.add_nodetree"
     bl_label = "Add appleseed Material Node Tree"
     bl_description = "Create an appleseed material node tree and link it to the current material"
 
@@ -87,33 +87,17 @@ class AppleseedNewNodeTree(bpy.types.Operator):
         material = context.object.active_material
         nodetree = bpy.data.node_groups.new('%s appleseed Nodetree' % material.name, 'AppleseedNodeTree')
         nodetree.use_fake_user = True
-        node = nodetree.nodes.new('AppleseedMaterialNode')
         material.appleseed.node_tree = nodetree.name
-        material.appleseed.node_output = node.name
         return {'FINISHED'}
-
-
-class AppleseedNewOSLNodeTree(bpy.types.Operator):
-
-    bl_idname = "appleseed.add_osl_material_nodetree"
-    bl_label = "Add appleseed OSL Material Node Tree"
-    bl_description = "Create an appleseed OSL material node tree and link it to the current material"
-
-    def execute(self, context):
-        material = context.object.active_material
-        nodetree = bpy.data.node_groups.new('%s appleseed Nodetree' % material.name, 'AppleseedNodeTree')
-        nodetree.use_fake_user = True
-        node = nodetree.nodes.new('Appleseedas_closure2surfaceNode')
-        material.appleseed.node_tree = nodetree.name
-        material.appleseed.node_output = node.name
-        return {'FINISHED'} 
 
 
 def register():
     bpy.utils.register_class(AppleseedAddMatLayer)
     bpy.utils.register_class(AppleseedRemoveMatLayer)
+    bpy.utils.register_class(AppleseedNewNodeTree)
 
 
 def unregister():
+    bpy.utils.unregister_class(AppleseedNewNodeTree)
     bpy.utils.unregister_class(AppleseedAddMatLayer)
     bpy.utils.unregister_class(AppleseedRemoveMatLayer)
