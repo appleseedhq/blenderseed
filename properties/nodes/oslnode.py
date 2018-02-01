@@ -38,11 +38,7 @@ class AppleseedOSLInSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedOSLInSocket"
     bl_label = "OSL Socket"
 
-    is_closure = False
-
     socket_value = ''
-
-    socket_default_value = None
 
     socket_osl_id = ''
 
@@ -146,11 +142,11 @@ def generate_node(node):
             helper = ""
             minimum = None
             maximum = None
-            socket_name = 'Appleseed%s%s' % (node['name'], in_socket['name'].capitalize())
+            socket_name = 'Appleseed{0}{1}'.format(node['name'], in_socket['name'].capitalize())
             if 'label' in in_socket.keys():
-                socket_label = "%s" % in_socket['label']
+                socket_label = "{0}".format(in_socket['label'])
             else:
-                socket_label = "%s" % in_socket['name'].strip('in_')
+                socket_label = "{0}".format(in_socket['name'].strip('in_'))
             if 'help' in in_socket.keys():
                 helper = in_socket['help']
             if 'min' in in_socket.keys():
@@ -241,19 +237,17 @@ def generate_node(node):
                 stype.hide_ui = True
 
             parameter_types[in_socket['name']] = in_socket['type']
-            if 'default' in in_socket.keys():
-                stype.socket_default_value = in_socket['default']
             bpy.utils.register_class(stype)
 
             socket_input_names.append([socket_name, socket_label])
 
     # create outp-ut socket classes
     for out_socket in output_sockets:
-        socket_name = 'Appleseed%s%s' % (node['name'], out_socket['name'].capitalize())
+        socket_name = "Appleseed{0}{1}".format(node['name'], out_socket['name'].capitalize())
         if 'label' in out_socket.keys():
-            socket_label = "%s" % out_socket['label']
+            socket_label = "{0}".format(out_socket['label'])
         else:
-            socket_label = "%s" % out_socket['name'].strip("out_out")
+            socket_label = "{0}".format(out_socket['name'].strip("out_out"))
 
         stype = type(socket_name, (AppleseedOSLOutSocket,), {})
         stype.bl_idname = socket_name
@@ -319,8 +313,8 @@ def generate_node(node):
                 linked_node.traverse_tree(self)
         return filter_params(self.tree)
 
-    node_name = "Appleseed%sNode" % name
-    node_label = "%s" % name
+    node_name = "Appleseed{0}Node".format(name)
+    node_label = "{0}".format(name)
 
     ntype = type(node_name, (AppleseedOSLNode,), {})
     ntype.bl_idname = node_name
@@ -328,8 +322,8 @@ def generate_node(node):
     setattr(ntype, 'file_name', node['filename'])
 
     def draw_buttons(self, context, layout):
-        for x in non_connected_props:
-            layout.prop(self, x['name'], text=x['label'])
+        for prop in non_connected_props:
+            layout.prop(self, prop['name'], text=prop['label'])
 
     for prop in non_connected_props:
         widget = ""

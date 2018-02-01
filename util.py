@@ -35,9 +35,7 @@ import mathutils
 
 from . import bl_info
 
-
 import subprocess
-import sys
 
 
 # ------------------------------------
@@ -81,7 +79,7 @@ def read_osl_shaders():
                     except:
                         print("ERROR: Failed to compile {0}".format(file))
 
-    print("appleseed Parsin OSL shaders")
+    print("appleseed Parsing OSL shaders")
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
             for file in os.listdir(shader_dir):

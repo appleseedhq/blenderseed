@@ -801,13 +801,13 @@ class Writer(object):
 
         self.__open_element('shader_group name="{0}"'.format(front_material_name))
         for node in node_list:
-            self.__open_element('shader type="shader" name="%s" layer="%s"' % (node.file_name, node.name))
+            self.__open_element('shader type="shader" name="{0}" layer="{1}"'.format(node.file_name, node.name))
             params = self.__get_osl_node_params(node)
             for param in params:
                 self.__emit_parameter(param, params[param])
             self.__close_element("shader")
             node_connections.append(self.__get_socket_links(node))
-        self.__open_element('shader type="surface" name="%s" layer="%s"' % (material_node.file_name, material_node.name))
+        self.__open_element('shader type="surface" name="{0}" layer="{1}"'.format(material_node.file_name, material_node.name))
         self.__close_element("shader")
         for connection in node_connections:
             self.__emit_shader_connection(connection[0], connection[1], connection[2], connection[3])
@@ -2457,7 +2457,7 @@ class Writer(object):
             else:
                 focal_distance = camera.data.dof_distance
 
-        self.__open_element('camera name="' + camera.name + '" model="{}_camera"'.format(cam_model))
+        self.__open_element('camera name="' + camera.name + '" model="{0}_camera"'.format(cam_model))
         if cam_model == "thinlens":
             self.__emit_parameter("f_stop", appleseed_cam.f_number)
             self.__emit_parameter("focal_distance", focal_distance)
