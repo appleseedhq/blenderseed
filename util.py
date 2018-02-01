@@ -67,6 +67,7 @@ def read_osl_shaders():
 
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
+            print("Searching {0} for OSL files".format(shader_dir))
             for file in os.listdir(shader_dir):
                 if file.endswith(".osl"):
                     print("appleseed Compiling {0}".format(file))
@@ -74,7 +75,16 @@ def read_osl_shaders():
                     oslc_path = os.path.join(appleseed_bin_dir, "oslc")
                     cmd = (oslc_path, filename)
                     try:
-                        process = subprocess.Popen(cmd, cwd=shader_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        process = subprocess.Popen(" ".join(cmd), cwd=shader_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        while True:
+                            line = process.stdout.readline()
+                            if not line:
+                                break
+                            line = line.strip().decode("utf-8")
+                            if "error" in line:
+                                print(line)
+                                print("ERROR: Failed to compile {0}".format(file))
+                                continue
                         print("appleseed Compiled {0}".format(file))
                     except:
                         print("ERROR: Failed to compile {0}".format(file))
@@ -82,6 +92,7 @@ def read_osl_shaders():
     print("appleseed Parsing OSL shaders")
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
+            print("Searching {0} for OSO files".format(shader_dir))
             for file in os.listdir(shader_dir):
                 if file.endswith(".oso"):
                     print("appleseed Reading {0}".format(file))
@@ -90,7 +101,7 @@ def read_osl_shaders():
                     oslinfo_path = os.path.join(appleseed_bin_dir, "oslinfo")
                     cmd = (oslinfo_path, '-v', filename)
                     try:
-                        process = subprocess.Popen(cmd, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        process = subprocess.Popen(" ".join(cmd), bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         while True:
                             line = process.stdout.readline()
                             if not line:
