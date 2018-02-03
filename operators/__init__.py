@@ -141,8 +141,8 @@ def register():
 
 
 def unregister():
-    bpy.utils.uregister_class(AppleseedAddSssSet)
-    bpy.utils.uregister_class(AppleseedRemoveSssSet)
+    bpy.utils.unregister_class(AppleseedAddSssSet)
+    bpy.utils.unregister_class(AppleseedRemoveSssSet)
     bpy.utils.unregister_class(AppleseedNewNodeTree)
     bpy.utils.unregister_class(AppleseedAddMatLayer)
     bpy.utils.unregister_class(AppleseedRemoveMatLayer)
