@@ -45,7 +45,35 @@ class AppleseedNodeTree(NodeTree):
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render.engine
-        return renderer == 'APPLESEED_RENDER'
+        obj = context.object
+        material = obj.active_material
+        return renderer == 'APPLESEED_RENDER' and not material.appleseed.use_osl
+
+    # This following code is required to avoid a max recursion error when Blender checks for node updates
+    def update(self):
+        self.refresh = True
+
+    def acknowledge_connection(self, context):
+        while self.refresh:
+            self.refresh = False
+            break
+
+    refresh = bpy.props.BoolProperty(name='Links Changed', default=False, update=acknowledge_connection)
+
+
+class AppleseedOSLNodeTree(NodeTree):
+    """Class for appleseed node tree."""
+
+    bl_idname = 'AppleseedOSLNodeTree'
+    bl_label = 'appleseed OSL Node Tree'
+    bl_icon = 'NODETREE'
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render.engine
+        obj = context.object
+        material = obj.active_material
+        return renderer == 'APPLESEED_RENDER' and material.appleseed.use_osl
 
     # This following code is required to avoid a max recursion error when Blender checks for node updates
     def update(self):
@@ -116,6 +144,18 @@ class AppleseedNodeCategory(NodeCategory):
         return context.space_data.tree_type == 'AppleseedNodeTree' and renderer == 'APPLESEED_RENDER'
 
 
+class AppleseedOSLNodeCategory(NodeCategory):
+    """Node category for extending the Add menu, toolbar panels and search operator.
+
+    Base class for node categories.
+    """
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render.engine
+        return context.space_data.tree_type == 'AppleseedOSLNodeTree' and renderer == 'APPLESEED_RENDER'
+
+
     """
     appleseed node categories
     Format: (identifier, label, items list)
@@ -166,11 +206,11 @@ def node_categories(osl_nodes):
             NodeItem("AppleseedNormalNode")]),
         AppleseedNodeCategory("OUTPUTS", "Output", items=[
             NodeItem("AppleseedMaterialNode")]),
-        AppleseedNodeCategory("OSL_Surfaces", "OSL Surface", items=osl_surface),
-        AppleseedNodeCategory("OSL_Shaders", "OSL Shader", items=osl_shaders),
-        AppleseedNodeCategory("OSL_Textures", "OSL Texture", items=osl_textures),
-        AppleseedNodeCategory("OSL_3D_Textures", "OSL 3D Texture", items=osl_3d_textures),
-        AppleseedNodeCategory("OSL_Utilities", "OSL Utility", items=osl_utilities)
+        AppleseedOSLNodeCategory("OSL_Surfaces", "OSL Surface", items=osl_surface),
+        AppleseedOSLNodeCategory("OSL_Shaders", "OSL Shader", items=osl_shaders),
+        AppleseedOSLNodeCategory("OSL_Textures", "OSL Texture", items=osl_textures),
+        AppleseedOSLNodeCategory("OSL_3D_Textures", "OSL 3D Texture", items=osl_3d_textures),
+        AppleseedOSLNodeCategory("OSL_Utilities", "OSL Utility", items=osl_utilities)
         ]
 
     return appleseed_node_categories
@@ -232,6 +272,7 @@ def register():
     bpy.app.handlers.load_post.append(appleseed_scene_loaded)
     bpy.app.handlers.scene_update_pre.append(appleseed_scene_loaded)
     bpy.utils.register_class(AppleseedNodeTree)
+    bpy.utils.register_class(AppleseedOSLNodeTree)
     ashikhminbrdf.register()
     bssrdf.register()
     blinnbrdf.register()
