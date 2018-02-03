@@ -74,6 +74,47 @@ class AppleseedRemoveMatLayer(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class AppleseedAddSssSet(bpy.types.Operator):
+    """Operator for adding SSS sets"""
+
+    bl_label = "Add Set"
+    bl_description = "Add new SSS Set"
+    bl_idname = "appleseed.add_sss_set"
+
+    def invoke(self, context, event):
+        world = context.scene.appleseed_sss_sets
+        collection = world.sss_sets
+
+        collection.add()
+        num = collection.__len__()
+        collection[num - 1].name = "SSS Set " + str(num)
+
+        return {'FINISHED'}
+
+
+class AppleseedRemoveSssSet(bpy.types.Operator):
+    """Operator for removing SSS sets"""
+
+    bl_label = "Remove Set"
+    bl_description = "Remove SSS Set"
+    bl_idname = "appleseed.remove_sss_set"
+
+    def invoke(self, context, event):
+        world = context.scene.appleseed_sss_sets
+        collection = world.sss_sets
+        index = world.sss_sets_index
+
+        collection.remove(index)
+        num = collection.__len__()
+        if index >= num:
+            index = num - 1
+        if index < 0:
+            index = 0
+        world.sss_sets_layer_index = index
+
+        return {'FINISHED'}
+
+
 class AppleseedNewNodeTree(bpy.types.Operator):
     """
     appleseed material node tree generator.
@@ -95,9 +136,13 @@ def register():
     bpy.utils.register_class(AppleseedAddMatLayer)
     bpy.utils.register_class(AppleseedRemoveMatLayer)
     bpy.utils.register_class(AppleseedNewNodeTree)
+    bpy.utils.register_class(AppleseedAddSssSet)
+    bpy.utils.register_class(AppleseedRemoveSssSet)
 
 
 def unregister():
+    bpy.utils.uregister_class(AppleseedAddSssSet)
+    bpy.utils.uregister_class(AppleseedRemoveSssSet)
     bpy.utils.unregister_class(AppleseedNewNodeTree)
     bpy.utils.unregister_class(AppleseedAddMatLayer)
     bpy.utils.unregister_class(AppleseedRemoveMatLayer)

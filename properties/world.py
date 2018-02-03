@@ -29,6 +29,27 @@
 import bpy
 
 
+class AppleseedSSSSetsProps(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(name="SSS Set Name", default="")
+
+
+class AppleseedSSSSets(bpy.types.PropertyGroup):
+
+    @classmethod
+    def register(cls):
+        bpy.types.Scene.appleseed_sss_sets = bpy.props.PointerProperty(name="appleseed_sss_sets",
+                                                                       description="appleseed SSS Sets",
+                                                                       type=cls)
+
+        cls.sss_sets = bpy.props.CollectionProperty(type=AppleseedSSSSetsProps,
+                                                    name="appleseed SSS Sets",
+                                                    description="")
+
+        cls.sss_sets_index = bpy.props.IntProperty(name="layer_index",
+                                                   description="",
+                                                   default=0)
+
+
 class AppleseedSkySettings(bpy.types.PropertyGroup):
 
     @classmethod
@@ -141,7 +162,8 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
 
 
 def register():
-    pass
+    bpy.utils.register_class(AppleseedSSSSetsProps)
+    bpy.utils.register_class(AppleseedSSSSets)
 
 
 def unregister():

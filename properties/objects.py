@@ -105,6 +105,10 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                    min=0.0,
                                                    max=1.0)
 
+        cls.object_sss_set = bpy.props.StringProperty(name="object_sss_set",
+                                                      description="SSS set",
+                                                      default="")
+
         cls.object_alpha_use_texture = bpy.props.BoolProperty(name="object_alpha_use_texture",
                                                               description="Use a texture to influence object alpha",
                                                               default=False)
