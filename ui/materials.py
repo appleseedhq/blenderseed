@@ -131,7 +131,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
             node_tree_selector_draw(layout, material, 'AppleseedMaterialNode')
         layout.prop(asr_mat, "use_osl", text="Use OSL")
 
-        if asr_mat.node_tree == '':
+        if asr_mat.node_tree == '' and asr_mat.osl_node_tree == '':
             row = layout.row()
             row.template_list("MATERIAL_UL_BSDF_slots", "appleseed_material_layers", asr_mat,
                               "layers", asr_mat, "layer_index", rows=1, maxrows=16, type="DEFAULT")
@@ -1458,7 +1458,7 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
-            is_not_nodemat = context.object.active_material.appleseed.node_tree == ''
+            is_not_nodemat = context.object.active_material.appleseed.node_tree == '' and context.object.active_material.appleseed.osl_node_tree == ''
             return renderer and obj and obj_type and material and is_not_nodemat
         return False
 

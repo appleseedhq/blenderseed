@@ -1791,7 +1791,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
 
     use_osl = bpy.props.BoolProperty(name="use_osl",
                                      description="Use OSL for material shading",
-                                     default=True,
+                                     default=False,
                                      update=refresh_preview)
 
 

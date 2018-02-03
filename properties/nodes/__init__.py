@@ -46,8 +46,10 @@ class AppleseedNodeTree(NodeTree):
     def poll(cls, context):
         renderer = context.scene.render.engine
         obj = context.object
-        material = obj.active_material
-        return renderer == 'APPLESEED_RENDER' and not material.appleseed.use_osl
+        if obj.type not in ('CAMERA', 'LAMP'):
+            material = obj.active_material
+            return renderer == 'APPLESEED_RENDER' and not material.appleseed.use_osl
+        
 
     # This following code is required to avoid a max recursion error when Blender checks for node updates
     def update(self):
@@ -72,8 +74,9 @@ class AppleseedOSLNodeTree(NodeTree):
     def poll(cls, context):
         renderer = context.scene.render.engine
         obj = context.object
-        material = obj.active_material
-        return renderer == 'APPLESEED_RENDER' and material.appleseed.use_osl
+        if obj.type not in ('CAMERA', 'LAMP'):
+            material = obj.active_material
+            return renderer == 'APPLESEED_RENDER' and material.appleseed.use_osl
 
     # This following code is required to avoid a max recursion error when Blender checks for node updates
     def update(self):
