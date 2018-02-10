@@ -688,19 +688,10 @@ class Writer(object):
         else:
             return asr_mat.use_light_emission and scene.appleseed.export_emitting_obj_as_lights
 
-    def __is_node_material(self, asr_mat):
-        if asr_mat.node_tree != "":
-            for node in bpy.data.node_groups[asr_mat.node_tree].nodes:
-                if node.node_type == "osl_surface":
-                    return True
-                elif node.node_type == 'material':
-                    return True
-        return False
-
-    def __is_osl_material(self, asr_mat):
-        if asr_mat.node_tree != "":
-            for node in bpy.data.node_groups[asr_mat.node_tree].nodes:
-                if node.node_type == "osl_surface":
+    def __is_node_material(self, asr_mat, node_tree):
+        if asr_mat.node_tree != "" or asr_mat.osl_node_tree != "":
+            for node in bpy.data.node_groups[node_tree].nodes:
+                if node.node_type == "osl_surface" or node.node_type == 'material':
                     return True
         return False
 
@@ -720,11 +711,9 @@ class Writer(object):
         """Write the material."""
 
         asr_mat = material.appleseed
-        asr_node_tree = asr_mat.node_tree
-        use_nodes = self.__is_node_material(asr_mat)
-        use_osl = self.__is_osl_material(asr_mat)
+        asr_node_tree = asr_mat.osl_node_tree if asr_mat.use_osl else asr_mat.node_tree
+        use_nodes = self.__is_node_material(asr_mat, asr_node_tree)
         layers = asr_mat.layers
-
         material_node = None
         node_list = None
         front_material_name = ""
@@ -756,7 +745,7 @@ class Writer(object):
         # If we didn't find any, then we're only exporting front material.
         if front_material_name == "":
             front_material_name = material.name
-            if use_osl:
+            if asr_mat.use_osl and use_nodes:
                 surface_name = front_material_name + "_surface"
                 self.__emit_osl_material(material, front_material_name, surface_name, scene, material_node, node_list)
                 back_material_name = front_material_name
@@ -801,13 +790,13 @@ class Writer(object):
 
         self.__open_element('shader_group name="{0}"'.format(front_material_name))
         for node in node_list:
-            self.__open_element('shader type="shader" name="%s" layer="%s"' % (node.file_name, node.name))
+            self.__open_element('shader type="shader" name="{0}" layer="{1}"'.format(node.file_name, node.name))
             params = self.__get_osl_node_params(node)
             for param in params:
                 self.__emit_parameter(param, params[param])
             self.__close_element("shader")
             node_connections.append(self.__get_socket_links(node))
-        self.__open_element('shader type="surface" name="%s" layer="%s"' % (material_node.file_name, material_node.name))
+        self.__open_element('shader type="surface" name="{0}" layer="{1}"'.format(material_node.file_name, material_node.name))
         self.__close_element("shader")
         for connection in node_connections:
             self.__emit_shader_connection(connection[0], connection[1], connection[2], connection[3])
@@ -2457,7 +2446,7 @@ class Writer(object):
             else:
                 focal_distance = camera.data.dof_distance
 
-        self.__open_element('camera name="' + camera.name + '" model="{}_camera"'.format(cam_model))
+        self.__open_element('camera name="{0}" model="{1}_camera"'.format(camera.name, cam_model))
         if cam_model == "thinlens":
             self.__emit_parameter("f_stop", appleseed_cam.f_number)
             self.__emit_parameter("focal_distance", focal_distance)
@@ -3161,8 +3150,8 @@ class Writer(object):
                 # Preview mesh.
                 mat_front = mat.name
                 mat_back = mat.name
-                if self.__is_node_material(asr_mat):
-                    asr_node_tree = asr_mat.node_tree
+                asr_node_tree = asr_mat.node_tree if not asr_mat.use_osl else asr_mat.osl_node_tree
+                if self.__is_node_material(asr_mat, asr_node_tree):
                     for node in bpy.data.node_groups[asr_node_tree].nodes:
                         if node.node_type == 'osl_surface':
                             material_node = node

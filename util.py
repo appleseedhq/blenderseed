@@ -28,6 +28,7 @@
 
 import multiprocessing
 import os
+import sys
 from math import tan, atan, degrees
 
 import bpy
@@ -35,9 +36,7 @@ import mathutils
 
 from . import bl_info
 
-
 import subprocess
-import sys
 
 
 # ------------------------------------
@@ -69,6 +68,7 @@ def read_osl_shaders():
 
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
+            print("Searching {0} for OSL files".format(shader_dir))
             for file in os.listdir(shader_dir):
                 if file.endswith(".osl"):
                     print("appleseed Compiling {0}".format(file))
@@ -76,14 +76,28 @@ def read_osl_shaders():
                     oslc_path = os.path.join(appleseed_bin_dir, "oslc")
                     cmd = (oslc_path, filename)
                     try:
-                        process = subprocess.Popen(cmd, cwd=shader_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        process = subprocess.Popen(" ".join(cmd), cwd=shader_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        while True:
+                            line = process.stdout.readline()
+                            if not line:
+                                break
+                            line = line.strip().decode("utf-8")
+                            if "error" in line:
+                                print(line)
+                                print("ERROR: Failed to compile {0}".format(file))
+                                break
                         print("appleseed Compiled {0}".format(file))
+                    except OSError as e:
+                        print("OSError > " + e.errno)
+                        print("OSError > " + e.strerror)
+                        print("OSError > " + e.filename)
                     except:
-                        print("ERROR: Failed to compile {0}".format(file))
+                        print("ERROR: Failed to compile {0}.  Oslc did not launch: {1}".format(file, sys.exc_info()[0]))
 
-    print("appleseed Parsin OSL shaders")
+    print("appleseed Parsing OSL shaders")
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
+            print("Searching {0} for OSO files".format(shader_dir))
             for file in os.listdir(shader_dir):
                 if file.endswith(".oso"):
                     print("appleseed Reading {0}".format(file))
@@ -92,19 +106,26 @@ def read_osl_shaders():
                     oslinfo_path = os.path.join(appleseed_bin_dir, "oslinfo")
                     cmd = (oslinfo_path, '-v', filename)
                     try:
-                        process = subprocess.Popen(cmd, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        process = subprocess.Popen(" ".join(cmd), bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         while True:
                             line = process.stdout.readline()
                             if not line:
                                 break
-                            line = line.strip()
+                            line = line.strip().decode("utf-8")
+                            if "error" in line:
+                                print(line)
+                                print("ERROR: Failed to read {0}".format(file))
+                                break
                             content.append(line)
                         shader_params = create_osl_dict(file, content)
                         if shader_params:
                             nodes.append(shader_params)
+                    except OSError as e:
+                        print("OSError > " + e.errno)
+                        print("OSError > " + e.strerror)
+                        print("OSError > " + e.filename)
                     except:
-                        print("ERROR: Failed to read {0}".format(file))
-                        continue
+                        print("ERROR: Failed to read {0}.  Oslinfo did not launch: {1}".format(file, sys.exc_info()[0]))
 
     print("appleseed OSL Parsing Complete")
     return nodes
@@ -114,7 +135,6 @@ def create_osl_dict(file, content=None):
     d = {}
     currentElement = None
     for line in content:
-        line = line.decode("utf-8")
         if len(line) == 0:
             continue
         if line.startswith("shader") or line.startswith("surface"):

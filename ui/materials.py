@@ -43,6 +43,20 @@ def node_tree_selector_draw(layout, mat, output_type):
     return True
 
 
+def osl_node_tree_selector_draw(layout, mat, output_type):
+    try:
+        layout.prop_search(mat.appleseed, "osl_node_tree", bpy.data, "node_groups", text="OSL Node Tree")
+    except:
+        return False
+
+    node = find_node(mat, output_type)
+    if not node:
+        if mat.appleseed.osl_node_tree == '':
+            layout.operator('appleseed.add_osl_nodetree', text="appleseed Node", icon='NODETREE')
+            return False
+    return True
+
+
 def find_node(material, nodetype):
     if not (material and material.appleseed and material.appleseed.node_tree):
         return None
@@ -111,9 +125,13 @@ class AppleseedMaterialShading(bpy.types.Panel):
         material = object.active_material
         asr_mat = material.appleseed
 
-        node_tree_selector_draw(layout, material, 'AppleseedMaterialNode')
+        if asr_mat.use_osl:
+            osl_node_tree_selector_draw(layout, material, None)
+        else:
+            node_tree_selector_draw(layout, material, 'AppleseedMaterialNode')
+        layout.prop(asr_mat, "use_osl", text="Use OSL")
 
-        if asr_mat.node_tree == '':
+        if asr_mat.node_tree == '' and asr_mat.osl_node_tree == '':
             row = layout.row()
             row.template_list("MATERIAL_UL_BSDF_slots", "appleseed_material_layers", asr_mat,
                               "layers", asr_mat, "layer_index", rows=1, maxrows=16, type="DEFAULT")
@@ -1440,7 +1458,7 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
-            is_not_nodemat = context.object.active_material.appleseed.node_tree == ''
+            is_not_nodemat = context.object.active_material.appleseed.node_tree == '' and context.object.active_material.appleseed.osl_node_tree == ''
             return renderer and obj and obj_type and material and is_not_nodemat
         return False
 
