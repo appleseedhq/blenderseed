@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedAshikhminReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminReflectance"
     bl_label = "Diffuse Reflectance"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_reflectance
+    socket_value = AppleseedMatProps.ashikhmin_brdf_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedAshikhminMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminMultiplier"
     bl_label = "Diffuse Multiplier"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_multiplier
+    socket_value = AppleseedMatProps.ashikhmin_brdf_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -69,7 +69,7 @@ class AppleseedAshikhminGlossySocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminGlossy"
     bl_label = "Glossy Reflectance"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_glossy
+    socket_value = AppleseedMatProps.ashikhmin_brdf_glossy
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -85,7 +85,7 @@ class AppleseedAshikhminUSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminU"
     bl_label = "Shininess U"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_shininess_u
+    socket_value = AppleseedMatProps.ashikhmin_brdf_shininess_u
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -101,7 +101,7 @@ class AppleseedAshikhminVSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedAshikhminV"
     bl_label = "Shininess V"
 
-    socket_value = AppleseedMatLayerProps.ashikhmin_brdf_shininess_v
+    socket_value = AppleseedMatProps.ashikhmin_brdf_shininess_v
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

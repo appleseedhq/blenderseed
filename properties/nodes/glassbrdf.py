@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedGlassTransmittanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedGlassTransmittance"
     bl_label = "Transmittance"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_surface_transmittance
+    socket_value = AppleseedMatProps.glass_bsdf_surface_transmittance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedGlassTransmittanceMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedGlassTransmittanceMultiplier"
     bl_label = "Transmittance Multiplier"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_surface_transmittance_multiplier
+    socket_value = AppleseedMatProps.glass_bsdf_surface_transmittance_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -69,7 +69,7 @@ class AppleseedGlassReflectionTintSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedGlassReflectionTint"
     bl_label = "Reflection Tint"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_reflection_tint
+    socket_value = AppleseedMatProps.glass_bsdf_reflection_tint
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -85,7 +85,7 @@ class AppleseedGlassRefractionTintSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedGlassRefractionTint"
     bl_label = "Reflection Tint"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_refraction_tint
+    socket_value = AppleseedMatProps.glass_bsdf_refraction_tint
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -101,7 +101,7 @@ class AppleseedGlassRoughnessSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedGlassRoughness"
     bl_label = "Roughness"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_roughness
+    socket_value = AppleseedMatProps.glass_bsdf_roughness
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -117,7 +117,7 @@ class AppleseedGlassAnisotropySocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedGlassAnisotropy"
     bl_label = "Anisotropy"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_anisotropy
+    socket_value = AppleseedMatProps.glass_bsdf_anisotropy
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -133,7 +133,7 @@ class AppleseedGlassVolumeTransmittanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedGlassVolumeTransmittance"
     bl_label = "Volume Transmittance"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_volume_transmittance
+    socket_value = AppleseedMatProps.glass_bsdf_volume_transmittance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -149,7 +149,7 @@ class AppleseedGlassVolumeTransmittanceDistanceSocket(NodeSocket, AppleseedSocke
     bl_idname = "AppleseedGlassVolumeTransmittanceDistance"
     bl_label = "Volume Transmittance Distance"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_volume_transmittance_distance
+    socket_value = AppleseedMatProps.glass_bsdf_volume_transmittance_distance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -165,7 +165,7 @@ class AppleseedGlassVolumeAbsorptionSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedGlassVolumeAbsorption"
     bl_label = "Volume Absorption"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_volume_absorption
+    socket_value = AppleseedMatProps.glass_bsdf_volume_absorption
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -181,7 +181,7 @@ class AppleseedGlassVolumeDensitySocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedGlassVolumeDensity"
     bl_label = "Volume Density"
 
-    socket_value = AppleseedMatLayerProps.glass_bsdf_volume_density 
+    socket_value = AppleseedMatProps.glass_bsdf_volume_density 
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

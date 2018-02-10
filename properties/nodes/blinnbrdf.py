@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedBlinnExponentSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedBlinnExponent"
     bl_label = "Exponent"
 
-    socket_value = AppleseedMatLayerProps.blinn_brdf_exponent
+    socket_value = AppleseedMatProps.blinn_brdf_exponent
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedSpecBRDFReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBRDFReflectance"
     bl_label = "Reflectance"
 
-    socket_value = AppleseedMatLayerProps.specular_brdf_reflectance
+    socket_value = AppleseedMatProps.specular_brdf_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedSpecBRDFMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBRDFMultiplier"
     bl_label = "Multiplier"
 
-    socket_value = AppleseedMatLayerProps.specular_brdf_multiplier
+    socket_value = AppleseedMatProps.specular_brdf_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedMetalNormalReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedMetalNormalReflectance"
     bl_label = "Normal Reflectance"
 
-    socket_value = AppleseedMatLayerProps.metal_brdf_normal_reflectance
+    socket_value = AppleseedMatProps.metal_brdf_normal_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedMetalReflectanceMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedMetalReflectanceMultiplier"
     bl_label = "Reflectance Multiplier"
 
-    socket_value = AppleseedMatLayerProps.metal_brdf_reflectance_multiplier
+    socket_value = AppleseedMatProps.metal_brdf_reflectance_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -69,7 +69,7 @@ class AppleseedMetalEdgeTintSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedMetalEdgeTint"
     bl_label = "Edge Tint"
 
-    socket_value = AppleseedMatLayerProps.metal_brdf_edge_tint
+    socket_value = AppleseedMatProps.metal_brdf_edge_tint
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -85,7 +85,7 @@ class AppleseedMetalRoughnessSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedMetalRoughness"
     bl_label = "Roughness"
 
-    socket_value = AppleseedMatLayerProps.metal_brdf_roughness
+    socket_value = AppleseedMatProps.metal_brdf_roughness
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -101,7 +101,7 @@ class AppleseedMetalAnisotropySocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedMetalAnisotropy"
     bl_label = "Anisotropy"
 
-    socket_value = AppleseedMatLayerProps.metal_brdf_anisotropy
+    socket_value = AppleseedMatProps.metal_brdf_anisotropy
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
