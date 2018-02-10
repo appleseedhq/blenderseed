@@ -43,15 +43,7 @@ def refresh_preview(self, context):
             context.texture.type = context.texture.type
 
 
-class AppleseedMatLayerProps(bpy.types.PropertyGroup):
-    """
-    appleseed Material Layer Properties.
-    """
-
-    bsdf_name = bpy.props.StringProperty(name="bsdf_name",
-                                         description="BSDF layer name",
-                                         default="",
-                                         update=refresh_preview)
+class AppleseedMatProps(bpy.types.PropertyGroup):
 
     bsdf_type = bpy.props.EnumProperty(name="BSDF Model",
                                        items=[('ashikhmin_brdf', "Ashikhmin-Shirley BRDF", ""),
@@ -148,23 +140,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                          max=1000.0,
                                                          update=refresh_preview)
 
-    ashikhmin_brdf_weight = bpy.props.FloatProperty(name="ashikhmin_brdf_weight",
-                                                    description="Blending weight of Ashikhmin-Shirley BRDF in BSDF mix",
-                                                    default=1.0,
-                                                    min=0.0,
-                                                    max=1.0,
-                                                    update=refresh_preview)
-
-    ashikhmin_brdf_use_tex = bpy.props.BoolProperty(name="ashikhmin_brdf_use_tex",
-                                                    description="Use texture to influence the layer weight in the BSDF mix",
-                                                    default=False,
-                                                    update=refresh_preview)
-
-    ashikhmin_brdf_mix_tex = bpy.props.StringProperty(name="ashikhmin_brdf_mix_tex",
-                                                      description="Texture to influence layer weight in the BSDF mix",
-                                                      default="",
-                                                      update=refresh_preview)
-
     #
     # Blinn BRDF.
     #
@@ -191,23 +166,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                              min=1,
                                              max=2.5,
                                              update=refresh_preview)
-
-    blinn_brdf_weight = bpy.props.FloatProperty(name="blinn_brdf_weight",
-                                                description="Blending weight of Blinn BRDF in BSDF mix",
-                                                default=1.0,
-                                                min=0.0,
-                                                max=1.0,
-                                                update=refresh_preview)
-
-    blinn_brdf_use_tex = bpy.props.BoolProperty(name="blinn_brdf_use_tex",
-                                                description="Use texture to influence the layer weight in the BSDF mix",
-                                                default=False,
-                                                update=refresh_preview)
-
-    blinn_brdf_mix_tex = bpy.props.StringProperty(name="blinn_brdf_mix_tex = bpy",
-                                                  description="Texture to influence layer weight in the BSDF mix",
-                                                  default="",
-                                                  update=refresh_preview)
 
     #
     # Diffuse BTDF.
@@ -247,23 +205,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                         description="Texture to influence diffuse color",
                                                         default="",
                                                         update=refresh_preview)
-
-    diffuse_btdf_weight = bpy.props.FloatProperty(name="diffuse_btdf_weight",
-                                                  description="Blending weight of Diffuse BTDF in BSDF mix",
-                                                  default=1.0,
-                                                  min=0.0,
-                                                  max=1.0,
-                                                  update=refresh_preview)
-
-    diffuse_btdf_use_tex = bpy.props.BoolProperty(name="diffuse_btdf_use_tex",
-                                                  description="Use texture to influence the layer weight in the BSDF mix",
-                                                  default=False,
-                                                  update=refresh_preview)
-
-    diffuse_btdf_mix_tex = bpy.props.StringProperty(name="diffuse_btdf_mix_tex",
-                                                    description="Texture to influence layer weight in the BSDF mix",
-                                                    default="",
-                                                    update=refresh_preview)
 
     #
     # Disney BRDF.
@@ -456,23 +397,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                           description="Texture to influence subsurface",
                                                           default="",
                                                           update=refresh_preview)
-
-    disney_brdf_weight = bpy.props.FloatProperty(name="disney_brdf_weight",
-                                                 description="Blending weight of Disney BRDF in BSDF mix",
-                                                 default=1.0,
-                                                 min=0.0,
-                                                 max=1.0,
-                                                 update=refresh_preview)
-
-    disney_brdf_use_tex = bpy.props.BoolProperty(name="disney_brdf_use_tex",
-                                                 description="Use texture to influence the layer weight in the BSDF mix",
-                                                 default=False,
-                                                 update=refresh_preview)
-
-    disney_brdf_mix_tex = bpy.props.StringProperty(name="disney_brdf_mix_tex",
-                                                   description="Texture to influence layer weight in the BSDF mix",
-                                                   default="",
-                                                   update=refresh_preview)
 
     #
     # Glass BSDF.
@@ -686,23 +610,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                       soft_max=10.0,
                                                       update=refresh_preview)
 
-    glass_bsdf_weight = bpy.props.FloatProperty(name="glass_bsdf_weight",
-                                                description="Blending weight of Blinn BRDF in BSDF mix",
-                                                default=1.0,
-                                                min=0.0,
-                                                max=1.0,
-                                                update=refresh_preview)
-
-    glass_bsdf_use_tex = bpy.props.BoolProperty(name="glass_bsdf_use_tex",
-                                                description="Use texture to influence the layer weight in the BSDF mix",
-                                                default=False,
-                                                update=refresh_preview)
-
-    glass_bsdf_mix_tex = bpy.props.StringProperty(name="glass_bsdf_mix_tex",
-                                                  description="Texture to influence layer weight in the BSDF mix",
-                                                  default="",
-                                                  update=refresh_preview)
-
     #
     # Glossy BRDF.
     #
@@ -798,23 +705,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                               max=2.5,
                                               update=refresh_preview)
 
-    glossy_brdf_weight = bpy.props.FloatProperty(name="glossy_brdf_weight",
-                                                 description="Blending weight of Glossy BRDF in BSDF mix",
-                                                 default=1.0,
-                                                 min=0.0,
-                                                 max=1.0,
-                                                 update=refresh_preview)
-
-    glossy_brdf_use_tex = bpy.props.BoolProperty(name="glossy_brdf_use_tex",
-                                                 description="Use texture to influence the layer weight in the BSDF mix",
-                                                 default=False,
-                                                 update=refresh_preview)
-
-    glossy_brdf_mix_tex = bpy.props.StringProperty(name="glossy_brdf_mix_tex",
-                                                   description="Texture to influence layer weight in the BSDF mix",
-                                                   default="",
-                                                   update=refresh_preview)
-
     #
     # Kelemen BRDF.
     #
@@ -865,23 +755,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                max=1.0,
                                                                update=refresh_preview)
 
-    kelemen_brdf_weight = bpy.props.FloatProperty(name="kelemen_brdf_weight",
-                                                  description="Blending weight of Kelemen BRDF in BSDF mix",
-                                                  default=1.0,
-                                                  min=0.0,
-                                                  max=1.0,
-                                                  update=refresh_preview)
-
-    kelemen_brdf_use_tex = bpy.props.BoolProperty(name="kelemen_brdf_use_tex",
-                                                  description="Use texture to influence the layer weight in the BSDF mix",
-                                                  default=False,
-                                                  update=refresh_preview)
-
-    kelemen_brdf_mix_tex = bpy.props.StringProperty(name="kelemen_brdf_mix_tex",
-                                                    description="Texture to influence layer weight in the BSDF mix",
-                                                    default="",
-                                                    update=refresh_preview)
-
     #
     # Lambertian BRDF.
     #
@@ -901,13 +774,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                          max=2.0,
                                                          update=refresh_preview)
 
-    lambertian_brdf_weight = bpy.props.FloatProperty(name="lambertian_brdf_weight",
-                                                     description="Blending weight of Lambertian BRDF in BSDF mix",
-                                                     default=1.0,
-                                                     min=0.0,
-                                                     max=1.0,
-                                                     update=refresh_preview)
-
     lambertian_brdf_use_diffuse_tex = bpy.props.BoolProperty(name="lambertian_brdf_use_diffuse_tex",
                                                              description="Use a texture to influence diffuse color",
                                                              default=False,
@@ -917,16 +783,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                            description="Diffuse color texture",
                                                            default="",
                                                            update=refresh_preview)
-
-    lambertian_brdf_use_tex = bpy.props.BoolProperty(name="lambertian_brdf_use_tex",
-                                                     description="Use texture to influence the layer weight in the BSDF mix",
-                                                     default=False,
-                                                     update=refresh_preview)
-
-    lambertian_brdf_mix_tex = bpy.props.StringProperty(name="lambertian_brdf_mix_tex",
-                                                       description="Texture to influence layer weight in the BSDF mix",
-                                                       default="",
-                                                       update=refresh_preview)
 
     #
     # Metal BRDF.
@@ -1034,23 +890,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                          default="",
                                                          update=refresh_preview)
 
-    metal_brdf_weight = bpy.props.FloatProperty(name="metal_brdf_weight",
-                                                description="Blending weight of Metal BRDF in mix",
-                                                default=1.0,
-                                                min=0.0,
-                                                max=1.0,
-                                                update=refresh_preview)
-
-    metal_brdf_use_tex = bpy.props.BoolProperty(name="metal_brdf_use_tex",
-                                                description="Use texture to influence the layer weight in the BSDF mix",
-                                                default=False,
-                                                update=refresh_preview)
-
-    metal_brdf_mix_tex = bpy.props.StringProperty(name="metal_brdf_mix_tex",
-                                                  description="Texture to influence layer weight in the BSDF mix",
-                                                  default="",
-                                                  update=refresh_preview)
-
     #
     # Oren-Nayar BRDF.
     #
@@ -1106,23 +945,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                         description="Roughness texture",
                                                         default="",
                                                         update=refresh_preview)
-
-    orennayar_brdf_weight = bpy.props.FloatProperty(name="orennayar_brdf_weight",
-                                                    description="Blending weight of Oren-Nayar BRDF in BSDF mix",
-                                                    default=1.0,
-                                                    min=0.0,
-                                                    max=1.0,
-                                                    update=refresh_preview)
-
-    orennayar_brdf_use_tex = bpy.props.BoolProperty(name="orennayar_brdf_use_tex",
-                                                    description="Use texture to influence the layer weight in the BSDF mix",
-                                                    default=False,
-                                                    update=refresh_preview)
-
-    orennayar_brdf_mix_tex = bpy.props.StringProperty(name="orennayar_brdf_mix_tex",
-                                                      description="Texture to influence layer weight in the BSDF mix",
-                                                      default="",
-                                                      update=refresh_preview)
 
     #
     # Plastic BRDF.
@@ -1244,23 +1066,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                max=1.0,
                                                                update=refresh_preview)
 
-    plastic_brdf_weight = bpy.props.FloatProperty(name="plastic_brdf_weight",
-                                                  description="Blending weight of plastic BRDF in mix",
-                                                  default=1.0,
-                                                  min=0.0,
-                                                  max=1.0,
-                                                  update=refresh_preview)
-
-    plastic_brdf_use_tex = bpy.props.BoolProperty(name="plastic_brdf_use_tex",
-                                                  description="Use texture to influence the layer weight in the BSDF mix",
-                                                  default=False,
-                                                  update=refresh_preview)
-
-    plastic_brdf_mix_tex = bpy.props.StringProperty(name="plastic_brdf_mix_tex",
-                                                    description="Texture to influence layer weight in the BSDF mix",
-                                                    default="",
-                                                    update=refresh_preview)
-
     #
     # Sheen BRDF.
     #
@@ -1300,23 +1105,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                                      default="",
                                                                      update=refresh_preview)
 
-    sheen_brdf_weight = bpy.props.FloatProperty(name="sheen_brdf_weight",
-                                                description="Blending weight of sheen BRDF in BSDF mix",
-                                                default=1.0,
-                                                min=0.0,
-                                                max=1.0,
-                                                update=refresh_preview)
-
-    sheen_brdf_use_tex = bpy.props.BoolProperty(name="sheen_brdf_use_tex",
-                                                description="Use texture to influence the layer weight in the BSDF mix",
-                                                default=False,
-                                                update=refresh_preview)
-
-    sheen_brdf_mix_tex = bpy.props.StringProperty(name="sheen_brdf_mix_tex",
-                                                  description="Texture to influence layer weight in the BSDF mix",
-                                                  default="",
-                                                  update=refresh_preview)
-
     #
     # Specular BRDF.
     #
@@ -1345,23 +1133,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                        min=0.0,
                                                        max=1.0,
                                                        update=refresh_preview)
-
-    specular_brdf_weight = bpy.props.FloatProperty(name="specular_brdf_weight",
-                                                   description="Blending weight of Specular BRDF in BSDF mix",
-                                                   default=1.0,
-                                                   min=0.0,
-                                                   max=1.0,
-                                                   update=refresh_preview)
-
-    specular_brdf_use_tex = bpy.props.BoolProperty(name="specular_brdf_use_tex",
-                                                   description="Use texture to influence the layer weight in the BSDF mix",
-                                                   default=False,
-                                                   update=refresh_preview)
-
-    specular_brdf_mix_tex = bpy.props.StringProperty(name="specular_brdf_mix_tex",
-                                                     description="Texture to influence layer weight in the BSDF mix",
-                                                     default="",
-                                                     update=refresh_preview)
 
     #
     # Specular BTDF.
@@ -1454,41 +1225,6 @@ class AppleseedMatLayerProps(bpy.types.PropertyGroup):
                                                          min=0.0,
                                                          max=10.0,
                                                          update=refresh_preview)
-
-    specular_btdf_weight = bpy.props.FloatProperty(name="specular_btdf_weight",
-                                                   description="Blending weight of Specular BTDF in BSDF mix",
-                                                   default=1.0,
-                                                   min=0.0,
-                                                   max=1.0,
-                                                   update=refresh_preview)
-
-    specular_btdf_use_tex = bpy.props.BoolProperty(name="specular_btdf_use_tex",
-                                                   description="Use texture to influence the layer weight in the BSDF mix",
-                                                   default=False,
-                                                   update=refresh_preview)
-
-    specular_btdf_mix_tex = bpy.props.StringProperty(name="specular_btdf_mix_tex",
-                                                     description="Texture to influence layer weight in the BSDF mix",
-                                                     default="",
-                                                     update=refresh_preview)
-
-
-class AppleseedMatProps(bpy.types.PropertyGroup):
-    """
-    appleseed Material Properties.
-    """
-
-    # Per-layer properties are stored in AppleseedMatLayerProps.
-    layers = bpy.props.CollectionProperty(type=AppleseedMatLayerProps,
-                                          name="appleseed Material Layers",
-                                          description="")
-
-    layer_index = bpy.props.IntProperty(name="layer_index",
-                                        description="",
-                                        default=0,
-                                        min=0,
-                                        max=16,
-                                        update=refresh_preview)
 
     #
     # BSSRDF
@@ -1796,12 +1532,10 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
 
 
 def register():
-    bpy.utils.register_class(AppleseedMatLayerProps)
     bpy.utils.register_class(AppleseedMatProps)
     bpy.types.Material.appleseed = bpy.props.PointerProperty(type=AppleseedMatProps)
 
 
 def unregister():
     del bpy.types.Material.appleseed
-    bpy.utils.unregister_class(AppleseedMatLayerProps)
     bpy.utils.unregister_class(AppleseedMatProps)

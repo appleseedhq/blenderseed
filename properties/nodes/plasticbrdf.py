@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedPlasticSpecularReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedPlasticSpecularReflectance"
     bl_label = "Specular Reflectance"
 
-    socket_value = AppleseedMatLayerProps.plastic_brdf_specular_reflectance
+    socket_value = AppleseedMatProps.plastic_brdf_specular_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedPlasticSpecularReflectanceMultiplierSocket(NodeSocket, AppleseedS
     bl_idname = "AppleseedPlasticSpecularReflectanceMultiplier"
     bl_label = "Specular Reflectance Multiplier"
 
-    socket_value = AppleseedMatLayerProps.plastic_brdf_specular_reflectance_multiplier
+    socket_value = AppleseedMatProps.plastic_brdf_specular_reflectance_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -69,7 +69,7 @@ class AppleseedPlasticRoughnessSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedPlasticRoughness"
     bl_label = "Roughness"
 
-    socket_value = AppleseedMatLayerProps.plastic_brdf_roughness
+    socket_value = AppleseedMatProps.plastic_brdf_roughness
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -85,7 +85,7 @@ class AppleseedPlasticDiffuseReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedPlasticDiffuseReflectance"
     bl_label = "Diffuse Reflectance"
 
-    socket_value = AppleseedMatLayerProps.plastic_brdf_diffuse_reflectance
+    socket_value = AppleseedMatProps.plastic_brdf_diffuse_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -101,7 +101,7 @@ class AppleseedPlasticDiffuseReflectanceMultiplierSocket(NodeSocket, AppleseedSo
     bl_idname = "AppleseedPlasticDiffuseReflectanceMultiplier"
     bl_label = "Diffuse Reflectance Multiplier"
 
-    socket_value = AppleseedMatLayerProps.plastic_brdf_diffuse_reflectance_multiplier
+    socket_value = AppleseedMatProps.plastic_brdf_diffuse_reflectance_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

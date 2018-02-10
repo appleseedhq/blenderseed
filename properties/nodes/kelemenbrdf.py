@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedKelemenReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenReflectance"
     bl_label = "Diffuse Reflectance"
 
-    socket_value = AppleseedMatLayerProps.kelemen_brdf_matte_reflectance
+    socket_value = AppleseedMatProps.kelemen_brdf_matte_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedKelemenMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenMultiplier"
     bl_label = "Diffuse Multiplier"
 
-    socket_value = AppleseedMatLayerProps.kelemen_brdf_matte_multiplier
+    socket_value = AppleseedMatProps.kelemen_brdf_matte_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -69,7 +69,7 @@ class AppleseedKelemenRoughnessSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenRoughness"
     bl_label = "Roughness"
 
-    socket_value = AppleseedMatLayerProps.kelemen_brdf_roughness
+    socket_value = AppleseedMatProps.kelemen_brdf_roughness
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -85,7 +85,7 @@ class AppleseedKelemenSpecReflSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenSpecRefl"
     bl_label = "Specular Reflectance"
 
-    socket_value = AppleseedMatLayerProps.kelemen_brdf_specular_reflectance
+    socket_value = AppleseedMatProps.kelemen_brdf_specular_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -101,7 +101,7 @@ class AppleseedKelemenSpecMultSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedKelemenSpecMult"
     bl_label = "Specular Multiplier"
 
-    socket_value = AppleseedMatLayerProps.kelemen_brdf_specular_multiplier
+    socket_value = AppleseedMatProps.kelemen_brdf_specular_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

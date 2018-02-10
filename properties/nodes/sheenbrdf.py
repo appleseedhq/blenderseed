@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedSheenReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSheenReflectance"
     bl_label = "Reflectance"
 
-    socket_value = AppleseedMatLayerProps.sheen_brdf_reflectance
+    socket_value = AppleseedMatProps.sheen_brdf_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedSheenReflectanceMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSheenReflectanceMultiplier"
     bl_label = "Reflectance Multiplier"
 
-    socket_value = AppleseedMatLayerProps.sheen_brdf_reflectance_multiplier
+    socket_value = AppleseedMatProps.sheen_brdf_reflectance_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedOrenNayarReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedOrenNayarReflectance"
     bl_label = "Reflectance"
 
-    socket_value = AppleseedMatLayerProps.orennayar_brdf_reflectance
+    socket_value = AppleseedMatProps.orennayar_brdf_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedOrenNayarMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedOrenNayarMultiplier"
     bl_label = "Multiplier"
 
-    socket_value = AppleseedMatLayerProps.orennayar_brdf_reflectance_multiplier
+    socket_value = AppleseedMatProps.orennayar_brdf_reflectance_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -69,7 +69,7 @@ class AppleseedOrenNayarRoughnessSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedOrenNayarRoughness"
     bl_label = "Roughness"
 
-    socket_value = AppleseedMatLayerProps.orennayar_brdf_roughness
+    socket_value = AppleseedMatProps.orennayar_brdf_roughness
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

@@ -29,7 +29,7 @@
 import bpy
 from bpy.types import NodeSocket, Node
 from ...util import asUpdate
-from ..materials import AppleseedMatLayerProps
+from ..materials import AppleseedMatProps
 from . import AppleseedNode, AppleseedSocket
 
 
@@ -37,7 +37,7 @@ class AppleseedSpecBTDFReflectanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBTDFReflectance"
     bl_label = "Reflectance"
 
-    socket_value = AppleseedMatLayerProps.specular_btdf_reflectance
+    socket_value = AppleseedMatProps.specular_btdf_reflectance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -53,7 +53,7 @@ class AppleseedSpecBTDFMultiplierSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBTDFMultiplier"
     bl_label = "Multiplier"
 
-    socket_value = AppleseedMatLayerProps.specular_brdf_multiplier
+    socket_value = AppleseedMatProps.specular_brdf_multiplier
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -69,7 +69,7 @@ class AppleseedSpecBTDFTransmittanceSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBTDFTransmittance"
     bl_label = "Transmittance"
 
-    socket_value = AppleseedMatLayerProps.specular_btdf_transmittance
+    socket_value = AppleseedMatProps.specular_btdf_transmittance
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -85,7 +85,7 @@ class AppleseedSpecBTDFTransMultSocket(NodeSocket, AppleseedSocket):
     bl_idname = "AppleseedSpecBTDFTransMult"
     bl_label = "Multiplier"
 
-    socket_value = AppleseedMatLayerProps.specular_btdf_trans_mult
+    socket_value = AppleseedMatProps.specular_btdf_trans_mult
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -105,7 +105,7 @@ class AppleseedSpecBTDFNode(Node, AppleseedNode):
 
     node_type = 'specular_btdf'
 
-    ior = AppleseedMatLayerProps.specular_btdf_ior
+    ior = AppleseedMatProps.specular_btdf_ior
 
     def init(self, context):
         self.inputs.new('AppleseedSpecBTDFReflectance', "Reflectance")
