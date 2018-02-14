@@ -49,7 +49,6 @@ class AppleseedNodeTree(NodeTree):
         if obj.type not in ('CAMERA', 'LAMP'):
             material = obj.active_material
             return renderer == 'APPLESEED_RENDER' and not material.appleseed.use_osl
-        
 
     # This following code is required to avoid a max recursion error when Blender checks for node updates
     def update(self):
@@ -158,11 +157,11 @@ class AppleseedOSLNodeCategory(NodeCategory):
         renderer = context.scene.render.engine
         return context.space_data.tree_type == 'AppleseedOSLNodeTree' and renderer == 'APPLESEED_RENDER'
 
-
     """
     appleseed node categories
     Format: (identifier, label, items list)
     """
+
 def node_categories(osl_nodes):
     osl_shaders = []
     osl_textures = []
@@ -214,7 +213,7 @@ def node_categories(osl_nodes):
         AppleseedOSLNodeCategory("OSL_Textures", "OSL Texture", items=osl_textures),
         AppleseedOSLNodeCategory("OSL_3D_Textures", "OSL 3D Texture", items=osl_3d_textures),
         AppleseedOSLNodeCategory("OSL_Utilities", "OSL Utility", items=osl_utilities)
-        ]
+    ]
 
     return appleseed_node_categories
 
@@ -296,9 +295,12 @@ def register():
     volume.register()
     material.register()
     node_list = read_osl_shaders()
-    for node in node_list:
-        node_name, node_category = oslnode.generate_node(node)
-        osl_node_names.append([node_name, node_category])
+    if node_list:
+        for node in node_list:
+            node_name, node_category = oslnode.generate_node(node)
+            osl_node_names.append([node_name, node_category])
+    else:
+        print("ERROR: OSL nodes list is empty")
     nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
 
 
