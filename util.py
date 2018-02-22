@@ -82,7 +82,7 @@ def read_osl_shaders():
                             if not line:
                                 break
                             line = line.strip().decode("utf-8")
-                            if "error" in line:
+                            if "ERROR" in line:
                                 print(line)
                                 print("ERROR: Failed to compile {0}".format(file))
                                 break
