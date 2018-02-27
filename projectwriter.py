@@ -164,7 +164,7 @@ class Writer(object):
     def __emit_assembly(self, scene):
         """Write the scene assembly."""
 
-        self.__open_element('assembly name="%s"' % scene.name)
+        self.__open_element('assembly name="{0}"'.format(scene.name))
         self.__emit_physical_surface_shader_element()
         self.__emit_default_material(scene)
         self.__emit_objects(scene)
@@ -182,7 +182,7 @@ class Writer(object):
         if obj is not None:
             # Write object assembly for an object with motion blur.
             obj_name = obj.name
-            self.__open_element('assembly_instance name="%s_instance" assembly="%s"' % (obj_name, obj_name))
+            self.__open_element('assembly_instance name="{0}_instance" assembly="{1}"'.format(obj_name, obj_name))
             current_frame = scene.frame_current
 
             # Advance to shutter open, collect matrix.
@@ -201,7 +201,7 @@ class Writer(object):
             self.__close_element("assembly_instance")
         else:
             # No object, write an assembly for the whole scene.
-            self.__open_element('assembly_instance name="%s_instance" assembly="%s"' % (scene.name, scene.name))
+            self.__open_element('assembly_instance name="{0}_instance" assembly="{1}"'.format(scene.name, scene.name))
             self.__close_element("assembly_instance")
 
     # --------------------------------
@@ -209,7 +209,7 @@ class Writer(object):
         """Write an assembly for an object with transformation motion blur."""
 
         object_name = object.name
-        self.__open_element('assembly name="%s"' % object_name)
+        self.__open_element('assembly name="{0}"'.format(object_name))
         self.__emit_physical_surface_shader_element()
         self.__emit_default_material(scene)
         self.__emit_geometric_object(scene, object, True)
@@ -227,8 +227,8 @@ class Writer(object):
             instance_index = 0
         self._assembly_count[object_name] = instance_index
 
-        assembly_name = "%s_%d" % (object_name, instance_index)
-        self.__open_element('assembly name="%s"' % assembly_name)
+        assembly_name = "{0}_{1}".format(object_name, instance_index)
+        self.__open_element('assembly name="{0}"'.format(assembly_name))
         self.__emit_physical_surface_shader_element()
         self.__emit_default_material(scene)
         self.__emit_dupli_object(scene, object, matrices, True, new_assembly=True)
@@ -248,7 +248,7 @@ class Writer(object):
             instance_index = 0
         self._assembly_instance_count[assembly_name] = instance_index
 
-        self.__open_element('assembly_instance name="%s.instance_%d" assembly="%s"' % (assembly_name, instance_index, assembly_name))
+        self.__open_element('assembly_instance name="{0}.instance_{1}" assembly="{2}"'.format(assembly_name, instance_index, assembly_name))
 
         instance_matrix = self._global_matrix * matrices[0].copy()
         next_matrix = self._global_matrix * matrices[1].copy()
@@ -488,7 +488,7 @@ class Writer(object):
             material_indices = set()
             for face in mesh_faces:
                 material_indices.add(face.material_index)
-            mesh_parts = map(lambda material_index: (material_index, "part_%d" % material_index), material_indices)
+            mesh_parts = map(lambda material_index: (material_index, "part_{0}".format(material_index)), material_indices)
 
         # Emit object.
         self.__emit_object_element(object_name, mesh_filename, object, scene)
@@ -681,17 +681,14 @@ class Writer(object):
 
     """Material(s) writing"""
 
-    def __is_light_emitting_material(self, asr_mat, scene, material_node=None):
-        if material_node is not None:
-            if material_node.inputs["Emission Strength"].socket_value > 0.0 or material_node.inputs["Emission Strength"].is_linked:
-                return scene.appleseed.export_emitting_obj_as_lights
-        else:
-            return asr_mat.use_light_emission and scene.appleseed.export_emitting_obj_as_lights
+    def __is_light_emitting_material(self, asr_mat, scene):
+
+        return asr_mat.use_light_emission and scene.appleseed.export_emitting_obj_as_lights
 
     def __is_node_material(self, asr_mat, node_tree):
-        if asr_mat.node_tree != "" or asr_mat.osl_node_tree != "":
+        if asr_mat.osl_node_tree != "":
             for node in bpy.data.node_groups[node_tree].nodes:
-                if node.node_type in ('osl_surface', 'material'):
+                if node.node_type == 'osl_surface':
                     return True
         return False
 
@@ -711,7 +708,7 @@ class Writer(object):
         """Write the material."""
 
         asr_mat = material.appleseed
-        asr_node_tree = asr_mat.osl_node_tree if asr_mat.use_osl else asr_mat.node_tree
+        asr_node_tree = asr_mat.osl_node_tree
         use_nodes = self.__is_node_material(asr_mat, asr_node_tree)
         material_node = None
         node_list = None
@@ -721,16 +718,9 @@ class Writer(object):
         if use_nodes:
             # Get all nodes. If specular btdf or diffuse btdf in the list, emit back material as well.
             for node in bpy.data.node_groups[asr_node_tree].nodes:
-                if node.node_type in ('osl_surface', 'material'):
+                if node.node_type == 'osl_surface':
                     material_node = node
             node_list = material_node.traverse_tree()
-            for node in node_list:
-                if node.node_type in ['specular_btdf', 'diffuse_btdf']:
-                    front_material_name = material.name + "_front"
-                    back_material_name = material.name + "_back"
-                    self.__emit_front_material(material, front_material_name, scene, material_node, node_list)
-                    self.__emit_back_material(material, back_material_name, scene, material_node, node_list)
-                    break
         else:
             if asr_mat.bsdf_type in ['specular_btdf', 'diffuse_btdf']:
                 front_material_name = material.name + "_front"
@@ -741,13 +731,13 @@ class Writer(object):
         # If we didn't find any, then we're only exporting front material.
         if front_material_name == "":
             front_material_name = material.name
-            if asr_mat.use_osl and use_nodes:
+            if use_nodes:
                 surface_name = front_material_name + "_surface"
                 self.__emit_osl_material(material, front_material_name, surface_name, scene, material_node, node_list)
                 back_material_name = front_material_name
             else:
-                self.__emit_front_material(material, front_material_name, scene, material_node, node_list)
-                if self.__is_light_emitting_material(asr_mat, scene, material_node):
+                self.__emit_front_material(material, front_material_name, scene)
+                if self.__is_light_emitting_material(asr_mat, scene):
                     # Assign the default material to the back face if the front face emits light,
                     # as we don't want mesh lights to emit from both faces.
                     back_material_name = "__default_material"
@@ -761,25 +751,25 @@ class Writer(object):
         self.__emit_osl_shader_group(surface_name, node_list, material_node)
         self.__emit_osl_element(front_material_name, surface_name)
 
-    def __emit_front_material(self, material, material_name, scene, material_node=None, node_list=None):
+    def __emit_front_material(self, material, material_name, scene):
         """Material_name here is material.name + _front"""
 
-        bsdf_name, bssrdf_name, volume_name = self.__emit_front_material_tree(material, material_name, scene, material_node, node_list)
+        bsdf_name, bssrdf_name, volume_name = self.__emit_front_material_tree(material, material_name, scene)
 
-        if self.__is_light_emitting_material(material.appleseed, scene, material_node):
+        if self.__is_light_emitting_material(material.appleseed, scene):
             edf_name = "{0}_edf".format(material_name)
-            self.__emit_edf(material, edf_name, scene, material_node)
+            self.__emit_edf(material, edf_name, scene)
         else:
             edf_name = ""
 
-        self.__emit_material_element(material_name, bsdf_name, edf_name, bssrdf_name, volume_name, "physical_surface_shader", scene, material, material_node)
+        self.__emit_material_element(material_name, bsdf_name, edf_name, bssrdf_name, volume_name, "physical_surface_shader", scene, material)
 
-    def __emit_back_material(self, material, material_name, scene, material_node=None, node_list=None):
+    def __emit_back_material(self, material, material_name, scene):
         """Material_name here is material.name + "_back"""
 
-        bsdf_name = self.__emit_back_material_bsdf_tree(material, material_name, scene, material_node, node_list)
+        bsdf_name = self.__emit_back_material_bsdf_tree(material, material_name, scene)
 
-        self.__emit_material_element(material_name, bsdf_name, "", "", "", "physical_surface_shader", scene, material, material_node)
+        self.__emit_material_element(material_name, bsdf_name, "", "", "", "physical_surface_shader", scene, material)
 
     def __emit_osl_shader_group(self, front_material_name, node_list, material_node):
         node_connections = []
@@ -835,7 +825,7 @@ class Writer(object):
                 connections = [node.name, output.socket_osl_id, output.links[0].to_node.name, output.links[0].to_socket.socket_osl_id]
         return connections
 
-    def __emit_front_material_tree(self, material, material_name, scene, material_node=None, node_list=None):
+    def __emit_front_material_tree(self, material, material_name, scene):
         """
         Emit the front material's BSDF tree and return the last BSDF name to the calling function (__emit_front_material).
         """
@@ -846,307 +836,213 @@ class Writer(object):
         volume_name = ""
 
         # If using nodes.
-        if material_node is not None:
-            if not material_node.inputs[0].is_linked and not material_node.inputs[1].is_linked and not material_node.inputs[2].is_linked:
-                bsdf_name = "__default_material_bsdf"
-                return bsdf_name, bssrdf_name, volume_name
 
-            for node in node_list:
-                if node.node_type not in {'texture', 'normal', 'bssrdf', 'volume'}:
-                    bsdf_name = material_name + node.get_node_name()
-                if node.node_type == 'ashikhmin':
-                    self.__emit_ashikhmin_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'blinn':
-                    self.__emit_blinn_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'bsdf_blend':
-                    self.__emit_bsdf_blend(bsdf_name, material_name, node)
-                if node.node_type == 'bssrdf':
-                    bssrdf_name = material_name + node.get_node_name()
-                    self.__emit_bssrdf(material, bssrdf_name, 'front', node)
-                if node.node_type == 'diffuse_btdf':
-                    self.__emit_diffuse_btdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'disney':
-                    self.__emit_disney_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'glass':
-                    self.__emit_glass_bsdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'kelemen':
-                    self.__emit_kelemen_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'lambertian':
-                    self.__emit_lambertian_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'orennayar':
-                    self.__emit_orennayar_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'plastic':
-                    self.__emit_plastic_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'metal':
-                    self.__emit_metal_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'sheen':
-                    self.__emit_sheen_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'specular_btdf':
-                    self.__emit_specular_btdf(material, bsdf_name, scene, None, node)
-                if node.node_type == 'specular_brdf':
-                    self.__emit_specular_brdf(material, bsdf_name, 'front', None, node)
-                if node.node_type == 'texture':
-                    self.__emit_texture(None, False, scene, node, material_name)
-                if node.node_type == 'volume':
-                    volume_name = material_name + node.get_node_name()
-                    self.__emit_volume(material, volume_name, 'front', node)
+        asr_mat = material.appleseed
+        if asr_mat.bsdf_type == "" and asr_mat.bssrdf_model == 'none' and asr_mat.volume_phase_function_model == 'none':
+            bsdf_name = "__default_material_bsdf"
+            return bsdf_name, bssrdf_name, volume_name
+        else:
+            # Spec BTDF
+            if asr_mat.bsdf_type == "specular_btdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_specular_btdf(material, bsdf_name, scene, asr_mat)
+
+            # Spec BRDF
+            elif asr_mat.bsdf_type == "specular_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_specular_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Blinn BRDF
+            elif asr_mat.bsdf_type == "blinn_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_blinn_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Glass BRDF
+            elif asr_mat.bsdf_type == "glass_bsdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_glass_bsdf(material, bsdf_name, scene, asr_mat)
+
+            # Metal BRDF
+            elif asr_mat.bsdf_type == "metal_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_metal_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Plastic BRDF
+            elif asr_mat.bsdf_type == "plastic_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_plastic_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Diffuse BTDF
+            elif asr_mat.bsdf_type == "diffuse_btdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_diffuse_btdf(material, bsdf_name, scene, asr_mat)
+
+            # Disney
+            elif asr_mat.bsdf_type == "disney_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_disney_brdf(material, bsdf_name, scene, asr_mat=asr_mat)
+
+            # Lambertian
+            elif asr_mat.bsdf_type == "lambertian_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_lambertian_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Oren-Nayar
+            elif asr_mat.bsdf_type == "orennayar_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_orennayar_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Ashikhmin
+            elif asr_mat.bsdf_type == "ashikhmin_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_ashikhmin_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Sheen
+            elif asr_mat.bsdf_type == "sheen_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_sheen_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Glossy
+            elif asr_mat.bsdf_type == "glossy_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_glossy_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Kelemen
+            elif asr_mat.bsdf_type == "kelemen_brdf":
+                bsdf_name = "{0}_bsdf".format(material_name)
+                self.__emit_kelemen_brdf(material, bsdf_name, scene, asr_mat)
+
+            # Subsurface
+            if asr_mat.bssrdf_model != 'none':
+                bssrdf_name = "{0}_bssrdf".format(material_name)
+                self.__emit_bssrdf(material, bssrdf_name, scene)
+
+            # Volume
+            if asr_mat.volume_phase_function_model != 'none':
+                volume_name = "{0}_volume".format(material_name)
+                self.__emit_volume(material, volume_name, scene)
+
             return bsdf_name, bssrdf_name, volume_name
 
-        else:
-            asr_mat = material.appleseed
-            if asr_mat.bsdf_type == "" and asr_mat.bssrdf_model == 'none' and asr_mat.volume_phase_function_model == 'none':
-                bsdf_name = "__default_material_bsdf"
-                return bsdf_name, bssrdf_name, volume_name
-            else:
-                # Spec BTDF
-                if asr_mat.bsdf_type == "specular_btdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_specular_btdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Spec BRDF
-                elif asr_mat.bsdf_type == "specular_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_specular_brdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Blinn BRDF
-                elif asr_mat.bsdf_type == "blinn_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_blinn_brdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Glass BRDF
-                elif asr_mat.bsdf_type == "glass_bsdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_glass_bsdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Metal BRDF
-                elif asr_mat.bsdf_type == "metal_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_metal_brdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Plastic BRDF
-                elif asr_mat.bsdf_type == "plastic_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_plastic_brdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Diffuse BTDF
-                elif asr_mat.bsdf_type == "diffuse_btdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_diffuse_btdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Disney
-                elif asr_mat.bsdf_type == "disney_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_disney_brdf(material, bsdf_name, scene, asr_mat=asr_mat)
-                    
-                # Lambertian
-                elif asr_mat.bsdf_type == "lambertian_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_lambertian_brdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Oren-Nayar
-                elif asr_mat.bsdf_type == "orennayar_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_orennayar_brdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Ashikhmin
-                elif asr_mat.bsdf_type == "ashikhmin_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_ashikhmin_brdf(material, bsdf_name, scene, asr_mat)
-                   
-                # Sheen
-                elif asr_mat.bsdf_type == "sheen_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_sheen_brdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Glossy
-                elif asr_mat.bsdf_type == "glossy_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_glossy_brdf(material, bsdf_name, scene, asr_mat)
-                    
-                # Kelemen
-                elif asr_mat.bsdf_type == "kelemen_brdf":
-                    bsdf_name = "{0}_bsdf".format(material_name)
-                    self.__emit_kelemen_brdf(material, bsdf_name, scene, asr_mat)
-
-                # Subsurface
-                if asr_mat.bssrdf_model != 'none':
-                    bssrdf_name = "{0}_bssrdf".format(material_name)
-                    self.__emit_bssrdf(material, bssrdf_name, scene)
-
-                # Volume
-                if asr_mat.volume_phase_function_model != 'none':
-                    volume_name = "{0}_volume".format(material_name)
-                    self.__emit_volume(material, volume_name, scene)
-
-                return bsdf_name, bssrdf_name, volume_name
-
-    def __emit_back_material_bsdf_tree(self, material, material_name, scene, material_node=None, node_list=None):
-        """Emits mateiral tree for the back side of the object."""
+    def __emit_back_material_bsdf_tree(self, material, material_name, scene):
+        """Emits material tree for the back side of the object."""
 
         transp_bsdf_name = None
         asr_mat = material.appleseed
-        if material_node is not None:
-            for node in node_list:
-                if node.node_type == "diffuse_btdf":
-                    transp_bsdf_name = "{0}|{1}".format(material_name, node.name)
-                    self.__emit_diffuse_btdf(material, transp_bsdf_name, scene, None, node)
-                    break
-                elif node.node_type == "specular_btdf":
-                    transp_bsdf_name = "{0}|{1}".format(material_name, node.name)
-                    self.__emit_specular_btdf(material, transp_bsdf_name, scene, None, node)
-                    break
-        else:
-            if asr_mat.bsdf_type == "diffuse_btdf":
-                transp_bsdf_name = "{0}_btdf".format(material_name)
-                self.__emit_diffuse_btdf(material, transp_bsdf_name, scene, asr_mat)
-            elif asr_mat.bsdf_type == "specular_btdf":
-                transp_bsdf_name = "{0}_btdf".format(material_name)
-                self.__emit_specular_btdf(material, transp_bsdf_name, scene, asr_mat)
+
+        if asr_mat.bsdf_type == "diffuse_btdf":
+            transp_bsdf_name = "{0}_btdf".format(material_name)
+            self.__emit_diffuse_btdf(material, transp_bsdf_name, scene, asr_mat)
+        elif asr_mat.bsdf_type == "specular_btdf":
+            transp_bsdf_name = "{0}_btdf".format(material_name)
+            self.__emit_specular_btdf(material, transp_bsdf_name, scene, asr_mat)
         return transp_bsdf_name
 
-    def __emit_lambertian_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_lambertian_brdf(self, material, bsdf_name, scene, asr_mat=None):
         reflectance_name = ""
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            reflectance_name = inputs["Reflectance"].get_socket_value(True)
+        if asr_mat.lambertian_brdf_use_diffuse_tex and asr_mat.lambertian_brdf_diffuse_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.lambertian_brdf_diffuse_tex]):
+                reflectance_name = asr_mat.lambertian_brdf_diffuse_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.lambertian_brdf_diffuse_tex], False, scene)
+        # TODO: add texture support for multiplier
+        reflectance_multiplier = asr_mat.lambertian_brdf_multiplier
 
-            # If the socket is not connected.
-            if not inputs["Reflectance"].is_linked:
-                lambertian_brdf_reflectance = reflectance_name
-                reflectance_name = "{0}_lambertian_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           lambertian_brdf_reflectance,
-                                                           1)
-            reflectance_multiplier = inputs["Multiplier"].get_socket_value(True)
-
-        else:
-            if asr_mat.lambertian_brdf_use_diffuse_tex and asr_mat.lambertian_brdf_diffuse_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.lambertian_brdf_diffuse_tex]):
-                    reflectance_name = asr_mat.lambertian_brdf_diffuse_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.lambertian_brdf_diffuse_tex], False, scene)
-            # TODO: add texture support for multiplier
-            reflectance_multiplier = asr_mat.lambertian_brdf_multiplier
-
-            if reflectance_name == "":
-                reflectance_name = "{0}_lambertian_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           asr_mat.lambertian_brdf_reflectance,
-                                                           1)
+        if reflectance_name == "":
+            reflectance_name = "{0}_lambertian_brdf_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(reflectance_name,
+                                                       asr_mat.lambertian_brdf_reflectance,
+                                                       1)
         # Emit BRDF.
         self.__open_element('bsdf name="{0}" model="lambertian_brdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance_name)
         self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
         self.__close_element("bsdf")
 
-    def __emit_disney_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_disney_brdf(self, material, bsdf_name, scene, asr_mat=None):
         base_coat_name = ""
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            base_coat_name = inputs["Base Color"].get_socket_value(True)
-            spec = inputs["Specular"].get_socket_value(True)
-            specular_tint = inputs["Specular Tint"].get_socket_value(True)
-            anisotropy = inputs["Anisotropy"].get_socket_value(True)
-            metallic = inputs["Metallic"].get_socket_value(True)
-            roughness = inputs["Roughness"].get_socket_value(True)
-            clearcoat = inputs["Clear Coat"].get_socket_value(True)
-            clearcoat_gloss = inputs["Clear Coat Gloss"].get_socket_value(True)
-            sheen = inputs["Sheen"].get_socket_value(True)
-            sheen_brdf_tint = inputs["Sheen Tint"].get_socket_value(True)
-            subsurface = inputs["Subsurface"].get_socket_value(True)
+        # Base Coat.
+        if asr_mat.disney_brdf_use_base_tex and asr_mat.disney_brdf_base_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_base_tex]):
+                base_coat_name = asr_mat.disney_brdf_base_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_base_tex], False, scene)
 
-            # If the socket is not connected.
-            if not inputs["Base Color"].is_linked:
-                base_coat_color = base_coat_name
-                base_coat_name = "{0}_disney_brdf_base_coat".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(base_coat_name,
-                                                           base_coat_color,
-                                                           1)
         else:
-            # Base Coat.
-            if asr_mat.disney_brdf_use_base_tex and asr_mat.disney_brdf_base_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_base_tex]):
-                    base_coat_name = asr_mat.disney_brdf_base_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_base_tex], False, scene)
+            base_coat_name = "{0}_disney_brdf_base_coat".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(base_coat_name,
+                                                       asr_mat.disney_brdf_base,
+                                                       1)
 
-            else:
-                base_coat_name = "{0}_disney_brdf_base_coat".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(base_coat_name,
-                                                           asr_mat.disney_brdf_base,
-                                                           1)
+        # Specular.
+        spec = asr_mat.disney_brdf_spec
+        if asr_mat.disney_brdf_use_specular_tex and asr_mat.disney_brdf_specular_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_specular_tex]):
+                spec = asr_mat.disney_brdf_specular_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_specular_tex], False, scene)
 
-            # Specular.
-            spec = asr_mat.disney_brdf_spec
-            if asr_mat.disney_brdf_use_specular_tex and asr_mat.disney_brdf_specular_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_specular_tex]):
-                    spec = asr_mat.disney_brdf_specular_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_specular_tex], False, scene)
+        # Specular Tint.
+        specular_tint = asr_mat.disney_brdf_specular_tint
+        if asr_mat.disney_brdf_use_specular_tint_tex and asr_mat.disney_brdf_specular_tint_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_specular_tint_tex]):
+                specular_tint = asr_mat.disney_brdf_specular_tint_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_specular_tint_tex], False, scene)
 
-            # Specular Tint.
-            specular_tint = asr_mat.disney_brdf_specular_tint
-            if asr_mat.disney_brdf_use_specular_tint_tex and asr_mat.disney_brdf_specular_tint_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_specular_tint_tex]):
-                    specular_tint = asr_mat.disney_brdf_specular_tint_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_specular_tint_tex], False, scene)
+        # Aniso.
+        anisotropy = asr_mat.disney_brdf_anisotropy
+        if asr_mat.disney_brdf_use_anisotropy_tex and asr_mat.disney_brdf_anisotropy_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_anisotropy_tex]):
+                anisotropy = asr_mat.disney_brdf_anisotropy_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_anisotropy_tex], False, scene)
 
-            # Aniso.
-            anisotropy = asr_mat.disney_brdf_anisotropy
-            if asr_mat.disney_brdf_use_anisotropy_tex and asr_mat.disney_brdf_anisotropy_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_anisotropy_tex]):
-                    anisotropy = asr_mat.disney_brdf_anisotropy_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_anisotropy_tex], False, scene)
+        # Clear Coat.
+        clearcoat = asr_mat.disney_brdf_clearcoat
+        if asr_mat.disney_brdf_use_clearcoat_tex and asr_mat.disney_brdf_clearcoat_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_clearcoat_tex]):
+                clearcoat = asr_mat.disney_brdf_clearcoat_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_clearcoat_tex], False, scene)
 
-            # Clear Coat.
-            clearcoat = asr_mat.disney_brdf_clearcoat
-            if asr_mat.disney_brdf_use_clearcoat_tex and asr_mat.disney_brdf_clearcoat_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_clearcoat_tex]):
-                    clearcoat = asr_mat.disney_brdf_clearcoat_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_clearcoat_tex], False, scene)
+        # Clear Coat Gloss.
+        clearcoat_gloss = asr_mat.disney_brdf_clearcoat_gloss
+        if asr_mat.disney_brdf_use_clearcoat_glossy_tex and asr_mat.disney_brdf_clearcoat_glossy_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_clearcoat_glossy_tex]):
+                clearcoat_gloss = asr_mat.disney_brdf_clearcoat_glossy_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_clearcoat_glossy_tex], False, scene)
 
-            # Clear Coat Gloss.
-            clearcoat_gloss = asr_mat.disney_brdf_clearcoat_gloss
-            if asr_mat.disney_brdf_use_clearcoat_glossy_tex and asr_mat.disney_brdf_clearcoat_glossy_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_clearcoat_glossy_tex]):
-                    clearcoat_gloss = asr_mat.disney_brdf_clearcoat_glossy_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_clearcoat_glossy_tex], False, scene)
+        # Metallic.
+        metallic = asr_mat.disney_brdf_metallic
+        if asr_mat.disney_brdf_use_metallic_tex and asr_mat.disney_brdf_metallic_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_metallic_tex]):
+                metallic = asr_mat.disney_brdf_metallic_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_metallic_tex], False, scene)
 
-            # Metallic.
-            metallic = asr_mat.disney_brdf_metallic
-            if asr_mat.disney_brdf_use_metallic_tex and asr_mat.disney_brdf_metallic_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_metallic_tex]):
-                    metallic = asr_mat.disney_brdf_metallic_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_metallic_tex], False, scene)
+        # Roughness.
+        roughness = asr_mat.disney_brdf_roughness
+        if asr_mat.disney_brdf_use_roughness_tex and asr_mat.disney_brdf_roughness_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_roughness_tex]):
+                roughness = asr_mat.disney_brdf_roughness_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_roughness_tex], False, scene)
 
-            # Roughness.
-            roughness = asr_mat.disney_brdf_roughness
-            if asr_mat.disney_brdf_use_roughness_tex and asr_mat.disney_brdf_roughness_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_roughness_tex]):
-                    roughness = asr_mat.disney_brdf_roughness_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_roughness_tex], False, scene)
+        # Sheen.
+        sheen = asr_mat.disney_brdf_sheen
+        if asr_mat.disney_brdf_use_sheen_brdf_tex and asr_mat.disney_brdf_sheen_brdf_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tex]):
+                sheen = asr_mat.disney_brdf_sheen_brdf_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tex], False, scene)
 
-            # Sheen.
-            sheen = asr_mat.disney_brdf_sheen
-            if asr_mat.disney_brdf_use_sheen_brdf_tex and asr_mat.disney_brdf_sheen_brdf_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tex]):
-                    sheen = asr_mat.disney_brdf_sheen_brdf_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tex], False, scene)
+        # Sheen Tint.
+        sheen_brdf_tint = asr_mat.disney_brdf_sheen_brdf_tint
+        if asr_mat.disney_brdf_use_sheen_brdf_tint_tex and asr_mat.disney_brdf_sheen_brdf_tint_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tint_tex]):
+                sheen_brdf_tint = asr_mat.disney_brdf_sheen_brdf_tint_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tint_tex], False, scene)
 
-            # Sheen Tint.
-            sheen_brdf_tint = asr_mat.disney_brdf_sheen_brdf_tint
-            if asr_mat.disney_brdf_use_sheen_brdf_tint_tex and asr_mat.disney_brdf_sheen_brdf_tint_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tint_tex]):
-                    sheen_brdf_tint = asr_mat.disney_brdf_sheen_brdf_tint_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tint_tex], False, scene)
-
-            # Subsurface.
-            subsurface = asr_mat.disney_brdf_subsurface
-            if asr_mat.disney_brdf_use_subsurface_tex and asr_mat.disney_brdf_subsurface_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_subsurface_tex]):
-                    subsurface = asr_mat.disney_brdf_subsurface_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_subsurface_tex], False, scene)
+        # Subsurface.
+        subsurface = asr_mat.disney_brdf_subsurface
+        if asr_mat.disney_brdf_use_subsurface_tex and asr_mat.disney_brdf_subsurface_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.disney_brdf_subsurface_tex]):
+                subsurface = asr_mat.disney_brdf_subsurface_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.disney_brdf_subsurface_tex], False, scene)
 
         self.__open_element('bsdf name="{0}" model="disney_brdf"'.format(bsdf_name))
         self.__emit_parameter("anisotropic", anisotropy)
@@ -1162,48 +1058,32 @@ class Writer(object):
         self.__emit_parameter("subsurface", subsurface)
         self.__close_element("bsdf")
 
-    def __emit_orennayar_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_orennayar_brdf(self, material, bsdf_name, scene, asr_mat=None):
         reflectance_name = ""
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            reflectance_name = inputs["Reflectance"].get_socket_value(True)
-            reflectance_multiplier = inputs["Multiplier"].get_socket_value(True)
-            roughness = inputs["Roughness"].get_socket_value(True)
+        if asr_mat.orennayar_brdf_use_diffuse_tex and asr_mat.orennayar_brdf_diffuse_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.orennayar_brdf_diffuse_tex]):
+                reflectance_name = asr_mat.orennayar_brdf_diffuse_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.orennayar_brdf_diffuse_tex], False, scene)
 
-            # If the socket is not connected.
-            if not inputs["Reflectance"].is_linked:
-                orennayar_brdf_reflectance = reflectance_name
-                reflectance_name = "{0}_orennayar_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           orennayar_brdf_reflectance,
-                                                           1)
+        roughness = asr_mat.orennayar_brdf_roughness
+        if asr_mat.orennayar_brdf_use_rough_tex and asr_mat.orennayar_brdf_rough_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.orennayar_brdf_rough_tex]):
+                roughness = asr_mat.orennayar_brdf_rough_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.orennayar_brdf_rough_tex], False, scene)
 
-        else:
-            if asr_mat.orennayar_brdf_use_diffuse_tex and asr_mat.orennayar_brdf_diffuse_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.orennayar_brdf_diffuse_tex]):
-                    reflectance_name = asr_mat.orennayar_brdf_diffuse_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.orennayar_brdf_diffuse_tex], False, scene)
+        # TODO: add texture support for multiplier
+        reflectance_multiplier = asr_mat.orennayar_brdf_reflectance_multiplier
+        if asr_mat.orennayar_brdf_use_reflect_multiplier_tex and asr_mat.orennayar_brdf_reflect_multiplier_tex != '':
+            if util.is_uv_img(bpy.data.textures[asr_mat.orennayar_brdf_reflect_multiplier_tex]):
+                reflectance_multiplier = asr_mat.orennayar_brdf_reflect_multiplier_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.orennayar_brdf_reflect_multiplier_tex], False, scene)
 
-            roughness = asr_mat.orennayar_brdf_roughness
-            if asr_mat.orennayar_brdf_use_rough_tex and asr_mat.orennayar_brdf_rough_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.orennayar_brdf_rough_tex]):
-                    roughness = asr_mat.orennayar_brdf_rough_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.orennayar_brdf_rough_tex], False, scene)
-
-            # TODO: add texture support for multiplier
-            reflectance_multiplier = asr_mat.orennayar_brdf_reflectance_multiplier
-            if asr_mat.orennayar_brdf_use_reflect_multiplier_tex and asr_mat.orennayar_brdf_reflect_multiplier_tex != '':
-                if util.is_uv_img(bpy.data.textures[asr_mat.orennayar_brdf_reflect_multiplier_tex]):
-                    reflectance_multiplier = asr_mat.orennayar_brdf_reflect_multiplier_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.orennayar_brdf_reflect_multiplier_tex], False, scene)
-
-            if reflectance_name == "":
-                reflectance_name = "{0}_orennayar_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           asr_mat.orennayar_brdf_reflectance,
-                                                           1)
+        if reflectance_name == "":
+            reflectance_name = "{0}_orennayar_brdf_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(reflectance_name,
+                                                       asr_mat.orennayar_brdf_reflectance,
+                                                       1)
 
         self.__open_element('bsdf name="{0}" model="orennayar_brdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance_name)
@@ -1211,89 +1091,59 @@ class Writer(object):
         self.__emit_parameter("roughness", roughness)
         self.__close_element("bsdf")
 
-    def __emit_diffuse_btdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_diffuse_btdf(self, material, bsdf_name, scene, asr_mat=None):
         transmittance_name = ""
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            transmittance_name = inputs["Transmittance"].get_socket_value(True)
-            transmittance = inputs["Multiplier"].get_socket_value(True)
+        if asr_mat.diffuse_btdf_use_diffuse_tex and asr_mat.diffuse_btdf_diffuse_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.diffuse_btdf_diffuse_tex]):
+                transmittance_name = asr_mat.diffuse_btdf_diffuse_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.diffuse_btdf_diffuse_tex], False, scene)
 
-            # If the socket is not connected.
-            if not inputs["Transmittance"].is_linked:
-                transmittance_color = transmittance_name
-                transmittance_name = "{0}_diffuse_transmittance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(transmittance_name,
-                                                           transmittance_color,
-                                                           1)
+        if asr_mat.diffuse_btdf_transmittance_use_mult_tex and asr_mat.diffuse_btdf_transmittance_mult_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.diffuse_btdf_transmittance_mult_tex]):
+                transmittance = asr_mat.diffuse_btdf_transmittance_mult_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.diffuse_btdf_transmittance_mult_tex], False, scene)
 
-        else:
-            if asr_mat.diffuse_btdf_use_diffuse_tex and asr_mat.diffuse_btdf_diffuse_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.diffuse_btdf_diffuse_tex]):
-                    transmittance_name = asr_mat.diffuse_btdf_diffuse_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.diffuse_btdf_diffuse_tex], False, scene)
-
-            if asr_mat.diffuse_btdf_transmittance_use_mult_tex and asr_mat.diffuse_btdf_transmittance_mult_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.diffuse_btdf_transmittance_mult_tex]):
-                    transmittance = asr_mat.diffuse_btdf_transmittance_mult_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.diffuse_btdf_transmittance_mult_tex], False, scene)
-
-            if transmittance_name == "":
-                transmittance_name = "{0}_diffuse_transmittance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(transmittance_name,
-                                                           asr_mat.diffuse_btdf_transmittance_color,
-                                                           1)
-            # TODO: add texture support for multiplier
-            transmittance = asr_mat.diffuse_btdf_transmittance_multiplier
+        if transmittance_name == "":
+            transmittance_name = "{0}_diffuse_transmittance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(transmittance_name,
+                                                       asr_mat.diffuse_btdf_transmittance_color,
+                                                       1)
+        # TODO: add texture support for multiplier
+        transmittance = asr_mat.diffuse_btdf_transmittance_multiplier
 
         self.__open_element('bsdf name="{0}" model="diffuse_btdf"'.format(bsdf_name))
         self.__emit_parameter("transmittance", transmittance_name)
         self.__emit_parameter("transmittance_multiplier", transmittance)
         self.__close_element("bsdf")
 
-    def __emit_sheen_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_sheen_brdf(self, material, bsdf_name, scene, asr_mat=None):
         reflectance = ""
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            reflectance = inputs["Reflectance"].get_socket_value(True)
-            reflectance_multiplier = inputs["Reflectance Multiplier"].get_socket_value(True)
+        reflectance_multiplier = asr_mat.sheen_brdf_reflectance_multiplier
+        # reflectance
+        if asr_mat.sheen_brdf_reflectance_use_tex and asr_mat.sheen_brdf_reflectance_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.sheen_brdf_reflectance_tex]):
+                reflectance = asr_mat.sheen_brdf_reflectance_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.sheen_brdf_reflectance_tex], False, scene)
+        if reflectance == "":
+            reflectance = "{0}_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(reflectance,
+                                                       asr_mat.sheen_brdf_reflectance,
+                                                       1)
 
-            # If the socket is not connected.
-            if not inputs["Reflectance"].is_linked:
-                reflectance_name = reflectance
-                reflectance = "{0}_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance,
-                                                           reflectance_name,
-                                                           1)
-
-        else:
-            reflectance_multiplier = asr_mat.sheen_brdf_reflectance_multiplier
-            # reflectance
-            if asr_mat.sheen_brdf_reflectance_use_tex and asr_mat.sheen_brdf_reflectance_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.sheen_brdf_reflectance_tex]):
-                    reflectance = asr_mat.sheen_brdf_reflectance_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.sheen_brdf_reflectance_tex], False, scene)
-            if reflectance == "":
-                reflectance = "{0}_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance,
-                                                           asr_mat.sheen_brdf_reflectance,
-                                                           1)
-
-            # reflectance multiplier
-            if asr_mat.sheen_brdf_reflectance_multiplier_use_tex and asr_mat.sheen_brdf_reflectance_multiplier_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.sheen_brdf_reflectance_multiplier_tex]):
-                    reflectance_multiplier = asr_mat.sheen_brdf_reflectance_multiplier_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.sheen_brdf_reflectance_multiplier_tex], False, scene)
+        # reflectance multiplier
+        if asr_mat.sheen_brdf_reflectance_multiplier_use_tex and asr_mat.sheen_brdf_reflectance_multiplier_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.sheen_brdf_reflectance_multiplier_tex]):
+                reflectance_multiplier = asr_mat.sheen_brdf_reflectance_multiplier_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.sheen_brdf_reflectance_multiplier_tex], False, scene)
 
         self.__open_element('bsdf name="{0}" model="sheen_brdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance)
         self.__emit_parameter("reflectance_multiplier", reflectance_multiplier)
         self.__close_element("bsdf")
 
-    def __emit_glossy_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_glossy_brdf(self, material, bsdf_name, scene, asr_mat=None):
         reflectance = ""
         reflectance_multiplier = asr_mat.glossy_brdf_reflectance_multiplier
         roughness = asr_mat.glossy_brdf_roughness
@@ -1338,61 +1188,36 @@ class Writer(object):
         self.__emit_parameter("ior", asr_mat.glossy_brdf_ior)
         self.__close_element("bsdf")
 
-    def __emit_ashikhmin_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_ashikhmin_brdf(self, material, bsdf_name, scene, asr_mat=None):
         diffuse_reflectance_name = ""
         glossy_brdf_reflectance_name = ""
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            diffuse_reflectance_name = inputs["Reflectance"].get_socket_value(True)
-            diffuse_multiplier = inputs["Multiplier"].get_socket_value(True)
-            glossy_brdf_reflectance_name = inputs["Glossy Reflectance"].get_socket_value(True)
-            shininess_u = inputs["Shininess U"].get_socket_value(True)
-            shininess_v = inputs["Shininess V"].get_socket_value(True)
-            fresnel = inputs["Fresnel Multiplier"].get_socket_value(True)
+        if asr_mat.ashikhmin_brdf_use_diffuse_tex and asr_mat.ashikhmin_brdf_diffuse_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.ashikhmin_brdf_diffuse_tex]):
+                diffuse_reflectance_name = asr_mat.ashikhmin_brdf_diffuse_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.ashikhmin_brdf_diffuse_tex], False, scene)
 
-            # If the socket is not connected.
-            if not inputs["Reflectance"].is_linked:
-                ashikhmin_brdf_reflectance = diffuse_reflectance_name
-                diffuse_reflectance_name = "{0}_ashikhmin_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(diffuse_reflectance_name,
-                                                           ashikhmin_brdf_reflectance,
-                                                           1)
-            if not inputs["Glossy Reflectance"].is_linked:
-                ashikhmin_brdf_glossy = glossy_brdf_reflectance_name
-                glossy_brdf_reflectance_name = "{0}_ashikhmin_brdf_glossy_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(glossy_brdf_reflectance_name,
-                                                           ashikhmin_brdf_glossy,
-                                                           1)
+        if asr_mat.ashikhmin_brdf_use_glossy_tex and asr_mat.ashikhmin_brdf_glossy_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.ashikhmin_brdf_glossy_tex]):
+                glossy_brdf_reflectance_name = asr_mat.ashikhmin_brdf_glossy_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.ashikhmin_brdf_glossy_tex], False, scene)
 
-        else:
-            if asr_mat.ashikhmin_brdf_use_diffuse_tex and asr_mat.ashikhmin_brdf_diffuse_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.ashikhmin_brdf_diffuse_tex]):
-                    diffuse_reflectance_name = asr_mat.ashikhmin_brdf_diffuse_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.ashikhmin_brdf_diffuse_tex], False, scene)
-
-            if asr_mat.ashikhmin_brdf_use_glossy_tex and asr_mat.ashikhmin_brdf_glossy_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.ashikhmin_brdf_glossy_tex]):
-                    glossy_brdf_reflectance_name = asr_mat.ashikhmin_brdf_glossy_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.ashikhmin_brdf_glossy_tex], False, scene)
-
-            # Make sure we found some textures. If not, default to material color.
-            if diffuse_reflectance_name == "":
-                diffuse_reflectance_name = "{0}_ashikhmin_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(diffuse_reflectance_name,
-                                                           asr_mat.ashikhmin_brdf_reflectance,
-                                                           1)
-            if glossy_brdf_reflectance_name == "":
-                glossy_brdf_reflectance_name = "{0}_ashikhmin_brdf_glossy_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(glossy_brdf_reflectance_name,
-                                                           asr_mat.ashikhmin_brdf_glossy,
-                                                           1)
-            # TODO: add texture support
-            shininess_u = asr_mat.ashikhmin_brdf_shininess_u
-            shininess_v = asr_mat.ashikhmin_brdf_shininess_v
-            diffuse_multiplier = asr_mat.ashikhmin_brdf_multiplier
-            fresnel = 1
+        # Make sure we found some textures. If not, default to material color.
+        if diffuse_reflectance_name == "":
+            diffuse_reflectance_name = "{0}_ashikhmin_brdf_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(diffuse_reflectance_name,
+                                                       asr_mat.ashikhmin_brdf_reflectance,
+                                                       1)
+        if glossy_brdf_reflectance_name == "":
+            glossy_brdf_reflectance_name = "{0}_ashikhmin_brdf_glossy_brdf_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(glossy_brdf_reflectance_name,
+                                                       asr_mat.ashikhmin_brdf_glossy,
+                                                       1)
+        # TODO: add texture support
+        shininess_u = asr_mat.ashikhmin_brdf_shininess_u
+        shininess_v = asr_mat.ashikhmin_brdf_shininess_v
+        diffuse_multiplier = asr_mat.ashikhmin_brdf_multiplier
+        fresnel = 1
 
         self.__open_element('bsdf name="{0}" model="ashikhmin_brdf"'.format(bsdf_name))
         self.__emit_parameter("diffuse_reflectance", diffuse_reflectance_name)
@@ -1403,185 +1228,122 @@ class Writer(object):
         self.__emit_parameter("fresnel_multiplier", fresnel)
         self.__close_element("bsdf")
 
-    def __emit_blinn_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_blinn_brdf(self, material, bsdf_name, scene, asr_mat=None):
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            exponent = inputs["Exponent"].get_socket_value(True)
-            ior = node.ior
-
-        else:
-            exponent = asr_mat.blinn_brdf_exponent
-            ior = asr_mat.blinn_brdf_ior
-            # check for texture in exponent slot
-            if asr_mat.blinn_brdf_exponent_use_tex and asr_mat.blinn_brdf_exponent_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.blinn_brdf_exponent_tex]):
-                    exponent = asr_mat.blinn_brdf_exponent_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.blinn_brdf_exponent_tex], False, scene)
+        exponent = asr_mat.blinn_brdf_exponent
+        ior = asr_mat.blinn_brdf_ior
+        # check for texture in exponent slot
+        if asr_mat.blinn_brdf_exponent_use_tex and asr_mat.blinn_brdf_exponent_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.blinn_brdf_exponent_tex]):
+                exponent = asr_mat.blinn_brdf_exponent_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.blinn_brdf_exponent_tex], False, scene)
 
         self.__open_element('bsdf name="{0}" model="blinn_brdf"'.format(bsdf_name))
         self.__emit_parameter("exponent", exponent)
         self.__emit_parameter("ior", ior)
         self.__close_element("bsdf")
 
-    def __emit_glass_bsdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_glass_bsdf(self, material, bsdf_name, scene, asr_mat=None):
         surface_transmittance = ""
         reflection_tint = ""
         refraction_tint = ""
         volume_transmittance = ""
         volume_absorption = ""
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            surface_transmittance = inputs["Transmittance"].get_socket_value(True)
-            surface_transmittance_multiplier = inputs["Transmittance Multiplier"].get_socket_value(True)
-            anisotropy = inputs["Anisotropy"].get_socket_value(True)
-            reflection_tint = inputs["Reflection Tint"].get_socket_value(True)
-            refraction_tint = inputs["Refraction Tint"].get_socket_value(True)
-            roughness = inputs["Roughness"].get_socket_value(True)
-            volume_transmittance = inputs["Volume Transmittance"].get_socket_value(True)
-            volume_absorption = inputs["Volume Absorption"].get_socket_value(True)
-            volume_transmittance_distance = inputs["Volume Transmittance Distance"].get_socket_value(True)
-            volume_density = inputs["Volume Density"].get_socket_value(True)
-            mdf = node.glass_brdf_mdf
-            ior = node.glass_brdf_ior
-            falloff = node.glass_brdf_falloff
-            parameterization = node.glass_brdf_volume_parameterization
-            volume_scale = node.glass_brdf_volume_scale
+        surface_transmittance_multiplier = asr_mat.glass_bsdf_surface_transmittance_multiplier
+        roughness = asr_mat.glass_bsdf_roughness
+        anisotropy = asr_mat.glass_bsdf_anisotropy
+        volume_transmittance_distance = asr_mat.glass_bsdf_volume_transmittance_distance
+        volume_density = asr_mat.glass_bsdf_volume_density
+        mdf = asr_mat.glass_bsdf_mdf
+        ior = asr_mat.glass_bsdf_ior
+        falloff = asr_mat.glass_bsdf_highlight_falloff
+        parameterization = asr_mat.glass_bsdf_volume_parameterization
+        volume_scale = asr_mat.glass_bsdf_volume_scale
+        # check for texture in surface_transmittance_name slot
+        if asr_mat.glass_bsdf_surface_transmittance_use_tex and asr_mat.glass_bsdf_surface_transmittance_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_tex]):
+                surface_transmittance = asr_mat.glass_bsdf_surface_transmittance_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_tex], False, scene)
+        if surface_transmittance == "":
+            surface_transmittance = "{0}_surface_transmittance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(surface_transmittance,
+                                                       asr_mat.glass_bsdf_surface_transmittance,
+                                                       1)
 
-            # If the socket is not connected.
-            if not inputs["Transmittance"].is_linked:
-                transmittance = surface_transmittance
-                surface_transmittance = "{0}_surface_transmittance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(surface_transmittance,
-                                                           transmittance,
-                                                           1)
+        # check for texture in surface_transmittance_multiplier slot
+        if asr_mat.glass_bsdf_surface_transmittance_multiplier_use_tex and asr_mat.glass_bsdf_surface_transmittance_multiplier_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_multiplier_tex]):
+                surface_transmittance_multiplier = asr_mat.glass_bsdf_surface_transmittance_multiplier_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_multiplier_tex], False, scene)
 
-            if not inputs["Reflection Tint"].is_linked:
-                tint_name = reflection_tint
-                reflection_tint = "{0}_reflection_tint".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflection_tint,
-                                                           tint_name,
-                                                           1)
+        # check for texture in reflection_tint slot
+        if asr_mat.glass_bsdf_reflection_tint_use_tex and asr_mat.glass_bsdf_reflection_tint_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_reflection_tint_tex]):
+                reflection_tint = asr_mat.glass_bsdf_reflection_tint_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_reflection_tint_tex], False, scene)
+        if reflection_tint == "":
+            reflection_tint = "{0}_reflection_tint".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(reflection_tint,
+                                                       asr_mat.glass_bsdf_reflection_tint,
+                                                       1)
 
-            if not inputs["Refraction Tint"].is_linked:
-                refraction_tint_name = refraction_tint
-                refraction_tint = "{0}_refraction_tint".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(refraction_tint,
-                                                           refraction_tint_name,
-                                                           1)
+        # check for texture in refraction_tint slot
+        if asr_mat.glass_bsdf_refraction_tint_use_tex and asr_mat.glass_bsdf_refraction_tint_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_refraction_tint_tex]):
+                refraction_tint = asr_mat.glass_bsdf_refraction_tint_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_refraction_tint_tex], False, scene)
+        if refraction_tint == "":
+            refraction_tint = "{0}_refraction_tint".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(refraction_tint,
+                                                       asr_mat.glass_bsdf_refraction_tint,
+                                                       1)
 
-            if not inputs["Volume Transmittance"].is_linked:
-                transmittance_name = volume_transmittance
-                volume_transmittance = "{0}_volume_transmittance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(volume_transmittance,
-                                                           transmittance_name,
-                                                           1)
+        # check for texture in roughness slot
+        if asr_mat.glass_bsdf_roughness_use_tex and asr_mat.glass_bsdf_roughness_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_roughness_tex]):
+                roughness = asr_mat.glass_bsdf_roughness_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_roughness_tex], False, scene)
 
-            if not inputs["Volume Absorption"].is_linked:
-                absorption_name = volume_absorption
-                volume_absorption = "{0}_volume_absorption".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(volume_absorption,
-                                                           absorption_name,
-                                                           1)
+        # check for texture in anisotropy slot
+        if asr_mat.glass_bsdf_anisotropy_use_tex and asr_mat.glass_bsdf_anisotropy_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_anisotropy_tex]):
+                anisotropy = asr_mat.glass_bsdf_anisotropy_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_anisotropy_tex], False, scene)
 
-        else:
-            surface_transmittance_multiplier = asr_mat.glass_bsdf_surface_transmittance_multiplier
-            roughness = asr_mat.glass_bsdf_roughness
-            anisotropy = asr_mat.glass_bsdf_anisotropy
-            volume_transmittance_distance = asr_mat.glass_bsdf_volume_transmittance_distance
-            volume_density = asr_mat.glass_bsdf_volume_density
-            mdf = asr_mat.glass_bsdf_mdf
-            ior = asr_mat.glass_bsdf_ior
-            falloff = asr_mat.glass_bsdf_highlight_falloff
-            parameterization = asr_mat.glass_bsdf_volume_parameterization
-            volume_scale = asr_mat.glass_bsdf_volume_scale
-            # check for texture in surface_transmittance_name slot
-            if asr_mat.glass_bsdf_surface_transmittance_use_tex and asr_mat.glass_bsdf_surface_transmittance_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_tex]):
-                    surface_transmittance = asr_mat.glass_bsdf_surface_transmittance_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_tex], False, scene)
-            if surface_transmittance == "":
-                surface_transmittance = "{0}_surface_transmittance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(surface_transmittance,
-                                                           asr_mat.glass_bsdf_surface_transmittance,
-                                                           1)
+        # check for texture in volume_transmittance slot
+        if asr_mat.glass_bsdf_volume_transmittance_use_tex and asr_mat.glass_bsdf_volume_transmittance_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_tex]):
+                volume_transmittance = asr_mat.glass_bsdf_volume_transmittance_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_tex], False, scene)
+        if volume_transmittance == "":
+            volume_transmittance = "{0}_volume_transmittance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(volume_transmittance,
+                                                       asr_mat.glass_bsdf_volume_transmittance,
+                                                       1)
 
-            # check for texture in surface_transmittance_multiplier slot
-            if asr_mat.glass_bsdf_surface_transmittance_multiplier_use_tex and asr_mat.glass_bsdf_surface_transmittance_multiplier_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_multiplier_tex]):
-                    surface_transmittance_multiplier = asr_mat.glass_bsdf_surface_transmittance_multiplier_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_multiplier_tex], False, scene)
+        # check for texture in volume_transmittance_distance slot
+        if asr_mat.glass_bsdf_volume_transmittance_distance_use_tex and asr_mat.glass_bsdf_volume_transmittance_distance_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_distance_tex]):
+                volume_transmittance_distance = asr_mat.glass_bsdf_volume_transmittance_distance_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_distance_tex], False, scene)
 
-            # check for texture in reflection_tint slot
-            if asr_mat.glass_bsdf_reflection_tint_use_tex and asr_mat.glass_bsdf_reflection_tint_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_reflection_tint_tex]):
-                    reflection_tint = asr_mat.glass_bsdf_reflection_tint_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_reflection_tint_tex], False, scene)
-            if reflection_tint == "":
-                reflection_tint = "{0}_reflection_tint".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflection_tint,
-                                                           asr_mat.glass_bsdf_reflection_tint,
-                                                           1)
+        # check for texture in volume_absorption slot
+        if asr_mat.glass_bsdf_volume_absorption_use_tex and asr_mat.glass_bsdf_volume_absorption_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_volume_absorption_tex]):
+                volume_absorption = asr_mat.glass_bsdf_volume_absorption_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_volume_absorption_tex], False, scene)
+        if volume_absorption == "":
+            volume_absorption = "{0}_volume_absorption".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(volume_absorption,
+                                                       asr_mat.glass_bsdf_volume_absorption,
+                                                       1)
 
-            # check for texture in refraction_tint slot
-            if asr_mat.glass_bsdf_refraction_tint_use_tex and asr_mat.glass_bsdf_refraction_tint_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_refraction_tint_tex]):
-                    refraction_tint = asr_mat.glass_bsdf_refraction_tint_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_refraction_tint_tex], False, scene)
-            if refraction_tint == "":
-                refraction_tint = "{0}_refraction_tint".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(refraction_tint,
-                                                           asr_mat.glass_bsdf_refraction_tint,
-                                                           1)
-
-            # check for texture in roughness slot
-            if asr_mat.glass_bsdf_roughness_use_tex and asr_mat.glass_bsdf_roughness_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_roughness_tex]):
-                    roughness = asr_mat.glass_bsdf_roughness_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_roughness_tex], False, scene)
-
-            # check for texture in anisotropy slot
-            if asr_mat.glass_bsdf_anisotropy_use_tex and asr_mat.glass_bsdf_anisotropy_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_anisotropy_tex]):
-                    anisotropy = asr_mat.glass_bsdf_anisotropy_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_anisotropy_tex], False, scene)
-
-            # check for texture in volume_transmittance slot
-            if asr_mat.glass_bsdf_volume_transmittance_use_tex and asr_mat.glass_bsdf_volume_transmittance_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_tex]):
-                    volume_transmittance = asr_mat.glass_bsdf_volume_transmittance_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_tex], False, scene)
-            if volume_transmittance == "":
-                volume_transmittance = "{0}_volume_transmittance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(volume_transmittance,
-                                                           asr_mat.glass_bsdf_volume_transmittance,
-                                                           1)
-
-            # check for texture in volume_transmittance_distance slot
-            if asr_mat.glass_bsdf_volume_transmittance_distance_use_tex and asr_mat.glass_bsdf_volume_transmittance_distance_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_distance_tex]):
-                    volume_transmittance_distance = asr_mat.glass_bsdf_volume_transmittance_distance_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_distance_tex], False, scene)
-
-            # check for texture in volume_absorption slot
-            if asr_mat.glass_bsdf_volume_absorption_use_tex and asr_mat.glass_bsdf_volume_absorption_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_volume_absorption_tex]):
-                    volume_absorption = asr_mat.glass_bsdf_volume_absorption_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_volume_absorption_tex], False, scene)
-            if volume_absorption == "":
-                volume_absorption = "{0}_volume_absorption".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(volume_absorption,
-                                                           asr_mat.glass_bsdf_volume_absorption,
-                                                           1)
-
-            # check for texture in volume_density slot
-            if asr_mat.glass_bsdf_volume_density_use_tex and asr_mat.glass_bsdf_volume_density_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_volume_density_tex]):
-                    volume_density = asr_mat.glass_bsdf_volume_density_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_volume_density_tex], False, scene)
+        # check for texture in volume_density slot
+        if asr_mat.glass_bsdf_volume_density_use_tex and asr_mat.glass_bsdf_volume_density_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.glass_bsdf_volume_density_tex]):
+                volume_density = asr_mat.glass_bsdf_volume_density_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.glass_bsdf_volume_density_tex], False, scene)
 
         self.__open_element('bsdf name="{0}" model="glass_bsdf"'.format(bsdf_name))
         self.__emit_parameter("mdf", mdf)
@@ -1603,80 +1365,54 @@ class Writer(object):
         self.__emit_parameter("volume_scale", volume_scale)
         self.__close_element("bsdf")
 
-    def __emit_metal_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_metal_brdf(self, material, bsdf_name, scene, asr_mat=None):
         normal_reflectance = ""
         edge_tint = ""
 
-        if node is not None:
-            inputs = node.inputs
-            normal_reflectance = inputs["Normal Reflectance"].get_socket_value(True)
-            mdf = node.metal_brdf_mdf
-            highlight_falloff = node.metal_brdf_falloff
-            reflectance_multiplier = inputs["Reflectance Multiplier"].get_socket_value(True)
-            edge_tint = inputs["Edge Tint"].get_socket_value(True)
-            roughness = inputs["Roughness"].get_socket_value(True)
-            anisotropy = inputs["Anisotropy"].get_socket_value(True)
+        reflectance_multiplier = asr_mat.metal_brdf_reflectance_multiplier
+        roughness = asr_mat.metal_brdf_roughness
+        anisotropy = asr_mat.metal_brdf_anisotropy
+        mdf = asr_mat.metal_brdf_mdf
+        highlight_falloff = asr_mat.metal_brdf_highlight_falloff
+        # check for texture in normal_reflectance_name slot
+        if asr_mat.metal_brdf_normal_reflectance_use_tex and asr_mat.metal_brdf_normal_reflectance_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_normal_reflectance_tex]):
+                normal_reflectance = asr_mat.metal_brdf_normal_reflectance_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_normal_reflectance_tex], False, scene)
+        if normal_reflectance == "":
+            normal_reflectance = "{0}_normal_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(normal_reflectance,
+                                                       asr_mat.metal_brdf_normal_reflectance,
+                                                       1)
 
-            # If the socket is not connected.
-            if not inputs["Normal Reflectance"].is_linked:
-                reflectance_name = normal_reflectance
-                normal_reflectance = "{0}_normal_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(normal_reflectance,
-                                                           reflectance_name,
-                                                           1)
+        # check for texture in edge_tint_name slot
+        if asr_mat.metal_brdf_edge_tint_use_tex and asr_mat.metal_brdf_edge_tint_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_edge_tint_tex]):
+                edge_tint = asr_mat.metal_brdf_edge_tint_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_edge_tint_tex], False, scene)
+        if edge_tint == "":
+            edge_tint = "{0}_edge_tint".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(edge_tint,
+                                                       asr_mat.metal_brdf_edge_tint,
+                                                       1)
 
-            if not inputs["Edge Tint"].is_linked:
-                edge_tint_name = edge_tint
-                edge_tint = "{0}_edge_tint".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(edge_tint,
-                                                           edge_tint_name,
-                                                           1)
+        # check for texture in reflectance_multiplier_multiplier slot
+        if asr_mat.metal_brdf_reflectance_multiplier_use_tex and asr_mat.metal_brdf_reflectance_multiplier_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_reflectance_multiplier_tex]):
+                reflectance_multiplier = asr_mat.metal_brdf_reflectance_multiplier_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_reflectance_multiplier_tex], False, scene)
 
-        else:
-            reflectance_multiplier = asr_mat.metal_brdf_reflectance_multiplier
-            roughness = asr_mat.metal_brdf_roughness
-            anisotropy = asr_mat.metal_brdf_anisotropy
-            mdf = asr_mat.metal_brdf_mdf
-            highlight_falloff = asr_mat.metal_brdf_highlight_falloff
-            # check for texture in normal_reflectance_name slot
-            if asr_mat.metal_brdf_normal_reflectance_use_tex and asr_mat.metal_brdf_normal_reflectance_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_normal_reflectance_tex]):
-                    normal_reflectance = asr_mat.metal_brdf_normal_reflectance_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_normal_reflectance_tex], False, scene)
-            if normal_reflectance == "":
-                normal_reflectance = "{0}_normal_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(normal_reflectance,
-                                                           asr_mat.metal_brdf_normal_reflectance,
-                                                           1)
+        # check for texture in roughness slot
+        if asr_mat.metal_brdf_roughness_use_tex and asr_mat.metal_brdf_roughness_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_roughness_tex]):
+                roughness = asr_mat.metal_brdf_roughness_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_roughness_tex], False, scene)
 
-            # check for texture in edge_tint_name slot
-            if asr_mat.metal_brdf_edge_tint_use_tex and asr_mat.metal_brdf_edge_tint_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_edge_tint_tex]):
-                    edge_tint = asr_mat.metal_brdf_edge_tint_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_edge_tint_tex], False, scene)
-            if edge_tint == "":
-                edge_tint = "{0}_edge_tint".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(edge_tint,
-                                                           asr_mat.metal_brdf_edge_tint,
-                                                           1)
-
-            # check for texture in reflectance_multiplier_multiplier slot
-            if asr_mat.metal_brdf_reflectance_multiplier_use_tex and asr_mat.metal_brdf_reflectance_multiplier_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_reflectance_multiplier_tex]):
-                    reflectance_multiplier = asr_mat.metal_brdf_reflectance_multiplier_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_reflectance_multiplier_tex], False, scene)
-
-            # check for texture in roughness slot
-            if asr_mat.metal_brdf_roughness_use_tex and asr_mat.metal_brdf_roughness_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_roughness_tex]):
-                    roughness = asr_mat.metal_brdf_roughness_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_roughness_tex], False, scene)
-
-            # check for texture in anisotropy slot
-            if asr_mat.metal_brdf_anisotropy_use_tex and asr_mat.metal_brdf_anisotropy_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_anisotropy_tex]):
-                    anisotropy = asr_mat.metal_brdf_anisotropy_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_anisotropy_tex], False, scene)
+        # check for texture in anisotropy slot
+        if asr_mat.metal_brdf_anisotropy_use_tex and asr_mat.metal_brdf_anisotropy_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.metal_brdf_anisotropy_tex]):
+                anisotropy = asr_mat.metal_brdf_anisotropy_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.metal_brdf_anisotropy_tex], False, scene)
 
         self.__open_element('bsdf name="{0}" model="metal_brdf"'.format(bsdf_name))
         self.__emit_parameter("mdf", mdf)
@@ -1688,84 +1424,56 @@ class Writer(object):
         self.__emit_parameter("anisotropy", anisotropy)
         self.__close_element("bsdf")
 
-    def __emit_plastic_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_plastic_brdf(self, material, bsdf_name, scene, asr_mat=None):
         specular_reflectance = ""
         diffuse_reflectance = ""
 
-        # nodes
-        if node is not None:
-            inputs = node.inputs
-            mdf = node.plastic_brdf_mdf
-            ior = node.plastic_brdf_ior
-            falloff = node.plastic_brdf_falloff
-            specular_reflectance = inputs["Specular Reflectance"].get_socket_value(True)
-            specular_reflectance_multiplier = inputs["Specular Reflectance Multiplier"].get_socket_value(True)
-            roughness = inputs["Roughness"].get_socket_value(True)
-            diffuse_reflectance = inputs["Diffuse Reflectance"].get_socket_value(True)
-            diffuse_reflectance_multiplier = inputs["Diffuse Reflectance Multiplier"].get_socket_value(True)
+        mdf = asr_mat.plastic_brdf_mdf
+        ior = asr_mat.plastic_brdf_ior
+        falloff = asr_mat.plastic_brdf_highlight_falloff
+        specular_reflectance_multiplier = asr_mat.plastic_brdf_specular_reflectance_multiplier
+        roughness = asr_mat.plastic_brdf_roughness
+        diffuse_reflectance_multiplier = asr_mat.plastic_brdf_diffuse_reflectance_multiplier
 
-            # If the socket is not connected.
-            if not inputs["Specular Reflectance"].is_linked:
-                specular_reflectance_color = specular_reflectance
-                specular_reflectance = "{0}_specular_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(specular_reflectance,
-                                                           specular_reflectance_color,
-                                                           1)
+        # check for texture in specular_reflectance slot
+        if asr_mat.plastic_brdf_specular_reflectance_use_tex and asr_mat.plastic_brdf_specular_reflectance_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_tex]):
+                specular_reflectance = asr_mat.plastic_brdf_specular_reflectance_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_tex], False, scene)
+        if specular_reflectance == "":
+            specular_reflectance = "{0}_specular_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(specular_reflectance,
+                                                       asr_mat.plastic_brdf_specular_reflectance,
+                                                       1)
 
-            if not inputs["Diffuse Reflectance"].is_linked:
-                diffuse_reflectance_color = diffuse_reflectance
-                diffuse_reflectance = "{0}_diffuse_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(diffuse_reflectance,
-                                                           diffuse_reflectance_color,
-                                                           1)
+        # check for texture in specular_reflectance_multiplier slot
+        if asr_mat.plastic_brdf_specular_reflectance_multiplier_use_tex and asr_mat.plastic_brdf_specular_reflectance_multiplier_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_multiplier_tex]):
+                specular_reflectance_multiplier = asr_mat.plastic_brdf_specular_reflectance_multiplier_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_multiplier_tex], False, scene)
 
-        else:
-            mdf = asr_mat.plastic_brdf_mdf
-            ior = asr_mat.plastic_brdf_ior
-            falloff = asr_mat.plastic_brdf_highlight_falloff
-            specular_reflectance_multiplier = asr_mat.plastic_brdf_specular_reflectance_multiplier
-            roughness = asr_mat.plastic_brdf_roughness
-            diffuse_reflectance_multiplier = asr_mat.plastic_brdf_diffuse_reflectance_multiplier
+        # check for texture in roughness slot
+        if asr_mat.plastic_brdf_roughness_use_tex and asr_mat.plastic_brdf_roughness_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_roughness_tex]):
+                roughness = asr_mat.plastic_brdf_roughness_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_roughness_tex], False, scene)
 
-            # check for texture in specular_reflectance slot
-            if asr_mat.plastic_brdf_specular_reflectance_use_tex and asr_mat.plastic_brdf_specular_reflectance_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_tex]):
-                    specular_reflectance = asr_mat.plastic_brdf_specular_reflectance_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_tex], False, scene)
-            if specular_reflectance == "":
-                specular_reflectance = "{0}_specular_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(specular_reflectance,
-                                                           asr_mat.plastic_brdf_specular_reflectance,
-                                                           1)
+        # check for texture in diffuse_reflectance slot
+        if asr_mat.plastic_brdf_diffuse_reflectance_use_tex and asr_mat.plastic_brdf_diffuse_reflectance_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_tex]):
+                diffuse_reflectance = asr_mat.plastic_brdf_diffuse_reflectance_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_tex], False, scene)
+        if diffuse_reflectance == "":
+            diffuse_reflectance = "{0}_diffuse_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(diffuse_reflectance,
+                                                       asr_mat.plastic_brdf_diffuse_reflectance,
+                                                       1)
 
-            # check for texture in specular_reflectance_multiplier slot
-            if asr_mat.plastic_brdf_specular_reflectance_multiplier_use_tex and asr_mat.plastic_brdf_specular_reflectance_multiplier_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_multiplier_tex]):
-                    specular_reflectance_multiplier = asr_mat.plastic_brdf_specular_reflectance_multiplier_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_multiplier_tex], False, scene)
-
-            # check for texture in roughness slot
-            if asr_mat.plastic_brdf_roughness_use_tex and asr_mat.plastic_brdf_roughness_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_roughness_tex]):
-                    roughness = asr_mat.plastic_brdf_roughness_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_roughness_tex], False, scene)
-
-            # check for texture in diffuse_reflectance slot
-            if asr_mat.plastic_brdf_diffuse_reflectance_use_tex and asr_mat.plastic_brdf_diffuse_reflectance_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_tex]):
-                    diffuse_reflectance = asr_mat.plastic_brdf_diffuse_reflectance_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_tex], False, scene)
-            if diffuse_reflectance == "":
-                diffuse_reflectance = "{0}_diffuse_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(diffuse_reflectance,
-                                                           asr_mat.plastic_brdf_diffuse_reflectance,
-                                                           1)
-
-            # check for texture in diffuse_reflectance_multiplier slot
-            if asr_mat.plastic_brdf_diffuse_reflectance_multiplier_use_tex and asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex]):
-                    diffuse_reflectance_multiplier = asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex], False, scene)
+        # check for texture in diffuse_reflectance_multiplier slot
+        if asr_mat.plastic_brdf_diffuse_reflectance_multiplier_use_tex and asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex]):
+                diffuse_reflectance_multiplier = asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex], False, scene)
 
         self.__open_element('bsdf name="{0}" model="plastic_brdf"'.format(bsdf_name))
         self.__emit_parameter("mdf", mdf)
@@ -1778,102 +1486,65 @@ class Writer(object):
         self.__emit_parameter("diffuse_reflectance_multiplier", diffuse_reflectance_multiplier)
         self.__close_element("bsdf")
 
-    def __emit_specular_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_specular_brdf(self, material, bsdf_name, scene, asr_mat=None):
         reflectance_name = ""
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            reflectance_name = inputs["Reflectance"].get_socket_value(True)
-            multiplier = inputs["Multiplier"].get_socket_value(True)
-
-            # If the socket is not connected.
-            if not inputs["Reflectance"].is_linked:
-                specular_reflectance = reflectance_name
-                reflectance_name = "{0}_specular_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           specular_reflectance,
-                                                           1)
-
-        else:
-            if asr_mat.specular_brdf_use_glossy_tex and asr_mat.specular_brdf_glossy_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.specular_brdf_glossy_tex]):
-                    reflectance_name = asr_mat.specular_brdf_glossy_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.specular_brdf_glossy_tex], False, scene)
-            if reflectance_name == "":
-                reflectance_name = "{0}_specular_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           asr_mat.specular_brdf_reflectance,
-                                                           1)
-            # TODO: add texture support for multiplier
-            multiplier = asr_mat.specular_brdf_multiplier
+        if asr_mat.specular_brdf_use_glossy_tex and asr_mat.specular_brdf_glossy_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.specular_brdf_glossy_tex]):
+                reflectance_name = asr_mat.specular_brdf_glossy_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.specular_brdf_glossy_tex], False, scene)
+        if reflectance_name == "":
+            reflectance_name = "{0}_specular_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(reflectance_name,
+                                                       asr_mat.specular_brdf_reflectance,
+                                                       1)
+        # TODO: add texture support for multiplier
+        multiplier = asr_mat.specular_brdf_multiplier
 
         self.__open_element('bsdf name="{0}" model="specular_brdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance_name)
         self.__emit_parameter("reflectance_multiplier", multiplier)
         self.__close_element("bsdf")
 
-    def __emit_specular_btdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_specular_btdf(self, material, bsdf_name, scene, asr_mat=None):
         reflectance_name = ""
         transmittance_name = ""
 
-        # Nodes.
-        if node is not None:
-            inputs = node.inputs
-            reflectance_name = inputs[0].get_socket_value(True)
-            reflectance_multiplier = inputs[1].get_socket_value(True)
-            transmittance_name = inputs[2].get_socket_value(True)
-            transmittance_multiplier = inputs[3].get_socket_value(True)
-            ior = node.ior
+        if asr_mat.specular_btdf_use_specular_tex and asr_mat.specular_btdf_specular_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.specular_btdf_specular_tex]):
+                reflectance_name = asr_mat.specular_btdf_specular_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.specular_btdf_specular_tex], False, scene)
 
-            if not inputs[0].is_linked:
-                specular_btdf_reflectance = reflectance_name
-                reflectance_name = "{0}_transp_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           specular_btdf_reflectance,
-                                                           1)
-            if not inputs[2].is_linked:
-                specular_btdf_transmittance = transmittance_name
-                transmittance_name = "{0}_transp_transmittance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(transmittance_name,
-                                                           specular_btdf_transmittance,
-                                                           1)
-        else:
-            if asr_mat.specular_btdf_use_specular_tex and asr_mat.specular_btdf_specular_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.specular_btdf_specular_tex]):
-                    reflectance_name = asr_mat.specular_btdf_specular_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.specular_btdf_specular_tex], False, scene)
+        if reflectance_name == "":
+            reflectance_name = "{0}_transp_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(reflectance_name,
+                                                       asr_mat.specular_btdf_reflectance,
+                                                       1)
 
-            if reflectance_name == "":
-                reflectance_name = "{0}_transp_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           asr_mat.specular_btdf_reflectance,
-                                                           1)
+        if asr_mat.specular_btdf_use_trans_tex and asr_mat.specular_btdf_trans_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.specular_btdf_trans_tex]):
+                transmittance_name = asr_mat.specular_btdf_trans_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.specular_btdf_trans_tex], False, scene)
 
-            if asr_mat.specular_btdf_use_trans_tex and asr_mat.specular_btdf_trans_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.specular_btdf_trans_tex]):
-                    transmittance_name = asr_mat.specular_btdf_trans_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.specular_btdf_trans_tex], False, scene)
+        if transmittance_name == "":
+            transmittance_name = "{0}_transp_transmittance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(transmittance_name,
+                                                       asr_mat.specular_btdf_transmittance,
+                                                       1)
+        # TODO: add texture support for multiplier
+        reflectance_multiplier = asr_mat.specular_btdf_refl_mult
+        transmittance_multiplier = asr_mat.specular_btdf_trans_mult
 
-            if transmittance_name == "":
-                transmittance_name = "{0}_transp_transmittance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(transmittance_name,
-                                                           asr_mat.specular_btdf_transmittance,
-                                                           1)
-            # TODO: add texture support for multiplier
-            reflectance_multiplier = asr_mat.specular_btdf_refl_mult
-            transmittance_multiplier = asr_mat.specular_btdf_trans_mult
+        fresnel_multiplier = asr_mat.specular_btdf_fresnel_multiplier
 
-            fresnel_multiplier = asr_mat.specular_btdf_fresnel_multiplier
+        if asr_mat.specular_btdf_fresnel_multiplier_use_tex and asr_mat.specular_btdf_fresnel_multiplier_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.specular_btdf_fresnel_multiplier_tex]):
+                fresnel_multiplier = asr_mat.specular_btdf_fresnel_multiplier_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.specular_btdf_fresnel_multiplier_tex], False, scene)
 
-            if asr_mat.specular_btdf_fresnel_multiplier_use_tex and asr_mat.specular_btdf_fresnel_multiplier_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.specular_btdf_fresnel_multiplier_tex]):
-                    fresnel_multiplier = asr_mat.specular_btdf_fresnel_multiplier_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.specular_btdf_fresnel_multiplier_tex], False, scene)
-
-            ior = asr_mat.specular_btdf_ior
-            volume_density = asr_mat.specular_btdf_volume_density
-            volume_scale = asr_mat.specular_btdf_volume_scale
+        ior = asr_mat.specular_btdf_ior
+        volume_density = asr_mat.specular_btdf_volume_density
+        volume_scale = asr_mat.specular_btdf_volume_scale
 
         self.__open_element('bsdf name="{0}" model="specular_btdf"'.format(bsdf_name))
         self.__emit_parameter("reflectance", reflectance_name)
@@ -1886,46 +1557,25 @@ class Writer(object):
         self.__emit_parameter("volume_scale", volume_scale)
         self.__close_element("bsdf")
 
-    def __emit_kelemen_brdf(self, material, bsdf_name, scene, asr_mat=None, node=None):
+    def __emit_kelemen_brdf(self, material, bsdf_name, scene, asr_mat=None):
         reflectance_name = ""
         specular_refl_name = ""
 
-        if node is not None:
-            inputs = node.inputs
-            reflectance_name = inputs[0].get_socket_value(True)
-            kelemen_brdf_matte_multiplier = inputs[1].get_socket_value(True)
-            specular_refl_name = inputs[2].get_socket_value(True)
-            kelemen_brdf_specular_multiplier = inputs[3].get_socket_value(True)
-            kelemen_brdf_roughness = inputs[4].get_socket_value(True)
+        if asr_mat.kelemen_brdf_use_diffuse_tex and asr_mat.kelemen_brdf_diffuse_tex != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.kelemen_brdf_diffuse_tex]):
+                reflectance_name = asr_mat.kelemen_brdf_diffuse_tex + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.kelemen_brdf_diffuse_tex], False, scene)
 
-            if not inputs[0].is_linked:
-                kelemen_brdf_matte_reflectance = reflectance_name
-                reflectance_name = "{0}_kelemen_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           kelemen_brdf_matte_reflectance,
-                                                           1)
-            if not inputs[2].is_linked:
-                kelemen_brdf_specular_reflectance = specular_refl_name
-                specular_refl_name = "{0}_kelemen_brdf_specular".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(specular_refl_name,
-                                                           kelemen_brdf_specular_reflectance,
-                                                           1)
-        else:
-            if asr_mat.kelemen_brdf_use_diffuse_tex and asr_mat.kelemen_brdf_diffuse_tex != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.kelemen_brdf_diffuse_tex]):
-                    reflectance_name = asr_mat.kelemen_brdf_diffuse_tex + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.kelemen_brdf_diffuse_tex], False, scene)
+        if reflectance_name == "":
+            reflectance_name = "{0}_kelemen_brdf_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(reflectance_name,
+                                                       asr_mat.kelemen_brdf_matte_reflectance,
+                                                       1)
 
-            if reflectance_name == "":
-                reflectance_name = "{0}_kelemen_brdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(reflectance_name,
-                                                           asr_mat.kelemen_brdf_matte_reflectance,
-                                                           1)
-
-            kelemen_brdf_roughness = asr_mat.kelemen_brdf_roughness
-            kelemen_brdf_specular_multiplier = asr_mat.kelemen_brdf_specular_multiplier
-            kelemen_brdf_specular_reflectance = asr_mat.kelemen_brdf_specular_reflectance
-            kelemen_brdf_matte_multiplier = asr_mat.kelemen_brdf_matte_multiplier
+        kelemen_brdf_roughness = asr_mat.kelemen_brdf_roughness
+        kelemen_brdf_specular_multiplier = asr_mat.kelemen_brdf_specular_multiplier
+        kelemen_brdf_specular_reflectance = asr_mat.kelemen_brdf_specular_reflectance
+        kelemen_brdf_matte_multiplier = asr_mat.kelemen_brdf_matte_multiplier
 
         self.__open_element('bsdf name="{0}" model="kelemen_brdf"'.format(bsdf_name))
         self.__emit_parameter("matte_reflectance", reflectance_name)
@@ -1935,86 +1585,59 @@ class Writer(object):
         self.__emit_parameter("specular_reflectance_multiplier", kelemen_brdf_specular_multiplier)
         self.__close_element("bsdf")
 
-    def __emit_bssrdf(self, material, bsdf_name, scene, node=None):
+    def __emit_bssrdf(self, material, bsdf_name, scene):
         bssrdf_reflectance = ""
         bssrdf_mfp = ""
 
-        if node is not None:
-            inputs = node.inputs
-            bssrdf_reflectance = inputs['Reflectance'].get_socket_value(True)
-            bssrdf_reflectance_multiplier = inputs['Reflectance Multiplier'].get_socket_value(True)
-            bssrdf_mfp = inputs['Mean Free Path'].get_socket_value(True)
-            bssrdf_mfp_multiplier = inputs['Mean Free Path Multiplier'].get_socket_value(True)
-            bssrdf_ior = node.bssrdf_ior
-            bssrdf_fresnel_weight = node.bssrdf_fresnel_weight
-            bssrdf_model = node.bssrdf_model
-            bssrdf_weight = inputs['Weight'].get_socket_value(True)
+        asr_mat = material.appleseed
+        if asr_mat.bssrdf_reflectance_use_texture and asr_mat.bssrdf_reflectance_texture != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_reflectance_texture]):
+                bssrdf_reflectance = asr_mat.bssrdf_reflectance_texture + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_reflectance_texture], False, scene)
 
-            # If the socket is not connected.
-            if not inputs["Reflectance"].is_linked:
-                bssrdf_reflectance_name = bssrdf_reflectance
-                bssrdf_reflectance = "{0}_bssrdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(bssrdf_reflectance,
-                                                           bssrdf_reflectance_name,
-                                                           1)
+        if bssrdf_reflectance == "":
+            bssrdf_reflectance = "{0}_bssrdf_reflectance".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(bssrdf_reflectance,
+                                                       asr_mat.bssrdf_reflectance,
+                                                       1)
 
-            if not inputs["Mean Free Path"].is_linked:
-                bssrdf_mfp_name = bssrdf_mfp
-                bssrdf_mfp = "{0}_bssrdf_mfp".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(bssrdf_mfp,
-                                                           bssrdf_mfp_name,
-                                                           1)
+        if asr_mat.bssrdf_mfp_use_texture and asr_mat.bssrdf_mfp_texture != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_mfp_texture]):
+                bssrdf_mfp_name = asr_mat.bssrdf_mfp_texture + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_mfp_texture], False, scene)
 
-        else:
-            asr_mat = material.appleseed
-            if asr_mat.bssrdf_reflectance_use_texture and asr_mat.bssrdf_reflectance_texture != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_reflectance_texture]):
-                    bssrdf_reflectance = asr_mat.bssrdf_reflectance_texture + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_reflectance_texture], False, scene)
+        if bssrdf_mfp == "":
+            bssrdf_mfp = "{0}_bssrdf_mfp".format(bsdf_name)
+            self.__emit_solid_linear_rgb_color_element(bssrdf_mfp,
+                                                       asr_mat.bssrdf_mfp,
+                                                       1)
 
-            if bssrdf_reflectance == "":
-                bssrdf_reflectance = "{0}_bssrdf_reflectance".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(bssrdf_reflectance,
-                                                           asr_mat.bssrdf_reflectance,
-                                                           1)
+        bssrdf_reflectance_multiplier = asr_mat.bssrdf_reflectance_multiplier
 
-            if asr_mat.bssrdf_mfp_use_texture and asr_mat.bssrdf_mfp_texture != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_mfp_texture]):
-                    bssrdf_mfp_name = asr_mat.bssrdf_mfp_texture + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_mfp_texture], False, scene)
+        if asr_mat.bssrdf_reflectance_multiplier_use_texture and asr_mat.bssrdf_reflectance_multiplier_texture != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_reflectance_multiplier_texture]):
+                bssrdf_reflectance_multiplier = asr_mat.bssrdf_reflectance_multiplier_texture + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_reflectance_multiplier_texture], False, scene)
 
-            if bssrdf_mfp == "":
-                bssrdf_mfp = "{0}_bssrdf_mfp".format(bsdf_name)
-                self.__emit_solid_linear_rgb_color_element(bssrdf_mfp,
-                                                           asr_mat.bssrdf_mfp,
-                                                           1)
+        bssrdf_mfp_multiplier = asr_mat.bssrdf_mfp_multiplier
 
-            bssrdf_reflectance_multiplier = asr_mat.bssrdf_reflectance_multiplier
+        if asr_mat.bssrdf_mfp_multiplier_use_texture and asr_mat.bssrdf_mfp_multiplier_texture != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_mfp_multiplier_texture]):
+                bssrdf_mfp_multiplier = asr_mat.bssrdf_mfp_multiplier_texture + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_mfp_multiplier_texture], False, scene)
 
-            if asr_mat.bssrdf_reflectance_multiplier_use_texture and asr_mat.bssrdf_reflectance_multiplier_texture != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_reflectance_multiplier_texture]):
-                    bssrdf_reflectance_multiplier = asr_mat.bssrdf_reflectance_multiplier_texture + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_reflectance_multiplier_texture], False, scene)
+        bssrdf_weight = asr_mat.bssrdf_weight
 
-            bssrdf_mfp_multiplier = asr_mat.bssrdf_mfp_multiplier
+        if asr_mat.bssrdf_weight_use_texture and asr_mat.bssrdf_weight_texture != "":
+            if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_weight_texture]):
+                bssrdf_weight = asr_mat.bssrdf_weight_texture + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_weight_texture], False, scene)
 
-            if asr_mat.bssrdf_mfp_multiplier_use_texture and asr_mat.bssrdf_mfp_multiplier_texture != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_mfp_multiplier_texture]):
-                    bssrdf_mfp_multiplier = asr_mat.bssrdf_mfp_multiplier_texture + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_mfp_multiplier_texture], False, scene)
+        bssrdf_ior = asr_mat.bssrdf_ior
+        bssrdf_fresnel_weight = asr_mat.bssrdf_fresnel_weight
+        bssrdf_model = asr_mat.bssrdf_model
 
-            bssrdf_weight = asr_mat.bssrdf_weight
-
-            if asr_mat.bssrdf_weight_use_texture and asr_mat.bssrdf_weight_texture != "":
-                if util.is_uv_img(bpy.data.textures[asr_mat.bssrdf_weight_texture]):
-                    bssrdf_weight = asr_mat.bssrdf_weight_texture + "_inst"
-                    self.__emit_texture(bpy.data.textures[asr_mat.bssrdf_weight_texture], False, scene)
-
-            bssrdf_ior = asr_mat.bssrdf_ior
-            bssrdf_fresnel_weight = asr_mat.bssrdf_fresnel_weight
-            bssrdf_model = asr_mat.bssrdf_model
-
-        self.__open_element('bssrdf name="{0}" model="%s"'.format(bsdf_name) % bssrdf_model)
+        self.__open_element('bssrdf name="{0}" model="{1}"'.format(bsdf_name, bssrdf_model))
         self.__emit_parameter("weight", bssrdf_weight)
         self.__emit_parameter("reflectance", bssrdf_reflectance)
         self.__emit_parameter("reflectance_multiplier", bssrdf_reflectance_multiplier)
@@ -2024,26 +1647,17 @@ class Writer(object):
         self.__emit_parameter("fresnel_weight", bssrdf_fresnel_weight)
         self.__close_element("bssrdf")
 
-    def __emit_volume(self, material, volume_name, scene, node=None):
+    def __emit_volume(self, material, volume_name, scene):
         volume_absorption_name = "{0}_volume_absorption".format(volume_name)
         volume_scattering_name = "{0}_volume_scattering".format(volume_name)
 
-        if node is not None:
-            volume_absorption = node.volume_absorption
-            volume_absorption_multiplier = node.volume_absorption_multiplier
-            volume_scattering = node.volume_scattering
-            volume_scattering_multiplier = node.volume_scattering_multiplier
-            volume_phase_function_model = node.volume_phase_function_model
-            volume_average_cosine = node.volume_average_cosine
-
-        else:
-            asr_mat = material.appleseed
-            volume_absorption = asr_mat.volume_absorption
-            volume_absorption_multiplier = asr_mat.volume_absorption_multiplier
-            volume_scattering = asr_mat.volume_scattering
-            volume_scattering_multiplier = asr_mat.volume_scattering_multiplier
-            volume_phase_function_model = asr_mat.volume_phase_function_model
-            volume_average_cosine = asr_mat.volume_average_cosine
+        asr_mat = material.appleseed
+        volume_absorption = asr_mat.volume_absorption
+        volume_absorption_multiplier = asr_mat.volume_absorption_multiplier
+        volume_scattering = asr_mat.volume_scattering
+        volume_scattering_multiplier = asr_mat.volume_scattering_multiplier
+        volume_phase_function_model = asr_mat.volume_phase_function_model
+        volume_average_cosine = asr_mat.volume_average_cosine
 
         self.__emit_solid_linear_rgb_color_element(volume_absorption_name,
                                                    volume_absorption,
@@ -2062,59 +1676,22 @@ class Writer(object):
             self.__emit_parameter("average_cosine", volume_average_cosine)
         self.__close_element("volume")
 
-    def __emit_bsdf_blend(self, bsdf_name, material_name, node=None):
-        """Emit BSDF blend to project file."""
-
-        if node is not None:
-            inputs = node.inputs
-            weight = inputs[0].get_socket_value(True)
-            bsdf0_name = material_name + inputs[1].get_socket_value(False)
-            bsdf1_name = material_name + inputs[2].get_socket_value(False)
-
-            if isinstance(weight, float):
-                weight = 1 - weight
-
-        self.__open_element('bsdf name="{0}" model="bsdf_blend"'.format(bsdf_name))
-        self.__emit_parameter("bsdf0", bsdf0_name)
-        self.__emit_parameter("bsdf1", bsdf1_name)
-        self.__emit_parameter("weight", weight)
-        self.__close_element("bsdf")
-
-    def __emit_edf(self, material, edf_name, scene, material_node=None):
+    def __emit_edf(self, material, edf_name, scene):
         """Writes the emissive component of a material."""
 
         asr_mat = material.appleseed
-        # Nodes.
-        if material_node is not None:
-            inputs = material_node.inputs
-            radiance = inputs["Emission Color"].get_socket_value(True)
-            radiance_multiplier = inputs["Emission Strength"].get_socket_value(True)
-            exposure = inputs["Exposure"].get_socket_value(True)
-            model = material_node.light_emission_profile
-            angle = material_node.light_cone_edf_angle
-            cast_indirect = material_node.cast_indirect
-            importance_multiplier = material_node.importance_multiplier
-            light_near_start = material_node.light_near_start
 
-            if not inputs["Emission Color"].is_linked:
-                radiance_name = radiance
-                radiance = "{0}_radiance".format(edf_name)
-                self.__emit_solid_linear_rgb_color_element(radiance,
-                                                           radiance_name,
-                                                           scene.appleseed.light_mats_radiance_multiplier)
-
-        else:
-            radiance = "{0}_radiance".format(edf_name)
-            model = asr_mat.light_emission_profile
-            angle = asr_mat.light_cone_edf_angle
-            radiance_multiplier = asr_mat.light_emission
-            cast_indirect = str(asr_mat.cast_indirect).lower()
-            importance_multiplier = asr_mat.importance_multiplier
-            exposure = asr_mat.light_exposure
-            light_near_start = asr_mat.light_near_start
-            self.__emit_solid_linear_rgb_color_element(radiance,
-                                                       asr_mat.light_color,
-                                                       scene.appleseed.light_mats_radiance_multiplier)
+        radiance = "{0}_radiance".format(edf_name)
+        model = asr_mat.light_emission_profile
+        angle = asr_mat.light_cone_edf_angle
+        radiance_multiplier = asr_mat.light_emission
+        cast_indirect = str(asr_mat.cast_indirect).lower()
+        importance_multiplier = asr_mat.importance_multiplier
+        exposure = asr_mat.light_exposure
+        light_near_start = asr_mat.light_near_start
+        self.__emit_solid_linear_rgb_color_element(radiance,
+                                                   asr_mat.light_color,
+                                                   scene.appleseed.light_mats_radiance_multiplier)
 
         self.__open_element('edf name="{0}" model="{1}"'.format(edf_name, model))
         self.__emit_parameter("radiance", radiance)
@@ -2127,16 +1704,15 @@ class Writer(object):
         self.__emit_parameter("light_near_start", light_near_start)
         self.__close_element("edf")
 
-    def __emit_texture(self, texture, bump_bool, scene, node=None, material_name=None, scene_texture=False, object=None):
+    def __emit_texture(self, texture, bump_bool, scene, material_name=None, scene_texture=False, object=None):
         """Emits a reference to a texture file."""
 
         # Nothing to do if this texture was already emitted.
 
-        if not node:
-            if texture in self._textures_set:
-                return
+        if texture in self._textures_set:
+            return
 
-            self._textures_set.add(texture)
+        self._textures_set.add(texture)
 
         if scene_texture:
             # texture is an absolute file path string.
@@ -2144,10 +1720,6 @@ class Writer(object):
             texture_name = texture.split(util.sep)[-1][:-4]
             filepath = texture
             color_space = 'srgb'
-        elif node is not None:
-            texture_name = node.get_node_name()
-            filepath = util.realpath(node.file_path)
-            color_space = node.color_space
         elif object is not None:
             filepath = util.realpath(object.appleseed.object_alpha_texture)
             texture_name = object.name + "_alpha"
@@ -2169,15 +1741,13 @@ class Writer(object):
         self.__close_element("texture")
 
         # Now create texture instance.
-        self.__emit_texture_instance(texture, texture_name, bump_bool, node, material_name, scene_texture, object)
+        self.__emit_texture_instance(texture, texture_name, bump_bool, material_name, scene_texture, object)
 
-    def __emit_texture_instance(self, texture, texture_name, bump_bool, node=None, material_name=None, scene_texture=False, object=None):
+    def __emit_texture_instance(self, texture, texture_name, bump_bool, material_name=None, scene_texture=False, object=None):
         """Write the instance for the texture"""
 
         if scene_texture:
             mode = "clamp"
-        elif node is not None:
-            mode = node.addressing_mode
         elif object is not None:
             mode = object.appleseed.object_alpha_texture_wrap_mode
         else:
@@ -2195,7 +1765,7 @@ class Writer(object):
         self.__emit_parameter("osl_surface", surface_name)
         self.__close_element("material")
 
-    def __emit_material_element(self, material_name, bsdf_name, edf_name, bssrdf_name, volume_name, surface_shader_name, scene, material, material_node=None):
+    def __emit_material_element(self, material_name, bsdf_name, edf_name, bssrdf_name, volume_name, surface_shader_name, scene, material):
         """This writes the material definition."""
 
         if material != "":
@@ -2207,37 +1777,27 @@ class Writer(object):
 
         # Check whether evaluating default material.
         if material != "":
-            # Node material.
-            if material_node is not None:
-                inputs = material_node.inputs
-                material_alpha_map = inputs[3].get_socket_value(True)
-                bump_map = inputs[4].get_socket_value(False)
-                if bump_map != "":
-                    bump_map = bump_map + "_inst"
-                    material_bump_amplitude, use_normalmap = inputs[4].get_normal_params()
-                    method = "normal" if use_normalmap else "bump"
-            else:
-                if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
-                    if util.is_uv_img(bpy.data.textures[asr_mat.material_alpha_map]):
-                        material_alpha_map = asr_mat.material_alpha_map + "_inst"
-                        self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
-
-                if asr_mat.material_use_bump_tex:
-                    if asr_mat.material_bump_tex != "":
-                        if util.is_uv_img(bpy.data.textures[asr_mat.material_bump_tex]):
-                            bump_map = asr_mat.material_bump_tex
-
-                if bump_map != "":
-                    self.__emit_texture(bpy.data.textures[asr_mat.material_bump_tex], True, scene)
-                    material_bump_amplitude = asr_mat.material_bump_amplitude
-                    bump_map += "_inst"
-                    method = "normal" if asr_mat.material_use_normalmap else "bump"
-
-                if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
+            if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
+                if util.is_uv_img(bpy.data.textures[asr_mat.material_alpha_map]):
                     material_alpha_map = asr_mat.material_alpha_map + "_inst"
                     self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
-                else:
-                    material_alpha_map = asr_mat.material_alpha
+
+            if asr_mat.material_use_bump_tex:
+                if asr_mat.material_bump_tex != "":
+                    if util.is_uv_img(bpy.data.textures[asr_mat.material_bump_tex]):
+                        bump_map = asr_mat.material_bump_tex
+
+            if bump_map != "":
+                self.__emit_texture(bpy.data.textures[asr_mat.material_bump_tex], True, scene)
+                material_bump_amplitude = asr_mat.material_bump_amplitude
+                bump_map += "_inst"
+                method = "normal" if asr_mat.material_use_normalmap else "bump"
+
+            if asr_mat.material_use_alpha and asr_mat.material_alpha_map != "":
+                material_alpha_map = asr_mat.material_alpha_map + "_inst"
+                self.__emit_texture(bpy.data.textures[asr_mat.material_alpha_map], False, scene)
+            else:
+                material_alpha_map = asr_mat.material_alpha
 
         self.__open_element('material name="{0}" model="generic_material"'.format(material_name))
         if bsdf_name:
@@ -2791,7 +2351,7 @@ class Writer(object):
         self.__emit_line("<parameter name=\"" + name + "\" value=\"" + str(value) + "\" />")
 
     def __emit_shader_connection(self, src_layer, src_param, dest_layer, dest_param):
-        self.__emit_line('<connect_shaders src_layer="%s" src_param="%s" dst_layer="%s" dst_param="%s" />' % (src_layer, src_param, dest_layer, dest_param))
+        self.__emit_line('<connect_shaders src_layer="{0}" src_param="{1}" dst_layer="{2}" dst_param="{3}" />'.format(src_layer, src_param, dest_layer, dest_param))
 
     def __open_element(self, name):
         self.__emit_line("<" + name + ">")
@@ -3009,20 +2569,12 @@ class Writer(object):
                 # Preview mesh.
                 mat_front = mat.name
                 mat_back = mat.name
-                asr_node_tree = asr_mat.node_tree if not asr_mat.use_osl else asr_mat.osl_node_tree
+                asr_node_tree = asr_mat.osl_node_tree
                 if self.__is_node_material(asr_mat, asr_node_tree):
                     for node in bpy.data.node_groups[asr_node_tree].nodes:
                         if node.node_type == 'osl_surface':
                             material_node = node
-                        else:
-                            if node.node_type == 'material':
-                                material_node = node
                     node_list = material_node.traverse_tree()
-                    for node in node_list:
-                        if node.node_type in ['specular_btdf', 'diffuse_btdf']:
-                            mat_front = mat.name + "_front"
-                            mat_back = mat.name + "_back"
-                            break
                 else:
                     if asr_mat.bsdf_type in ['specular_btdf', 'diffuse_btdf']:
                         mat_front = mat.name + "_front"

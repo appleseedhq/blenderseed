@@ -29,36 +29,21 @@
 import bpy
 
 
-def node_tree_selector_draw(layout, mat, output_type):
-    try:
-        layout.prop_search(mat.appleseed, "node_tree", bpy.data, "node_groups", text="Node Tree")
-    except:
-        return False
-
-    node = find_node(mat, output_type)
-    if not node:
-        if mat.appleseed.node_tree == '':
-            layout.operator('appleseed.add_nodetree', text="appleseed Node", icon='NODETREE')
-            return False
-    return True
-
-
-def osl_node_tree_selector_draw(layout, mat, output_type):
+def osl_node_tree_selector_draw(layout, mat):
     try:
         layout.prop_search(mat.appleseed, "osl_node_tree", bpy.data, "node_groups", text="OSL Node Tree")
     except:
         return False
 
-    node = find_node(mat, output_type)
-    if not node:
-        if mat.appleseed.osl_node_tree == '':
-            layout.operator('appleseed.add_osl_nodetree', text="appleseed Node", icon='NODETREE')
-            return False
+    if mat.appleseed.osl_node_tree == '':
+        layout.operator('appleseed.add_osl_nodetree', text="Add appleseed Material Node", icon='NODETREE')
+        return False
+
     return True
 
 
 def find_node(material, nodetype):
-    if not (material and material.appleseed and material.appleseed.node_tree):
+    if not (material and material.appleseed.node_tree):
         return None
 
     node_tree = material.appleseed.node_tree
@@ -115,13 +100,9 @@ class AppleseedMaterialShading(bpy.types.Panel):
         material = object.active_material
         asr_mat = material.appleseed
 
-        if asr_mat.use_osl:
-            osl_node_tree_selector_draw(layout, material, None)
-        else:
-            node_tree_selector_draw(layout, material, 'AppleseedMaterialNode')
-        layout.prop(asr_mat, "use_osl", text="Use OSL")
+        osl_node_tree_selector_draw(layout, material)
 
-        if asr_mat.node_tree == '' and asr_mat.osl_node_tree == '':
+        if asr_mat.osl_node_tree == '':
             layout.prop(asr_mat, "bsdf_type", text="BSDF Model")
             layout.separator()
 
@@ -1242,7 +1223,7 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
-            is_not_nodemat = context.object.active_material.appleseed.node_tree == '' and context.object.active_material.appleseed.osl_node_tree == ''
+            is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == ''
             return renderer and obj and obj_type and material and is_not_nodemat
         return False
 
