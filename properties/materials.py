@@ -1517,18 +1517,9 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                             update=refresh_preview)
 
     # Nodes
-    node_tree = bpy.props.StringProperty(name="node_tree",
-                                         description="Material node tree to link to the current material",
-                                         update=refresh_preview)
-
     osl_node_tree = bpy.props.StringProperty(name="osl_node_tree",
                                              description="OSL material node tree to link to the current material",
                                              update=refresh_preview)
-
-    use_osl = bpy.props.BoolProperty(name="use_osl",
-                                     description="Use OSL for material shading",
-                                     default=False,
-                                     update=refresh_preview)
 
 
 def register():
