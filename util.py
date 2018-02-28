@@ -82,7 +82,7 @@ def read_osl_shaders():
                             if not line:
                                 break
                             line = line.strip().decode("utf-8")
-                            if "ERROR" in line:
+                            if "error" in line:
                                 print(line)
                                 print("ERROR: Failed to compile {0}".format(file))
                                 break
@@ -112,7 +112,7 @@ def read_osl_shaders():
                             if not line:
                                 break
                             line = line.strip().decode("utf-8")
-                            if "error" in line:
+                            if "ERROR" in line:
                                 print(line)
                                 print("ERROR: Failed to read {0}".format(file))
                                 break
@@ -155,7 +155,7 @@ def create_osl_dict(file, content=None):
                         vector = line.split("[")[-1].split("]")[0]
                         currentElement['default'] = vector.strip()
             if line.startswith("metadata"):
-                if 'as_maya_node_name' in line:
+                if 'node_name' in line:
                     currentElement['name'] = line.split(" = ")[-1].replace("\"", "")
                 if "widget = " in line:
                     currentElement['widget'] = line.split(" = ")[-1].replace("\"", "")
@@ -163,7 +163,7 @@ def create_osl_dict(file, content=None):
                         currentElement['connectable'] = False
                     if currentElement['widget'] == 'filename':
                         currentElement['use_file_picker'] = True
-                if "as_maya_classification" in line:
+                if "classification" in line:
                     if 'drawdb/shader:rendernode/appleseed/utility' in line:
                         currentElement['category'] = 'utility'
                     if 'drawdb/shader:rendernode/appleseed/texture/2d:swatch/AppleseedRenderSwatch:texture' in line:
@@ -180,7 +180,7 @@ def create_osl_dict(file, content=None):
                     currentElement['max'] = line.split(" ")[-1]
                 if "label = " in line:
                     currentElement['label'] = " ".join(line.split("=")[1:]).replace("\"", "").strip()
-                if "as_maya_attribute_connectable" in line:
+                if "connectable" in line:
                     currentElement['connectable'] = False
                 if "help = " in line:
                     currentElement['help'] = line.split(" = ")[-1].replace("\"", "")

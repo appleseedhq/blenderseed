@@ -797,10 +797,12 @@ class Writer(object):
                             'bl_width_default', 'bl_width_max', 'bl_width_min', 'color', 'copy', 'dimensions', 'draw_buttons',
                             'draw_buttons_ext', 'draw_label', 'file_name', 'free', 'height', 'hide', 'init', 'inputs', 'internal_links',
                             'is_registered_node_type', 'label', 'location', 'mute', 'name', 'outputs', 'parent', 'rna_type', 'select',
-                            'shading_compatibility', 'show_options', 'show_preview', 'show_texture', 'socket_value_update', 'type', 'use_custom_color', 'width',
+                            'shading_compatibility', 'show_options', 'filepaths', 'show_preview', 'show_texture', 'socket_value_update', 'type', 'use_custom_color', 'width',
                             'width_hidden']:
                 parameter_value = "{0}".format(parameter_types[item])
                 parameter = getattr(node, item)
+                if item in node.filepaths:
+                    parameter = bpy.path.abspath(parameter)
                 if parameter_value == "int checkbox":
                     parameter_value = "int"
                     parameter = int(parameter)
