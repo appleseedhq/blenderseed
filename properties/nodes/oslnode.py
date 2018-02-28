@@ -123,6 +123,7 @@ def generate_node(node):
         return 1.0, 0.5, 1.0, 1.0
 
     parameter_types = {}
+    filepaths = []
     name = node['name']
     category = node['category']
     input_sockets = node['inputs']
@@ -349,6 +350,7 @@ def generate_node(node):
                 setattr(ntype, prop_name, bpy.props.StringProperty(name=prop['label'],
                                                                    description=helper,
                                                                    subtype='FILE_PATH'))
+                filepaths.append(prop_name)
             else:
                 setattr(ntype, prop_name, bpy.props.StringProperty(name=prop['label'],
                                                                    description=helper))
@@ -442,6 +444,7 @@ def generate_node(node):
     ntype.draw_buttons = draw_buttons
     ntype.draw_buttons_ext = draw_buttons_ext
     ntype.copy = copy
+    ntype.filepaths = filepaths
     ntype.free = free
     ntype.draw_label = draw_label
     if category == 'surface':
