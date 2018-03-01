@@ -35,29 +35,11 @@ def osl_node_tree_selector_draw(layout, mat):
     except:
         return False
 
-    if mat.appleseed.osl_node_tree == '':
+    if mat.appleseed.osl_node_tree == None:
         layout.operator('appleseed.add_osl_nodetree', text="Add appleseed Material Node", icon='NODETREE')
         return False
 
     return True
-
-
-def find_node(material, nodetype):
-    if not (material and material.appleseed.node_tree):
-        return None
-
-    node_tree = material.appleseed.node_tree
-
-    if node_tree == '':
-        return None
-
-    ntree = bpy.data.node_groups[node_tree]
-
-    for node in ntree.nodes:
-        nt = getattr(node, "bl_idname", None)
-        if nt == nodetype:
-            return node
-    return None
 
 
 class AppleseedMaterialPreview(bpy.types.Panel):
@@ -102,7 +84,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
         osl_node_tree_selector_draw(layout, material)
 
-        if asr_mat.osl_node_tree == '':
+        if asr_mat.osl_node_tree == None:
             layout.prop(asr_mat, "bsdf_type", text="BSDF Model")
             layout.separator()
 
