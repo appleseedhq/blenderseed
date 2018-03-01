@@ -686,8 +686,8 @@ class Writer(object):
         return asr_mat.use_light_emission and scene.appleseed.export_emitting_obj_as_lights
 
     def __is_node_material(self, asr_mat, node_tree):
-        if asr_mat.osl_node_tree != "":
-            for node in bpy.data.node_groups[node_tree].nodes:
+        if node_tree:
+            for node in node_tree.nodes:
                 if node.node_type == 'osl_surface':
                     return True
         return False
@@ -717,7 +717,7 @@ class Writer(object):
         # If using nodes.
         if use_nodes:
             # Get all nodes. If specular btdf or diffuse btdf in the list, emit back material as well.
-            for node in bpy.data.node_groups[asr_node_tree].nodes:
+            for node in asr_node_tree.nodes:
                 if node.node_type == 'osl_surface':
                     material_node = node
             node_list = material_node.traverse_tree()
@@ -2573,7 +2573,7 @@ class Writer(object):
                 mat_back = mat.name
                 asr_node_tree = asr_mat.osl_node_tree
                 if self.__is_node_material(asr_mat, asr_node_tree):
-                    for node in bpy.data.node_groups[asr_node_tree].nodes:
+                    for node in asr_node_tree.nodes:
                         if node.node_type == 'osl_surface':
                             material_node = node
                     node_list = material_node.traverse_tree()

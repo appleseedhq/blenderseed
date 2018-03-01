@@ -145,7 +145,7 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
         material = context.object.active_material
         nodetree = bpy.data.node_groups.new('%s appleseed OSL Nodetree' % material.name, 'AppleseedOSLNodeTree')
         nodetree.use_fake_user = True
-        material.appleseed.osl_node_tree = nodetree.name
+        material.appleseed.osl_node_tree = nodetree
         return {'FINISHED'}
 
 
