@@ -74,7 +74,7 @@ def read_osl_shaders():
                     print("appleseed Compiling {0}".format(file))
                     filename = os.path.join(shader_dir, file)
                     oslc_path = os.path.join(appleseed_bin_dir, "oslc")
-                    cmd = (oslc_path, filename)
+                    cmd = (oslc_path, '"{0}"'.format(filename))
                     try:
                         process = subprocess.Popen(" ".join(cmd), cwd=shader_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         while True:
@@ -104,7 +104,7 @@ def read_osl_shaders():
                     filename = os.path.join(shader_dir, file)
                     content = []
                     oslinfo_path = os.path.join(appleseed_bin_dir, "oslinfo")
-                    cmd = (oslinfo_path, '-v', filename)
+                    cmd = (oslinfo_path, '-v', '"{0}"'.format(filename))
                     try:
                         process = subprocess.Popen(" ".join(cmd), bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         while True:
@@ -120,6 +120,8 @@ def read_osl_shaders():
                         shader_params = create_osl_dict(file, content)
                         if shader_params:
                             nodes.append(shader_params)
+                        else:
+                            print("ERROR: No Shader Parameters")
                     except OSError as e:
                         print("OSError > " + e.errno)
                         print("OSError > " + e.strerror)
@@ -154,7 +156,7 @@ def create_osl_dict(file, content=None):
                     if currentElement["type"] in ["color", "vector", "output vector"]:
                         vector = line.split("[")[-1].split("]")[0]
                         currentElement['default'] = vector.strip()
-            if line.startswith("metadata"):
+            elif line.startswith("metadata"):
                 if 'node_name' in line:
                     currentElement['name'] = line.split(" = ")[-1].replace("\"", "")
                 if "widget = " in line:
@@ -184,7 +186,7 @@ def create_osl_dict(file, content=None):
                     currentElement['connectable'] = False
                 if "help = " in line:
                     currentElement['help'] = line.split(" = ")[-1].replace("\"", "")
-            if line.startswith("\""):  # found a parameter
+            elif line.startswith("\""):  # found a parameter
                 currentElement = {}
                 elementName = line.split(" ")[0].replace("\"", "")
                 currentElement['name'] = reverseValidate(elementName)
@@ -205,6 +207,11 @@ def create_osl_dict(file, content=None):
                 else:
                     d['inputs'].append(currentElement)
                     currentElement = d['inputs'][-1]
+            elif line.startswith("Unknown"):
+                continue
+            else:
+                print("ERROR: {0}".format(line))
+                return {}
 
     return d
 
