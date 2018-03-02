@@ -198,8 +198,9 @@ def register():
     node_list = read_osl_shaders()
     if node_list:
         for node in node_list:
-            node_name, node_category = oslnode.generate_node(node)
-            osl_node_names.append([node_name, node_category])
+            if node:
+                node_name, node_category = oslnode.generate_node(node)
+                osl_node_names.append([node_name, node_category])
     else:
         print("ERROR: OSL nodes list is empty")
     nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
