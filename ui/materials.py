@@ -1205,7 +1205,7 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
-            is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == ''
+            is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
             return renderer and obj and obj_type and material and is_not_nodemat
         return False
 
