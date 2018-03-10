@@ -166,11 +166,11 @@ def create_osl_dict(file, content=None):
                     if currentElement['widget'] == 'filename':
                         currentElement['use_file_picker'] = True
                 if "classification" in line:
-                    if 'drawdb/shader:rendernode/appleseed/utility' in line:
+                    if 'utility' in line:
                         currentElement['category'] = 'utility'
-                    if 'drawdb/shader:rendernode/appleseed/texture/2d:swatch/AppleseedRenderSwatch:texture' in line:
+                    if 'texture/2d' in line:
                         currentElement['category'] = 'texture'
-                    if 'drawdb/shader:rendernode/appleseed/texture/3d:swatch/AppleseedRenderSwatch:texture' in line:
+                    if 'texture/3d' in line:
                         currentElement['category'] = '3d_texture'
                 if "options = " in line:
                     currentElement['type'] = 'intenum'
