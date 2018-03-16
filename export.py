@@ -78,6 +78,37 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
 
+class ExportAppleseedAnimationScene(bpy.types.Operator, ExportHelper):
+    """
+    Export the scene to an appleseed project on disk.
+    """
+
+    bl_idname = "appleseed.export_anim_scene"
+    bl_label = "Export appleseed Animation Scene"
+
+    filename_ext = ".appleseed"
+    filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'})
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER'
+
+    def execute(self, context):
+        scene = context.scene
+        frame_start = scene.frame_start
+        frame_end = scene.frame_end
+
+        for frame in range(frame_start, frame_end + 1):
+            scene.frame_set(frame)
+            file_split = self.filepath.split(".")
+            export_path = util.realpath(os.path.join('{0}_{1}.{2}'.format(file_split[0], frame, file_split[1])))
+            writer = projectwriter.Writer()
+            writer.write(context.scene, export_path, animation=True)
+
+        return {'FINISHED'}
+
+
 def menu_func_export_scene(self, context):
     self.layout.operator(ExportAppleseedScene.bl_idname, text="appleseed (.appleseed)")
 

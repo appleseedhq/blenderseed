@@ -66,7 +66,7 @@ def object_enumerator(obj_type):
 class Writer(object):
     """appleseed exporter."""
 
-    def write(self, scene, file_path):
+    def write(self, scene, file_path, animation=False):
         """Write the .appleseed project file for rendering."""
 
         if scene is None:
@@ -75,6 +75,9 @@ class Writer(object):
 
         # Root path of the exported project.
         self._root_path = os.path.dirname(util.realpath(file_path))
+
+        # Whether this is an exported animation.
+        self._animation = animation
 
         # Transformation matrix applied to all entities of the scene.
         self._global_scale = 1
@@ -335,6 +338,7 @@ class Writer(object):
         asr_scn = scene.appleseed
         shutter_open = asr_scn.shutter_open if asr_scn.enable_motion_blur else 0
         current_frame = scene.frame_current
+        do_def_blur = util.def_mblur_enabled(object, scene)
         """
         Emit the mesh object (and write it to disk) only the first time it is encountered.
         If it's a new assembly (for dupli motion blur), only emit the object without tesselating mesh.
@@ -349,7 +353,7 @@ class Writer(object):
                         export_mesh = False
 
                 # If deformation motion blur is enabled, write deformation mesh to disk.
-                if util.def_mblur_enabled(object, scene):
+                if do_def_blur:
                     scene.frame_set(current_frame, subframe=asr_scn.shutter_close)
                     # Tessellate the object at the next frame to export mesh for deformation motion blur.
                     if export_mesh:
@@ -381,7 +385,7 @@ class Writer(object):
                     mesh_faces = mesh.tessfaces
                     mesh_uvtex = mesh.tessface_uv_textures
                     # Write the geometry to disk and emit a mesh object element.
-                    self._mesh_parts[object.name] = self.__emit_mesh_object(scene, object, mesh, mesh_faces, mesh_uvtex, new_assembly)
+                    self._mesh_parts[object.name] = self.__emit_mesh_object(scene, object, mesh, mesh_faces, mesh_uvtex, new_assembly, do_def_blur)
                     # Delete the mesh
                     bpy.data.meshes.remove(mesh)
 
@@ -427,7 +431,7 @@ class Writer(object):
                 os.mkdir(meshes_path)
             if scene.appleseed.export_mode == 'all':
                 export_curves = True
-            if scene.appleseed.export_mode == 'partial' and not os.path.exists(curves_filepath):
+            if (scene.appleseed.export_mode == 'partial' or self._animation) and not os.path.exists(curves_filepath):
                 export_curves = True
             if scene.appleseed.export_mode == 'selected' and object.name in self._selected_objects:
                 export_curves = True
@@ -447,7 +451,7 @@ class Writer(object):
         # Hard code one mesh part for now, since particle systems aren't split into materials.
         return [(0, "part_0")]
 
-    def __emit_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex, new_assembly):
+    def __emit_mesh_object(self, scene, object, mesh, mesh_faces, mesh_uvtex, new_assembly, do_def_blur=False):
         """
         Emit the mesh object element and write to disk.
         Return mesh parts to self._mesh_parts[object.name]
@@ -459,7 +463,7 @@ class Writer(object):
 
         object_name = object.name
 
-        mesh_filename = object_name + ".obj"
+        mesh_filename = "{0}.obj".format(object_name) if not do_def_blur else "{0}_{1}.obj".format(object_name, scene.frame_current)
         meshes_path = os.path.join(self._root_path, "meshes")
         export_mesh = False
         if scene.appleseed.generate_mesh_files:
@@ -468,7 +472,7 @@ class Writer(object):
                 os.mkdir(meshes_path)
             if scene.appleseed.export_mode == 'all':
                 export_mesh = True
-            if scene.appleseed.export_mode == 'partial' and not os.path.exists(mesh_filepath):
+            if (scene.appleseed.export_mode == 'partial' or self._animation) and not os.path.exists(mesh_filepath):
                 export_mesh = True
             if scene.appleseed.export_mode == 'selected' and object.name in self._selected_objects:
                 export_mesh = True
@@ -536,9 +540,8 @@ class Writer(object):
         if len(mesh_faces) == 0:
             self.__info("Skipping object '{0}' since it has no faces once converted to a mesh.".format(object.name))
             return []
-
         object_name = object.name
-        mesh_filename = object_name + "_deform.obj"
+        mesh_filename = "{0}_{1}_deform.obj".format(object_name, scene.frame_current)
 
         self._def_mblur_obs[object_name] = mesh_filename
 
@@ -550,7 +553,7 @@ class Writer(object):
                 os.mkdir(meshes_path)
             if scene.appleseed.export_mode == 'all':
                 export_mesh = True
-            if scene.appleseed.export_mode == 'partial' and not os.path.exists(mesh_filepath):
+            if (scene.appleseed.export_mode == 'partial' or self._animation) and not os.path.exists(mesh_filepath):
                 export_mesh = True
             if scene.appleseed.export_mode == 'selected' and object.name in self._selected_objects:
                 export_mesh = True
@@ -578,7 +581,7 @@ class Writer(object):
                 os.mkdir(meshes_path)
             if scene.appleseed.export_mode == 'all':
                 export_curves = True
-            if scene.appleseed.export_mode == 'partial' and not os.path.exists(curves_filepath):
+            if (scene.appleseed.export_mode == 'partial' or self._animation) and not os.path.exists(curves_filepath):
                 export_curves = True
             if scene.appleseed.export_mode == 'selected' and object.name in self._selected_objects:
                 export_curves = True
