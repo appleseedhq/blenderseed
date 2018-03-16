@@ -40,6 +40,36 @@ class AppleseedRenderPanelBase(object):
         return renderer.engine == 'APPLESEED_RENDER'
 
 
+class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
+    bl_label = "Render"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+
+    def draw(self, context):
+        layout = self.layout
+
+        rd = context.scene.render
+        scene = context.scene
+        rd = scene.render
+        asr_scene_props = scene.appleseed
+
+        layout.prop(asr_scene_props, "export_only", text="Export appleseed Files Only")
+        row = layout.row(align=True)
+        if asr_scene_props.export_only:
+            row.operator("appleseed.export_scene", text="Export Frame", icon='RENDER_STILL')
+            row.operator("appleseed.export_anim_scene", text="Export Animation", icon='RENDER_ANIMATION')
+        else:
+            row.operator("render.render", text="Render", icon='RENDER_STILL')
+            row.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
+        row.operator("sound.mixdown", text="Audio", icon='PLAY_AUDIO')
+        if not asr_scene_props.export_only:
+            split = layout.split(percentage=0.33)
+
+            split.label(text="Display:")
+            row = split.row(align=True)
+            row.prop(rd, "display_mode", text="")
+            row.prop(rd, "use_lock_interface", icon_only=True)
+
+
 class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_label = "General"
@@ -254,7 +284,7 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
 
 def register():
-    bpy.types.RENDER_PT_render.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.utils.register_class(AppleseedRender)
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.utils.register_class(AppleseedRenderSettingsPanel)
@@ -264,6 +294,7 @@ def register():
 
 
 def unregister():
+    bpy.utils.unregister_class(AppleseedRender)
     bpy.utils.unregister_class(AppleseedRenderSettingsPanel)
     bpy.utils.unregister_class(AppleseedSamplingPanel)
     bpy.utils.unregister_class(AppleseedLightingPanel)
