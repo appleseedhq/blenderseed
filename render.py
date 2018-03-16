@@ -33,6 +33,8 @@ import subprocess
 import shutil
 import tempfile
 import threading
+import time
+from math import ceil
 from shutil import copyfile
 
 import bpy
@@ -81,6 +83,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 return
 
         # Generate project on disk.
+        self.update_stats("", "appleseed Rendering: Exporting Scene")
         writer = projectwriter.Writer()
         writer.write(scene, project_filepath)
 
@@ -177,6 +180,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Rendered pixel total
         self.rendered_pixels = 0
 
+        # Total tiles.
+        self.rendered_tiles = 0
+
         # Compute render window.
         if scene.render.use_border:
             min_x = int(scene.render.border_min_x * width)
@@ -189,8 +195,15 @@ class RenderAppleseed(bpy.types.RenderEngine):
             max_x = width - 1
             max_y = height - 1
 
+        # Compute number of tiles.
+        vertical_tiles = int(ceil((max_y - min_y + 1) / scene.appleseed.tile_height))
+        horizontal_tiles = int(ceil((max_x - min_x + 1) / scene.appleseed.tile_width))
+        self.total_tiles = vertical_tiles * horizontal_tiles
+        self.pass_number = 1
+        self.total_passes = scene.appleseed.renderer_passes
+
         # Compute total pixel count.
-        self.total_pixels = (max_x - min_x + 1) * (max_y - min_y + 1) * scene.appleseed.renderer_passes
+        self.total_pixels = (max_x - min_x + 1) * (max_y - min_y + 1) * self.total_passes
 
         # Launch appleseed.cli.
         threads = 'auto' if scene.appleseed.threads_auto else str(scene.appleseed.threads)
@@ -207,7 +220,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.report({'ERROR'}, "Failed to run {0} with project {1}: {2}.".format(appleseed_bin_path, project_filepath, e))
             return
 
-        self.update_stats("", "appleseed: Rendering")
+        self.update_stats("appleseed Rendering: Loading Scene", "Time Remaining: Unknown")
+        self.time_start = time.time()
 
         # Update while rendering.
         while not self.test_break():
@@ -307,6 +321,15 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.rendered_pixels += take_x * take_y
         self.update_progress(self.rendered_pixels / self.total_pixels)
 
+        # Update stats.
+        seconds_per_pixel = (time.time() - self.time_start) / self.rendered_pixels
+        remaining_seconds = (self.total_pixels - self.rendered_pixels) * seconds_per_pixel
+        if self.rendered_tiles == self.total_tiles:
+            self.pass_number += 1
+            self.rendered_tiles = 0
+        self.rendered_tiles += 1
+        self.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.pass_number, self.total_passes, self.rendered_tiles, self.total_tiles), "Time Remaining: {0}".format(self.format_seconds_to_hhmmss(remaining_seconds)))
+
         return True
 
     def __process_tile_highlight_chunk(self, process, min_x, min_y, max_x, max_y):
@@ -359,6 +382,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.__draw_hline(x1 - bracket_width + 1, y0, bracket_width, bracket_color)
         self.__draw_vline(x1, y0, bracket_height, bracket_color)
 
+        if self.pass_number == 1 and self.rendered_tiles == 0:
+            self.update_stats("appleseed Rendering: Pass 1 of %i" % self.total_passes, "Time Remaining: Unknown")
+
         return True
 
     def __draw_hline(self, x, y, length, color):
@@ -372,3 +398,11 @@ class RenderAppleseed(bpy.types.RenderEngine):
         layer = result.layers[0].passes[0]
         layer.rect = [color] * length
         self.end_result(result)
+
+    @staticmethod
+    def format_seconds_to_hhmmss(seconds):
+        hours = seconds // (60 * 60)
+        seconds %= (60 * 60)
+        minutes = seconds // 60
+        seconds %= 60
+        return "%02i:%02i:%02i" % (hours, minutes, seconds)
