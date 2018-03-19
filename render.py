@@ -34,6 +34,7 @@ import shutil
 import tempfile
 import threading
 import time
+import numpy as np
 from math import ceil
 from shutil import copyfile
 
@@ -206,9 +207,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.total_pixels = (max_x - min_x + 1) * (max_y - min_y + 1) * self.total_passes
 
         # Create secondary image buffer
-        self.image_buffer = []
-        for x in range(0, (int(width * height) * 4)):
-            self.image_buffer.append(0.0)
+        self.image_buffer = np.zeros(shape=[4, max_y - min_y + 1, max_x - min_x + 1], dtype=np.float32)
 
         # Launch appleseed.cli.
         threads = 'auto' if scene.appleseed.threads_auto else str(scene.appleseed.threads)
@@ -255,10 +254,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         if self.test_break():
             display_buffer = []
-            result = self.begin_result(0, 0, width, height)
+            result = self.begin_result(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
             layer = result.layers[0].passes[0]
-            for x in range(0, int(width * height)):
-                display_buffer.append(self.image_buffer[(x * 4):(x * 4 + 4)])
+            for y in range(0, max_y + 1):
+                for x in range(0, max_x + 1):
+                    pixel = []
+                    for element in range(0, 4):
+                        pixel.append(self.image_buffer[element][y][x])
+                    display_buffer.append(pixel)
             layer.rect = display_buffer
             self.end_result(result)
             self.report({'INFO'}, "Render Aborted")
@@ -321,18 +324,20 @@ class RenderAppleseed(bpy.types.RenderEngine):
         floats = array.array('f')
         floats.fromstring(tile_data)
         pix = []
-        y_line = y0
+        y_start = y0
         for y in range(take_y - 1, -1, -1):
-            buffer_start = (y_line * (max_x + 1) + (min_x + x0)) * 4
+            x_start = x0
             start_pix = (skip_y + y) * tile_w + skip_x
             end_pix = start_pix + take_x
             for p in range(start_pix, end_pix):
                 pixel = floats[p * 4:p * 4 + 4]
                 pix.append(pixel)
-                for l in range(buffer_start, buffer_start + 4):
-                    self.image_buffer[l] = pixel[l - buffer_start]
-                buffer_start += 4
-            y_line += 1
+                self.image_buffer[0][y_start][x_start] = pixel[0]
+                self.image_buffer[1][y_start][x_start] = pixel[1]
+                self.image_buffer[2][y_start][x_start] = pixel[2]
+                self.image_buffer[3][y_start][x_start] = pixel[3]
+                x_start += 1
+            y_start +=1
 
         # Update image.
         result = self.begin_result(x0, y0, take_x, take_y)
