@@ -34,6 +34,7 @@ import shutil
 import tempfile
 import threading
 import time
+import numpy as np
 from math import ceil
 from shutil import copyfile
 
@@ -205,6 +206,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Compute total pixel count.
         self.total_pixels = (max_x - min_x + 1) * (max_y - min_y + 1) * self.total_passes
 
+        # Create secondary image buffer
+        self.image_buffer = np.zeros(shape=[4, max_y - min_y + 1, max_x - min_x + 1], dtype=np.float32)
+
         # Launch appleseed.cli.
         threads = 'auto' if scene.appleseed.threads_auto else str(scene.appleseed.threads)
         cmd = (appleseed_bin_path,
@@ -247,6 +251,20 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 # Ignore unknown chunks.
                 os.read(process.stdout.fileno(), chunk_size)
                 continue
+
+        if self.test_break():
+            display_buffer = []
+            result = self.begin_result(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
+            layer = result.layers[0].passes[0]
+            for y in range(0, max_y + 1):
+                for x in range(0, max_x + 1):
+                    pixel = []
+                    for element in range(0, 4):
+                        pixel.append(self.image_buffer[element][y][x])
+                    display_buffer.append(pixel)
+            layer.rect = display_buffer
+            self.end_result(result)
+            self.report({'INFO'}, "Render Aborted")
 
         # Make sure the appleseed.cli process has terminated.
         process.kill()
@@ -292,6 +310,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
         ix1 = min(tile_x + tile_w - 1, max_x)
         iy1 = min(tile_y + tile_h - 1, max_y)
 
+        # Window-space coordinates of the intersection between the tile and the render window.
+        x0 = ix0 - min_x    # left
+        y0 = max_y - iy1    # bottom
+
         # Number of rows and columns to skip in the input tile.
         skip_x = ix0 - tile_x
         skip_y = iy0 - tile_y
@@ -302,14 +324,20 @@ class RenderAppleseed(bpy.types.RenderEngine):
         floats = array.array('f')
         floats.fromstring(tile_data)
         pix = []
+        y_start = y0
         for y in range(take_y - 1, -1, -1):
+            x_start = x0
             start_pix = (skip_y + y) * tile_w + skip_x
             end_pix = start_pix + take_x
-            pix.extend(floats[p * 4:p * 4 + 4] for p in range(start_pix, end_pix))
-
-        # Window-space coordinates of the intersection between the tile and the render window.
-        x0 = ix0 - min_x    # left
-        y0 = max_y - iy1    # bottom
+            for p in range(start_pix, end_pix):
+                pixel = floats[p * 4:p * 4 + 4]
+                pix.append(pixel)
+                self.image_buffer[0][y_start][x_start] = pixel[0]
+                self.image_buffer[1][y_start][x_start] = pixel[1]
+                self.image_buffer[2][y_start][x_start] = pixel[2]
+                self.image_buffer[3][y_start][x_start] = pixel[3]
+                x_start += 1
+            y_start +=1
 
         # Update image.
         result = self.begin_result(x0, y0, take_x, take_y)
@@ -333,6 +361,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         return True
 
     def __process_tile_highlight_chunk(self, process, min_x, min_y, max_x, max_y):
+
         # Read and decode tile header.
         tile_header = struct.unpack("IIII", os.read(process.stdout.fileno(), 4 * 4))
         tile_x = tile_header[0]
