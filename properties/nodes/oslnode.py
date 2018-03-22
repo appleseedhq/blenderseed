@@ -359,7 +359,7 @@ def generate_node(node):
         if prop['type'] == 'intenum':
             items = []
             for enum_item in prop['options']:
-                if widget == 'mapper':
+                if ':' in enum_item:
                     items.append((enum_item.split(":")[1], enum_item.split(":")[0], ""))
                     parameter_types[prop_name] = "int"
                 else:
@@ -431,9 +431,9 @@ def generate_node(node):
             setattr(ntype, prop_name, bpy.props.FloatVectorProperty(name=prop['name'],
                                                                     description=helper,
                                                                     subtype='COLOR',
-                                                                    default=(float(in_socket['default'].split(" ")[0]),
-                                                                             float(in_socket['default'].split(" ")[1]),
-                                                                             float(in_socket['default'].split(" ")[2])),
+                                                                    default=(float(prop['default'].split(" ")[0]),
+                                                                             float(prop['default'].split(" ")[1]),
+                                                                             float(prop['default'].split(" ")[2])),
                                                                     min=0.0,
                                                                     max=1.0))
 
