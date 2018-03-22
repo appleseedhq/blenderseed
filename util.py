@@ -103,10 +103,9 @@ def read_osl_shaders():
                     print("appleseed Reading {0}".format(file))
                     filename = os.path.join(shader_dir, file)
                     content = []
-                    oslinfo_path = os.path.join(appleseed_bin_dir, "oslinfo")
-                    cmd = (oslinfo_path, '-v', '"{0}"'.format(filename))
+                    cmd = ('oslinfo', '-v', '"{0}"'.format(filename))
                     try:
-                        process = subprocess.Popen(" ".join(cmd), bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        process = subprocess.Popen(" ".join(cmd), cwd=appleseed_bin_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         while True:
                             line = process.stdout.readline()
                             if not line:
@@ -151,11 +150,10 @@ def create_osl_dict(file, content=None):
                 currentElement['category'] = 'shader'
         else:
             if line.startswith("Default value"):
-                currentElement['default'] = line.split(" ")[-1].replace("\"", "")
+                currentElement['default'] = line.split(": ")[-1].replace("\"", "")
                 if "type" in currentElement:
                     if currentElement["type"] in ["color", "vector", "output vector"]:
-                        vector = line.split("[")[-1].split("]")[0]
-                        currentElement['default'] = vector.strip()
+                        currentElement['default'] = line.split("[")[-1].split("]")[0].strip()
             elif line.startswith("metadata"):
                 if 'node_name' in line:
                     currentElement['name'] = line.split(" = ")[-1].replace("\"", "")

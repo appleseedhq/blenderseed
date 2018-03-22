@@ -199,8 +199,11 @@ def register():
     if node_list:
         for node in node_list:
             if node:
-                node_name, node_category = oslnode.generate_node(node)
-                osl_node_names.append([node_name, node_category])
+                try:
+                    node_name, node_category = oslnode.generate_node(node)
+                    osl_node_names.append([node_name, node_category])
+                except:
+                    pass
     else:
         print("ERROR: OSL nodes list is empty")
     nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
