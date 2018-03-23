@@ -66,34 +66,6 @@ def read_osl_shaders():
 
     nodes = []
 
-    for shader_dir in shader_directories:
-        if os.path.isdir(shader_dir):
-            print("Searching {0} for OSL files".format(shader_dir))
-            for file in os.listdir(shader_dir):
-                if file.endswith(".osl"):
-                    print("appleseed Compiling {0}".format(file))
-                    filename = os.path.join(shader_dir, file)
-                    oslc_path = os.path.join(appleseed_bin_dir, "oslc")
-                    cmd = (oslc_path, '"{0}"'.format(filename))
-                    try:
-                        process = subprocess.Popen(" ".join(cmd), cwd=shader_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                        while True:
-                            line = process.stdout.readline()
-                            if not line:
-                                break
-                            line = line.strip().decode("utf-8")
-                            if "error" in line:
-                                print(line)
-                                print("ERROR: Failed to compile {0}".format(file))
-                                break
-                        print("appleseed Compiled {0}".format(file))
-                    except OSError as e:
-                        print("OSError > " + e.errno)
-                        print("OSError > " + e.strerror)
-                        print("OSError > " + e.filename)
-                    except:
-                        print("ERROR: Failed to compile {0}.  Oslc did not launch: {1}".format(file, sys.exc_info()[0]))
-
     print("appleseed Parsing OSL shaders")
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
