@@ -16,7 +16,7 @@ Install
 Configure
 	If the addon was installed successfully, you will see it among your addons under the "Render" category. Enable the addon, and click the small triangle to the left of the words "Render: appleseed". You will see a text field with a file path selector next to the words "appleseed binary directory". Use the file path selector to point the addon to your appleseed installation's bin directory (the directory containing appleseed.cli.exe and appleseed.studio.exe).
 
-	.. image:: \\_static\\screenshots\\blenderseed-addon-installation.png
+	.. image:: /_static/screenshots/blenderseed-addon-installation.png
 
 
 
