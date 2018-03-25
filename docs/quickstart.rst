@@ -11,7 +11,7 @@ Go to the materials tab
 
 
 
-.. image:: \\_static\\screenshots\\material_tab.png
+.. image:: /_static/screenshots/material_tab.PNG
 
 
 Select one of the material BSDF's from the dropdown
@@ -21,7 +21,7 @@ Go to the render tab and press the big **Render** button
 
 
 
-.. image:: \\_static\\screenshots\\render_button.png
+.. image:: /_static/screenshots/render_button.PNG
 
 
 Your image will render into Blender's image editor.  When it's done you can save the image by pressing 'F3' in the image editor
