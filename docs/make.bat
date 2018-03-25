@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=blenderseedManual
+set SPHINXPROJ=blenderseedManaual
 
 if "%1" == "" goto help
 

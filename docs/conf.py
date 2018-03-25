@@ -12,35 +12,38 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+import os
+import sys
+import sphinx_bootstrap_theme
 # sys.path.insert(0, os.path.abspath('.'))
 
-import sphinx_bootstrap_theme
+sys.path.insert(0, os.path.abspath('../..'))
+
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'blenderseed Manual'
+project = 'blenderseed Manaual'
 copyright = '2018, The appleseedhq Organization'
 author = 'The appleseedhq Organization'
 
 # The short X.Y version
 version = '0.7'
 # The full version, including alpha/beta/rc tags
-release = 'blenderseed Manual v0.7'
+release = 'blenderseed Manual 0.7 Beta'
 
 
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-needs_sphinx = '1.0'
+# needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -102,7 +105,6 @@ html_theme_options = {
         ("Installation", "installation"),
         # ("Reference", "shaders/shaders"),
         # ("Tutorials", "tutorials/tutorials"),
-        ("About", "about"),
         ("appleseedhq", "http://appleseedhq.net", True),
         ("vimeo", "https://vimeo.com/appleseedhq", True)
     ],
@@ -140,7 +142,7 @@ html_theme_options = {
 
     # Location of link to source.
     # Options are "nav" (default), "footer" or anything else to exclude.
-    'source_link_position': "footer",
+    'source_link_position': "nav",
 
     # Bootswatch (http://bootswatch.com/) theme.
     #
@@ -156,17 +158,8 @@ html_theme_options = {
     'bootstrap_version': "3",
 }
 
-# Override stylesheet for block quotes
-
 def setup(app):
     app.add_stylesheet("css/blockquote_custom1.css")
-
-# The name for this set of Sphinx documents.  If None, it defaults to
-# "<project> v<release> documentation".
-html_title = "blenderseed Documentation"
-
-# A shorter title for the navigation bar.  Default is the same as html_title.
-#html_short_title = None
 
 html_logo = "_static/appleseed-logo.png"
 
@@ -190,13 +183,16 @@ html_static_path = ['_static']
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-# html_sidebars = {}
+html_sidebars = {
+    '**': ['localtoc.html', 'searchbox.html'],
+    'using/windows': ['windowssidebar.html', 'searchbox.html'],
+}
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'blenderseedManualdoc'
+htmlhelp_basename = 'blenderseedManaualdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -223,7 +219,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'blenderseedManual.tex', 'blenderseed Manual Documentation',
+    (master_doc, 'blenderseedManaual.tex', 'blenderseed Manaual Documentation',
      'blenderseed Manual', 'manual'),
 ]
 
@@ -233,7 +229,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'blenderseedmanual', 'blenderseed Manual Documentation',
+    (master_doc, 'blenderseedmanaual', 'blenderseed Manaual Documentation',
      [author], 1)
 ]
 
@@ -244,7 +240,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'blenderseedManual', 'blenderseed Manual Documentation',
-     author, 'blenderseedManual', 'One line description of project.',
+    (master_doc, 'blenderseedManaual', 'blenderseed Manaual Documentation',
+     author, 'blenderseedManaual', 'One line description of project.',
      'Miscellaneous'),
 ]
