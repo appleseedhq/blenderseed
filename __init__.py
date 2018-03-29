@@ -48,7 +48,7 @@ if "bpy" in locals():
     imp.reload(render)
     imp.reload(util)
     imp.reload(preferences)
-    imp.reload(project_file_writer)
+    imp.reload(projectwriter)
 
 else:
     import bpy
