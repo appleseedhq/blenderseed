@@ -403,22 +403,27 @@ class RenderAppleseed(bpy.types.RenderEngine):
         return True
 
     def __process_tiles_header(self, process):
-        # Read and decode tiles header
-        # Protocol v2
-        # Contains: AOV count >= 1
+        """Read and decode tiles header.
+        
+        Use Protocol v2.
+        Contains: 
+        - AOV count with a value >= 1
+        """
         tiles_header = struct.unpack("I", os.read(process.stdout.fileno(), 1 * 4))
         aov_count = tiles_header[0]
 
         return True
 
     def __process_plane_header(self, process):
-        # Read and decode AOV definition
-        # Protocol v2
-        # Contains:
-        #  Index
-        #  Name size
-        #  Number of channels
-        #  Name
+        """Read and decode AOV definition.
+        
+        Use Protocol v2.
+        Contains:
+        - Index
+        - Name size
+        - Number of channels
+        - Name
+        """
         aov_header = struct.unpack("III", os.read(process.stdout.fileno(), 3 * 4))
         aov_index = aov_header[0]
         aov_name_len = aov_header[1]
@@ -429,16 +434,18 @@ class RenderAppleseed(bpy.types.RenderEngine):
         return True
 
     def __process_plane_data_chunk(self, process, min_x, min_y, max_x, max_y):
-        # Read and decode plane header and content.
-        # Protocol v2
-        # Contains:
-        #  AOV index
-        #  X tile coordinate
-        #  Y tile coordinate
-        #  Tile widht
-        #  Tile height
-        #  Pixel channel count
-        #  Tile pixels
+        """Read and decode plane header and content.
+        
+        Protocol v2
+        Contains:
+        - AOV index
+        - X tile coordinate
+        - Y tile coordinate
+        - Tile widht
+        - Tile height
+        - Pixel channel count
+        - Tile pixels
+        """
         tile_header = struct.unpack("IIIIII", os.read(process.stdout.fileno(), 6 * 4))
         tile_aov_index = tile_header[0]
         tile_x = tile_header[1]
@@ -447,7 +454,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         tile_h = tile_header[4]
         tile_c = tile_header[5]
 
-        # We process only the beauty AOV
+        # We process only the beauty AOV.
         if tile_aov_index != 0:
             return True
 
