@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -96,6 +95,46 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         row.prop(asr_scene_props, "clean_cache", text="Delete External Cache After Render")
 
         layout.prop(asr_scene_props, "tile_ordering", text="Tile Ordering")
+
+
+class AppleseedRenderStampPanel(bpy.types.Panel, AppleseedRenderPanelBase):
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_label = "Render Stamp"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw_header(self, context):
+        header = self.layout
+        asr_scene_props = context.scene.appleseed
+        header.prop(asr_scene_props, "enable_render_stamp", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        asr_scene_props = context.scene.appleseed
+
+        layout.active = asr_scene_props.enable_render_stamp
+        layout.prop(asr_scene_props, "render_stamp", text="Stamp Text")
+        layout.prop(asr_scene_props, "render_stamp_patterns")
+
+
+class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_label = "Denoiser"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw_header(self, context):
+        header = self.layout
+        asr_scene_props = context.scene.appleseed
+        header.prop(asr_scene_props, "enable_denoiser", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        asr_scene_props = context.scene.appleseed
+
+        layout.active = asr_scene_props.enable_denoiser
+        layout.prop(asr_scene_props, "prefilter_spikes", text="Prefilter Spikes")
+        layout.prop(asr_scene_props, "spike_threshold", text="Spike Threshold")
+        layout.prop(asr_scene_props, "patch_distance_threshold", text="Patch Distance")
+        layout.prop(asr_scene_props, "denoise_scales", text="Denoise Scales")
 
 
 class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
@@ -240,7 +279,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             layout.prop(asr_scene_props, "enable_caustics", text="Caustics")
 
             layout.label("Photon Tracing")
-            
+
             layout.prop(asr_scene_props, "sppm_photon_max_length", text="Max Bounces")
             layout.prop(asr_scene_props, "sppm_photon_rr_start", text="Russian Roulette Start Bounce")
             layout.prop(asr_scene_props, "sppm_light_photons", text="Light Photons")
@@ -258,6 +297,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
             layout.prop(asr_scene_props, "light_mats_radiance_multiplier", text="Mesh Light Multiplier")
             layout.prop(asr_scene_props, "export_emitting_obj_as_lights", text="Export Mesh Lights")
+
 
 class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -284,10 +324,12 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
 
 def register():
-    bpy.utils.register_class(AppleseedRender)
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.utils.register_class(AppleseedRender)
+    bpy.utils.register_class(AppleseedRenderStampPanel)
     bpy.utils.register_class(AppleseedRenderSettingsPanel)
+    bpy.utils.register_class(AppleseedDenoiserPanel)
     bpy.utils.register_class(AppleseedSamplingPanel)
     bpy.utils.register_class(AppleseedLightingPanel)
     bpy.utils.register_class(AppleseedMotionBlurPanel)
@@ -295,7 +337,9 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(AppleseedRender)
+    bpy.utils.unregister_class(AppleseedRenderStampPanel)
     bpy.utils.unregister_class(AppleseedRenderSettingsPanel)
+    bpy.utils.unregister_class(AppleseedDenoiserPanel)
     bpy.utils.unregister_class(AppleseedSamplingPanel)
     bpy.utils.unregister_class(AppleseedLightingPanel)
     bpy.utils.unregister_class(AppleseedMotionBlurPanel)

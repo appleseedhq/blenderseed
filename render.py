@@ -183,6 +183,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Total tiles.
         self.rendered_tiles = 0
 
+        # Is the denoiser on
+        self.do_denoise = scene.appleseed.enable_denoiser
+
         # Compute render window.
         if scene.render.use_border:
             min_x = int(scene.render.border_min_x * width)
@@ -329,6 +332,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.rendered_tiles = 0
         self.rendered_tiles += 1
         self.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.pass_number, self.total_passes, self.rendered_tiles, self.total_tiles), "Time Remaining: {0}".format(self.format_seconds_to_hhmmss(remaining_seconds)))
+
+        if (self.total_passes == self.pass_number) and (self.rendered_tiles == self.total_tiles) and self.do_denoise:
+            self.update_stats("appleseed Rendering: Denoising Image", "")
 
         return True
 
