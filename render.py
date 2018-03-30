@@ -235,13 +235,26 @@ class RenderAppleseed(bpy.types.RenderEngine):
             chunk_type = chunk_header[0]
             chunk_size = chunk_header[1]
 
+            # Protocol V1
             if chunk_type == 1:
-                # Tile data (protocol v1).
+                # Tile data, protocol v1
                 if not self.__process_tile_data_chunk(process, min_x, min_y, max_x, max_y):
                     break
-            elif chunk_type == 2:
-                # Tile highlight (protocol v1).
+            elif chunk_type == 2 or chunk_type == 10:
+                # Tile highlight, protocol v1 and v2
                 if not self.__process_tile_highlight_chunk(process, min_x, min_y, max_x, max_y):
+                    break
+            elif chunk_type == 11:
+                # Tiles header, protocol v2
+                if not self.__process_tiles_header(process):
+                    break
+            elif chunk_type == 12:
+                # Plane definition header, protocol v2
+                if not self.__process_plane_header(process):
+                    break
+            elif chunk_type == 13:
+                # Plane pixels, protocol v2
+                if not self.__process_plane_data_chunk(process, min_x, min_y, max_x, max_y):
                     break
             else:
                 # Ignore unknown chunks.
@@ -261,6 +274,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
     def __process_tile_data_chunk(self, process, min_x, min_y, max_x, max_y):
         # Read and decode tile header.
+        # Protocol v1
         tile_header = struct.unpack("IIIII", os.read(process.stdout.fileno(), 5 * 4))
         tile_x = tile_header[0]
         tile_y = tile_header[1]
@@ -334,6 +348,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
     def __process_tile_highlight_chunk(self, process, min_x, min_y, max_x, max_y):
         # Read and decode tile header.
+        # Protocol v1 and v2
         tile_header = struct.unpack("IIII", os.read(process.stdout.fileno(), 4 * 4))
         tile_x = tile_header[0]
         tile_y = tile_header[1]
@@ -384,6 +399,126 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         if self.pass_number == 1 and self.rendered_tiles == 0:
             self.update_stats("appleseed Rendering: Pass 1 of %i" % self.total_passes, "Time Remaining: Unknown")
+
+        return True
+
+    def __process_tiles_header(self, process):
+        """Read and decode tiles header.
+        
+        Use Protocol v2.
+        Contains: 
+        - AOV count with a value >= 1
+        """
+        tiles_header = struct.unpack("I", os.read(process.stdout.fileno(), 1 * 4))
+        aov_count = tiles_header[0]
+
+        return True
+
+    def __process_plane_header(self, process):
+        """Read and decode AOV definition.
+        
+        Use Protocol v2.
+        Contains:
+        - Index
+        - Name size
+        - Number of channels
+        - Name
+        """
+        aov_header = struct.unpack("III", os.read(process.stdout.fileno(), 3 * 4))
+        aov_index = aov_header[0]
+        aov_name_len = aov_header[1]
+        aov_nc = aov_header[2]
+
+        aov_name = os.read(process.stdout.fileno(), aov_name_len)
+
+        return True
+
+    def __process_plane_data_chunk(self, process, min_x, min_y, max_x, max_y):
+        """Read and decode plane header and content.
+        
+        Protocol v2
+        Contains:
+        - AOV index
+        - X tile coordinate
+        - Y tile coordinate
+        - Tile widht
+        - Tile height
+        - Pixel channel count
+        - Tile pixels
+        """
+        tile_header = struct.unpack("IIIIII", os.read(process.stdout.fileno(), 6 * 4))
+        tile_aov_index = tile_header[0]
+        tile_x = tile_header[1]
+        tile_y = tile_header[2]
+        tile_w = tile_header[3]
+        tile_h = tile_header[4]
+        tile_c = tile_header[5]
+
+        # We process only the beauty AOV.
+        if tile_aov_index != 0:
+            return True
+
+        # Read tile data.
+        tile_size = tile_w * tile_h * tile_c * 4
+        tile_data = bytes()
+        while len(tile_data) < tile_size and not self.test_break():
+            tile_data += os.read(process.stdout.fileno(), tile_size - len(tile_data))
+        if self.test_break():
+            return False
+
+        # Optional debug message.
+        if False:
+            print("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
+
+        # Ignore tiles completely outside the render window.
+        if tile_x > max_x or tile_x + tile_w - 1 < min_x:
+            return True
+        if tile_y > max_y or tile_y + tile_h - 1 < min_y:
+            return True
+
+        # Image-space coordinates of the intersection between the tile and the render window.
+        ix0 = max(tile_x, min_x)
+        iy0 = max(tile_y, min_y)
+        ix1 = min(tile_x + tile_w - 1, max_x)
+        iy1 = min(tile_y + tile_h - 1, max_y)
+
+        # Number of rows and columns to skip in the input tile.
+        skip_x = ix0 - tile_x
+        skip_y = iy0 - tile_y
+        take_x = ix1 - ix0 + 1
+        take_y = iy1 - iy0 + 1
+
+        # Extract relevant tile data and convert them to the format expected by Blender.
+        floats = array.array('f')
+        floats.fromstring(tile_data)
+        pix = []
+        for y in range(take_y - 1, -1, -1):
+            start_pix = (skip_y + y) * tile_w + skip_x
+            end_pix = start_pix + take_x
+            pix.extend(floats[p * 4:p * 4 + 4] for p in range(start_pix, end_pix))
+
+        # Window-space coordinates of the intersection between the tile and the render window.
+        x0 = ix0 - min_x    # left
+        y0 = max_y - iy1    # bottom
+
+        # Update image.
+        result = self.begin_result(x0, y0, take_x, take_y)
+        layer = result.layers[0].passes[0]
+        layer.rect = pix
+        self.end_result(result)
+
+        # Update progress bar.
+        self.rendered_pixels += take_x * take_y
+        self.update_progress(self.rendered_pixels / self.total_pixels)
+
+        # Update stats.
+        seconds_per_pixel = (time.time() - self.time_start) / self.rendered_pixels
+        remaining_seconds = (self.total_pixels - self.rendered_pixels) * seconds_per_pixel
+        if self.rendered_tiles == self.total_tiles:
+            self.pass_number += 1
+            self.rendered_tiles = 0
+        self.rendered_tiles += 1
+        self.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.pass_number, self.total_passes, self.rendered_tiles, self.total_tiles), "Time Remaining: {0}".format(self.format_seconds_to_hhmmss(remaining_seconds)))
 
         return True
 
