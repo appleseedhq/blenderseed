@@ -104,8 +104,8 @@ html_theme_options = {
         ("Features", "features"),
         ("Installation", "installation"),
         ("Quickstart", "quickstart"),
+        ("Reference", "reference"),
         ("About", "about"),
-        # ("Reference", "shaders/shaders"),
         # ("Tutorials", "tutorials/tutorials"),
         ("appleseedhq", "http://appleseedhq.net", True),
         ("vimeo", "https://vimeo.com/appleseedhq", True)
@@ -151,7 +151,7 @@ html_theme_options = {
     # Options are nothing (default) or the name of a valid theme
     # such as "amelia" or "cosmo".
     # 'bootswatch_theme': "lumen",
-    #'bootswatch_theme': "sandstone",
+    # 'bootswatch_theme': "sandstone",
     # 'bootswatch_theme': "readable",
     'bootswatch_theme': "yeti",
 

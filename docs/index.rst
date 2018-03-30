@@ -15,13 +15,5 @@ Welcome to blenderseed's documentation!
    features
    installation
    quickstart
+   reference
    about
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
