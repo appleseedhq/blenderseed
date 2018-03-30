@@ -240,19 +240,19 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 # Tile data, protocol v1
                 if not self.__process_tile_data_chunk(process, min_x, min_y, max_x, max_y):
                     break
-            elif (chunk_type == 2) or (chunk_type == 10):
+            elif chunk_type == 2 or chunk_type == 10:
                 # Tile highlight, protocol v1 and v2
                 if not self.__process_tile_highlight_chunk(process, min_x, min_y, max_x, max_y):
                     break
-            elif (chunk_type == 11):
+            elif chunk_type == 11:
                 # Tiles header, protocol v2
                 if not self.__process_tiles_header(process):
                     break
-            elif (chunk_type == 12):
+            elif chunk_type == 12:
                 # Plane definition header, protocol v2
                 if not self.__process_plane_header(process):
                     break
-            elif (chunk_type == 13):
+            elif chunk_type == 13:
                 # Plane pixels, protocol v2
                 if not self.__process_plane_data_chunk(process, min_x, min_y, max_x, max_y):
                     break
@@ -432,7 +432,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Read and decode plane header and content.
         # Protocol v2
         # Contains:
-        #  Aov index
+        #  AOV index
         #  X tile coordinate
         #  Y tile coordinate
         #  Tile widht
