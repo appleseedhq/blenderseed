@@ -207,6 +207,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                     ('sppm', "SPPM", "Stochastic Progressive Photon Mapping")],
                                              default='pt')
 
+    record_light_paths = bpy.props.BoolProperty(name="record_light_paths",
+                                                default=False)
+
     # DRT settings.
 
     enable_ibl = bpy.props.BoolProperty(name="enable_ibl",
