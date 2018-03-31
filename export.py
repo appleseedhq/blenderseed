@@ -111,13 +111,16 @@ class ExportAppleseedAnimationScene(bpy.types.Operator, ExportHelper):
 
 def menu_func_export_scene(self, context):
     self.layout.operator(ExportAppleseedScene.bl_idname, text="appleseed (.appleseed)")
+    self.layout.operator(ExportAppleseedAnimationScene.bl_idname, text="appleseed animation (.appleseed)")
 
 
 def register():
     bpy.utils.register_class(ExportAppleseedScene)
+    bpy.utils.register_class(ExportAppleseedAnimationScene)
     bpy.types.INFO_MT_file_export.append(menu_func_export_scene)
 
 
 def unregister():
     bpy.utils.unregister_class(ExportAppleseedScene)
+    bpy.utils.unregister_class(ExportAppleseedAnimationScene)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_scene)
