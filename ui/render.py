@@ -49,24 +49,21 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
         rd = context.scene.render
         scene = context.scene
         rd = scene.render
-        asr_scene_props = scene.appleseed
 
-        layout.prop(asr_scene_props, "export_only", text="Export appleseed Files Only")
         row = layout.row(align=True)
-        if asr_scene_props.export_only:
-            row.operator("appleseed.export_scene", text="Export Frame", icon='RENDER_STILL')
-            row.operator("appleseed.export_anim_scene", text="Export Animation", icon='RENDER_ANIMATION')
-        else:
-            row.operator("render.render", text="Render", icon='RENDER_STILL')
-            row.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
-        row.operator("sound.mixdown", text="Audio", icon='PLAY_AUDIO')
-        if not asr_scene_props.export_only:
-            split = layout.split(percentage=0.33)
+        row.operator("appleseed.export_scene", text="Export Frame")
+        row.operator("appleseed.export_anim_scene", text="Export Animation")
 
-            split.label(text="Display:")
-            row = split.row(align=True)
-            row.prop(rd, "display_mode", text="")
-            row.prop(rd, "use_lock_interface", icon_only=True)
+        row = layout.row(align=True)
+        row.operator("render.render", text="Render Frame", icon='RENDER_STILL')
+        row.operator("render.render", text="Render Animation", icon='RENDER_ANIMATION').animation = True
+
+        split = layout.split(percentage=0.33)
+
+        split.label(text="Display:")
+        row = split.row(align=True)
+        row.prop(rd, "display_mode", text="")
+        row.prop(rd, "use_lock_interface", icon_only=True)
 
 
 class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
