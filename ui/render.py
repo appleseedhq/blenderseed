@@ -51,12 +51,12 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
         rd = scene.render
 
         row = layout.row(align=True)
-        row.operator("appleseed.export_scene", text="Export Frame")
-        row.operator("appleseed.export_anim_scene", text="Export Animation")
-
-        row = layout.row(align=True)
         row.operator("render.render", text="Render Frame", icon='RENDER_STILL')
         row.operator("render.render", text="Render Animation", icon='RENDER_ANIMATION').animation = True
+
+        row = layout.row(align=True)
+        row.operator("appleseed.export_scene", text="Export Frame")
+        row.operator("appleseed.export_anim_scene", text="Export Animation")
 
         split = layout.split(percentage=0.33)
 
