@@ -188,6 +188,10 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col = layout.column()
         col.prop(asr_scene_props, "lighting_engine", text="Engine")
         col.prop(asr_scene_props, "light_sampler", text="Light Sampler")
+        if asr_scene_props.lighting_engine == 'pt':
+            layout.separator()
+            col = layout.column()
+            col.prop(asr_scene_props, "record_light_paths", text="Record Light Paths")
         split = layout.split()
 
         # Path tracing UI

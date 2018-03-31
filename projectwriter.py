@@ -2257,6 +2257,7 @@ class Writer(object):
         if scene.appleseed.lighting_engine == 'pt':
             self.__emit_parameter("enable_dl", "true" if scene.appleseed.enable_dl else "false")
             self.__emit_parameter("enable_caustics", "true" if scene.appleseed.enable_caustics else "false")
+            self.__emit_parameter("record_light_paths", "true" if scene.appleseed.record_light_paths else "false")
             self.__emit_parameter("next_event_estimation", "true" if scene.appleseed.next_event_estimation else "false")
             if not scene.appleseed.max_ray_intensity_unlimited:
                 self.__emit_parameter("max_ray_intensity", scene.appleseed.max_ray_intensity)
