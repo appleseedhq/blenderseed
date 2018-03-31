@@ -49,16 +49,15 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         col.active = asr_obj.enable_visibility_flags
         row = col.row()
         row.prop(asr_obj, "camera_visible", text="Camera")
-        row.prop(asr_obj, "light_visible", text="Light")
-        row = col.row()
-        row.prop(asr_obj, "shadow_visible", text="Shadow")
-        row.prop(asr_obj, "transparency_visible", text="Transparency")
-        row = col.row()
-        row.prop(asr_obj, "probe_visible", text="Probe")
         row.prop(asr_obj, "diffuse_visible", text="Diffuse")
         row = col.row()
+        row.prop(asr_obj, "shadow_visible", text="Shadow")
         row.prop(asr_obj, "glossy_visible", text="Glossy")
+        row = col.row()
+        row.prop(asr_obj, "light_visible", text="Light")
         row.prop(asr_obj, "specular_visible", text="Specular")
+        row = col.row()
+        row.prop(asr_obj, "transparency_visible", text="Transparency")
 
 
 class AppleseedObjOptionsPanel(bpy.types.Panel):
@@ -78,7 +77,7 @@ class AppleseedObjOptionsPanel(bpy.types.Panel):
         asr_obj = context.object.appleseed
         scene = context.scene
         sss_lists = scene.appleseed_sss_sets
-        
+
         layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
         layout.label(text="SSS sets are created in the world tab")
         layout.prop(asr_obj, "medium_priority", text="Nested Dielectric Medium Priority")
