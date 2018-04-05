@@ -115,7 +115,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     pixel_filter_size = bpy.props.FloatProperty(name="pixel_filter_size",
                                                 description="Pixel filter size",
-                                                min=0.0,
+                                                min=0.5,
                                                 max=16.0,
                                                 default=1.5)
 
