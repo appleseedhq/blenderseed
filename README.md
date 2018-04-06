@@ -1,4 +1,4 @@
-## blenderseed
+## blenderseed ![docs-badge](https://readthedocs.org/projects/appleseed-blenderseed/badge/?version=latest)
 
 ![Chair & Table](https://github.com/appleseedhq/appleseedhq.github.io/raw/master/img/renders/chair-and-table.png)
 
