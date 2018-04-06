@@ -24,7 +24,7 @@ blenderseed includes support for the following features of appleseed:
 * Physical sun/sky
 * Gradient, constant, mirror ball map and latitude-longitude map environment models
 
-blenderseed also supports :
+blenderseed also supports:
 * Node-based material creation (with Blender's node editor)
 * Hair path particle systems exported as geometry
 * Export to appleseed.studio or rendering within Blender's image editor
