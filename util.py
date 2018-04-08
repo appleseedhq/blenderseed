@@ -52,17 +52,19 @@ def get_osl_search_paths():
 
     shader_directories = (os.path.join(appleseed_parent_dir, 'shaders', 'appleseed'), os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed'))
 
-    return appleseed_bin_dir, shader_directories
+    osl_info_dir = os.path.join(appleseed_parent_dir, 'bin')
+
+    return osl_info_dir, shader_directories
 
 
 def read_osl_shaders():
-    """Compiles any .osl files and reads all .oso parameters"""
+    """Reads all .oso parameters"""
 
     if bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory == "":
         print("appleseed binary path not set.  Rendering and OSL features will not be available")
-        return
+        return True
 
-    appleseed_bin_dir, shader_directories = get_osl_search_paths()
+    osl_info_dir, shader_directories = get_osl_search_paths()
 
     nodes = []
 
@@ -77,7 +79,7 @@ def read_osl_shaders():
                     content = []
                     cmd = ('oslinfo', '-v', '"{0}"'.format(filename))
                     try:
-                        process = subprocess.Popen(" ".join(cmd), cwd=appleseed_bin_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        process = subprocess.Popen(" ".join(cmd), cwd=osl_info_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         while True:
                             line = process.stdout.readline()
                             if not line:
@@ -101,6 +103,7 @@ def read_osl_shaders():
                         print("ERROR: Failed to read {0}.  Oslinfo did not launch: {1}".format(file, sys.exc_info()[0]))
 
     print("appleseed OSL Parsing Complete")
+
     return nodes
 
 
