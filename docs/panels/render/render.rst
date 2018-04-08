@@ -5,11 +5,13 @@ Render
 
 |
 
-- Export appleseed Files Only
-	- This options tells blenderseed to create the scene files for rendering and export the geometry only.  The rendering process will not be triggered.  This allows you to render the scene at a later time using the appleseed command line or appleseed.studio.
-- Render
-	- This button triggers the exporting process, and then the actual render if the export only button is not selected.
-- Animation
-	- Render a sequential output of frames (determined by the start and end frame settings).
-- Display
-	- This determines how the Blender desktop will change to accomodate the rendered image.
+- Render Frame:
+	- Exports and renders the current Blender frame.
+- Render Animation:
+	- Exports and renders all frames in between the start and end points defined in the dimensions panel.
+- Export Frame:
+	- Exports the scene file for the current frame.
+- Export Animation:
+	- Exports the scene files for each frame in between the start and end points defined in the dimensions panel.
+- Display:
+	- This defines how the in-progress render is displayed within Blender.
