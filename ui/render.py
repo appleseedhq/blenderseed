@@ -160,8 +160,6 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             row = layout.row(align=True)
             row.prop(asr_scene_props, "sampler_min_samples", text="Min Samples")
             row.prop(asr_scene_props, "sampler_max_samples", text="Max Samples")
-            layout.prop(asr_scene_props, "sampler_max_contrast", text="Max Contrast")
-            layout.prop(asr_scene_props, "sampler_max_variation", text="Max Variation")
         else:
             layout.prop(asr_scene_props, "sampler_max_samples", text="Samples")
             split = layout.split()
