@@ -28,9 +28,9 @@ copyright = '2018, The appleseedhq Organization'
 author = 'The appleseedhq Organization'
 
 # The short X.Y version
-version = '0.7'
+version = '0.8'
 # The full version, including alpha/beta/rc tags
-release = 'blenderseed Manual 0.7 Beta'
+release = 'blenderseed Manual 0.8 Beta'
 
 
 # -- General configuration ---------------------------------------------------
@@ -122,7 +122,7 @@ html_theme_options = {
 
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
-    'globaltoc_depth': 2,
+    'globaltoc_depth': -1,
 
     # Include hidden TOCs in Site navbar?
     #
@@ -144,7 +144,7 @@ html_theme_options = {
 
     # Location of link to source.
     # Options are "nav" (default), "footer" or anything else to exclude.
-    'source_link_position': "nav",
+    'source_link_position': "footer",
 
     # Bootswatch (http://bootswatch.com/) theme.
     #

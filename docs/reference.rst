@@ -1,6 +1,8 @@
-Panel Reference
-===============
+Reference
+=========
 
+Panels
+------
 .. toctree::
    :maxdepth: 2
 
@@ -10,3 +12,10 @@ Panel Reference
    panels/material/material_panel
    panels/texture/texture_panel
    panels/node_editor
+
+OSL
+---
+.. toctree::
+	:maxdepth: 2
+
+	osl/osl
