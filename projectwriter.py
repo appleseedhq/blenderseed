@@ -2183,7 +2183,32 @@ class Writer(object):
         if scene.render.use_border:
             min_x, min_y, max_x, max_y = self.__get_border_limits(scene, width, height)
             self.__emit_parameter("crop_window", "{0} {1} {2} {3}".format(min_x, min_y, max_x, max_y))
+        self.__open_element("aovs")
+        self.__emit_line('<aov model="depth_aov" />')
+        if scene.appleseed.enable_aovs:
+            self.__emit_aovs(scene)
+        self.__close_element("aovs")
         self.__close_element("frame")
+
+    def __emit_aovs(self, scene):
+        asr_scene_props = scene.appleseed
+
+        if asr_scene_props.diffuse_aov:
+            self.__emit_line('<aov model="diffuse_aov" />')
+        if asr_scene_props.direct_diffuse_aov:
+            self.__emit_line('<aov model="direct_diffuse_aov" />')
+        if asr_scene_props.indirect_diffuse_aov:
+            self.__emit_line('<aov model="indirect_diffuse_aov" />')
+        if asr_scene_props.glossy_aov:
+            self.__emit_line('<aov model="glossy_aov" />')
+        if asr_scene_props.direct_glossy_aov:
+            self.__emit_line('<aov model="direct_glossy_aov" />')
+        if asr_scene_props.indirect_glossy_aov:
+            self.__emit_line('<aov model="indirect_glossy_aov" />')
+        if asr_scene_props.normal_aov:
+            self.__emit_line('<aov model="normal_aov" />')
+        if asr_scene_props.uv_aov:
+            self.__emit_line('<aov model="uv_aov" />')
 
     def __get_frame_resolution(self, render):
         scale = render.resolution_percentage / 100.0

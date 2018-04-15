@@ -490,6 +490,39 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                             step=3,
                                             precision=3)
 
+    # AOV export
+
+    enable_aovs = bpy.props.BoolProperty(name="enable_aovs",
+                                         description="Enabled additional AOVs during rendering",
+                                         default=False)
+
+    diffuse_aov = bpy.props.BoolProperty(name="diffuse_aov",
+                                         default=False)
+
+    direct_diffuse_aov = bpy.props.BoolProperty(name="direct_diffuse_aov",
+                                                default=False)
+
+    direct_glossy_aov = bpy.props.BoolProperty(name="direct_glossy_aov",
+                                               default=False)
+
+    emission_aov = bpy.props.BoolProperty(name="emission_aov",
+                                          default=False)
+
+    glossy_aov = bpy.props.BoolProperty(name="glossy_aov",
+                                        default=False)
+
+    indirect_diffuse_aov = bpy.props.BoolProperty(name="indirect_diffuse_aov",
+                                                  default=False)
+
+    indirect_glossy_aov = bpy.props.BoolProperty(name="indirect_glossy_aov",
+                                                 default=False)
+
+    normal_aov = bpy.props.BoolProperty(name="normal_aov",
+                                        default=False)
+
+    uv_aov = bpy.props.BoolProperty(name="uv_aov",
+                                    default=False)
+
 
 def register():
     bpy.utils.register_class(AppleseedTextureConvertProps)
