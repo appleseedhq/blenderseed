@@ -29,6 +29,7 @@
 import codecs
 import math
 import os
+import imghdr
 from datetime import datetime
 
 import bpy
@@ -751,7 +752,7 @@ class Writer(object):
 
     def __emit_osl_material(self, material, front_material_name, surface_name, scene, material_node, node_list):
 
-        self.__emit_osl_shader_group(surface_name, node_list, material_node)
+        self.__emit_osl_shader_group(surface_name, node_list, material_node, scene)
         self.__emit_osl_element(front_material_name, surface_name)
 
     def __emit_front_material(self, material, material_name, scene):
@@ -774,13 +775,13 @@ class Writer(object):
 
         self.__emit_material_element(material_name, bsdf_name, "", "", "", "physical_surface_shader", scene, material)
 
-    def __emit_osl_shader_group(self, front_material_name, node_list, material_node):
+    def __emit_osl_shader_group(self, front_material_name, node_list, material_node, scene):
         node_connections = []
 
         self.__open_element('shader_group name="{0}"'.format(front_material_name))
         for node in node_list:
             self.__open_element('shader type="shader" name="{0}" layer="{1}"'.format(node.file_name, node.name))
-            params = self.__get_osl_node_params(node)
+            params = self.__get_osl_node_params(node, scene)
             for param in params:
                 self.__emit_parameter(param, params[param])
             self.__close_element("shader")
@@ -791,7 +792,7 @@ class Writer(object):
             self.__emit_shader_connection(connection[0], connection[1], connection[2], connection[3])
         self.__close_element("shader_group")
 
-    def __get_osl_node_params(self, node):
+    def __get_osl_node_params(self, node, scene):
         parameters = {}
         parameter_types = node.parameter_types
         for item in dir(node):
@@ -806,6 +807,11 @@ class Writer(object):
                 parameter = getattr(node, item)
                 if item in node.filepaths:
                     parameter = bpy.path.abspath(parameter)
+                    if scene.appleseed.sub_textures is True:
+                        if imghdr.what(parameter):
+                            base_filename = parameter.split('.')
+                            parameter = "{0}.tx".format(base_filename[0])
+
                 if parameter_value == "int checkbox":
                     parameter_value = "int"
                     parameter = int(parameter)

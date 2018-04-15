@@ -1238,15 +1238,69 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         layout.prop(asr_mat, "light_near_start", text="Light Near Start")
 
 
+class TextureConvertSlots(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        texture = item.name
+        if 'DEFAULT' in self.layout_type:
+            layout.label(text=texture, translate=False, icon_value=icon)
+
+
+class AppleseedTextureConverterPanel(bpy.types.Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+
+    bl_context = "material"
+    bl_label = "Texture Converter"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.render.engine in cls.COMPAT_ENGINES and context.object is not None and context.object.active_material.appleseed.osl_node_tree is not None
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        asr_scene_props = scene.appleseed
+        textures = asr_scene_props.textures
+
+        row = layout.row()
+        row.template_list("TextureConvertSlots", "", asr_scene_props,
+                          "textures", asr_scene_props, "textures_index", rows=1, maxrows=16, type="DEFAULT")
+
+        col = layout.column(align=True)
+
+        col.prop(asr_scene_props, "sub_textures", text="Use Converted Textures", toggle=True)
+        row = col.row(align=True)
+        row.operator("appleseed.add_texture", text="Add Texture", icon="ZOOMIN")
+        row.operator("appleseed.remove_texture", text="Remove Texture", icon="ZOOMOUT")
+        row = col.row(align=True)
+        row.operator("appleseed.refresh_textures", text="Refresh Textures", icon='FILE_REFRESH')
+        row.operator("appleseed.convert_textures", text="Convert Textures", icon='PLAY')
+
+        if textures:
+            current_set = textures[asr_scene_props.textures_index]
+            layout.prop(current_set, "name", text="Texture")
+            layout.prop(current_set, "input_space")
+            layout.prop(current_set, "output_depth")
+            layout.prop(current_set, "command_string", text="Additional Commands")
+
+
 def register():
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.utils.register_class(AppleseedMaterialPreview)
     bpy.utils.register_class(AppleseedMaterialShading)
     bpy.utils.register_class(AppleseedMatEmissionPanel)
+    bpy.utils.register_class(TextureConvertSlots)
+    bpy.utils.register_class(AppleseedTextureConverterPanel)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedMaterialPreview)
-    bpy.utils.unregister_class(AppleseedMaterialShading)
+    bpy.utils.unregister_class(AppleseedTextureConverterPanel)
+    bpy.utils.unregister_class(TextureConvertSlots)
     bpy.utils.unregister_class(AppleseedMatEmissionPanel)
+    bpy.utils.unregister_class(AppleseedMaterialShading)
+    bpy.utils.unregister_class(AppleseedMaterialPreview)
+    bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+    bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')
