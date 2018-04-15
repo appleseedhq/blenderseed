@@ -49,10 +49,53 @@ def camera_enumerator(self, context):
     return object_enumerator('CAMERA')
 
 
+class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(name="Texture",
+                                    default="",
+                                    subtype='FILE_PATH')
+
+    input_space = bpy.props.EnumProperty(name="Input Color Space",
+                                         description="The color space of the file.  PNG, JPG and TIFF files are usually sRGB, EXR is normally linear",
+                                         items=[
+                                              ('linear', "Linear", ""),
+                                              ('sRGB', "sRGB", ""),
+                                              ('Rec709', "Rec.709", "")],
+                                         default='sRGB')
+
+    output_depth = bpy.props.EnumProperty(name="Output Bit Depth",
+                                          description="The bit depth of the output file.  Leave at default for no conversion",
+                                          items=[
+                                              ('default', "Default", ""),
+                                              ('uint8', "Uint8", "Unsigned 8-bit integer"),
+                                              ('sint8', "Sint8", "Signed 8-bit integer"),
+                                              ('uint16', "Uint16", "Unsigned 16-bit integer"),
+                                              ('sint16', "Sint16", "Signed 16-bit integer"),
+                                              ('half', "Half", "16-bit float"),
+                                              ('float', "Float", "32-bit float")],
+                                          default='default')
+
+    command_string = bpy.props.StringProperty(name="command_string",
+                                              description="Additional commands",
+                                              default="")
+
+
 class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     def update_stamp(self, context):
         self.render_stamp += self.render_stamp_patterns
+
+    # Texture conversion
+
+    sub_textures = bpy.props.BoolProperty(name="sub_textures",
+                                          default=False)
+
+    textures = bpy.props.CollectionProperty(type=AppleseedTextureConvertProps,
+                                            name="appleseed Texture",
+                                            description="")
+
+    textures_index = bpy.props.IntProperty(name="layer_index",
+                                           description="",
+                                           default=0)
 
     # Scene render settings.
 
@@ -449,6 +492,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
 
 def register():
+    bpy.utils.register_class(AppleseedTextureConvertProps)
     bpy.utils.register_class(AppleseedRenderSettings)
     bpy.types.Scene.appleseed = bpy.props.PointerProperty(type=AppleseedRenderSettings)
 
@@ -456,3 +500,4 @@ def register():
 def unregister():
     del bpy.types.Scene.appleseed
     bpy.utils.unregister_class(AppleseedRenderSettings)
+    bpy.utils.unregister_class(AppleseedTextureConvertProps)

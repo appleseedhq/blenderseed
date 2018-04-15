@@ -27,41 +27,100 @@
 #
 
 import bpy
+import subprocess
+import os
+import imghdr
+from ..util import get_osl_search_paths
 
 
-class AppleseedAddMatLayer(bpy.types.Operator):
-    """
-    Operator for adding material layers.
-    """
+class AppleseedConvertTextures(bpy.types.Operator):
+    bl_label = "Convert Textures"
+    bl_description = "Convert textures"
+    bl_idname = "appleseed.convert_textures"
 
-    bl_label = "Add Layer"
-    bl_description = "Add new BSDF layer"
-    bl_idname = "appleseed.add_matlayer"
+    def execute(self, context):
+        scene = context.scene
+        textures = scene.appleseed
 
-    def invoke(self, context, event):
-        material = context.object.active_material
-        collection = material.appleseed.layers
+        tool_dir, shader_dir = get_osl_search_paths()
 
-        collection.add()
-        num = collection.__len__()
-        collection[num - 1].bsdf_name = "BSDF Layer " + str(num)
+        for tex in textures.textures:
+            filename = bpy.path.abspath(tex.name)
+            cmd = ['maketx', '--oiio --monochrome-detect -u --constant-color-detect --opaque-detect', '"{0}"'.format(filename)]
+            if tex.input_space != 'linear':
+                cmd.insert(-1, '--colorconvert {0} linear --unpremult'.format(tex.input_space))
+            if tex.output_depth != 'default':
+                cmd.insert(-1, '-d {0}'.format(tex.output_depth))
+            if tex.command_string:
+                cmd.insert(-1, '{0}'.format(tex.command_string))
+            process = subprocess.Popen(" ".join(cmd), cwd=tool_dir, shell=True, bufsize=1)
+            process.wait()
 
         return {'FINISHED'}
 
 
-class AppleseedRemoveMatLayer(bpy.types.Operator):
+class AppleseedRefreshTexture(bpy.types.Operator):
     """
-    Operator for removing material layers.
+    Operator for refreshing texture list to convert.
     """
 
-    bl_label = "Remove Layer"
-    bl_description = "Remove BSDF layer"
-    bl_idname = "appleseed.remove_matlayer"
+    bl_label = "Refresh Texture"
+    bl_description = "Refresh textures for conversion"
+    bl_idname = "appleseed.refresh_textures"
 
     def invoke(self, context, event):
-        material = context.object.active_material
-        collection = material.appleseed.layers
-        index = material.appleseed.layer_index
+        scene = context.scene
+        collection = scene.appleseed.textures
+
+        existing_textures = [x.name for x in collection]
+
+        for tree in bpy.data.node_groups:
+            for node in tree.nodes:
+                for param in node.parameter_types:
+                    if node.parameter_types[param] == 'string':
+                        string = getattr(node, param)
+                        if imghdr.what(string):
+                            if string not in existing_textures:
+                                collection.add()
+                                num = collection.__len__()
+                                collection[num - 1].name = string
+
+        return {'FINISHED'}
+
+
+class AppleseedAddTexture(bpy.types.Operator):
+    """
+    Operator for adding a texture to convert.
+    """
+
+    bl_label = "Add Texture"
+    bl_description = "Add new texture"
+    bl_idname = "appleseed.add_texture"
+
+    def invoke(self, context, event):
+        scene = context.scene
+        collection = scene.appleseed.textures
+
+        collection.add()
+        num = collection.__len__()
+        collection[num - 1].name = ""
+
+        return {'FINISHED'}
+
+
+class AppleseedRemoveTexture(bpy.types.Operator):
+    """
+    Operator for removing a texture to convert.
+    """
+
+    bl_label = "Remove Texture"
+    bl_description = "Remove texture"
+    bl_idname = "appleseed.remove_texture"
+
+    def invoke(self, context, event):
+        scene = context.scene
+        collection = scene.appleseed.textures
+        index = scene.appleseed.textures_index
 
         collection.remove(index)
         num = collection.__len__()
@@ -69,7 +128,7 @@ class AppleseedRemoveMatLayer(bpy.types.Operator):
             index = num - 1
         if index < 0:
             index = 0
-        material.appleseed.layer_index = index
+        scene.appleseed.textures_index = index
 
         return {'FINISHED'}
 
@@ -115,23 +174,6 @@ class AppleseedRemoveSssSet(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedNewNodeTree(bpy.types.Operator):
-    """
-    appleseed material node tree generator.
-    """
-
-    bl_idname = "appleseed.add_nodetree"
-    bl_label = "Add appleseed Material Node Tree"
-    bl_description = "Create an appleseed material node tree and link it to the current material"
-
-    def execute(self, context):
-        material = context.object.active_material
-        nodetree = bpy.data.node_groups.new('%s appleseed Nodetree' % material.name, 'AppleseedNodeTree')
-        nodetree.use_fake_user = True
-        material.appleseed.node_tree = nodetree.name
-        return {'FINISHED'}
-
-
 class AppleseedNewOSLNodeTree(bpy.types.Operator):
     """
     appleseed material node tree generator.
@@ -150,18 +192,20 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
 
 
 def register():
-    bpy.utils.register_class(AppleseedAddMatLayer)
-    bpy.utils.register_class(AppleseedRemoveMatLayer)
-    bpy.utils.register_class(AppleseedNewNodeTree)
+    bpy.utils.register_class(AppleseedConvertTextures)
+    bpy.utils.register_class(AppleseedRefreshTexture)
+    bpy.utils.register_class(AppleseedAddTexture)
+    bpy.utils.register_class(AppleseedRemoveTexture)
     bpy.utils.register_class(AppleseedNewOSLNodeTree)
     bpy.utils.register_class(AppleseedAddSssSet)
     bpy.utils.register_class(AppleseedRemoveSssSet)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedAddSssSet)
     bpy.utils.unregister_class(AppleseedRemoveSssSet)
-    bpy.utils.unregister_class(AppleseedNewNodeTree)
+    bpy.utils.unregister_class(AppleseedAddSssSet)
     bpy.utils.unregister_class(AppleseedNewOSLNodeTree)
-    bpy.utils.unregister_class(AppleseedAddMatLayer)
-    bpy.utils.unregister_class(AppleseedRemoveMatLayer)
+    bpy.utils.unregister_class(AppleseedRemoveTexture)
+    bpy.utils.unregister_class(AppleseedAddTexture)
+    bpy.utils.unregister_class(AppleseedRefreshTexture)
+    bpy.utils.unregister_class(AppleseedConvertTextures)
