@@ -2250,11 +2250,9 @@ class Writer(object):
         self.__close_element("configuration")
 
     def __emit_common_configuration_parameters(self, scene, type):
-        # Interactive: always use drt
-        lighting_engine = 'drt' if type == "interactive" else scene.appleseed.lighting_engine
 
         self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
-        self.__emit_parameter("lighting_engine", lighting_engine)
+        self.__emit_parameter("lighting_engine", scene.appleseed.lighting_engine)
 
         self.__open_element('parameters name="adaptive_pixel_renderer"')
         self.__emit_parameter("min_samples", scene.appleseed.sampler_min_samples)
@@ -2292,8 +2290,6 @@ class Writer(object):
             self.__emit_parameter("next_event_estimation", "true" if scene.appleseed.next_event_estimation else "false")
             if not scene.appleseed.max_ray_intensity_unlimited:
                 self.__emit_parameter("max_ray_intensity", scene.appleseed.max_ray_intensity)
-
-        if scene.appleseed.lighting_engine == 'pt' or scene.appleseed.lighting_engine == 'drt':
             self.__emit_parameter("dl_light_samples", scene.appleseed.dl_light_samples)
             if scene.appleseed.dl_low_light_threshold > 0.0:
                 self.__emit_parameter("dl_low_light_threshold", scene.appleseed.dl_low_light_threshold)
