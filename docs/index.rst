@@ -6,7 +6,7 @@
 Welcome to blenderseed's documentation!
 =======================================
 
-	blenderseed is a plugin that allows Blender (version 2.79 or higher) to use `appleseed <https://appleseedhq.net/>`_ to produce imagery.  appleseed is a modern, open source, fully programmable path tracer that integrates several cutting edge features into a robust rendering package that is capable of rendering highly complex objects with dozens (or hundreds) of high resolution texures with deformation blur and depth of field.
+	blenderseed is a plugin that allows Blender (version 2.79 or higher) to use `appleseed <https://appleseedhq.net/>`_ to produce imagery.  appleseed is a modern, open source, fully programmable path tracer that integrates several cutting edge features into a robust rendering package that is capable of rendering highly complex objects with dozens (or hundreds) of high resolution textures with deformation blur and depth of field.
 
 |
 
