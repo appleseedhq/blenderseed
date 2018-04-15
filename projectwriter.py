@@ -2089,13 +2089,13 @@ class Writer(object):
 
         lamp_data = lamp.data
         asr_light = lamp_data.appleseed
-        radiance_name = "{0}_radiance".format(lamp.name)
+        intensity_name = "{0}_intensity".format(lamp.name)
 
-        self.__emit_solid_linear_rgb_color_element(radiance_name, asr_light.radiance, 1)
+        self.__emit_solid_linear_rgb_color_element(intensity_name, asr_light.radiance, 1)
 
         self.__open_element('light name="{0}" model="point_light"'.format(lamp.name))
-        self.__emit_parameter("radiance", radiance_name)
-        self.__emit_parameter("radiance_multiplier", asr_light.radiance_multiplier)
+        self.__emit_parameter("intensity", intensity_name)
+        self.__emit_parameter("intensity_multiplier", asr_light.radiance_multiplier)
         self.__emit_parameter("exposure", asr_light.exposure)
         self.__emit_parameter("cast_indirect_light", str(asr_light.cast_indirect).lower())
         self.__emit_parameter("importance_multiplier", asr_light.importance_multiplier)
@@ -2109,17 +2109,17 @@ class Writer(object):
         asr_light = lamp_data.appleseed
 
         # Radiance.
-        radiance_name = "{0}_radiance".format(lamp.name)
+        intensity_name = "{0}_intensity".format(lamp.name)
         if asr_light.radiance_use_tex and asr_light.radiance_tex != '':
-            radiance_name = asr_light.radiance_tex + "_inst"
+            intensity_name = asr_light.radiance_tex + "_inst"
             self.__emit_texture(bpy.data.textures[asr_light.radiance_tex], False, scene)
         else:
-            self.__emit_solid_linear_rgb_color_element(radiance_name, asr_light.radiance, 1)
+            self.__emit_solid_linear_rgb_color_element(intensity_name, asr_light.radiance, 1)
 
         # Radiance multiplier.
-        radiance_multiplier = asr_light.radiance_multiplier
+        intensity_multiplier = asr_light.radiance_multiplier
         if asr_light.radiance_multiplier_use_tex and asr_light.radiance_multiplier_tex != '':
-            radiance_multiplier = asr_light.radiance_multiplier_tex + "_inst"
+            intensity_multiplier = asr_light.radiance_multiplier_tex + "_inst"
             self.__emit_texture(bpy.data.textures[asr_light.radiance_multiplier_tex], False, scene)
 
         # Spot cone.
@@ -2127,8 +2127,8 @@ class Writer(object):
         inner_angle = (1.0 - lamp.data.spot_blend) * outer_angle
 
         self.__open_element('light name="{0}" model="spot_light"'.format(lamp.name))
-        self.__emit_parameter("radiance", radiance_name)
-        self.__emit_parameter("radiance_multiplier", radiance_multiplier)
+        self.__emit_parameter("intensity", intensity_name)
+        self.__emit_parameter("intensity_multiplier", intensity_multiplier)
         self.__emit_parameter("exposure", asr_light.exposure)
         self.__emit_parameter("inner_angle", inner_angle)
         self.__emit_parameter("outer_angle", outer_angle)
@@ -2147,8 +2147,8 @@ class Writer(object):
         self.__emit_solid_linear_rgb_color_element(radiance_name, asr_light.radiance, 1)
 
         self.__open_element('light name="{0}" model="directional_light"'.format(lamp.name))
-        self.__emit_parameter("radiance", radiance_name)
-        self.__emit_parameter("radiance_multiplier", asr_light.radiance_multiplier)
+        self.__emit_parameter("irradiance", radiance_name)
+        self.__emit_parameter("irradiance_multiplier", asr_light.radiance_multiplier)
         self.__emit_parameter("exposure", asr_light.exposure)
         self.__emit_parameter("cast_indirect_light", str(asr_light.cast_indirect).lower())
         self.__emit_parameter("importance_multiplier", asr_light.importance_multiplier)
