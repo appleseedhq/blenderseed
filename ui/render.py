@@ -322,6 +322,39 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         layout.prop(asr_scene_props, "enable_deformation_blur", text="Deformation Blur")
 
 
+class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_label = "AOVs"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw_header(self, context):
+        header = self.layout
+        asr_scene_props = context.scene.appleseed
+        header.prop(asr_scene_props, "enable_aovs", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        asr_scene_props = context.scene.appleseed
+
+        layout.active = asr_scene_props.enable_aovs
+
+        row = layout.row()
+        row.prop(asr_scene_props, "diffuse_aov", text="Diffuse")
+        row.prop(asr_scene_props, "glossy_aov", text="Glossy")
+
+        row = layout.row()
+        row.prop(asr_scene_props, "direct_diffuse_aov", text="Direct Diffuse")
+        row.prop(asr_scene_props, "direct_glossy_aov", text="Direct Glossy")
+
+        row = layout.row()
+        row.prop(asr_scene_props, "indirect_diffuse_aov", text="Indirect Diffuse")
+        row.prop(asr_scene_props, "indirect_glossy_aov", text="Indirect Glossy")
+
+        row = layout.row()
+        row.prop(asr_scene_props, "normal_aov", text="Normals")
+        row.prop(asr_scene_props, "uv_aov", text="UV Coordinates")
+
+
 def register():
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.add('APPLESEED_RENDER')
@@ -332,13 +365,17 @@ def register():
     bpy.utils.register_class(AppleseedSamplingPanel)
     bpy.utils.register_class(AppleseedLightingPanel)
     bpy.utils.register_class(AppleseedMotionBlurPanel)
+    bpy.utils.register_class(AppleseedAOVPanel)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedRender)
-    bpy.utils.unregister_class(AppleseedRenderStampPanel)
-    bpy.utils.unregister_class(AppleseedRenderSettingsPanel)
-    bpy.utils.unregister_class(AppleseedDenoiserPanel)
-    bpy.utils.unregister_class(AppleseedSamplingPanel)
-    bpy.utils.unregister_class(AppleseedLightingPanel)
+    bpy.utils.unregister_class(AppleseedAOVPanel)
     bpy.utils.unregister_class(AppleseedMotionBlurPanel)
+    bpy.utils.unregister_class(AppleseedLightingPanel)
+    bpy.utils.unregister_class(AppleseedSamplingPanel)
+    bpy.utils.unregister_class(AppleseedDenoiserPanel)
+    bpy.utils.unregister_class(AppleseedRenderSettingsPanel)
+    bpy.utils.unregister_class(AppleseedRenderStampPanel)
+    bpy.utils.unregister_class(AppleseedRender)
+    bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+    bpy.types.RENDER_PT_output.COMPAT_ENGINES.remove('APPLESEED_RENDER')
