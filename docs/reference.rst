@@ -19,3 +19,7 @@ OSL
 	:maxdepth: 2
 
 	osl/osl
+
+Shaders
+-------
+- :ref:`Shader Reference <appleseed_maya:label_shaders>`

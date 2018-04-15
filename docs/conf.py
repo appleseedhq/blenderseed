@@ -20,7 +20,6 @@ import sphinx_bootstrap_theme
 sys.path.insert(0, os.path.abspath('../..'))
 
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'blenderseed Manual'
@@ -42,9 +41,9 @@ release = 'blenderseed Manual 0.8 Beta'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    
-]
+extensions = ['sphinx.ext.intersphinx']
+
+intersphinx_mapping = {'appleseed_maya': ('http://appleseed.readthedocs.io/projects/appleseed-maya/en/latest/', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -159,6 +158,7 @@ html_theme_options = {
     # Values: "3" (default) or "2" (in quotes)
     'bootstrap_version': "3",
 }
+
 
 def setup(app):
     app.add_stylesheet("css/blockquote_custom1.css")
