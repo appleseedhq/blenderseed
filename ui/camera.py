@@ -61,7 +61,7 @@ class AppleseedCameraLens(bpy.types.Panel):
                 row.prop(cam, "angle")
             row.prop(cam, "lens_unit", text="")
 
-        elif cam.type =='ORTHO':
+        elif cam.type == 'ORTHO':
             row = col.row()
             row.prop(cam, "ortho_scale")
 
@@ -117,6 +117,10 @@ def register():
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedCameraLens)
     bpy.utils.unregister_class(AppleseedCameraDoF)
-    
+    bpy.utils.unregister_class(AppleseedCameraLens)
+    bpy.types.DATA_PT_camera.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+    bpy.types.DATA_PT_camera_display.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+    bpy.types.CAMERA_MT_presets.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+    bpy.types.DATA_PT_custom_props_camera.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+    bpy.types.DATA_PT_context_camera.COMPAT_ENGINES.remove('APPLESEED_RENDER')

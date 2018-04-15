@@ -167,4 +167,5 @@ def register():
 
 
 def unregister():
-    pass
+    bpy.utils.unregister_class(AppleseedSSSSets)
+    bpy.utils.unregister_class(AppleseedSSSSetsProps)

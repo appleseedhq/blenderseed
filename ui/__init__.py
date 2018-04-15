@@ -162,11 +162,11 @@ def register():
 
 
 def unregister():
-    render.unregister()
-    scene.unregister()
-    world.unregister()
-    materials.unregister()
-    camera.unregister()
-    objects.unregister()
-#    particles.unregister()
     lamps.unregister()
+#    particles.unregister()
+    objects.unregister()
+    camera.unregister()
+    materials.unregister()
+    world.unregister()
+    scene.unregister()
+    render.unregister()
