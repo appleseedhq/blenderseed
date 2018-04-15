@@ -49,11 +49,11 @@ def register():
 
 
 def unregister():
-    scene.unregister()
-    world.unregister()
-    objects.unregister()
-    materials.unregister()
-    camera.unregister()
-    nodes.unregister()
-    particles.unregister()
     lamps.unregister()
+    particles.unregister()
+    nodes.unregister()
+    camera.unregister()
+    materials.unregister()
+    objects.unregister()
+    world.unregister()
+    scene.unregister()

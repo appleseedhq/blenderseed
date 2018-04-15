@@ -89,7 +89,7 @@ class AppleseedWorldPanel(bpy.types.Panel):
         layout.prop(asr_sky_props, "env_alpha", text="Alpha")
 
 
-class SSS_sets_slots(bpy.types.UIList):
+class SSSSetsProps(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         sss_set = item.name
@@ -115,7 +115,7 @@ class AppleseedWorldSssSets(bpy.types.Panel):
         world = scene.appleseed_sss_sets
 
         row = layout.row()
-        row.template_list("SSS_sets_slots", "", world,
+        row.template_list("SSSSetsProps", "", world,
                           "sss_sets", world, "sss_sets_index", rows=1, maxrows=16, type="DEFAULT")
 
         row = layout.row(align=True)
@@ -130,9 +130,12 @@ class AppleseedWorldSssSets(bpy.types.Panel):
 def register():
     bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    bpy.utils.register_class(SSS_sets_slots)
+    bpy.utils.register_class(SSSSetsProps)
     bpy.utils.register_class(AppleseedWorldSssSets)
 
 
 def unregister():
-    pass
+    bpy.utils.unregister_class(AppleseedWorldSssSets)
+    bpy.utils.unregister_class(SSSSetsProps)
+    bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+    bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')

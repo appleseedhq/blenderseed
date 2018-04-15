@@ -212,5 +212,4 @@ def register():
 def unregister():
     nodeitems_utils.unregister_node_categories("APPLESEED")
     bpy.utils.unregister_class(AppleseedOSLNodeTree)
-    oslnode.unregister()
     bpy.app.handlers.load_post.remove(appleseed_scene_loaded)

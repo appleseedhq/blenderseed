@@ -72,9 +72,9 @@ def register():
 
 
 def unregister():
-    properties.unregister()
-    operators.unregister()
-    export.unregister()
-    ui.unregister()
-    preferences.unregister()
     bpy.utils.unregister_module(__name__)
+    ui.unregister()
+    export.unregister()
+    operators.unregister()
+    properties.unregister()
+    preferences.unregister()

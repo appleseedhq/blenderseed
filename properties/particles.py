@@ -67,4 +67,5 @@ def register():
 
 
 def unregister():
+    del bpy.types.ParticleSettings.appleseed
     bpy.utils.unregister_class(AppleseedPsysProps)

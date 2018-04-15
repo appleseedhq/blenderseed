@@ -121,6 +121,6 @@ def register():
 
 
 def unregister():
-    bpy.utils.unregister_class(ExportAppleseedScene)
-    bpy.utils.unregister_class(ExportAppleseedAnimationScene)
     bpy.types.INFO_MT_file_export.remove(menu_func_export_scene)
+    bpy.utils.unregister_class(ExportAppleseedAnimationScene)
+    bpy.utils.unregister_class(ExportAppleseedScene)
