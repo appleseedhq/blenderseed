@@ -1,3 +1,5 @@
+.. _label_sss_sets:
+
 SSS Sets
 ========
 
