@@ -12,7 +12,6 @@ Welcome to blenderseed's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
 
    features
    installation
