@@ -106,7 +106,7 @@ html_theme_options = {
         ("Reference", "reference"),
         ("About", "about"),
         # ("Tutorials", "tutorials/tutorials"),
-        ("appleseedhq", "http://appleseedhq.net", True),
+        ("appleseedhq", "https://appleseedhq.net", True),
         ("vimeo", "https://vimeo.com/appleseedhq", True)
     ],
 
