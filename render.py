@@ -60,8 +60,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
     def update_render_passes(self, scene=None, renderlayer=None):
         asr_scene_props = scene.appleseed
 
-        self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
-
         if not self.is_preview:
             if asr_scene_props.enable_aovs:
                 if asr_scene_props.diffuse_aov:
@@ -81,12 +79,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 if asr_scene_props.uv_aov:
                     self.register_pass(scene, renderlayer, "UV", 3, "RGB", 'VECTOR')
                 if asr_scene_props.depth_aov:
-                    self.register_pass(scene, renderlayer, "Depth", 1, "X", 'VALUE')
+                    self.register_pass(scene, renderlayer, "Z Depth", 1, "X", 'VALUE')
 
     def render(self, scene):
         asr_scene_props = scene.appleseed
-
-        self.add_pass("Combined", 4, "RGBA")
 
         if not self.is_preview:
             if asr_scene_props.enable_aovs:
@@ -107,7 +103,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 if asr_scene_props.uv_aov:
                     self.add_pass("UV", 3, "RGB")
                 if asr_scene_props.depth_aov:
-                    self.add_pass("Depth", 1, "X")
+                    self.add_pass("Z Depth", 1, "X")
 
         with RenderAppleseed.render_lock:
             if self.is_preview:
@@ -551,7 +547,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         for y in range(take_y - 1, -1, -1):
             start_pix = (skip_y + y) * tile_w + skip_x
             end_pix = start_pix + take_x
-            if self.aovs[tile_aov_index] == "Depth":
+            if self.aovs[tile_aov_index] == "Z Depth":
                 pix.extend(floats[p:p + 1] for p in range(start_pix, end_pix))
             elif tile_aov_index == 0 or self.aovs[tile_aov_index] not in ('UV', 'Normal'):
                 pix.extend(floats[p * 4:p * 4 + 4] for p in range(start_pix, end_pix))
@@ -634,4 +630,4 @@ class RenderAppleseed(bpy.types.RenderEngine):
         elif aov_name == "uv":
             return "UV"
         else:
-            return "Depth"
+            return "Z Depth"
