@@ -1880,6 +1880,7 @@ class Writer(object):
         self.__open_element('camera name="{0}" model="{1}_camera"'.format(camera.name, cam_model))
         if cam_model == "thinlens":
             self.__emit_parameter("f_stop", appleseed_cam.f_number)
+            self.__emit_parameter("autofocus_enabled", "false")
             self.__emit_parameter("focal_distance", focal_distance)
             self.__emit_parameter("diaphragm_blades", appleseed_cam.diaphragm_blades)
             self.__emit_parameter("diaphragm_tilt_angle", appleseed_cam.diaphragm_angle)
