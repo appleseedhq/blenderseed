@@ -2183,15 +2183,14 @@ class Writer(object):
         if scene.render.use_border:
             min_x, min_y, max_x, max_y = self.__get_border_limits(scene, width, height)
             self.__emit_parameter("crop_window", "{0} {1} {2} {3}".format(min_x, min_y, max_x, max_y))
-        self.__open_element("aovs")
-        self.__emit_line('<aov model="depth_aov" />')
         if scene.appleseed.enable_aovs:
             self.__emit_aovs(scene)
-        self.__close_element("aovs")
         self.__close_element("frame")
 
     def __emit_aovs(self, scene):
         asr_scene_props = scene.appleseed
+
+        self.__open_element("aovs")
 
         if asr_scene_props.diffuse_aov:
             self.__emit_line('<aov model="diffuse_aov" />')
@@ -2209,6 +2208,10 @@ class Writer(object):
             self.__emit_line('<aov model="normal_aov" />')
         if asr_scene_props.uv_aov:
             self.__emit_line('<aov model="uv_aov" />')
+        if asr_scene_props.depth_aov:
+            self.__emit_line('<aov model="depth_aov" />')
+
+        self.__close_element("aovs")
 
     def __get_frame_resolution(self, render):
         scale = render.resolution_percentage / 100.0

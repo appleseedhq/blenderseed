@@ -61,48 +61,53 @@ class RenderAppleseed(bpy.types.RenderEngine):
         asr_scene_props = scene.appleseed
 
         self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
-        self.register_pass(scene, renderlayer, "Depth", 1, "X", 'VALUE')
 
         if not self.is_preview:
             if asr_scene_props.enable_aovs:
                 if asr_scene_props.diffuse_aov:
-                    self.register_pass(scene, renderlayer, "diffuse", 4, "RGBA", 'COLOR')
+                    self.register_pass(scene, renderlayer, "Diffuse", 4, "RGBA", 'COLOR')
                 if asr_scene_props.direct_diffuse_aov:
-                    self.register_pass(scene, renderlayer, "direct_diffuse", 4, "RGBA", 'COLOR')
+                    self.register_pass(scene, renderlayer, "Direct Diffuse", 4, "RGBA", 'COLOR')
                 if asr_scene_props.indirect_diffuse_aov:
-                    self.register_pass(scene, renderlayer, "indirect_diffuse", 4, "RGBA", 'COLOR')
+                    self.register_pass(scene, renderlayer, "Indirect Diffuse", 4, "RGBA", 'COLOR')
                 if asr_scene_props.glossy_aov:
-                    self.register_pass(scene, renderlayer, "glossy", 4, "RGBA", 'COLOR')
+                    self.register_pass(scene, renderlayer, "Glossy", 4, "RGBA", 'COLOR')
                 if asr_scene_props.direct_glossy_aov:
-                    self.register_pass(scene, renderlayer, "direct_glossy", 4, "RGBA", 'COLOR')
+                    self.register_pass(scene, renderlayer, "Direct Glossy", 4, "RGBA", 'COLOR')
                 if asr_scene_props.indirect_glossy_aov:
-                    self.register_pass(scene, renderlayer, "indirect_glossy", 4, "RGBA", 'COLOR')
+                    self.register_pass(scene, renderlayer, "Indirect Glossy", 4, "RGBA", 'COLOR')
                 if asr_scene_props.normal_aov:
-                    self.register_pass(scene, renderlayer, "normal", 3, "RGB", 'VECTOR')
+                    self.register_pass(scene, renderlayer, "Normal", 3, "RGB", 'VECTOR')
                 if asr_scene_props.uv_aov:
-                    self.register_pass(scene, renderlayer, "uv", 3, "RGB", 'VECTOR')
+                    self.register_pass(scene, renderlayer, "UV", 3, "RGB", 'VECTOR')
+                if asr_scene_props.depth_aov:
+                    self.register_pass(scene, renderlayer, "Depth", 1, "X", 'VALUE')
 
     def render(self, scene):
         asr_scene_props = scene.appleseed
 
+        self.add_pass("Combined", 4, "RGBA")
+
         if not self.is_preview:
             if asr_scene_props.enable_aovs:
                 if asr_scene_props.diffuse_aov:
-                    self.add_pass("diffuse", 4, "RGBA")
+                    self.add_pass("Diffuse", 4, "RGBA")
                 if asr_scene_props.direct_diffuse_aov:
-                    self.add_pass("direct_diffuse", 4, "RGBA")
+                    self.add_pass("Direct Diffuse", 4, "RGBA")
                 if asr_scene_props.indirect_diffuse_aov:
-                    self.add_pass("indirect_diffuse", 4, "RGBA")
+                    self.add_pass("Indirect Diffuse", 4, "RGBA")
                 if asr_scene_props.glossy_aov:
-                    self.add_pass("glossy", 4, "RGBA")
+                    self.add_pass("Glossy", 4, "RGBA")
                 if asr_scene_props.direct_glossy_aov:
-                    self.add_pass("direct_glossy", 4, "RGBA")
+                    self.add_pass("Direct Glossy", 4, "RGBA")
                 if asr_scene_props.indirect_glossy_aov:
-                    self.add_pass("indirect_glossy", 4, "RGBA")
+                    self.add_pass("Indirect Glossy", 4, "RGBA")
                 if asr_scene_props.normal_aov:
-                    self.add_pass("normal", 3, "RGB")
+                    self.add_pass("Normal", 3, "RGB")
                 if asr_scene_props.uv_aov:
-                    self.add_pass("uv", 3, "RGB")
+                    self.add_pass("UV", 3, "RGB")
+                if asr_scene_props.depth_aov:
+                    self.add_pass("Depth", 1, "X")
 
         with RenderAppleseed.render_lock:
             if self.is_preview:
@@ -271,7 +276,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.update_stats("appleseed Rendering: Loading Scene", "Time Remaining: Unknown")
         self.time_start = time.time()
-        self.aovs = {1: "depth"}
+        self.aovs = {}
         self.aov_count = 0
         self.render_result = None
 
@@ -461,7 +466,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """Read and decode tiles header.
 
         Use Protocol v2.
-        Contains: 
+        Contains:
         - AOV count with a value >= 1
         """
         tiles_header = struct.unpack("I", os.read(process.stdout.fileno(), 1 * 4))
@@ -483,7 +488,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
         aov_index = aov_header[0]
         aov_name_len = aov_header[1]
         aov_nc = aov_header[2]
-        self.aovs[aov_index] = os.read(process.stdout.fileno(), aov_name_len).decode("utf-8")
+        aov_name = os.read(process.stdout.fileno(), aov_name_len).decode("utf-8")
+        self.aovs[aov_index] = self.__map_aovs(aov_name)
 
         return True
 
@@ -545,9 +551,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         for y in range(take_y - 1, -1, -1):
             start_pix = (skip_y + y) * tile_w + skip_x
             end_pix = start_pix + take_x
-            if tile_aov_index == 1:
+            if self.aovs[tile_aov_index] == "Depth":
                 pix.extend(floats[p:p + 1] for p in range(start_pix, end_pix))
-            elif tile_aov_index == 0 or self.aovs[tile_aov_index] not in ('uv', 'normal'):
+            elif tile_aov_index == 0 or self.aovs[tile_aov_index] not in ('UV', 'Normal'):
                 pix.extend(floats[p * 4:p * 4 + 4] for p in range(start_pix, end_pix))
             else:
                 pix.extend(floats[p * 3:p * 3 + 3] for p in range(start_pix, end_pix))
@@ -562,9 +568,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
             result = self.begin_result(x0, y0, take_x, take_y)
             self.render_result = result
             layer = result.layers[0].passes["Combined"]
-        elif tile_aov_index == 1:
-            result = self.render_result
-            layer = result.layers[0].passes["Depth"]
         else:
             result = self.render_result
             layer = result.layers[0].passes[self.aovs[tile_aov_index]]
@@ -610,3 +613,25 @@ class RenderAppleseed(bpy.types.RenderEngine):
         minutes = seconds // 60
         seconds %= 60
         return "%02i:%02i:%02i" % (hours, minutes, seconds)
+
+    def __map_aovs(self, aov_name):
+        if aov_name == "beauty":
+            return "Combined"
+        if aov_name == "diffuse":
+            return "Diffuse"
+        elif aov_name == "direct_diffuse":
+            return "Direct Diffuse"
+        elif aov_name == "indirect_diffuse":
+            return "Indirect Diffuse"
+        elif aov_name == "glossy":
+            return "Glossy"
+        elif aov_name == "direct_glossy":
+            return "Direct Glossy"
+        elif aov_name == "indirect_glossy":
+            return "Indirect Glossy"
+        elif aov_name == "normal":
+            return "Normal"
+        elif aov_name == "uv":
+            return "UV"
+        else:
+            return "Depth"

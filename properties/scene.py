@@ -520,6 +520,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     normal_aov = bpy.props.BoolProperty(name="normal_aov",
                                         default=False)
 
+    depth_aov = bpy.props.BoolProperty(name="depth_aov",
+                                       default=False)
+
     uv_aov = bpy.props.BoolProperty(name="uv_aov",
                                     default=False)
 

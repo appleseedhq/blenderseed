@@ -354,6 +354,9 @@ class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         row.prop(asr_scene_props, "normal_aov", text="Normals")
         row.prop(asr_scene_props, "uv_aov", text="UV Coordinates")
 
+        row = layout.row()
+        row.prop(asr_scene_props, "depth_aov", text="Depth")
+
 
 def register():
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add('APPLESEED_RENDER')
