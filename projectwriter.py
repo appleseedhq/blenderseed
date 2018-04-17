@@ -29,7 +29,6 @@
 import codecs
 import math
 import os
-import imghdr
 from datetime import datetime
 
 import bpy
@@ -42,6 +41,8 @@ identity_matrix = mathutils.Matrix(((1.0, 0.0, 0.0, 0.0),
                                     (0.0, 0.0, -1.0, 0.0),
                                     (0.0, 1.0, 0.0, 0.0),
                                     (0.0, 0.0, 0.0, 1.0)))
+
+image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
 
 
 def is_black(color):
@@ -808,7 +809,7 @@ class Writer(object):
                 if item in node.filepaths:
                     parameter = bpy.path.abspath(parameter)
                     if scene.appleseed.sub_textures is True:
-                        if imghdr.what(parameter):
+                        if parameter.endswith(image_extensions):
                             base_filename = parameter.split('.')
                             parameter = "{0}.tx".format(base_filename[0])
 
