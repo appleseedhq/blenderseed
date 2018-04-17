@@ -135,8 +135,7 @@ def generate_node(node):
 
     # create socket classes
     for in_socket in input_sockets:
-        if in_socket['hidden']:
-            continue
+
         if not in_socket['connectable']:
             non_connected_props.append(in_socket)
         else:
@@ -199,7 +198,6 @@ def generate_node(node):
 
             elif socket_type == 'pointer':
                 stype.draw_color = draw_closure_color
-                stype.hide_ui = True
 
             elif socket_type in ('vector', 'output vector'):
                 stype.draw_color = draw_vector_color
@@ -212,32 +210,33 @@ def generate_node(node):
                 else:
                     stype.socket_value = bpy.props.FloatVectorProperty(name=in_socket['name'],
                                                                        description=helper)
-                stype.hide_ui = True
 
             elif socket_type == 'int':
                 stype.draw_color = draw_color_float
                 stype.socket_value = bpy.props.IntProperty(name=in_socket['name'],
                                                            description=helper,
-
                                                            default=int(in_socket['default']))
+
+            elif socket_type == 'float[2]':
+                stype.draw_color = draw_uv_color
+                if not in_socket['hide_ui']:
+                    stype.socket_value = bpy.props.FloatVectorProperty(name=in_socket['name'],
+                                                                       description=helper,
+                                                                       size=2,
+                                                                       default=(float(in_socket['default'].split(" ")[0]),
+                                                                                float(in_socket['default'].split(" ")[1])))
 
             elif socket_type == 'normal':
                 stype.draw_color = draw_vector_color
-                stype.hide_ui = True
 
             elif socket_type == 'matrix':
                 stype.draw_color = draw_matrix_color
-                stype.hide_ui = True
 
             elif socket_type in ('point', 'point[4]'):
                 stype.draw_color = draw_point_color
-                stype.hide_ui = True
-
-            elif socket_type in ('float[2]'):
-                stype.draw_color = draw_uv_color
-                stype.hide_ui = True
 
             parameter_types[in_socket['name']] = in_socket['type']
+            stype.hide_ui = in_socket['hide_ui']
             bpy.utils.register_class(stype)
 
             socket_input_names.append([socket_name, socket_label])
