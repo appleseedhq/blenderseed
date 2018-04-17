@@ -2257,6 +2257,8 @@ class Writer(object):
 
         self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
         self.__emit_parameter("lighting_engine", scene.appleseed.lighting_engine)
+        if not scene.appleseed.threads_auto:
+            self.__emit_parameter("rendering_threads", scene.appleseed.threads)
 
         self.__open_element('parameters name="adaptive_pixel_renderer"')
         self.__emit_parameter("min_samples", scene.appleseed.sampler_min_samples)
