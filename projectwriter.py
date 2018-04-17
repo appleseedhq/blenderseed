@@ -816,7 +816,7 @@ class Writer(object):
                 if parameter_value == "int checkbox":
                     parameter_value = "int"
                     parameter = int(parameter)
-                if parameter_value in ('color', 'vector', 'normal'):
+                if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
                     parameter = "{0}".format(" ".join(map(str, parameter)))
                 parameters[item] = parameter_value + " " + str(parameter)
 
@@ -825,7 +825,7 @@ class Writer(object):
                 if socket.socket_value != "":
                     parameter_value = "{0}".format(parameter_types[socket.socket_osl_id])
                     parameter = socket.get_socket_value(True)
-                    if parameter_value in ('color', 'vector', 'normal'):
+                    if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
                         parameter = "{0}".format(" ".join(map(str, parameter)))
                     parameters[socket.socket_osl_id] = parameter_value + " " + str(parameter)
 
