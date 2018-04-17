@@ -142,6 +142,8 @@ def generate_node(node):
             helper = ""
             minimum = None
             maximum = None
+            soft_minimum = None
+            soft_maximum = None
             socket_name = 'Appleseed{0}{1}'.format(node['name'], in_socket['name'].capitalize())
             if 'label' in in_socket.keys():
                 socket_label = "{0}".format(in_socket['label'])
@@ -153,37 +155,31 @@ def generate_node(node):
                 minimum = in_socket['min']
             if 'max' in in_socket.keys():
                 maximum = in_socket['max']
+            if 'softmin' in in_socket.keys():
+                soft_minimum = in_socket['softmin']
+            if 'softmax' in in_socket.keys():
+                soft_maximum = in_socket['softmax']
 
             stype = type(socket_name, (AppleseedOSLInSocket,), {})
             stype.bl_idname = socket_name
             stype.bl_label = socket_label
             stype.socket_osl_id = in_socket['name']
             socket_type = in_socket['type']
+
             if socket_type == 'float':
                 stype.draw_color = draw_color_float
+
+                kwargs = {'name': in_socket['name'], 'description': helper, 'default': float(in_socket['default'])}
                 if minimum:
-                    stype.socket_value = bpy.props.FloatProperty(name=in_socket['name'],
-                                                                 description=helper,
-                                                                 default=float(in_socket['default']),
-                                                                 min=float(minimum))
-
+                    kwargs['min'] = float(minimum)
                 if maximum:
-                    stype.socket_value = bpy.props.FloatProperty(name=in_socket['name'],
-                                                                 description=helper,
-                                                                 default=float(in_socket['default']),
-                                                                 max=float(maximum))
+                    kwargs['max'] = float(maximum)
+                if soft_minimum:
+                    kwargs['soft_min'] = float(soft_minimum)
+                if soft_maximum:
+                    kwargs['soft_max'] = float(soft_maximum)
 
-                if minimum and maximum:
-                    stype.socket_value = bpy.props.FloatProperty(name=in_socket['name'],
-                                                                 description=helper,
-                                                                 default=float(in_socket['default']),
-                                                                 min=float(minimum),
-                                                                 max=float(maximum))
-
-                else:
-                    stype.socket_value = bpy.props.FloatProperty(name=in_socket['name'],
-                                                                 description=helper,
-                                                                 default=float(in_socket['default']))
+                stype.socket_value = bpy.props.FloatProperty(**kwargs)
 
             elif socket_type == 'color':
                 stype.draw_color = draw_color_color
@@ -343,6 +339,10 @@ def generate_node(node):
             minimum = prop['min']
         if 'max' in prop.keys():
             maximum = prop['max']
+        if 'softmin' in prop.keys():
+            soft_minimum = prop['softmin']
+        if 'softmax' in prop.keys():
+            soft_maximum = prop['softmax']
 
         if prop['type'] == 'string':
             if prop['use_file_picker'] == True:
@@ -377,53 +377,35 @@ def generate_node(node):
                 parameter_types[prop['name']] = "int checkbox"
 
             else:
+
+                kwargs = {'name': prop['name'], 'description': helper, 'default': int(prop['default'])}
                 if minimum:
-                    setattr(ntype, prop_name, bpy.props.IntProperty(name=prop['name'],
-                                                                    description=helper,
-                                                                    default=int(prop['default']),
-                                                                    min=int(minimum)))
+                    kwargs['min'] = int(minimum)
+                if maximum:
+                    kwargs['max'] = int(maximum)
+                if soft_minimum:
+                    kwargs['soft_min'] = int(soft_minimum)
+                if soft_maximum:
+                    kwargs['soft_max'] = int(soft_maximum)
 
-                elif minimum and maximum:
-                    setattr(ntype, prop_name, bpy.props.IntProperty(name=prop['name'],
-                                                                    description=helper,
-                                                                    default=int(prop['default']),
-                                                                    min=int(minimum),
-                                                                    max=int(maximum)))
+                setattr(ntype, prop_name, bpy.props.IntProperty(**kwargs))
 
-                elif maximum:
-                    setattr(ntype, prop_name, bpy.props.IntProperty(name=prop['name'],
-                                                                    description=helper,
-                                                                    default=int(prop['default']),
-                                                                    max=int(maximum)))
-                else:
-                    setattr(ntype, prop_name, bpy.props.IntProperty(name=prop['name'],
-                                                                    description=helper,
-                                                                    default=int(prop['default'])))
                 parameter_types[prop['name']] = "int"
 
         elif prop['type'] == 'float':
+
+            kwargs = {'name': prop['name'], 'description': helper, 'default': float(prop['default'])}
             if minimum:
-                setattr(ntype, prop_name, bpy.props.FloatProperty(name=prop['name'],
-                                                                  description=helper,
-                                                                  default=float(prop['default']),
-                                                                  min=float(minimum)))
-            elif minimum and maximum:
-                setattr(ntype, prop_name, bpy.props.FloatProperty(name=prop['name'],
-                                                                  description=helper,
-                                                                  default=float(prop['default']),
-                                                                  min=float(minimum),
-                                                                  max=float(maximum)))
+                kwargs['min'] = float(minimum)
+            if maximum:
+                kwargs['max'] = float(maximum)
+            if soft_minimum:
+                kwargs['soft_min'] = float(soft_minimum)
+            if soft_maximum:
+                kwargs['soft_max'] = float(soft_maximum)
 
-            elif maximum:
-                setattr(ntype, prop_name, bpy.props.FloatProperty(name=prop['name'],
-                                                                  description=helper,
-                                                                  default=float(prop['default']),
-                                                                  max=float(maximum)))
+            setattr(ntype, prop_name, bpy.props.FloatProperty(**kwargs))
 
-            else:
-                setattr(ntype, prop_name, bpy.props.FloatProperty(name=prop['name'],
-                                                                  description=helper,
-                                                                  default=float(prop['default'])))
             parameter_types[prop['name']] = "float"
 
         elif prop['type'] == 'color':
