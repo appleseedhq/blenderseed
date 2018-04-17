@@ -127,15 +127,17 @@ def create_osl_dict(file, content=None):
             if line.startswith("Default value"):
                 currentElement['default'] = line.split(": ")[-1].replace("\"", "")
                 if "type" in currentElement:
-                    if currentElement["type"] in ["color", "vector", "output vector"]:
+                    if currentElement["type"] in ["color", "vector", "output vector", "float[2]"]:
                         currentElement['default'] = line.split("[")[-1].split("]")[0].strip()
+            elif line == 'Unknown default value':
+                currentElement['hide_ui'] = True
             elif line.startswith("metadata"):
                 if 'node_name' in line:
                     currentElement['name'] = line.split(" = ")[-1].replace("\"", "")
                 if "widget = " in line:
                     currentElement['widget'] = line.split(" = ")[-1].replace("\"", "")
-                    if currentElement['widget'] == 'null' and currentElement['type'] not in ('vector', 'point[4]', 'point', 'normal', 'matrix', 'float[2]'):
-                        currentElement['connectable'] = False
+                    if currentElement['widget'] == 'null':
+                        currentElement['hide_ui'] = True
                     if currentElement['widget'] == 'filename':
                         currentElement['use_file_picker'] = True
                 if "classification" in line:
@@ -149,13 +151,21 @@ def create_osl_dict(file, content=None):
                     currentElement['type'] = 'intenum'
                     currentElement['options'] = line.split(" = ")[-1].replace("\"", "").split("|")
                     currentElement['connectable'] = False
-                if "min = " in line:
+                if "softmin = " in line:
+                    currentElement['softmin'] = line.split(" ")[-1]
+                elif "min = " in line:
                     currentElement['min'] = line.split(" ")[-1]
-                if "max = " in line:
+                else:
+                    pass
+                if "softmax = " in line:
+                    currentElement['softmax'] = line.split(" ")[-1]
+                elif "max = " in line:
                     currentElement['max'] = line.split(" ")[-1]
+                else:
+                    pass
                 if "label = " in line:
                     currentElement['label'] = " ".join(line.split("=")[1:]).replace("\"", "").strip()
-                if "connectable" in line:
+                if "connectable = 0" in line:
                     currentElement['connectable'] = False
                 if "help = " in line:
                     currentElement['help'] = line.split(" = ")[-1].replace("\"", "")
@@ -165,16 +175,13 @@ def create_osl_dict(file, content=None):
                 currentElement['name'] = reverseValidate(elementName)
                 currentElement['type'] = " ".join(line.split(" ")[1:]).replace("\"", "")
                 currentElement['connectable'] = True
-                currentElement['hidden'] = False
+                currentElement['hide_ui'] = False
                 currentElement['use_file_picker'] = False
-                if 'in_' not in currentElement['name']:
-                    currentElement['hidden'] = True
                 if 'FilePath' in elementName:
                     currentElement['use_file_picker'] = True
                 if currentElement['type'] == "string":
                     currentElement['connectable'] = False
-
-                if "out_" in line:
+                if "output" in line:
                     d['outputs'].append(currentElement)
                     currentElement = d['outputs'][-1]
                 else:
