@@ -29,7 +29,7 @@
 import bpy
 import subprocess
 import os
-import imghdr
+from ..projectwriter import image_extensions
 from ..util import get_osl_search_paths
 
 
@@ -79,7 +79,7 @@ class AppleseedRefreshTexture(bpy.types.Operator):
                 for param in node.parameter_types:
                     if node.parameter_types[param] == 'string':
                         string = getattr(node, param)
-                        if imghdr.what(string):
+                        if string.endswith(image_extensions):
                             if string not in existing_textures:
                                 collection.add()
                                 num = collection.__len__()
