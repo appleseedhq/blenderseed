@@ -827,6 +827,8 @@ class Writer(object):
                     parameter = socket.get_socket_value(True)
                     if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
                         parameter = "{0}".format(" ".join(map(str, parameter)))
+                        if parameter_value == 'float[2]':
+                            parameter_value = 'float[]'
                     parameters[socket.socket_osl_id] = parameter_value + " " + str(parameter)
 
         return parameters
