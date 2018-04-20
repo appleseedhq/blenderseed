@@ -786,7 +786,8 @@ class Writer(object):
             for param in params:
                 self.__emit_parameter(param, params[param])
             self.__close_element("shader")
-            node_connections.append(self.__get_socket_links(node))
+            for x in self.__get_socket_links(node):
+                node_connections.append(x)
         self.__open_element('shader type="surface" name="{0}" layer="{1}"'.format(material_node.file_name, material_node.name))
         self.__close_element("shader")
         for connection in node_connections:
@@ -834,9 +835,11 @@ class Writer(object):
         return parameters
 
     def __get_socket_links(self, node):
+        connections = []
         for output in node.outputs:
             if output.is_linked:
-                connections = [node.name, output.socket_osl_id, output.links[0].to_node.name, output.links[0].to_socket.socket_osl_id]
+                for x in range(0, len(output.links)):
+                    connections.append([node.name, output.socket_osl_id, output.links[x].to_node.name, output.links[x].to_socket.socket_osl_id])
         return connections
 
     def __emit_front_material_tree(self, material, material_name, scene):
