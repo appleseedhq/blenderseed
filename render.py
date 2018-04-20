@@ -293,10 +293,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 # Tile data, protocol v1
                 if not self.__process_tile_data_chunk(process, min_x, min_y, max_x, max_y):
                     break
-            elif chunk_type == 2 or chunk_type == 10:
-                # Tile highlight, protocol v1 and v2
-                if not self.__process_tile_highlight_chunk(process, min_x, min_y, max_x, max_y):
-                    break
+            # elif chunk_type == 2 or chunk_type == 10:
+            #     # Tile highlight, protocol v1 and v2
+            #     if not self.__process_tile_highlight_chunk(process, min_x, min_y, max_x, max_y):
+            #         break
             elif chunk_type == 11:
                 # Tiles header, protocol v2
                 if not self.__process_tiles_header(process):
