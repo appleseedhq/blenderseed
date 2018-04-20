@@ -67,6 +67,7 @@ class AppleseedCameraLens(bpy.types.Panel):
 
         col = layout.column()
         col.prop(asr_cam_props, "near_z", text="Near Clip")
+        col.prop(cam, "clip_end", text="Viewport Far Clip")
 
 
 class AppleseedCameraDoF(bpy.types.Panel):
