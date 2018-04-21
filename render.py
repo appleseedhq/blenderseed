@@ -570,7 +570,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         layer.rect = pix
 
-        if (tile_aov_index != (self.aov_count - 1)):
+        if tile_aov_index != self.aov_count - 1:
             self.update_result(result)
         else:
             self.end_result(result)
