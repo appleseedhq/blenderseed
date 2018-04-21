@@ -97,7 +97,7 @@ def generate_node(node):
     Generates a node based on the provided node data
 
     input format is {name, input properties, output properties, non-connectable properties, filename}
-    properties consist of [name, type, default value, min value, max value].  
+    properties consist of [name, type, default value, min value, max value].
     Enum properties have item list in place of min/max
     """
 
@@ -419,6 +419,15 @@ def generate_node(node):
                                                                     max=1.0))
 
             parameter_types[prop['name']] = "color"
+
+        elif prop['type'] == 'vector':
+            setattr(ntype, prop_name, bpy.props.FloatVectorProperty(name=prop['name'],
+                                                                    description=helper,
+                                                                    default=(float(prop['default'].split(" ")[0]),
+                                                                             float(prop['default'].split(" ")[1]),
+                                                                             float(prop['default'].split(" ")[2]))))
+
+            parameter_types[prop['name']] = "vector"
 
     ntype.parameter_types = parameter_types
     ntype.init = init
