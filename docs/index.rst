@@ -3,7 +3,7 @@ Welcome!
 
 .. image:: /_static/appleseedDocCover_Blender.png
 
-Table of Contents:
+Table of Contents
 ==================
 
 .. toctree::

@@ -34,4 +34,4 @@ How do I convert textures?
 Can I write my own shaders?
 ---------------------------
 	Absolutely.  OSL shaders can be written in any text editor and compiled into .oso files using the oslc utility that’s included with appleseed.  The .oso file can then be placed into the shaders/blenderseed folder and it will be scanned and added into the available nodes during the next startup.
-	If you choose to write your own OSL shader, there are several formatting rules and metadata tags that should be used in order to properly build the node’s UI and category.
+	If you choose to write your own OSL shader, there are several formatting rules and :ref:`metadata<label_osl_metadata>` tags that should be used in order to properly build the node’s UI and category.
