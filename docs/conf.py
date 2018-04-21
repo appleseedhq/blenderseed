@@ -22,14 +22,14 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'blenderseed Manual'
+project = 'blenderseed'
 copyright = '2018, The appleseedhq Organization'
 author = 'The appleseedhq Organization'
 
 # The short X.Y version
-version = '0.8.0'
+version = '0.8.0-beta'
 # The full version, including alpha/beta/rc tags
-release = '0.8.0 Beta'
+release = '0.8.0-beta'
 
 
 # -- General configuration ---------------------------------------------------
@@ -221,7 +221,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'blenderseedManual.tex', 'blenderseed Manual Documentation',
+    (master_doc, 'blenderseed.tex', 'blenderseed Documentation',
      'blenderseed Manual', 'manual'),
 ]
 
@@ -231,7 +231,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'blenderseedmanual', 'blenderseed Manual Documentation',
+    (master_doc, 'blenderseed', 'blenderseed Documentation',
      [author], 1)
 ]
 
@@ -242,7 +242,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'blenderseedManual', 'blenderseed Manual Documentation',
-     author, 'blenderseedManual', 'One line description of project.',
+    (master_doc, 'blenderseed', 'blenderseed Documentation',
+     author, 'blenderseed', 'One line description of project.',
      'Miscellaneous'),
 ]
