@@ -27,9 +27,9 @@ copyright = '2018, The appleseedhq Organization'
 author = 'The appleseedhq Organization'
 
 # The short X.Y version
-version = '0.8'
+version = '0.8.0'
 # The full version, including alpha/beta/rc tags
-release = 'blenderseed Manual 0.8 Beta'
+release = 'blenderseed 0.8.0 Manual'
 
 
 # -- General configuration ---------------------------------------------------
