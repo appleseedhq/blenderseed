@@ -109,7 +109,7 @@ def read_osl_shaders():
 
 def create_osl_dict(file, content=None):
     d = {}
-    currentElement = None
+    current_element = None
     for line in content:
         if len(line) == 0:
             continue
@@ -118,75 +118,75 @@ def create_osl_dict(file, content=None):
             d['outputs'] = []
             d['non_connectable_props'] = []
             d['filename'] = file.replace(".oso", "")
-            currentElement = d
+            current_element = d
             if line.startswith("surface"):
-                currentElement['category'] = 'surface'
+                current_element['category'] = 'surface'
             else:
-                currentElement['category'] = 'shader'
+                current_element['category'] = 'shader'
         else:
             if line.startswith("Default value"):
-                currentElement['default'] = line.split(": ")[-1].replace("\"", "")
-                if "type" in currentElement:
-                    if currentElement["type"] in ["color", "vector", "output vector", "float[2]"]:
-                        currentElement['default'] = line.split("[")[-1].split("]")[0].strip()
+                current_element['default'] = line.split(": ")[-1].replace("\"", "")
+                if "type" in current_element:
+                    if current_element["type"] in ["color", "vector", "output vector", "float[2]"]:
+                        current_element['default'] = line.split("[")[-1].split("]")[0].strip()
             elif line == 'Unknown default value':
-                currentElement['hide_ui'] = True
+                current_element['hide_ui'] = True
             elif line.startswith("metadata"):
                 if 'node_name' in line:
-                    currentElement['name'] = line.split(" = ")[-1].replace("\"", "")
+                    current_element['name'] = line.split(" = ")[-1].replace("\"", "")
                 if "widget = " in line:
-                    currentElement['widget'] = line.split(" = ")[-1].replace("\"", "")
-                    if currentElement['widget'] == 'null':
-                        currentElement['hide_ui'] = True
-                    if currentElement['widget'] == 'filename':
-                        currentElement['use_file_picker'] = True
+                    current_element['widget'] = line.split(" = ")[-1].replace("\"", "")
+                    if current_element['widget'] == 'null':
+                        current_element['hide_ui'] = True
+                    if current_element['widget'] == 'filename':
+                        current_element['use_file_picker'] = True
                 if "classification" in line:
                     if 'utility' in line:
-                        currentElement['category'] = 'utility'
+                        current_element['category'] = 'utility'
                     if 'texture/2d' in line:
-                        currentElement['category'] = 'texture'
+                        current_element['category'] = 'texture'
                     if 'texture/3d' in line:
-                        currentElement['category'] = '3d_texture'
+                        current_element['category'] = '3d_texture'
                 if "options = " in line:
-                    currentElement['type'] = 'intenum'
-                    currentElement['options'] = line.split(" = ")[-1].replace("\"", "").split("|")
-                    currentElement['connectable'] = False
+                    current_element['type'] = 'intenum'
+                    current_element['options'] = line.split(" = ")[-1].replace("\"", "").split("|")
+                    current_element['connectable'] = False
                 if "softmin = " in line:
-                    currentElement['softmin'] = line.split(" ")[-1]
+                    current_element['softmin'] = line.split(" ")[-1]
                 elif "min = " in line:
-                    currentElement['min'] = line.split(" ")[-1]
+                    current_element['min'] = line.split(" ")[-1]
                 else:
                     pass
                 if "softmax = " in line:
-                    currentElement['softmax'] = line.split(" ")[-1]
+                    current_element['softmax'] = line.split(" ")[-1]
                 elif "max = " in line:
-                    currentElement['max'] = line.split(" ")[-1]
+                    current_element['max'] = line.split(" ")[-1]
                 else:
                     pass
                 if "label = " in line:
-                    currentElement['label'] = " ".join(line.split("=")[1:]).replace("\"", "").strip()
+                    current_element['label'] = " ".join(line.split("=")[1:]).replace("\"", "").strip()
                 if "connectable = 0" in line:
-                    currentElement['connectable'] = False
+                    current_element['connectable'] = False
                 if "help = " in line:
-                    currentElement['help'] = line.split(" = ")[-1].replace("\"", "")
+                    current_element['help'] = line.split(" = ")[-1].replace("\"", "")
             elif line.startswith("\""):  # found a parameter
-                currentElement = {}
-                elementName = line.split(" ")[0].replace("\"", "")
-                currentElement['name'] = reverseValidate(elementName)
-                currentElement['type'] = " ".join(line.split(" ")[1:]).replace("\"", "")
-                currentElement['connectable'] = True
-                currentElement['hide_ui'] = False
-                currentElement['use_file_picker'] = False
-                if 'FilePath' in elementName:
-                    currentElement['use_file_picker'] = True
-                if currentElement['type'] == "string":
-                    currentElement['connectable'] = False
+                current_element = {}
+                element_name = line.split(" ")[0].replace("\"", "")
+                current_element['name'] = reverseValidate(element_name)
+                current_element['type'] = " ".join(line.split(" ")[1:]).replace("\"", "")
+                current_element['connectable'] = True
+                current_element['hide_ui'] = False
+                current_element['use_file_picker'] = False
+                if 'FilePath' in element_name:
+                    current_element['use_file_picker'] = True
+                if current_element['type'] == "string":
+                    current_element['connectable'] = False
                 if "output" in line:
-                    d['outputs'].append(currentElement)
-                    currentElement = d['outputs'][-1]
+                    d['outputs'].append(current_element)
+                    current_element = d['outputs'][-1]
                 else:
-                    d['inputs'].append(currentElement)
-                    currentElement = d['inputs'][-1]
+                    d['inputs'].append(current_element)
+                    current_element = d['inputs'][-1]
             elif line.startswith("Unknown"):
                 continue
             else:
