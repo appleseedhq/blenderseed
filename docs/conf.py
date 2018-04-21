@@ -29,7 +29,7 @@ author = 'The appleseedhq Organization'
 # The short X.Y version
 version = '0.8.0'
 # The full version, including alpha/beta/rc tags
-release = 'blenderseed 0.8.0 Manual'
+release = '0.8.0 Beta'
 
 
 # -- General configuration ---------------------------------------------------
