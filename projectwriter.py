@@ -838,8 +838,8 @@ class Writer(object):
         connections = []
         for output in node.outputs:
             if output.is_linked:
-                for x in range(0, len(output.links)):
-                    connections.append([node.name, output.socket_osl_id, output.links[x].to_node.name, output.links[x].to_socket.socket_osl_id])
+                for link in output.links:
+                    connections.append([node.name, output.socket_osl_id, link.to_node.name, link.to_socket.socket_osl_id])
         return connections
 
     def __emit_front_material_tree(self, material, material_name, scene):
