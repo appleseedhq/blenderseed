@@ -19,6 +19,7 @@ OSL
 	:maxdepth: 2
 
 	osl/osl
+	osl/osl_metadata
 
 Shaders
 -------
