@@ -60,13 +60,13 @@ def get_osl_search_paths():
 def read_osl_shaders():
     """Reads all .oso parameters"""
 
+    nodes = []
+
     if bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory == "":
         print("appleseed binary path not set.  Rendering and OSL features will not be available")
-        return True
+        return nodes
 
     tool_dir, shader_directories = get_osl_search_paths()
-
-    nodes = []
 
     print("appleseed Parsing OSL shaders")
     for shader_dir in shader_directories:
