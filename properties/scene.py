@@ -477,16 +477,16 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     shutter_open = bpy.props.FloatProperty(name="shutter_open",
                                            description="Shutter open time (relative to start of current frame)",
                                            default=0.0,
-                                           min=0.0,
-                                           max=0.999,
+                                           soft_min=0.0,
+                                           soft_max=1.0,
                                            step=3,
                                            precision=3)
 
     shutter_close = bpy.props.FloatProperty(name="shutter_close",
                                             description="Shutter close time (relative to end of current frame)",
                                             default=1.0,
-                                            min=0.001,
-                                            max=1.0,
+                                            soft_min=0.0,
+                                            soft_max=1.0,
                                             step=3,
                                             precision=3)
 
