@@ -63,18 +63,18 @@ def read_osl_shaders():
     nodes = []
 
     if bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory == "":
-        print("appleseed binary path not set.  Rendering and OSL features will not be available")
+        print("[appleseed] Binary path not set. Rendering and OSL features will not be available.")
         return nodes
 
     tool_dir, shader_directories = get_osl_search_paths()
 
-    print("appleseed Parsing OSL shaders")
+    print("[appleseed] Parsing OSL shaders...")
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
-            print("Searching {0} for OSO files".format(shader_dir))
+            print("[appleseed] Searching {0} for OSO files...".format(shader_dir))
             for file in os.listdir(shader_dir):
                 if file.endswith(".oso"):
-                    print("appleseed Reading {0}".format(file))
+                    print("[appleseed] Reading {0}...".format(file))
                     filename = os.path.join(shader_dir, file)
                     content = []
                     cmd = ('oslinfo', '-v', '"{0}"'.format(filename))
@@ -87,22 +87,22 @@ def read_osl_shaders():
                             line = line.strip().decode("utf-8")
                             if "ERROR" in line:
                                 print(line)
-                                print("ERROR: Failed to read {0}".format(file))
+                                print("[appleseed] ERROR: Failed to read {0}".format(file))
                                 break
                             content.append(line)
                         shader_params = create_osl_dict(file, content)
                         if shader_params:
                             nodes.append(shader_params)
                         else:
-                            print("ERROR: No Shader Parameters")
+                            print("[appleseed] ERROR: No Shader Parameters")
                     except OSError as e:
-                        print("OSError > " + e.errno)
-                        print("OSError > " + e.strerror)
-                        print("OSError > " + e.filename)
+                        print("[appleseed] OSError > " + e.errno)
+                        print("[appleseed] OSError > " + e.strerror)
+                        print("[appleseed] OSError > " + e.filename)
                     except:
-                        print("ERROR: Failed to read {0}.  Oslinfo did not launch: {1}".format(file, sys.exc_info()[0]))
+                        print("[appleseed] ERROR: Failed to read {0}. Oslinfo did not launch: {1}".format(file, sys.exc_info()[0]))
 
-    print("appleseed OSL Parsing Complete")
+    print("[appleseed] OSL parsing complete.")
 
     return nodes
 
@@ -236,12 +236,12 @@ def debug(*args):
     msg = ' '.join(['%s' % a for a in args])
     global EnableDebug
     if EnableDebug:
-        print("DEBUG:", msg)
+        print("[appleseed] DEBUG:".format(msg))
 
 
 def asUpdate(*args):
     msg = ' '.join(['%s' % a for a in args])
-    print("appleseed:", msg)
+    print("[appleseed] {0}".format(msg))
 
 
 def strip_spaces(name):
