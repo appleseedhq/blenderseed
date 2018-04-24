@@ -135,7 +135,6 @@ def generate_node(node):
 
     # create socket classes
     for in_socket in input_sockets:
-
         if not in_socket['connectable']:
             non_connected_props.append(in_socket)
         else:
@@ -237,7 +236,7 @@ def generate_node(node):
 
             socket_input_names.append([socket_name, socket_label])
 
-    # create outp-ut socket classes
+    # create output socket classes
     for out_socket in output_sockets:
         socket_name = "Appleseed{0}{1}".format(node['name'], out_socket['name'].capitalize())
         if 'label' in out_socket.keys():
@@ -273,7 +272,7 @@ def generate_node(node):
 
         socket_output_names.append([socket_name, socket_label])
 
-    # create node clas
+    # create node class
     def init(self, context):
         if socket_input_names:
             for x in socket_input_names:

@@ -40,7 +40,7 @@ import subprocess
 
 
 # ------------------------------------
-# OSL shader reader
+# OSL shader reader.
 # ------------------------------------
 
 def get_osl_search_paths():
@@ -213,9 +213,11 @@ def reverseValidate(pname):
         return "output"
     return pname
 
+
 # ------------------------------------
 # Generic utilities and settings.
 # ------------------------------------
+
 sep = os.sep
 
 # Add-on directory.
@@ -407,8 +409,9 @@ def sample_mblur(ob, scene, dupli=False):
 # ------------------------------------
 # Particle system utilities.
 # ------------------------------------
+
 def calc_decrement(root, tip, segments):
-    return ((root - tip) / (segments - 1))
+    return (root - tip) / (segments - 1)
 
 
 def render_emitter(ob):

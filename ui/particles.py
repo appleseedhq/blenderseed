@@ -28,10 +28,6 @@
 
 import bpy
 
-#---------------------------------------
-# Particle settings UI
-#---------------------------------------
-
 
 class AppleseedPsysPanel(bpy.types.Panel):
     bl_label = "Hair Rendering"

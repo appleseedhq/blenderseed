@@ -30,6 +30,7 @@ import multiprocessing
 
 import bpy
 
+
 try:
     threads = multiprocessing.cpu_count()
     max_threads = threads
