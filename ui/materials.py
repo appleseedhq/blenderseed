@@ -27,6 +27,7 @@
 #
 
 import bpy
+from .. import util
 
 
 def osl_node_tree_selector_draw(layout, mat):
@@ -1289,18 +1290,18 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
 def register():
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    bpy.utils.register_class(AppleseedMaterialPreview)
-    bpy.utils.register_class(AppleseedMaterialShading)
-    bpy.utils.register_class(AppleseedMatEmissionPanel)
-    bpy.utils.register_class(TextureConvertSlots)
-    bpy.utils.register_class(AppleseedTextureConverterPanel)
+    util.safe_register_class(AppleseedMaterialPreview)
+    util.safe_register_class(AppleseedMaterialShading)
+    util.safe_register_class(AppleseedMatEmissionPanel)
+    util.safe_register_class(TextureConvertSlots)
+    util.safe_register_class(AppleseedTextureConverterPanel)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedTextureConverterPanel)
-    bpy.utils.unregister_class(TextureConvertSlots)
-    bpy.utils.unregister_class(AppleseedMatEmissionPanel)
-    bpy.utils.unregister_class(AppleseedMaterialShading)
-    bpy.utils.unregister_class(AppleseedMaterialPreview)
+    util.safe_unregister_class(AppleseedTextureConverterPanel)
+    util.safe_unregister_class(TextureConvertSlots)
+    util.safe_unregister_class(AppleseedMatEmissionPanel)
+    util.safe_unregister_class(AppleseedMaterialShading)
+    util.safe_unregister_class(AppleseedMaterialPreview)
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')

@@ -27,6 +27,7 @@
 #
 
 import bpy
+from .. import util
 
 
 class AppleseedLampPanel(bpy.types.Panel):
@@ -114,8 +115,8 @@ class AppleseedLampPanel(bpy.types.Panel):
 
 
 def register():
-    bpy.utils.register_class(AppleseedLampPanel)
+    util.safe_register_class(AppleseedLampPanel)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedLampPanel)
+    util.safe_unregister_class(AppleseedLampPanel)

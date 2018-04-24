@@ -27,6 +27,7 @@
 #
 
 import bpy
+from . import util
 
 
 class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
@@ -42,8 +43,8 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
 
 
 def register():
-    bpy.utils.register_class(AppleseedPreferencesPanel)
+    util.safe_register_class(AppleseedPreferencesPanel)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedPreferencesPanel)
+    util.safe_unregister_class(AppleseedPreferencesPanel)

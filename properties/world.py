@@ -27,6 +27,7 @@
 #
 
 import bpy
+from .. import util
 
 
 class AppleseedSSSSetsProps(bpy.types.PropertyGroup):
@@ -162,10 +163,10 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
 
 
 def register():
-    bpy.utils.register_class(AppleseedSSSSetsProps)
-    bpy.utils.register_class(AppleseedSSSSets)
+    util.safe_register_class(AppleseedSSSSetsProps)
+    util.safe_register_class(AppleseedSSSSets)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedSSSSets)
-    bpy.utils.unregister_class(AppleseedSSSSetsProps)
+    util.safe_unregister_class(AppleseedSSSSets)
+    util.safe_unregister_class(AppleseedSSSSetsProps)
