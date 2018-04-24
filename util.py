@@ -229,20 +229,6 @@ version = "{0}.{1}.{2}".format(bl_info['version'][0], bl_info['version'][1], bl_
 
 thread_count = multiprocessing.cpu_count()
 
-EnableDebug = True
-
-
-def debug(*args):
-    msg = ' '.join(['%s' % a for a in args])
-    global EnableDebug
-    if EnableDebug:
-        print("[appleseed] DEBUG:".format(msg))
-
-
-def asUpdate(*args):
-    msg = ' '.join(['%s' % a for a in args])
-    print("[appleseed] {0}".format(msg))
-
 
 def strip_spaces(name):
     return '_'.join(name.split(' '))

@@ -605,8 +605,6 @@ class Writer(object):
         else:
             object_matrix = self._global_matrix * object_matrix
 
-        if hair:
-            util.debug(object_name, object_matrix)
         # Emit BSDFs and materials if they are encountered for the first time.
         for material_slot_index, material_slot in enumerate(object.material_slots):
             material = material_slot.material
@@ -644,8 +642,6 @@ class Writer(object):
                 if material:
                     front_material_name, back_material_name = self._emitted_materials[material]
 
-            if hair:
-                util.debug(object_name, object_matrix)
             self.__emit_object_instance_element(part_name, instance_name, object_matrix, front_material_name, back_material_name, object, scene)
 
     def __emit_object_instance_element(self, object_name, instance_name, instance_matrix, front_material_name, back_material_name, object, scene):

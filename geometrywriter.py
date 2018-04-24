@@ -147,7 +147,7 @@ def write_mesh_to_disk(ob, scene, mesh, filepath):
             return mesh_parts
 
     except IOError:
-        util.asUpdate("Failed to write to {0}.".format(filepath))
+        print("[appleseed] ERROR: Failed to write to {0}.".format(filepath))
 
 
 def write_curves_to_disk(ob, scene, psys, filepath):
