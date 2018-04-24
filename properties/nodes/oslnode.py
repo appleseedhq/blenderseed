@@ -290,7 +290,7 @@ def generate_node(node):
         pass
 
     def free(self):
-        util.asUpdate("Removing node ", self)
+        pass
 
     def draw_label(self):
         return self.bl_label
