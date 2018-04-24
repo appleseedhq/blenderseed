@@ -55,13 +55,19 @@ def safe_unregister_class(cls):
         print("[appleseed] ERROR: Failed to unregister class {0}: {1}".format(cls, e))
 
 
+def get_appleseed_bin_dir():
+    appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
+    if appleseed_bin_dir:
+        appleseed_bin_dir = realpath(appleseed_bin_dir)
+    return appleseed_bin_dir
+
+
 # ------------------------------------
 # OSL shader reader.
 # ------------------------------------
 
 def get_osl_search_paths():
-    appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
-    appleseed_parent_dir = appleseed_bin_dir
+    appleseed_parent_dir = get_appleseed_bin_dir()
     while os.path.basename(appleseed_parent_dir) != 'bin':
         appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
     appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
@@ -76,11 +82,12 @@ def get_osl_search_paths():
 def read_osl_shaders():
     """Reads all .oso parameters"""
 
+    if not get_appleseed_bin_dir():
+        print("[appleseed] Binary path not set. Rendering and OSL features will not be available.")
+        return []
+
     nodes = []
 
-    if bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory == "":
-        print("[appleseed] Binary path not set. Rendering and OSL features will not be available.")
-        return nodes
 
     tool_dir, shader_directories = get_osl_search_paths()
 
