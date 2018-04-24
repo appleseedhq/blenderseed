@@ -83,15 +83,15 @@ def read_osl_shaders():
     """Reads all .oso parameters"""
 
     if not get_appleseed_bin_dir():
-        print("[appleseed] Binary path not set. Rendering and OSL features will not be available.")
+        print("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
         return []
 
     nodes = []
 
+    print("[appleseed] Parsing OSL shaders...")
 
     tool_dir, shader_directories = get_osl_search_paths()
 
-    print("[appleseed] Parsing OSL shaders...")
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
             print("[appleseed] Searching {0} for OSO files...".format(shader_dir))
@@ -110,14 +110,14 @@ def read_osl_shaders():
                             line = line.strip().decode("utf-8")
                             if "ERROR" in line:
                                 print(line)
-                                print("[appleseed] ERROR: Failed to read {0}".format(file))
+                                print("[appleseed] ERROR: Failed to read {0}.".format(file))
                                 break
                             content.append(line)
                         shader_params = create_osl_dict(file, content)
                         if shader_params:
                             nodes.append(shader_params)
                         else:
-                            print("[appleseed] ERROR: No Shader Parameters")
+                            print("[appleseed] ERROR: No shader parameters.")
                     except OSError as e:
                         print("[appleseed] OSError > " + e.errno)
                         print("[appleseed] OSError > " + e.strerror)
