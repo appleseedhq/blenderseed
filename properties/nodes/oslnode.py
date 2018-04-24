@@ -28,8 +28,8 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
-from ...util import asUpdate, filter_params
 from . import AppleseedNode, AppleseedSocket
+from ... import util
 
 
 class AppleseedOSLInSocket(NodeSocket, AppleseedSocket):
@@ -232,7 +232,7 @@ def generate_node(node):
 
             parameter_types[in_socket['name']] = in_socket['type']
             stype.hide_ui = in_socket['hide_ui']
-            bpy.utils.register_class(stype)
+            util.safe_register_class(stype)
 
             socket_input_names.append([socket_name, socket_label])
 
@@ -268,7 +268,7 @@ def generate_node(node):
         else:
             pass
 
-        bpy.utils.register_class(stype)
+        util.safe_register_class(stype)
 
         socket_output_names.append([socket_name, socket_label])
 
@@ -290,7 +290,7 @@ def generate_node(node):
         pass
 
     def free(self):
-        asUpdate("Removing node ", self)
+        util.asUpdate("Removing node ", self)
 
     def draw_label(self):
         return self.bl_label
@@ -306,7 +306,7 @@ def generate_node(node):
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
                 linked_node.traverse_tree(self)
-        return filter_params(self.tree)
+        return util.filter_params(self.tree)
 
     node_name = "Appleseed{0}Node".format(name)
     node_label = "{0}".format(name)
@@ -441,7 +441,7 @@ def generate_node(node):
         ntype.tree = []
         ntype.node_type = 'osl_surface'
 
-    bpy.utils.register_class(ntype)
+    util.safe_register_class(ntype)
 
     return ntype.bl_idname, category
 

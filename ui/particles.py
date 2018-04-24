@@ -27,6 +27,7 @@
 #
 
 import bpy
+from .. import util
 
 
 class AppleseedPsysPanel(bpy.types.Panel):
@@ -60,8 +61,8 @@ class AppleseedPsysPanel(bpy.types.Panel):
 
 
 def register():
-    bpy.utils.register_class(AppleseedPsysPanel)
+    util.safe_register_class(AppleseedPsysPanel)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedPsysPanel)
+    util.safe_unregister_class(AppleseedPsysPanel)

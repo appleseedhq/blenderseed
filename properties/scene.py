@@ -29,6 +29,7 @@
 import multiprocessing
 
 import bpy
+from .. import util
 
 
 try:
@@ -529,12 +530,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
 
 def register():
-    bpy.utils.register_class(AppleseedTextureConvertProps)
-    bpy.utils.register_class(AppleseedRenderSettings)
+    util.safe_register_class(AppleseedTextureConvertProps)
+    util.safe_register_class(AppleseedRenderSettings)
     bpy.types.Scene.appleseed = bpy.props.PointerProperty(type=AppleseedRenderSettings)
 
 
 def unregister():
     del bpy.types.Scene.appleseed
-    bpy.utils.unregister_class(AppleseedRenderSettings)
-    bpy.utils.unregister_class(AppleseedTextureConvertProps)
+    util.safe_unregister_class(AppleseedRenderSettings)
+    util.safe_unregister_class(AppleseedTextureConvertProps)

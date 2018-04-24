@@ -27,6 +27,7 @@
 #
 
 import bpy
+from .. import util
 
 
 def refresh_preview(self, context):
@@ -1521,10 +1522,10 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
 
 
 def register():
-    bpy.utils.register_class(AppleseedMatProps)
+    util.safe_register_class(AppleseedMatProps)
     bpy.types.Material.appleseed = bpy.props.PointerProperty(type=AppleseedMatProps)
 
 
 def unregister():
     del bpy.types.Material.appleseed
-    bpy.utils.unregister_class(AppleseedMatProps)
+    util.safe_unregister_class(AppleseedMatProps)

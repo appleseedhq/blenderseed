@@ -595,3 +595,19 @@ def sample_psys_mblur(ob, scene, psys, index, start, current_total):
         ob.dupli_list_clear()
     frame_set(frame_orig)
     return dupli_dict, index
+
+
+def safe_register_class(cls):
+    try:
+        print("[appleseed] Registering class {0}...".format(cls))
+        bpy.utils.register_class(cls)
+    except Exception as e:
+        print("[appleseed] ERROR: Failed to register class {0}: {1}".format(cls, e))
+
+
+def safe_unregister_class(cls):
+    try:
+        print("[appleseed] Unregistering class {0}...".format(cls))
+        bpy.utils.unregister_class(cls)
+    except Exception as e:
+        print("[appleseed] ERROR: Failed to unregister class {0}: {1}".format(cls, e))

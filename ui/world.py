@@ -27,6 +27,7 @@
 #
 
 import bpy
+from .. import util
 
 
 class AppleseedWorldPanel(bpy.types.Panel):
@@ -130,12 +131,12 @@ class AppleseedWorldSssSets(bpy.types.Panel):
 def register():
     bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    bpy.utils.register_class(SSSSetsProps)
-    bpy.utils.register_class(AppleseedWorldSssSets)
+    util.safe_register_class(SSSSetsProps)
+    util.safe_register_class(AppleseedWorldSssSets)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedWorldSssSets)
-    bpy.utils.unregister_class(SSSSetsProps)
+    util.safe_unregister_class(AppleseedWorldSssSets)
+    util.safe_unregister_class(SSSSetsProps)
     bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')

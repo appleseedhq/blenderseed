@@ -115,12 +115,12 @@ def menu_func_export_scene(self, context):
 
 
 def register():
-    bpy.utils.register_class(ExportAppleseedScene)
-    bpy.utils.register_class(ExportAppleseedAnimationScene)
+    util.safe_register_class(ExportAppleseedScene)
+    util.safe_register_class(ExportAppleseedAnimationScene)
     bpy.types.INFO_MT_file_export.append(menu_func_export_scene)
 
 
 def unregister():
     bpy.types.INFO_MT_file_export.remove(menu_func_export_scene)
-    bpy.utils.unregister_class(ExportAppleseedAnimationScene)
-    bpy.utils.unregister_class(ExportAppleseedScene)
+    util.safe_unregister_class(ExportAppleseedAnimationScene)
+    util.safe_unregister_class(ExportAppleseedScene)

@@ -27,6 +27,7 @@
 #
 
 import bpy
+from .. import util
 
 
 class AppleseedObjFlagsPanel(bpy.types.Panel):
@@ -132,15 +133,15 @@ def register():
         except:
             pass
     del properties_object
-    bpy.utils.register_class(AppleseedObjFlagsPanel)
-    bpy.utils.register_class(AppleseedObjOptionsPanel)
-    bpy.utils.register_class(AppleseedObjMBlurPanel)
+    util.safe_register_class(AppleseedObjFlagsPanel)
+    util.safe_register_class(AppleseedObjOptionsPanel)
+    util.safe_register_class(AppleseedObjMBlurPanel)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedObjMBlurPanel)
-    bpy.utils.unregister_class(AppleseedObjOptionsPanel)
-    bpy.utils.unregister_class(AppleseedObjFlagsPanel)
+    util.safe_unregister_class(AppleseedObjMBlurPanel)
+    util.safe_unregister_class(AppleseedObjOptionsPanel)
+    util.safe_unregister_class(AppleseedObjFlagsPanel)
     import bl_ui.properties_object as properties_object
     for member in dir(properties_object):
         subclass = getattr(properties_object, member)

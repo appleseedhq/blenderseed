@@ -26,6 +26,7 @@
 #
 
 import bpy
+from .. import util
 
 
 class AppleseedRenderPanelBase(object):
@@ -361,24 +362,24 @@ class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 def register():
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    bpy.utils.register_class(AppleseedRender)
-    bpy.utils.register_class(AppleseedRenderStampPanel)
-    bpy.utils.register_class(AppleseedRenderSettingsPanel)
-    bpy.utils.register_class(AppleseedDenoiserPanel)
-    bpy.utils.register_class(AppleseedSamplingPanel)
-    bpy.utils.register_class(AppleseedLightingPanel)
-    bpy.utils.register_class(AppleseedMotionBlurPanel)
-    bpy.utils.register_class(AppleseedAOVPanel)
+    util.safe_register_class(AppleseedRender)
+    util.safe_register_class(AppleseedRenderStampPanel)
+    util.safe_register_class(AppleseedRenderSettingsPanel)
+    util.safe_register_class(AppleseedDenoiserPanel)
+    util.safe_register_class(AppleseedSamplingPanel)
+    util.safe_register_class(AppleseedLightingPanel)
+    util.safe_register_class(AppleseedMotionBlurPanel)
+    util.safe_register_class(AppleseedAOVPanel)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedAOVPanel)
-    bpy.utils.unregister_class(AppleseedMotionBlurPanel)
-    bpy.utils.unregister_class(AppleseedLightingPanel)
-    bpy.utils.unregister_class(AppleseedSamplingPanel)
-    bpy.utils.unregister_class(AppleseedDenoiserPanel)
-    bpy.utils.unregister_class(AppleseedRenderSettingsPanel)
-    bpy.utils.unregister_class(AppleseedRenderStampPanel)
-    bpy.utils.unregister_class(AppleseedRender)
+    util.safe_unregister_class(AppleseedAOVPanel)
+    util.safe_unregister_class(AppleseedMotionBlurPanel)
+    util.safe_unregister_class(AppleseedLightingPanel)
+    util.safe_unregister_class(AppleseedSamplingPanel)
+    util.safe_unregister_class(AppleseedDenoiserPanel)
+    util.safe_unregister_class(AppleseedRenderSettingsPanel)
+    util.safe_unregister_class(AppleseedRenderStampPanel)
+    util.safe_unregister_class(AppleseedRender)
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.remove('APPLESEED_RENDER')

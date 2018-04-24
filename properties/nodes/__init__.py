@@ -31,8 +31,8 @@ import nodeitems_utils
 from nodeitems_utils import NodeItem, NodeCategory
 from bpy.types import NodeTree
 from bpy.app.handlers import persistent
-from ...util import addon_dir, join_names_underscore, read_osl_shaders
 import os
+from ... import util
 
 
 class AppleseedOSLNodeTree(NodeTree):
@@ -69,7 +69,7 @@ class AppleseedNode:
 
     def get_node_name(self):
         """Return the node's name, including appended pointer."""
-        return join_names_underscore(self.name, str(self.as_pointer()))
+        return util.join_names_underscore(self.name, str(self.as_pointer()))
 
     def traverse_tree(self, material_node):
         """Iterate inputs and traverse the tree backward if any inputs are connected.
@@ -159,7 +159,7 @@ def appleseed_scene_loaded(dummy):
     icon16 = bpy.data.images.get('appleseed16')
     icon32 = bpy.data.images.get('appleseed32')
     if icon16 is None:
-        img = bpy.data.images.load(os.path.join(os.path.join(addon_dir, 'icons'), 'appleseed16.png'))
+        img = bpy.data.images.load(os.path.join(os.path.join(util.addon_dir, 'icons'), 'appleseed16.png'))
         img.name = 'appleseed16'
         img.use_alpha = True
         img.user_clear()
@@ -170,7 +170,7 @@ def appleseed_scene_loaded(dummy):
             if f.__name__ == "appleseed_scene_loaded":
                 bpy.app.handlers.scene_update_pre.remove(f)
     if icon32 is None:
-        img = bpy.data.images.load(os.path.join(os.path.join(addon_dir, 'icons'), 'appleseed32.png'))
+        img = bpy.data.images.load(os.path.join(os.path.join(util.addon_dir, 'icons'), 'appleseed32.png'))
         img.name = 'appleseed32'
         img.use_alpha = True
         img.user_clear()  # Won't get saved into .blend files
@@ -191,22 +191,18 @@ osl_node_names = []
 def register():
     bpy.app.handlers.load_post.append(appleseed_scene_loaded)
     bpy.app.handlers.scene_update_pre.append(appleseed_scene_loaded)
-    bpy.utils.register_class(AppleseedOSLNodeTree)
-    node_list = read_osl_shaders()
-    if node_list:
-        for node in node_list:
-            if node:
-                try:
-                    node_name, node_category = oslnode.generate_node(node)
-                    osl_node_names.append([node_name, node_category])
-                except:
-                    pass
-    else:
-        print("ERROR: OSL nodes list is empty")
+    util.safe_register_class(AppleseedOSLNodeTree)
+    node_list = util.read_osl_shaders()
+    for node in node_list:
+        try:
+            node_name, node_category = oslnode.generate_node(node)
+            osl_node_names.append([node_name, node_category])
+        except:
+            pass
     nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
 
 
 def unregister():
     nodeitems_utils.unregister_node_categories("APPLESEED")
-    bpy.utils.unregister_class(AppleseedOSLNodeTree)
+    util.safe_unregister_class(AppleseedOSLNodeTree)
     bpy.app.handlers.load_post.remove(appleseed_scene_loaded)

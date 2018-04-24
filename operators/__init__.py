@@ -29,7 +29,7 @@
 import bpy
 import subprocess
 from ..projectwriter import image_extensions
-from ..util import get_osl_search_paths
+from .. import util
 
 
 class AppleseedConvertTextures(bpy.types.Operator):
@@ -41,7 +41,7 @@ class AppleseedConvertTextures(bpy.types.Operator):
         scene = context.scene
         textures = scene.appleseed
 
-        tool_dir, shader_dir = get_osl_search_paths()
+        tool_dir, shader_dir = util.get_osl_search_paths()
 
         for tex in textures.textures:
             filename = bpy.path.abspath(tex.name)
@@ -191,20 +191,20 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
 
 
 def register():
-    bpy.utils.register_class(AppleseedConvertTextures)
-    bpy.utils.register_class(AppleseedRefreshTexture)
-    bpy.utils.register_class(AppleseedAddTexture)
-    bpy.utils.register_class(AppleseedRemoveTexture)
-    bpy.utils.register_class(AppleseedNewOSLNodeTree)
-    bpy.utils.register_class(AppleseedAddSssSet)
-    bpy.utils.register_class(AppleseedRemoveSssSet)
+    util.safe_register_class(AppleseedConvertTextures)
+    util.safe_register_class(AppleseedRefreshTexture)
+    util.safe_register_class(AppleseedAddTexture)
+    util.safe_register_class(AppleseedRemoveTexture)
+    util.safe_register_class(AppleseedNewOSLNodeTree)
+    util.safe_register_class(AppleseedAddSssSet)
+    util.safe_register_class(AppleseedRemoveSssSet)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedRemoveSssSet)
-    bpy.utils.unregister_class(AppleseedAddSssSet)
-    bpy.utils.unregister_class(AppleseedNewOSLNodeTree)
-    bpy.utils.unregister_class(AppleseedRemoveTexture)
-    bpy.utils.unregister_class(AppleseedAddTexture)
-    bpy.utils.unregister_class(AppleseedRefreshTexture)
-    bpy.utils.unregister_class(AppleseedConvertTextures)
+    util.safe_unregister_class(AppleseedRemoveSssSet)
+    util.safe_unregister_class(AppleseedAddSssSet)
+    util.safe_unregister_class(AppleseedNewOSLNodeTree)
+    util.safe_unregister_class(AppleseedRemoveTexture)
+    util.safe_unregister_class(AppleseedAddTexture)
+    util.safe_unregister_class(AppleseedRefreshTexture)
+    util.safe_unregister_class(AppleseedConvertTextures)

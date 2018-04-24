@@ -27,6 +27,7 @@
 #
 
 import bpy
+from .. import util
 
 
 class AppleseedPsysProps(bpy.types.PropertyGroup):
@@ -62,10 +63,10 @@ class AppleseedPsysProps(bpy.types.PropertyGroup):
 
 
 def register():
-    bpy.utils.register_class(AppleseedPsysProps)
+    util.safe_register_class(AppleseedPsysProps)
     bpy.types.ParticleSettings.appleseed = bpy.props.PointerProperty(type=AppleseedPsysProps)
 
 
 def unregister():
     del bpy.types.ParticleSettings.appleseed
-    bpy.utils.unregister_class(AppleseedPsysProps)
+    util.safe_unregister_class(AppleseedPsysProps)
