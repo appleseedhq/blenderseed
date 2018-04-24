@@ -62,7 +62,7 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
         writer.write(context.scene, export_path)
 
         if self.compress_export:
-            appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
+            appleseed_bin_dir = util.get_appleseed_bin_dir()
             projecttool_path = os.path.join(appleseed_bin_dir, "projecttool")
             cmd = (projecttool_path, 'pack', export_path)
             try:

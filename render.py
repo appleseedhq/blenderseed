@@ -205,13 +205,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
     def __render_project_file(self, scene, project_filepath, project_dir=None):
         # Check that the path to the bin folder is set.
-        appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
+        appleseed_bin_dir = util.get_appleseed_bin_dir()
         if not appleseed_bin_dir:
             self.report({'ERROR'}, "The path to the folder containing the appleseed.cli executable has not been specified. Set the path in the add-on user preferences.")
             return
-
-        # Properly handle relative Blender paths.
-        appleseed_bin_dir = util.realpath(appleseed_bin_dir)
 
         # Check that the path to the bin folder indeed points to a folder.
         if not os.path.isdir(appleseed_bin_dir):
