@@ -802,7 +802,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                                   subtype='COLOR',
                                                                   min=0.0,
                                                                   max=1.0,
-                                                                  default=(0.8, 0.8, 0.8),
+                                                                  default=(0.92, 0.92, 0.92),
                                                                   update=refresh_preview)
 
     metal_brdf_normal_reflectance_use_tex = bpy.props.BoolProperty(name="metal_brdf_normal_reflectance_use_tex",
@@ -820,7 +820,7 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                          subtype='COLOR',
                                                          min=0.0,
                                                          max=1.0,
-                                                         default=(0.8, 0.8, 0.8),
+                                                         default=(0.98, 0.98, 0.98),
                                                          update=refresh_preview)
 
     metal_brdf_edge_tint_use_tex = bpy.props.BoolProperty(name="metal_brdf_edge_tint_use_tex",
