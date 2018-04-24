@@ -26,7 +26,6 @@
 # THE SOFTWARE.
 #
 
-import bpy
 from . import scene
 from . import world
 from . import objects

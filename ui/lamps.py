@@ -28,10 +28,6 @@
 
 import bpy
 
-#------------------------------------
-# appleseed Lamps panel.
-#------------------------------------
-
 
 class AppleseedLampPanel(bpy.types.Panel):
     bl_label = "Lamp"

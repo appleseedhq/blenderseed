@@ -28,7 +28,6 @@
 
 import bpy
 import subprocess
-import os
 from ..projectwriter import image_extensions
 from ..util import get_osl_search_paths
 

@@ -28,10 +28,6 @@
 
 import bpy
 
-#------------------------------------
-# appleseed Lamp properties
-#------------------------------------
-
 
 class AppleseedLampProps(bpy.types.PropertyGroup):
 
