@@ -27,6 +27,7 @@
 #
 
 import bpy
+from .. import util
 
 
 def get_shutter_min(self, context):
@@ -39,61 +40,53 @@ def get_shutter_max(self, context):
 
 class AppleseedCameraSettings(bpy.types.PropertyGroup):
 
-    @classmethod
-    def register(cls):
-        bpy.types.Camera.appleseed = bpy.props.PointerProperty(name="appleseed_camera",
-                                                               description="appleseed Camera",
-                                                               type=cls)
+    camera_model = bpy.props.EnumProperty(name="camera_model",
+                                          items=[('pinhole', 'Pinhole', ''),
+                                                 ('thinlens', 'Thin Lens', ''),
+                                                 ('spherical', 'Spherical', '')],
+                                          description="Camera model",
+                                          default='pinhole')
 
-        cls.camera_model = bpy.props.EnumProperty(name="camera_model",
-                                                  items=[('pinhole', 'Pinhole', ''),
-                                                         ('thinlens', 'Thin Lens', ''),
-                                                         ('spherical', 'Spherical', '')],
-                                                  description="Camera model",
-                                                  default='pinhole')
+    near_z = bpy.props.FloatProperty(name="near_z",
+                                     description="Near clipping distance",
+                                     default=-0.001)
 
-        cls.near_z = bpy.props.FloatProperty(name="near_z",
-                                             description="Near clipping distance",
-                                             default=-0.001)
+    enable_dof = bpy.props.BoolProperty(name="enable_dof",
+                                        description="Enable depth of field",
+                                        default=False)
 
-        cls.enable_dof = bpy.props.BoolProperty(name="enable_dof",
-                                                description="Enable depth of field",
-                                                default=False)
+    f_number = bpy.props.FloatProperty(name="f_number",
+                                       description="Thin lens camera f-stop value",
+                                       default=32.0,
+                                       min=0.0,
+                                       max=32.0,
+                                       step=3,
+                                       precision=1)
 
-        cls.f_number = bpy.props.FloatProperty(name="f_number",
-                                               description="Thin lens camera f-stop value",
-                                               default=32.0,
-                                               min=0.0,
-                                               max=32.0,
-                                               step=3,
-                                               precision=1)
+    diaphragm_blades = bpy.props.IntProperty(name="diaphragm_blades",
+                                             description="Number of diaphragm blades. Use minimum of 3 for geometric bokeh",
+                                             default=3,
+                                             max=32,
+                                             min=0)
 
-        cls.diaphragm_blades = bpy.props.IntProperty(name="diaphragm_blades",
-                                                     description="Number of diaphragm blades. Use minimum of 3 for geometric bokeh",
-                                                     default=3,
-                                                     max=32,
-                                                     min=0)
+    diaphragm_angle = bpy.props.FloatProperty(name="diaphragm_angle",
+                                              description="Diaphragm tilt angle",
+                                              default=0,
+                                              min=-360,
+                                              max=360,
+                                              precision=3)
 
-        cls.diaphragm_angle = bpy.props.FloatProperty(name="diaphragm_angle",
-                                                      description="Diaphragm tilt angle",
-                                                      default=0,
-                                                      min=-360,
-                                                      max=360,
-                                                      precision=3)
-
-        cls.diaphragm_map = bpy.props.StringProperty(name="diaphragm_map",
-                                                     description="Image texture to define bokeh",
-                                                     default='',
-                                                     subtype='FILE_PATH')
-
-    @classmethod
-    def unregister(cls):
-        del bpy.types.Camera.appleseed
+    diaphragm_map = bpy.props.StringProperty(name="diaphragm_map",
+                                             description="Image texture to define bokeh",
+                                             default='',
+                                             subtype='FILE_PATH')
 
 
 def register():
-    pass
+    util.safe_register_class(AppleseedCameraSettings)
+    bpy.types.Camera.appleseed = bpy.props.PointerProperty(type=AppleseedCameraSettings)
 
 
 def unregister():
-    pass
+    del bpy.types.Camera.appleseed
+    util.safe_unregister_class(AppleseedCameraSettings)
