@@ -82,11 +82,11 @@ def get_osl_search_paths():
 def read_osl_shaders():
     """Reads all .oso parameters"""
 
+    nodes = []
+
     if not get_appleseed_bin_dir():
         print("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
-        return []
-
-    nodes = []
+        return nodes
 
     print("[appleseed] Parsing OSL shaders...")
 
