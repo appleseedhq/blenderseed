@@ -4,7 +4,7 @@ Quickstart
 This is for those new users who want to see a quick result from appleseed.  We assume a basic familiarity with Blender and the default locations of certain controls.
 
 
-Enable appleseedFollow the instructions in the :doc:`installation` section to install and enable blenderseed
+Enable appleseedFollow the instructions in the :ref:`installation<label_installation>` section to install and enable blenderseed
 
 
 Go to the materials tab

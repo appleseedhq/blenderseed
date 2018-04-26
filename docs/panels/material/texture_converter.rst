@@ -1,3 +1,5 @@
+.. _label_tex_conv:
+
 Texture Converter
 =================
 

@@ -29,7 +29,7 @@ Textures with OSL
 
 How do I convert textures?
 --------------------------
-	Textures can be converted to .tx files using the :doc:`/panels/material/texture_converter` panel in the material tab.
+	Textures can be converted to .tx files using the :ref:`texture converter<label_tex_conv>` panel in the material tab.
 
 Can I write my own shaders?
 ---------------------------

@@ -1,3 +1,5 @@
+.. _label_installation:
+
 Installation
 ============
 
@@ -28,7 +30,5 @@ Configure
 
 	Select "appleseed" from the render dropdown selector.
 
-Footnotes
----------
-
+.. rubric:: Footnotes:
 .. [#f1] If you want access to cutting edge features, you can download the latest master branch.  Be aware that features may not be stable or complete and new features may require an up to date build of appleseed.  If you download the latest Github master branch, the folder will have a *-master* suffix that needs to be removed.

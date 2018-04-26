@@ -16,7 +16,6 @@ Motion Blur
 - Deformation Blur
 	- Enables blur caused by an object changing shape (deforming)
 
-Footnotes
----------
+.. rubric:: Footnotes:
 
 .. [#f1] For realistic blur the shutter should close before the end of the frame.  '0.5' is equivalent to a 180 degree shutter, which is a common shutter type used in motion picture cameras.
