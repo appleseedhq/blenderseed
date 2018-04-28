@@ -52,8 +52,8 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
         rd = scene.render
 
         row = layout.row(align=True)
-        row.operator("render.render", text="Render Frame", icon='RENDER_STILL')
-        row.operator("render.render", text="Render Animation", icon='RENDER_ANIMATION').animation = True
+        row.operator("render.render", text="Render", icon='RENDER_STILL')
+        row.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
 
         row = layout.row(align=True)
         row.operator("appleseed.export_scene", text="Export Frame")
@@ -90,7 +90,7 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             row.prop(asr_scene_props, "export_mode", text="")
             # layout.prop(asr_scene_props, "export_hair", text="Export Hair")
         row = layout.row()
-        row.prop(asr_scene_props, "clean_cache", text="Delete External Cache After Render")
+        row.prop(asr_scene_props, "clean_cache", text="Delete Cache")
 
         layout.prop(asr_scene_props, "tile_ordering", text="Tile Ordering")
 
@@ -111,7 +111,7 @@ class AppleseedRenderStampPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         layout.active = asr_scene_props.enable_render_stamp
         layout.prop(asr_scene_props, "render_stamp", text="Stamp Text")
-        layout.prop(asr_scene_props, "render_stamp_patterns")
+        layout.prop(asr_scene_props, "render_stamp_patterns", text="Stamp Type")
 
 
 class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
@@ -323,42 +323,6 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         layout.prop(asr_scene_props, "enable_deformation_blur", text="Deformation Blur")
 
 
-class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
-    COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_label = "AOVs"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw_header(self, context):
-        header = self.layout
-        asr_scene_props = context.scene.appleseed
-        header.prop(asr_scene_props, "enable_aovs", text="")
-
-    def draw(self, context):
-        layout = self.layout
-        asr_scene_props = context.scene.appleseed
-
-        layout.active = asr_scene_props.enable_aovs
-
-        row = layout.row()
-        row.prop(asr_scene_props, "diffuse_aov", text="Diffuse")
-        row.prop(asr_scene_props, "glossy_aov", text="Glossy")
-
-        row = layout.row()
-        row.prop(asr_scene_props, "direct_diffuse_aov", text="Direct Diffuse")
-        row.prop(asr_scene_props, "direct_glossy_aov", text="Direct Glossy")
-
-        row = layout.row()
-        row.prop(asr_scene_props, "indirect_diffuse_aov", text="Indirect Diffuse")
-        row.prop(asr_scene_props, "indirect_glossy_aov", text="Indirect Glossy")
-
-        row = layout.row()
-        row.prop(asr_scene_props, "normal_aov", text="Normals")
-        row.prop(asr_scene_props, "uv_aov", text="UV Coordinates")
-
-        row = layout.row()
-        row.prop(asr_scene_props, "depth_aov", text="Depth")
-
-
 def register():
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.add('APPLESEED_RENDER')
@@ -369,11 +333,9 @@ def register():
     util.safe_register_class(AppleseedSamplingPanel)
     util.safe_register_class(AppleseedLightingPanel)
     util.safe_register_class(AppleseedMotionBlurPanel)
-    util.safe_register_class(AppleseedAOVPanel)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedAOVPanel)
     util.safe_unregister_class(AppleseedMotionBlurPanel)
     util.safe_unregister_class(AppleseedLightingPanel)
     util.safe_unregister_class(AppleseedSamplingPanel)
