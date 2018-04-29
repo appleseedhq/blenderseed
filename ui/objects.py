@@ -31,7 +31,7 @@ from .. import util
 
 
 class AppleseedObjFlagsPanel(bpy.types.Panel):
-    bl_label = "Appleseed Object Flags"
+    bl_label = "Object Visibility"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -42,10 +42,14 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         renderer = context.scene.render
         return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
 
+    def draw_header(self, context):
+        header = self.layout
+        asr_obj = context.object.appleseed
+        header.prop(asr_obj, "enable_visibility_flags", text="")
+
     def draw(self, context):
         layout = self.layout
         asr_obj = context.object.appleseed
-        layout.prop(asr_obj, "enable_visibility_flags", text="Enable Visibility Flags")
         col = layout.column()
         col.active = asr_obj.enable_visibility_flags
         row = col.row()
@@ -62,7 +66,7 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
 
 
 class AppleseedObjOptionsPanel(bpy.types.Panel):
-    bl_label = "Appleseed Object Options"
+    bl_label = "Object Options"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -79,14 +83,6 @@ class AppleseedObjOptionsPanel(bpy.types.Panel):
         scene = context.scene
         sss_lists = scene.appleseed_sss_sets
 
-        layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
-        layout.label(text="SSS sets are created in the world tab")
-        layout.prop(asr_obj, "medium_priority", text="Nested Dielectric Medium Priority")
-        layout.prop(asr_obj, "ray_bias_method")
-        row = layout.row()
-        row.enabled = asr_obj.ray_bias_method != 'none'
-        row.prop(asr_obj, "ray_bias_distance", text="Ray Bias Distance")
-
         split = layout.split(percentage=0.90)
         col = split.column()
         col.prop(asr_obj, "object_alpha", text="Object Alpha")
@@ -99,9 +95,18 @@ class AppleseedObjOptionsPanel(bpy.types.Panel):
         col = split.column()
         col.prop(asr_obj, "object_alpha_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
 
+        layout.prop(asr_obj, "medium_priority", text="Nested Glass Priority")
+
+        layout.prop(asr_obj, "ray_bias_method", text="Ray Bias")
+        row = layout.row()
+        row.enabled = asr_obj.ray_bias_method != 'none'
+        row.prop(asr_obj, "ray_bias_distance", text="Ray Bias Distance")
+
+        layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
+
 
 class AppleseedObjMBlurPanel(bpy.types.Panel):
-    bl_label = "Appleseed Motion Blur"
+    bl_label = "Object Motion Blur"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"

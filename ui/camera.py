@@ -68,7 +68,7 @@ class AppleseedCameraLens(bpy.types.Panel):
 
         col = layout.column()
         col.prop(asr_cam_props, "near_z", text="Near Clip")
-        col.prop(cam, "clip_end", text="Viewport Far Clip")
+        col.prop(cam, "clip_end", text="Far Clip")
 
 
 class AppleseedCameraDoF(bpy.types.Panel):
@@ -103,9 +103,9 @@ class AppleseedCameraDoF(bpy.types.Panel):
         row = layout.row()
         row.prop(context.active_object.data, "dof_object", text='Autofocus')
 
-        layout.prop(asr_cam_props, "diaphragm_blades", text="Diaphragm Blades")
-        layout.prop(asr_cam_props, "diaphragm_angle", text="Diaphragm Tilt Angle")
-        layout.prop(asr_cam_props, "diaphragm_map", text="Diaphragm Map")
+        layout.prop(asr_cam_props, "diaphragm_blades", text="Blades")
+        layout.prop(asr_cam_props, "diaphragm_angle", text="Tilt Angle")
+        layout.prop(asr_cam_props, "diaphragm_map", text="Aperture Shape")
 
 
 def register():

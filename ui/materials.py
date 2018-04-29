@@ -86,7 +86,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
         osl_node_tree_selector_draw(layout, material)
 
         if asr_mat.osl_node_tree == None:
-            layout.prop(asr_mat, "bsdf_type", text="BSDF Model")
+            layout.prop(asr_mat, "bsdf_type", text="Surface")
             layout.separator()
 
             #
@@ -1043,7 +1043,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
             #
 
             # Model
-            layout.prop(asr_mat, "bssrdf_model")
+            layout.prop(asr_mat, "bssrdf_model", text="Subsurface")
             if asr_mat.bssrdf_model != 'none':
                 # Weight
                 layout.prop(asr_mat, "bssrdf_weight", text="Weight")
@@ -1083,7 +1083,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                 # MFP
                 split = layout.split(percentage=0.40)
                 col = split.column()
-                col.label("Mean Free Path:")
+                col.label("Depth:")
                 split = split.split(percentage=0.83)
                 col = split.column()
                 col.prop(asr_mat, "bssrdf_mfp", text="")
@@ -1101,7 +1101,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
                 # MFP multiplier
                 split = layout.split(percentage=0.90)
                 col = split.column()
-                col.prop(asr_mat, "bssrdf_mfp_multiplier", text="Mean Free Path Multiplier")
+                col.prop(asr_mat, "bssrdf_mfp_multiplier", text="Depth Multiplier")
 
                 if asr_mat.bssrdf_mfp_multiplier_use_texture:
                     layout.prop_search(asr_mat, "bssrdf_mfp_multiplier_texture", material, "texture_slots", text="")
@@ -1124,7 +1124,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
             # Volume
             #
             col = layout.column()
-            col.prop(asr_mat, "volume_phase_function_model")
+            col.prop(asr_mat, "volume_phase_function_model", text="Volume")
             if asr_mat.volume_phase_function_model != 'none':
                 # Absorption
                 split = layout.split(percentage=0.40)
@@ -1193,7 +1193,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
 
 class AppleseedMatEmissionPanel(bpy.types.Panel):
-    bl_label = "Light Material"
+    bl_label = "Emission Shader"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -1270,21 +1270,22 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
                           "textures", asr_scene_props, "textures_index", rows=1, maxrows=16, type="DEFAULT")
 
         col = layout.column(align=True)
-
-        col.prop(asr_scene_props, "sub_textures", text="Use Converted Textures", toggle=True)
+        
         row = col.row(align=True)
         row.operator("appleseed.add_texture", text="Add Texture", icon="ZOOMIN")
         row.operator("appleseed.remove_texture", text="Remove Texture", icon="ZOOMOUT")
         row = col.row(align=True)
-        row.operator("appleseed.refresh_textures", text="Refresh Textures", icon='FILE_REFRESH')
-        row.operator("appleseed.convert_textures", text="Convert Textures", icon='PLAY')
+        row.operator("appleseed.refresh_textures", text="Refresh", icon='FILE_REFRESH')
+        row.operator("appleseed.convert_textures", text="Convert", icon='PLAY')
+
+        layout.prop(asr_scene_props, "sub_textures", text="Use Converted Textures", toggle=True)
 
         if textures:
             current_set = textures[asr_scene_props.textures_index]
             layout.prop(current_set, "name", text="Texture")
-            layout.prop(current_set, "input_space")
-            layout.prop(current_set, "output_depth")
-            layout.prop(current_set, "command_string", text="Additional Commands")
+            layout.prop(current_set, "input_space", text="Color Space")
+            layout.prop(current_set, "output_depth", text="Depth")
+            layout.prop(current_set, "command_string", text="Command")
 
 
 def register():

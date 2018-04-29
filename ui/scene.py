@@ -27,6 +27,54 @@
 #
 
 import bpy
+from .. import util
+
+
+class AppleseedRenderPanelBase(object):
+    bl_context = "render"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER'
+
+class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_label = "Render Passes"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_context = "render_layer"
+
+    def draw_header(self, context):
+        header = self.layout
+        asr_scene_props = context.scene.appleseed
+        header.prop(asr_scene_props, "enable_aovs", text="")
+
+    def draw(self, context):
+        layout = self.layout
+        asr_scene_props = context.scene.appleseed
+
+        layout.active = asr_scene_props.enable_aovs
+
+        row = layout.row()
+        row.prop(asr_scene_props, "diffuse_aov", text="Diffuse")
+        row.prop(asr_scene_props, "glossy_aov", text="Glossy")
+
+        row = layout.row()
+        row.prop(asr_scene_props, "direct_diffuse_aov", text="Direct Diffuse")
+        row.prop(asr_scene_props, "direct_glossy_aov", text="Direct Glossy")
+
+        row = layout.row()
+        row.prop(asr_scene_props, "indirect_diffuse_aov", text="Indirect Diffuse")
+        row.prop(asr_scene_props, "indirect_glossy_aov", text="Indirect Glossy")
+
+        row = layout.row()
+        row.prop(asr_scene_props, "normal_aov", text="Normals")
+        row.prop(asr_scene_props, "uv_aov", text="UV Coordinates")
+
+        row = layout.row()
+        row.prop(asr_scene_props, "depth_aov", text="Depth")
 
 
 def register():
@@ -41,9 +89,11 @@ def register():
     bpy.types.SCENE_PT_rigid_body_cache.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.SCENE_PT_rigid_body_field_weights.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.SCENE_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    util.safe_register_class(AppleseedAOVPanel)
 
 
 def unregister():
+    util.safe_unregister_class(AppleseedAOVPanel)
     bpy.types.SCENE_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.SCENE_PT_rigid_body_field_weights.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.SCENE_PT_rigid_body_cache.COMPAT_ENGINES.remove('APPLESEED_RENDER')
