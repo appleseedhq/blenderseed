@@ -50,7 +50,7 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
     env_type = bpy.props.EnumProperty(name="Environment Type",
                                       items=[("constant", "Constant", "Use constant color for sky"),
                                              ("gradient", "Gradient", "Use sky color gradient"),
-                                             ("latlong_map", "HDRI Environment", "Use hdri map texture"),
+                                             ("latlong_map", "HDRI Environment", "Use HDRI map texture"),
                                              ("mirrorball_map", "Mirror Ball", "Use mirror ball texture"),
                                              ("sunsky", "Physical Sky", ""),
                                              ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere")],
