@@ -228,7 +228,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.rendered_tiles = 0
 
         # Is the denoiser on
-        self.do_denoise = scene.appleseed.enable_denoiser
+        self.do_denoise = scene.appleseed.denoise_mode == 'on'
 
         # Compute render window.
         if scene.render.use_border:
@@ -254,13 +254,15 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Launch appleseed.cli.
         threads = 'auto' if scene.appleseed.threads_auto else str(scene.appleseed.threads)
-        cmd = (appleseed_bin_path,
+        cmd = [appleseed_bin_path,
                project_filepath,
                '--to-stdout',
                '--threads', threads,
-               '--message-verbosity', 'warning',
+               '--message-verbosity', 'info',
                '--resolution', str(width), str(height),
-               '--window', str(min_x), str(min_y), str(max_x), str(max_y))
+               '--window', str(min_x), str(min_y), str(max_x), str(max_y)]
+        if scene.appleseed.denoise_mode == 'write_outputs':
+            cmd.extend(['--output', '"{0}"'.format(os.path.join(scene.appleseed.denoise_output_file_name, 'denoise_output.exr'))])
         try:
             process = subprocess.Popen(cmd, cwd=appleseed_bin_dir, env=os.environ.copy(), stdout=subprocess.PIPE)
         except OSError as e:

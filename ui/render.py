@@ -119,20 +119,19 @@ class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     bl_label = "Denoiser"
     bl_options = {'DEFAULT_CLOSED'}
 
-    def draw_header(self, context):
-        header = self.layout
-        asr_scene_props = context.scene.appleseed
-        header.prop(asr_scene_props, "enable_denoiser", text="")
-
     def draw(self, context):
         layout = self.layout
         asr_scene_props = context.scene.appleseed
 
-        layout.active = asr_scene_props.enable_denoiser
-        layout.prop(asr_scene_props, "prefilter_spikes", text="Prefilter Spikes")
-        layout.prop(asr_scene_props, "spike_threshold", text="Spike Threshold")
-        layout.prop(asr_scene_props, "patch_distance_threshold", text="Patch Distance")
-        layout.prop(asr_scene_props, "denoise_scales", text="Denoise Scales")
+        layout.prop(asr_scene_props, "denoise_mode")
+        if asr_scene_props.denoise_mode == 'write_outputs':
+            layout.prop(asr_scene_props, "denoise_output_file_name", text="Output File Name")
+        col = layout.column(align=True)
+        col.active = asr_scene_props.denoise_mode != 'off'
+        col.prop(asr_scene_props, "prefilter_spikes", text="Prefilter Spikes", toggle=True)
+        col.prop(asr_scene_props, "spike_threshold", text="Spike Threshold")
+        col.prop(asr_scene_props, "patch_distance_threshold", text="Patch Distance")
+        col.prop(asr_scene_props, "denoise_scales", text="Denoise Scales")
 
 
 class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
