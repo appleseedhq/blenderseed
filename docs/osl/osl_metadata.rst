@@ -7,35 +7,35 @@ When blenderseed scans an OSL shader it looks for several specific metadata tags
 
 - Shader Metadata:  This metadata is used to describe the shader as a whole.
 	-  string node_name
-		- This is the name of the node.  If it is not used the name of the OSL file will be used.
+		This is the name of the node.  If it is not used the name of the OSL file will be used.
 	- string classification
-		- This tells blenderseed what the shader is.  Options are:
-			- utility
-			- texture/2d
-			- texture/3d
+		This tells blenderseed what the shader is.  Options are:
+			utility
+			texture/2d
+			texture/3d
 - Parameter Metadata:  This is metadata that is used on each parameter.
 	- string label
-		- This defines the name of the parameter that will appear in the UI.
+		This defines the name of the parameter that will appear in the UI.
 	- int connectable
-		- This tells the UI whether it should hide the socket connection for this parameter.  You would use this for any parameter that you do not want to be controllable through a texture. '0' hides the socket.
+		This tells the UI whether it should hide the socket connection for this parameter.  You would use this for any parameter that you do not want to be controllable through a texture. '0' hides the socket.
 	- string help
-		- This is a tool tip that will appear whenever a parameter is hovered over.
+		This is a tooltip that will appear whenever a parameter is hovered over.
 	- string option
-		- This is used to define the menu options of a drop down list.  Entries should be formatted with a '|' separating each option.
+		This is used to define the menu options of a drop down list.  Entries should be formatted with a '|' separating each option.
 	- string widget
-		- This is used for defining two things: if a string parameter needs a file selector option, or if the direct control of a parameter should be hidden (so only the socket is visible).  Options are:
-			- filename (tells blenderseed to add a file selection button to a string property)
-			- null (tells blenderseed to hide the direct control for a parameter)
+		This is used for defining two things: if a string parameter needs a file selector option, or if the direct control of a parameter should be hidden (so only the socket is visible).  Options are:
+			filename (tells blenderseed to add a file selection button to a string property)
+			null (tells blenderseed to hide the direct control for a parameter)
 
 |
 
 - Max/Min limits: Integer and float properties can be set with one of four different options that control the range of adjustment a parameter can have.  Options are:
-	- max
-	- min 
-	- softmax 
-	- softmin
+	max
+	min 
+	softmax 
+	softmin
 
 - Examples:
-	- string help = "This is a help string"
-	- int softmin = 5
-	- string node_name = "asClosure2Surface"
+	string help = "This is a help string"
+	int softmin = 5
+	string node_name = "asClosure2Surface"
