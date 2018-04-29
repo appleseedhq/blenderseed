@@ -103,7 +103,6 @@ class AppleseedObjOptionsPanel(bpy.types.Panel):
         row.prop(asr_obj, "ray_bias_distance", text="Ray Bias Distance")
 
         layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
-        #layout.label(text="SSS sets are created in the world tab")
 
 
 class AppleseedObjMBlurPanel(bpy.types.Panel):
