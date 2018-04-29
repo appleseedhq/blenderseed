@@ -31,7 +31,6 @@ import multiprocessing
 import bpy
 from .. import util
 
-
 try:
     threads = multiprocessing.cpu_count()
     max_threads = threads
@@ -59,9 +58,9 @@ class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
     input_space = bpy.props.EnumProperty(name="Input Color Space",
                                          description="The color space of the file.  PNG, JPG and TIFF files are usually sRGB, EXR is normally linear",
                                          items=[
-                                              ('linear', "Linear", ""),
-                                              ('sRGB', "sRGB", ""),
-                                              ('Rec709', "Rec.709", "")],
+                                             ('linear', "Linear", ""),
+                                             ('sRGB', "sRGB", ""),
+                                             ('Rec709', "Rec.709", "")],
                                          default='sRGB')
 
     output_depth = bpy.props.EnumProperty(name="Output Bit Depth",
@@ -95,7 +94,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                             name="appleseed Texture",
                                             description="")
 
-    textures_index = bpy.props.IntProperty(name="layer_index",
+    textures_index = bpy.props.IntProperty(name="textures_index",
                                            description="",
                                            default=0)
 
@@ -436,9 +435,18 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     # Denoiser settings
 
-    enable_denoiser = bpy.props.BoolProperty(name="enable_denoiser",
-                                             description="Use a post process denoising step on the finished image",
-                                             default=False)
+    denoise_mode = bpy.props.EnumProperty(name="Denoise Mode",
+                                          description="Select the denoising mode",
+                                          items=[
+                                              ('off', "Off", ""),
+                                              ('on', "On", ""),
+                                              ('write_outputs', "Write Outputs", "")],
+                                          default='off')
+
+    denoise_output_dir = bpy.props.StringProperty(name="denoise_output_dir",
+                                                  description="",
+                                                  default="",
+                                                  subtype='DIR_PATH')
 
     prefilter_spikes = bpy.props.BoolProperty(name="prefilter_spikes",
                                               default=True)
