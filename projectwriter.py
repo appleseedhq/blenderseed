@@ -2213,6 +2213,8 @@ class Writer(object):
             self.__emit_line('<aov model="uv_aov" />')
         if asr_scene_props.depth_aov:
             self.__emit_line('<aov model="depth_aov" />')
+        if asr_scene_props.pixel_time_aov:
+            self.__emit_line('<aov model="pixel_time_aov" />')
 
         self.__close_element("aovs")
 

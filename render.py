@@ -80,6 +80,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
                     self.register_pass(scene, renderlayer, "UV", 3, "RGB", 'VECTOR')
                 if asr_scene_props.depth_aov:
                     self.register_pass(scene, renderlayer, "Z Depth", 1, "X", 'VALUE')
+                if asr_scene_props.pixel_time_aov:
+                    self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
 
     def render(self, scene):
         asr_scene_props = scene.appleseed
@@ -104,6 +106,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
                     self.add_pass("UV", 3, "RGB")
                 if asr_scene_props.depth_aov:
                     self.add_pass("Z Depth", 1, "X")
+                if asr_scene_props.pixel_time_aov:
+                    self.add_pass("Pixel Time", 1, "X")
 
         with RenderAppleseed.render_lock:
             if self.is_preview:
@@ -546,7 +550,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         for y in range(take_y - 1, -1, -1):
             start_pix = (skip_y + y) * tile_w + skip_x
             end_pix = start_pix + take_x
-            if self.aovs[tile_aov_index] == "Z Depth":
+            if self.aovs[tile_aov_index] in ("Z Depth", "Pixel Time"):
                 pix.extend(floats[p:p + 1] for p in range(start_pix, end_pix))
             elif tile_aov_index == 0 or self.aovs[tile_aov_index] not in ('UV', 'Normal'):
                 pix.extend(floats[p * 4:p * 4 + 4] for p in range(start_pix, end_pix))
@@ -628,5 +632,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             return "Normal"
         elif aov_name == "uv":
             return "UV"
+        elif aov_name == "pixel_time":
+            return "Pixel Time"
         else:
             return "Z Depth"

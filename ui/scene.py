@@ -75,6 +75,7 @@ class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         row = layout.row()
         row.prop(asr_scene_props, "depth_aov", text="Depth")
+        row.prop(asr_scene_props, "pixel_time_aov", text="Pixel Time")
 
 
 def register():
