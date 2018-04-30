@@ -6,7 +6,7 @@ Installation
 Download
 	Download the latest `appleseed release <https://github.com/appleseedhq/appleseed/releases>`_ and unzip it to a location on your hard drive.
 
-	Download the .zip file of the latest `blenderseed release <https://github.com/appleseedhq/blenderseed/releases>`_. [#f1]_ Note that as of 0.8 you must use Blender 2.79 or higher.
+	Download the .zip file of the latest `blenderseed release <https://github.com/appleseedhq/blenderseed/releases>`_. [#f1]_ Note that as of 0.8.0 you must use Blender 2.79 or higher.
 
 	*Blender 2.8 is not yet supported*
 
