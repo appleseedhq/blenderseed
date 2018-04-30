@@ -1236,7 +1236,8 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                           items=[('none', "None", ""),
                                                  ('normalized_diffusion_bssrdf', "Normalized Diffusion", ""),
                                                  ('better_dipole_bssrdf', "Dipole", ""),
-                                                 ('gaussian_bssrdf', "Gaussian", "")],
+                                                 ('gaussian_bssrdf', "Gaussian", ""),
+                                                 ('randomwalk_bssrdf', "Random Walk", "")],
                                           default="none",
                                           update=refresh_preview)
 
