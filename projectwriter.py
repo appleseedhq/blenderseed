@@ -2177,11 +2177,11 @@ class Writer(object):
         if scene.appleseed.enable_render_stamp:
             self.__emit_parameter("enable_render_stamp", "true")
             self.__emit_parameter("render_stamp_format", scene.appleseed.render_stamp)
-        if scene.appleseed.enable_denoiser:
-            self.__emit_parameter("denoiser", "on")
+        if scene.appleseed.denoise_mode != 'off':
+            self.__emit_parameter("denoiser", scene.appleseed.denoise_mode)
             self.__emit_parameter("denoise_scales", scene.appleseed.denoise_scales)
             self.__emit_parameter("patch_distance_threshold", scene.appleseed.patch_distance_threshold)
-            self.__emit_parameter("prefilter_spikes", scene.appleseed.prefilter_spikes)
+            self.__emit_parameter("prefilter_spikes", "true" if scene.appleseed.prefilter_spikes else "false")
             self.__emit_parameter("spike_threshold", scene.appleseed.spike_threshold)
         if scene.render.use_border:
             min_x, min_y, max_x, max_y = self.__get_border_limits(scene, width, height)
