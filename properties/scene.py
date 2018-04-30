@@ -436,9 +436,18 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     # Denoiser settings
 
-    enable_denoiser = bpy.props.BoolProperty(name="enable_denoiser",
-                                             description="Use a post process denoising step on the finished image",
-                                             default=False)
+    denoise_mode = bpy.props.EnumProperty(name="Denoise Mode",
+                                          description="The mode the denoiser will operate in",
+                                          items=[
+                                              ('off', "Off", ""),
+                                              ('on', "On", ""),
+                                              ('write_outputs', "Write Outputs", "")],
+                                          default='off')
+
+    denoise_output_dir = bpy.props.StringProperty(name="denoise_output_dir",
+                                                  description="Where the denoise files will be exported",
+                                                  default="",
+                                                  subtype="DIR_PATH")
 
     prefilter_spikes = bpy.props.BoolProperty(name="prefilter_spikes",
                                               default=True)
