@@ -537,6 +537,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     uv_aov = bpy.props.BoolProperty(name="uv_aov",
                                     default=False)
 
+    pixel_time_aov = bpy.props.BoolProperty(name="pixel_time_aov",
+                                            default=False)
+
 
 def register():
     util.safe_register_class(AppleseedTextureConvertProps)
