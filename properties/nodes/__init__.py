@@ -40,7 +40,7 @@ class AppleseedOSLNodeTree(NodeTree):
 
     bl_idname = 'AppleseedOSLNodeTree'
     bl_label = 'appleseed OSL Node Tree'
-    bl_icon = 'NODETREE'
+    bl_icon = 'MATERIAL'
 
     @classmethod
     def poll(cls, context):
