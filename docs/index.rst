@@ -1,5 +1,4 @@
-Welcome!
-========
+.. title:: Welcome!
 
 .. image:: /_static/appleseedDocCover_Blender.png
 

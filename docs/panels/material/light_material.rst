@@ -9,8 +9,9 @@ Light Material
 	This is the color of the light light_emission
 - Profile:
 	This selects one of two different emission profiles:
-		Diffuse EDF: This is a standard profile that emits light in a Lambertian fasion (i.e. directionless)
-		Cone EDF: This profile allows you to change the angle of distribution, allowing you to create a pseudo spotlight light distribution from a mesh lamp
+
+		- Diffuse EDF: This is a standard profile that emits light in a Lambertian fashion (i.e. directionless)
+		- Cone EDF: This profile allows you to change the angle of distribution, allowing you to create a pseudo spotlight distribution from a mesh lamp
 - Cone EDF Angle (*only applicable to Cone EDF profile*):
 	This defines the angle of the light emission for the Cone EDF profile
 - Radiance Multiplier:

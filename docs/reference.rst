@@ -7,6 +7,7 @@ Panels
    :maxdepth: 2
 
    panels/render/render_panel
+   panels/layers/layers_panel
    panels/world/world_panel
    panels/object/object_panel
    panels/material/material_panel
