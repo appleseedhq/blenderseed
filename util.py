@@ -139,7 +139,6 @@ def create_osl_dict(file, content=None):
         if line.startswith("shader") or line.startswith("surface"):
             d['inputs'] = []
             d['outputs'] = []
-            d['non_connectable_props'] = []
             d['filename'] = file.replace(".oso", "")
             current_element = d
             if line.startswith("surface"):
@@ -188,7 +187,7 @@ def create_osl_dict(file, content=None):
                     pass
                 if "label = " in line:
                     current_element['label'] = " ".join(line.split("=")[1:]).replace("\"", "").strip()
-                if "connectable = 0" in line:
+                if "as_blender_input_socket = 0" in line:
                     current_element['connectable'] = False
                 if "help = " in line:
                     current_element['help'] = line.split(" = ")[-1].replace("\"", "")
