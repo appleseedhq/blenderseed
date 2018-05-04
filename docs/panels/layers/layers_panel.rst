@@ -1,5 +1,5 @@
-Layers
-======
+Render Layers Panel
+===================
 
 .. toctree::
 	:maxdepth: 2
