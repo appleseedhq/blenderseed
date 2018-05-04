@@ -135,7 +135,9 @@ def generate_node(node):
 
     # create socket classes
     for in_socket in input_sockets:
-        if not in_socket['connectable']:
+        if not in_socket['connectable'] and in_socket['hide_ui']:
+            continue
+        elif not in_socket['connectable']:
             non_connected_props.append(in_socket)
         else:
             helper = ""
