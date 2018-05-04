@@ -92,6 +92,8 @@ def read_osl_shaders():
 
     tool_dir, shader_directories = get_osl_search_paths()
 
+    oslinfo_path = os.path.join(tool_dir, 'oslinfo')
+
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
             print("[appleseed] Searching {0} for OSO files...".format(shader_dir))
@@ -100,7 +102,7 @@ def read_osl_shaders():
                     print("[appleseed] Reading {0}...".format(file))
                     filename = os.path.join(shader_dir, file)
                     content = []
-                    cmd = ('oslinfo', '-v', '"{0}"'.format(filename))
+                    cmd = ('"{0}"'.format(oslinfo_path), '-v', '"{0}"'.format(filename))
                     try:
                         process = subprocess.Popen(" ".join(cmd), cwd=tool_dir, bufsize=1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         while True:
