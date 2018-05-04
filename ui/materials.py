@@ -74,8 +74,14 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type == 'MESH' and context.object.active_material is not None
+        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+        obj = context.object is not None
+        obj_type = context.object.type == 'MESH'
+        material = context.object.active_material is not None
+        if material:
+            is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
+            return renderer and obj and obj_type and material and is_not_nodemat
+        return False
 
     def draw(self, context):
         layout = self.layout
@@ -1257,7 +1263,14 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.render.engine in cls.COMPAT_ENGINES and context.object is not None and context.object.active_material.appleseed.osl_node_tree is not None
+        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+        obj = context.object is not None
+        obj_type = context.object.type == 'MESH'
+        material = context.object.active_material is not None
+        if material:
+            is_nodemat = context.object.active_material.appleseed.osl_node_tree != None
+            return renderer and obj and obj_type and material and is_nodemat
+        return False
 
     def draw(self, context):
         layout = self.layout
@@ -1270,7 +1283,7 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
                           "textures", asr_scene_props, "textures_index", rows=1, maxrows=16, type="DEFAULT")
 
         col = layout.column(align=True)
-        
+
         row = col.row(align=True)
         row.operator("appleseed.add_texture", text="Add Texture", icon="ZOOMIN")
         row.operator("appleseed.remove_texture", text="Remove Texture", icon="ZOOMOUT")
