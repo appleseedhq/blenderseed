@@ -262,9 +262,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
                project_filepath,
                '--to-stdout',
                '--threads', threads,
-               '--message-verbosity', 'info',
                '--resolution', str(width), str(height),
                '--window', str(min_x), str(min_y), str(max_x), str(max_y)]
+        if self.is_preview:
+            cmd.extend(['--message-verbosity', 'warning'])
+        else:
+            cmd.extend(['--message-verbosity', 'info'])
         if scene.appleseed.denoise_mode == 'write_outputs':
             cmd.extend(['--output', (os.path.join(scene.appleseed.denoise_output_dir, 'denoise_output.exr'))])
         try:
