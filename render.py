@@ -61,6 +61,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         asr_scene_props = scene.appleseed
 
         if not self.is_preview:
+            self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
             if asr_scene_props.enable_aovs:
                 if asr_scene_props.diffuse_aov:
                     self.register_pass(scene, renderlayer, "Diffuse", 4, "RGBA", 'COLOR')
@@ -79,7 +80,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 if asr_scene_props.uv_aov:
                     self.register_pass(scene, renderlayer, "UV", 3, "RGB", 'VECTOR')
                 if asr_scene_props.depth_aov:
-                    self.register_pass(scene, renderlayer, "Z Depth", 1, "X", 'VALUE')
+                    self.register_pass(scene, renderlayer, "Z Depth", 1, "Z", 'VALUE')
                 if asr_scene_props.pixel_time_aov:
                     self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
 
@@ -105,7 +106,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 if asr_scene_props.uv_aov:
                     self.add_pass("UV", 3, "RGB")
                 if asr_scene_props.depth_aov:
-                    self.add_pass("Z Depth", 1, "X")
+                    self.add_pass("Z Depth", 1, "Z")
                 if asr_scene_props.pixel_time_aov:
                     self.add_pass("Pixel Time", 1, "X")
 
@@ -617,25 +618,17 @@ class RenderAppleseed(bpy.types.RenderEngine):
         return "%02i:%02i:%02i" % (hours, minutes, seconds)
 
     def __map_aovs(self, aov_name):
-        if aov_name == "beauty":
-            return "Combined"
-        if aov_name == "diffuse":
-            return "Diffuse"
-        elif aov_name == "direct_diffuse":
-            return "Direct Diffuse"
-        elif aov_name == "indirect_diffuse":
-            return "Indirect Diffuse"
-        elif aov_name == "glossy":
-            return "Glossy"
-        elif aov_name == "direct_glossy":
-            return "Direct Glossy"
-        elif aov_name == "indirect_glossy":
-            return "Indirect Glossy"
-        elif aov_name == "normal":
-            return "Normal"
-        elif aov_name == "uv":
-            return "UV"
-        elif aov_name == "pixel_time":
-            return "Pixel Time"
-        else:
-            return "Z Depth"
+
+        aov_mapping = {'beauty': "Combined",
+                       'diffuse': "Diffuse",
+                       'direct_diffuse': "Direct Diffuse",
+                       'indirect_diffuse': "Indirect Diffuse",
+                       'glossy': "Glossy",
+                       'direct_glossy': "Direct Glossy",
+                       'indirect_glossy': "Indirect Glossy",
+                       'normal': "Normal",
+                       'uv': "UV",
+                       'pixel_time': "Pixel Time",
+                       'depth': "Z Depth"}
+
+        return aov_mapping[aov_name]
