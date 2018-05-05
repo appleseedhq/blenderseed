@@ -1,6 +1,6 @@
 .. title:: Welcome!
 
-.. image:: /_static/appleseedDocCover_Blender.png
+.. image:: /_static/blenderseed-docs-cover.png
 
 Table of Contents
 ==================
