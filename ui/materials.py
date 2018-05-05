@@ -79,8 +79,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
         obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
-            is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
-            return renderer and obj and obj_type and material and is_not_nodemat
+            return renderer and obj and obj_type and material
         return False
 
     def draw(self, context):
@@ -1042,160 +1041,157 @@ class AppleseedMaterialShading(bpy.types.Panel):
                 # volume density
                 layout.prop(asr_mat, "specular_btdf_volume_scale", text="Volume Scale")
 
-            layout.separator()
 
-            #
-            # BSSRDF
-            #
+class AppleseedMaterialSSSShading(bpy.types.Panel):
+    bl_label = 'SSS Shader'
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_options = {'DEFAULT_CLOSED'}
 
-            # Model
-            layout.prop(asr_mat, "bssrdf_model", text="Subsurface")
-            if asr_mat.bssrdf_model != 'none':
-                # Weight
-                layout.prop(asr_mat, "bssrdf_weight", text="Weight")
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+        obj = context.object is not None
+        obj_type = context.object.type == 'MESH'
+        material = context.object.active_material is not None
+        if material:
+            is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
+            return renderer and obj and obj_type and material and is_not_nodemat
+        return False
 
-                # Reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "bssrdf_reflectance", text="")
+    def draw(self, context):
+        layout = self.layout
+        object = context.object
+        material = object.active_material
+        asr_mat = material.appleseed
 
-                if asr_mat.bssrdf_reflectance_use_texture:
-                    layout.prop_search(asr_mat, "bssrdf_reflectance_texture", material, "texture_slots", text="")
+        layout.prop(asr_mat, "bssrdf_model", text="Subsurface")
+        if asr_mat.bssrdf_model != 'none':
+            # Weight
+            layout.prop(asr_mat, "bssrdf_weight", text="Weight")
 
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "bssrdf_reflectance_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.bssrdf_reflectance_texture != '' and asr_mat.bssrdf_reflectance_use_texture:
-                    specular_texture = bpy.data.textures[asr_mat.bssrdf_reflectance_texture]
-                    layout.prop(specular_texture.image.colorspace_settings, "name", text="Color Space")
+            # Reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "bssrdf_reflectance", text="")
 
-                # Reflectance multiplier
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "bssrdf_reflectance_multiplier", text="Reflectance Multiplier")
+            if asr_mat.bssrdf_reflectance_use_texture:
+                layout.prop_search(asr_mat, "bssrdf_reflectance_texture", material, "texture_slots", text="")
 
-                if asr_mat.bssrdf_reflectance_multiplier_use_texture:
-                    layout.prop_search(asr_mat, "bssrdf_reflectance_multiplier_texture", material, "texture_slots", text="")
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "bssrdf_reflectance_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.bssrdf_reflectance_texture != '' and asr_mat.bssrdf_reflectance_use_texture:
+                specular_texture = bpy.data.textures[asr_mat.bssrdf_reflectance_texture]
+                layout.prop(specular_texture.image.colorspace_settings, "name", text="Color Space")
 
-                col = split.column()
-                col.prop(asr_mat, "bssrdf_reflectance_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.bssrdf_reflectance_multiplier_texture != '' and asr_mat.bssrdf_reflectance_multiplier_use_texture:
-                    reflect_mult_tex = bpy.data.textures[asr_mat.bssrdf_reflectance_multiplier_texture]
-                    layout.prop(reflect_mult_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # MFP
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Depth:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "bssrdf_mfp", text="")
-
-                if asr_mat.bssrdf_mfp_use_texture:
-                    layout.prop_search(asr_mat, "bssrdf_mfp_texture", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "bssrdf_mfp_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.bssrdf_mfp_texture != '' and asr_mat.bssrdf_mfp_use_texture:
-                    meanfp_texture = bpy.data.textures[asr_mat.bssrdf_mfp_texture]
-                    layout.prop(meanfp_texture.image.colorspace_settings, "name", text="Color Space")
-
-                # MFP multiplier
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "bssrdf_mfp_multiplier", text="Depth Multiplier")
-
-                if asr_mat.bssrdf_mfp_multiplier_use_texture:
-                    layout.prop_search(asr_mat, "bssrdf_mfp_multiplier_texture", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "bssrdf_mfp_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.bssrdf_mfp_multiplier_texture != '' and asr_mat.bssrdf_mfp_multiplier_use_texture:
-                    mfp_mult_tex = bpy.data.textures[asr_mat.bssrdf_mfp_multiplier_texture]
-                    layout.prop(mfp_mult_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # IOR
-                layout.prop(asr_mat, "bssrdf_ior", text="Index of Refraction")
-
-                # Fresnel weight
-                layout.prop(asr_mat, "bssrdf_fresnel_weight", text="Fresnel Weight")
-
-            layout.separator()
-
-            #
-            # Volume
-            #
-            col = layout.column()
-            col.prop(asr_mat, "volume_phase_function_model", text="Volume")
-            if asr_mat.volume_phase_function_model != 'none':
-                # Absorption
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Absorption:")
-                col = split.column()
-                col.prop(asr_mat, "volume_absorption", text="")
-
-                # Absorption Multiplier
-                col = layout.column()
-                col.prop(asr_mat, "volume_absorption_multiplier", text="Absorption Multiplier")
-
-                # Volume Scattering
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Scattering:")
-                col = split.column()
-                col.prop(asr_mat, "volume_scattering", text="")
-
-                # Scattering Multiplier
-                col = layout.column()
-                col.prop(asr_mat, "volume_scattering_multiplier", text="Scattering Multiplier")
-
-                if asr_mat.volume_phase_function_model == 'henyey':
-                    col.prop(asr_mat, "volume_average_cosine", text="Average Cosine")
-
-            #
-            # Alpha mapping.
-            #
-
-            layout.separator()
-
+            # Reflectance multiplier
             split = layout.split(percentage=0.90)
             col = split.column()
-            col.prop(asr_mat, "material_alpha", text="Alpha")
+            col.prop(asr_mat, "bssrdf_reflectance_multiplier", text="Reflectance Multiplier")
 
-            if asr_mat.material_use_alpha:
-                layout.prop_search(asr_mat, "material_alpha_map",
-                                   material, "texture_slots", text="")
+            if asr_mat.bssrdf_reflectance_multiplier_use_texture:
+                layout.prop_search(asr_mat, "bssrdf_reflectance_multiplier_texture", material, "texture_slots", text="")
 
             col = split.column()
-            col.prop(asr_mat, "material_use_alpha", text="", icon="TEXTURE_SHADED", toggle=True)
-            if asr_mat.material_alpha_map != '' and asr_mat.material_use_alpha:
-                alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
-                layout.prop(alpha_tex.image.colorspace_settings,
-                            "name", text="Color Space")
+            col.prop(asr_mat, "bssrdf_reflectance_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.bssrdf_reflectance_multiplier_texture != '' and asr_mat.bssrdf_reflectance_multiplier_use_texture:
+                reflect_mult_tex = bpy.data.textures[asr_mat.bssrdf_reflectance_multiplier_texture]
+                layout.prop(reflect_mult_tex.image.colorspace_settings, "name", text="Color Space")
 
-            #
-            # Bump/normal mapping.
-            #
-
-            split = layout.split(percentage=0.50)
+            # MFP
+            split = layout.split(percentage=0.40)
             col = split.column()
-            col.prop(asr_mat, "material_use_bump_tex", text="Bump Map", icon="POTATO", toggle=True)
+            col.label("Depth:")
+            split = split.split(percentage=0.83)
             col = split.column()
-            if asr_mat.material_use_bump_tex:
-                col.prop(asr_mat, "material_use_normalmap", text="Normal Map", toggle=True)
-                layout.prop_search(asr_mat, "material_bump_tex", material, "texture_slots", text="")
+            col.prop(asr_mat, "bssrdf_mfp", text="")
 
-                if asr_mat.material_bump_tex != '':
-                    bump_tex = bpy.data.textures[asr_mat.material_bump_tex]
-                    layout.prop(bump_tex.image.colorspace_settings, "name", text="Color Space")
-                if not asr_mat.material_use_normalmap:
-                    layout.prop(asr_mat, "material_bump_amplitude", text="Bump Amplitude")
-                    layout.prop(asr_mat, "material_bump_offset", text="Bump Offset")
+            if asr_mat.bssrdf_mfp_use_texture:
+                layout.prop_search(asr_mat, "bssrdf_mfp_texture", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "bssrdf_mfp_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.bssrdf_mfp_texture != '' and asr_mat.bssrdf_mfp_use_texture:
+                meanfp_texture = bpy.data.textures[asr_mat.bssrdf_mfp_texture]
+                layout.prop(meanfp_texture.image.colorspace_settings, "name", text="Color Space")
+
+            # MFP multiplier
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "bssrdf_mfp_multiplier", text="Depth Multiplier")
+
+            if asr_mat.bssrdf_mfp_multiplier_use_texture:
+                layout.prop_search(asr_mat, "bssrdf_mfp_multiplier_texture", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "bssrdf_mfp_multiplier_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.bssrdf_mfp_multiplier_texture != '' and asr_mat.bssrdf_mfp_multiplier_use_texture:
+                mfp_mult_tex = bpy.data.textures[asr_mat.bssrdf_mfp_multiplier_texture]
+                layout.prop(mfp_mult_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # IOR
+            layout.prop(asr_mat, "bssrdf_ior", text="Index of Refraction")
+
+            # Fresnel weight
+            layout.prop(asr_mat, "bssrdf_fresnel_weight", text="Fresnel Weight")
+
+
+class AppleseedMaterialVolumeShading(bpy.types.Panel):
+    bl_label = "Volume Shader"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+        obj = context.object is not None
+        obj_type = context.object.type == 'MESH'
+        material = context.object.active_material is not None
+        if material:
+            is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
+            return renderer and obj and obj_type and material and is_not_nodemat
+        return False
+
+    def draw(self, context):
+        layout = self.layout
+        material = context.object.active_material
+        asr_mat = material.appleseed
+
+        layout.prop(asr_mat, "volume_phase_function_model", text="Volume")
+        if asr_mat.volume_phase_function_model != 'none':
+            # Absorption
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Absorption:")
+            col = split.column()
+            col.prop(asr_mat, "volume_absorption", text="")
+
+            # Absorption Multiplier
+            col = layout.column()
+            col.prop(asr_mat, "volume_absorption_multiplier", text="Absorption Multiplier")
+
+            # Volume Scattering
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Scattering:")
+            col = split.column()
+            col.prop(asr_mat, "volume_scattering", text="")
+
+            # Scattering Multiplier
+            col = layout.column()
+            col.prop(asr_mat, "volume_scattering_multiplier", text="Scattering Multiplier")
+
+            if asr_mat.volume_phase_function_model == 'henyey':
+                col.prop(asr_mat, "volume_average_cosine", text="Average Cosine")
 
 
 class AppleseedMatEmissionPanel(bpy.types.Panel):
@@ -1243,6 +1239,60 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
         layout.prop(asr_mat, "cast_indirect", text="Cast Indirect Light")
         layout.prop(asr_mat, "importance_multiplier", text="Importance Multiplier")
         layout.prop(asr_mat, "light_near_start", text="Light Near Start")
+
+
+class AppleseedAlphaBumpPanel(bpy.types.Panel):
+    bl_label = "Alpha/Bump Shader"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+        obj = context.object is not None
+        obj_type = context.object.type == 'MESH'
+        material = context.object.active_material is not None
+        if material:
+            is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
+            return renderer and obj and obj_type and material and is_not_nodemat
+        return False
+
+    def draw(self, context):
+        layout = self.layout
+        material = context.object.active_material
+        asr_mat = material.appleseed
+
+        split = layout.split(percentage=0.90)
+        col = split.column()
+        col.prop(asr_mat, "material_alpha", text="Alpha")
+
+        if asr_mat.material_use_alpha:
+            layout.prop_search(asr_mat, "material_alpha_map",
+                               material, "texture_slots", text="")
+
+        col = split.column()
+        col.prop(asr_mat, "material_use_alpha", text="", icon="TEXTURE_SHADED", toggle=True)
+        if asr_mat.material_alpha_map != '' and asr_mat.material_use_alpha:
+            alpha_tex = bpy.data.textures[asr_mat.material_alpha_map]
+            layout.prop(alpha_tex.image.colorspace_settings,
+                        "name", text="Color Space")
+
+        split = layout.split(percentage=0.50)
+        col = split.column()
+        col.prop(asr_mat, "material_use_bump_tex", text="Bump Map", icon="POTATO", toggle=True)
+        col = split.column()
+        if asr_mat.material_use_bump_tex:
+            col.prop(asr_mat, "material_use_normalmap", text="Normal Map", toggle=True)
+            layout.prop_search(asr_mat, "material_bump_tex", material, "texture_slots", text="")
+
+            if asr_mat.material_bump_tex != '':
+                bump_tex = bpy.data.textures[asr_mat.material_bump_tex]
+                layout.prop(bump_tex.image.colorspace_settings, "name", text="Color Space")
+            if not asr_mat.material_use_normalmap:
+                layout.prop(asr_mat, "material_bump_amplitude", text="Bump Amplitude")
+                layout.prop(asr_mat, "material_bump_offset", text="Bump Offset")
 
 
 class TextureConvertSlots(bpy.types.UIList):
@@ -1306,7 +1356,10 @@ def register():
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
     util.safe_register_class(AppleseedMaterialPreview)
     util.safe_register_class(AppleseedMaterialShading)
+    util.safe_register_class(AppleseedMaterialSSSShading)
+    util.safe_register_class(AppleseedMaterialVolumeShading)
     util.safe_register_class(AppleseedMatEmissionPanel)
+    util.safe_register_class(AppleseedAlphaBumpPanel)
     util.safe_register_class(TextureConvertSlots)
     util.safe_register_class(AppleseedTextureConverterPanel)
 
@@ -1314,7 +1367,10 @@ def register():
 def unregister():
     util.safe_unregister_class(AppleseedTextureConverterPanel)
     util.safe_unregister_class(TextureConvertSlots)
+    util.safe_unregister_class(AppleseedAlphaBumpPanel)
     util.safe_unregister_class(AppleseedMatEmissionPanel)
+    util.safe_unregister_class(AppleseedMaterialVolumeShading)
+    util.safe_unregister_class(AppleseedMaterialSSSShading)
     util.safe_unregister_class(AppleseedMaterialShading)
     util.safe_unregister_class(AppleseedMaterialPreview)
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.remove('APPLESEED_RENDER')
