@@ -450,7 +450,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                   subtype="DIR_PATH")
 
     prefilter_spikes = bpy.props.BoolProperty(name="prefilter_spikes",
-                                              description="This filter attempts to filter pixels that show a strong 'spike' over the average of its neighbors, i.e. fireflies",
+                                              description="This filter attempts to filter pixels that show a strong 'spike' over the average of their neighbors, i.e. fireflies",
                                               default=True)
 
     spike_threshold = bpy.props.FloatProperty(name="spike_threshold",

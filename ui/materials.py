@@ -74,12 +74,12 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
-        obj = context.object is not None
-        obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
-            return renderer and obj and obj_type and material
+            renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+            obj = context.object is not None
+            obj_type = context.object.type == 'MESH'
+            return renderer and obj and obj_type
         return False
 
     def draw(self, context):
@@ -1052,13 +1052,13 @@ class AppleseedMaterialSSSShading(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
-        obj = context.object is not None
-        obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
+            renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+            obj = context.object is not None
+            obj_type = context.object.type == 'MESH'
             is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
-            return renderer and obj and obj_type and material and is_not_nodemat
+            return renderer and obj and obj_type and is_not_nodemat
         return False
 
     def draw(self, context):
@@ -1152,13 +1152,13 @@ class AppleseedMaterialVolumeShading(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
-        obj = context.object is not None
-        obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
+            renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+            obj = context.object is not None
+            obj_type = context.object.type == 'MESH'
             is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
-            return renderer and obj and obj_type and material and is_not_nodemat
+            return renderer and obj and obj_type and is_not_nodemat
         return False
 
     def draw(self, context):
@@ -1203,13 +1203,13 @@ class AppleseedMatEmissionPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
-        obj = context.object is not None
-        obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
+            renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+            obj = context.object is not None
+            obj_type = context.object.type == 'MESH'
             is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
-            return renderer and obj and obj_type and material and is_not_nodemat
+            return renderer and obj and obj_type and is_not_nodemat
         return False
 
     def draw_header(self, context):
@@ -1250,13 +1250,13 @@ class AppleseedAlphaBumpPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
-        obj = context.object is not None
-        obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
+            renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+            obj = context.object is not None
+            obj_type = context.object.type == 'MESH'
             is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
-            return renderer and obj and obj_type and material and is_not_nodemat
+            return renderer and obj and obj_type and is_not_nodemat
         return False
 
     def draw(self, context):
@@ -1313,13 +1313,13 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        renderer = context.scene.render.engine == 'APPLESEED_RENDER'
-        obj = context.object is not None
-        obj_type = context.object.type == 'MESH'
         material = context.object.active_material is not None
         if material:
+            renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+            obj = context.object is not None
+            obj_type = context.object.type == 'MESH'
             is_nodemat = context.object.active_material.appleseed.osl_node_tree != None
-            return renderer and obj and obj_type and material and is_nodemat
+            return renderer and obj and obj_type and is_nodemat
         return False
 
     def draw(self, context):
