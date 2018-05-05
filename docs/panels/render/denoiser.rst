@@ -13,7 +13,7 @@ Denoiser
     - Prefilter Spikes:
         This filter attempts to remove fireflies (overly bright pixels) from the image before denoising
     - Spike Threshold:
-        How high a pixel has to be compared to its neighbors to be considered a spike
+        How bright a pixel has to be compared to its neighbors to be considered a spike
     - Patch Distance:
         This controls the overall level of denoising that will be applied.  Raising this too high can lead to a blurry image
     - Denoise Scales:

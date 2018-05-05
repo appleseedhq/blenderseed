@@ -795,7 +795,7 @@ class Writer(object):
         parameter_types = node.parameter_types
         for key in parameter_types.keys():
             if key in dir(node):
-                parameter_value = "{0}".format(parameter_types[key])
+                parameter_value = parameter_types[key]
                 parameter = getattr(node, key)
                 if key in node.filepaths:
                     parameter = bpy.path.abspath(parameter)
@@ -808,16 +808,16 @@ class Writer(object):
                     parameter_value = "int"
                     parameter = int(parameter)
                 if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
-                    parameter = "{0}".format(" ".join(map(str, parameter)))
+                    parameter =  " ".join(map(str, parameter))
                 parameters[key] = parameter_value + " " + str(parameter)
 
         for socket in node.inputs:
             if not socket.is_linked:
                 if socket.socket_value != "":
-                    parameter_value = "{0}".format(parameter_types[socket.socket_osl_id])
+                    parameter_value = parameter_types[socket.socket_osl_id]
                     parameter = socket.get_socket_value(True)
                     if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
-                        parameter = "{0}".format(" ".join(map(str, parameter)))
+                        parameter = " ".join(map(str, parameter))
                         if parameter_value == 'float[2]':
                             parameter_value = 'float[]'
                     parameters[socket.socket_osl_id] = parameter_value + " " + str(parameter)
