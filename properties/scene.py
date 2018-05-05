@@ -450,19 +450,23 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                   subtype="DIR_PATH")
 
     prefilter_spikes = bpy.props.BoolProperty(name="prefilter_spikes",
+                                              description="This filter attempts to filter pixels that show a strong 'spike' over the average of its neighbors, i.e. fireflies",
                                               default=True)
 
     spike_threshold = bpy.props.FloatProperty(name="spike_threshold",
+                                              description="How much brighter a pixel has to be to be considered a spike",
                                               default=2.0,
                                               min=0.1,
                                               max=4.0)
 
     patch_distance_threshold = bpy.props.FloatProperty(name="patch_distance_threshold",
+                                                       description="This controls the amount of denoising applied to the image",
                                                        default=1.0,
                                                        min=0.5,
                                                        max=3.0)
 
     denoise_scales = bpy.props.IntProperty(name="denoise_scales",
+                                           description="This controls the number of scales that are used to remove low frequency noise",
                                            default=3,
                                            min=1,
                                            max=10)
