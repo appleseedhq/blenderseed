@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'blenderseed'
-copyright = '2018, The appleseedhq Organization'
+copyright = '2010-2018, The appleseedhq Organization'
 author = 'The appleseedhq Organization'
 
 # The short X.Y version
@@ -243,6 +243,6 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'blenderseed', 'blenderseed Documentation',
-     author, 'blenderseed', 'One line description of project.',
+     author, 'blenderseed', 'appleseed plugin for Blender',
      'Miscellaneous'),
 ]
