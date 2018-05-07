@@ -11,13 +11,13 @@ SSS sets are a way for appleseed to treat separate meshes as a single object whe
 
 .. image:: /_static/screenshots/world_panel/sss_sets_example.png
 
-Objects on the right are in a common SSS set.  Objects on the left are not.
+Objects on the left are in separate SSS sets; objects on the right are in the same SSS set.
 
 |
 
 - Add Set
 	- This adds an SSS set to the current scene.
 - Remove Set
-	- This removes the currently selected set from the scene.
+	- This removes the currently selected SSS set from the scene.
 - SSS Set Name
 	- This allows you to set the name of the SSS set.
