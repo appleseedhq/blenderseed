@@ -1341,6 +1341,7 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
         row.operator("appleseed.refresh_textures", text="Refresh", icon='FILE_REFRESH')
         row.operator("appleseed.convert_textures", text="Convert", icon='PLAY')
 
+        layout.prop(asr_scene_props, "remove_unused_textures", text="Delete Unused .tx Files", toggle=True)
         layout.prop(asr_scene_props, "sub_textures", text="Use Converted Textures", toggle=True)
 
         if textures:
