@@ -98,7 +98,7 @@ class AppleseedRefreshTexture(bpy.types.Operator):
                     try:
                         os.remove(converted_texture)
                     except:
-                        print("[appleseed] {0} does not exist".format(converted_texture))
+                        self.report[{'ERROR'}: "[appleseed] {0} does not exist".format(converted_texture)]
             texture_index -= 1
 
         return {'FINISHED'}
