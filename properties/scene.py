@@ -91,6 +91,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     sub_textures = bpy.props.BoolProperty(name="sub_textures",
                                           default=False)
 
+    del_unused_tex = bpy.props.BoolProperty(name="del_unused_tex",
+                                                    description="Removes unused .tx files when the list is refreshed",
+                                                    default=True)
+
     textures = bpy.props.CollectionProperty(type=AppleseedTextureConvertProps,
                                             name="appleseed Texture",
                                             description="")

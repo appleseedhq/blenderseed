@@ -30,6 +30,7 @@ import bpy
 import subprocess
 from ..projectwriter import image_extensions
 from .. import util
+import os
 
 
 class AppleseedConvertTextures(bpy.types.Operator):
@@ -73,16 +74,32 @@ class AppleseedRefreshTexture(bpy.types.Operator):
 
         existing_textures = [x.name for x in collection]
 
+        scene_textures = []
+
         for tree in bpy.data.node_groups:
             for node in tree.nodes:
                 for param in node.parameter_types:
                     if node.parameter_types[param] == 'string':
                         string = getattr(node, param)
                         if string.endswith(image_extensions):
+                            scene_textures.append(string)
                             if string not in existing_textures:
                                 collection.add()
-                                num = collection.__len__()
+                                num = len(collection)
                                 collection[num - 1].name = string
+
+        texture_index = len(collection) - 1
+        while texture_index > -1:
+            texture = collection[texture_index]
+            if texture.name not in scene_textures:
+                collection.remove(texture_index)
+                if scene.appleseed.del_unused_tex:
+                    converted_texture = os.path.realpath(texture.name.split(".")[0] + '.tx')
+                    try:
+                        os.remove(converted_texture)
+                    except:
+                        self.report[{'ERROR'}: "[appleseed] {0} does not exist".format(converted_texture)]
+            texture_index -= 1
 
         return {'FINISHED'}
 
