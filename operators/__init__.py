@@ -28,7 +28,7 @@
 
 import bpy
 import subprocess
-from .. projectwriter import image_extensions
+from ..projectwriter import image_extensions
 from .. import util
 import os
 
@@ -93,7 +93,7 @@ class AppleseedRefreshTexture(bpy.types.Operator):
             texture = collection[texture_index]
             if texture.name not in scene_textures:
                 collection.remove(texture_index)
-                if scene.appleseed.remove_unused_textures:
+                if scene.appleseed.del_unused_tex:
                     converted_texture = os.path.realpath(texture.name.split(".")[0] + '.tx')
                     try:
                         os.remove(converted_texture)
