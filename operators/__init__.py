@@ -98,7 +98,7 @@ class AppleseedRefreshTexture(bpy.types.Operator):
                     try:
                         os.remove(converted_texture)
                     except:
-                        self.report[{'ERROR'}: "[appleseed] {0} does not exist".format(converted_texture)]
+                        self.report[{'ERROR'}, "[appleseed] {0} does not exist".format(converted_texture)]
             texture_index -= 1
 
         return {'FINISHED'}
@@ -118,7 +118,7 @@ class AppleseedAddTexture(bpy.types.Operator):
         collection = scene.appleseed.textures
 
         collection.add()
-        num = collection.__len__()
+        num = len(collection)
         collection[num - 1].name = ""
 
         return {'FINISHED'}
@@ -139,7 +139,7 @@ class AppleseedRemoveTexture(bpy.types.Operator):
         index = scene.appleseed.textures_index
 
         collection.remove(index)
-        num = collection.__len__()
+        num = len(collection)
         if index >= num:
             index = num - 1
         if index < 0:
@@ -161,7 +161,7 @@ class AppleseedAddSssSet(bpy.types.Operator):
         collection = world.sss_sets
 
         collection.add()
-        num = collection.__len__()
+        num = len(collection)
         collection[num - 1].name = "SSS Set " + str(num)
 
         return {'FINISHED'}
@@ -180,7 +180,7 @@ class AppleseedRemoveSssSet(bpy.types.Operator):
         index = world.sss_sets_index
 
         collection.remove(index)
-        num = collection.__len__()
+        num = len(collection)
         if index >= num:
             index = num - 1
         if index < 0:
