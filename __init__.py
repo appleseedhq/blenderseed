@@ -58,12 +58,12 @@ else:
     from . import ui
     from . import render    # not superfluous
     from . import preferences
-
-import bpy
+    from . import util
 
 
 def register():
     preferences.register()
+    util.load_appleseed_python_paths()
     properties.register()
     operators.register()
     export.register()
@@ -76,5 +76,6 @@ def unregister():
     export.unregister()
     operators.unregister()
     properties.unregister()
+    util.unload_appleseed_python_paths()
     preferences.unregister()
     bpy.utils.unregister_module(__name__)  # Must be at the end in order to avoid unregistration errors.
