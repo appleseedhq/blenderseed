@@ -13,3 +13,4 @@ Table of Contents
    quickstart
    reference
    about
+   tutorials
