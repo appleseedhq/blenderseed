@@ -28,6 +28,7 @@
 
 import multiprocessing
 import os
+import platform
 import sys
 from math import tan, atan, degrees
 
@@ -62,10 +63,6 @@ def get_appleseed_bin_dir():
     return appleseed_bin_dir
 
 
-# ------------------------------------
-# OSL shader reader.
-# ------------------------------------
-
 def get_osl_search_paths():
     appleseed_parent_dir = get_appleseed_bin_dir()
     while os.path.basename(appleseed_parent_dir) != 'bin':
@@ -79,8 +76,139 @@ def get_osl_search_paths():
     return tool_dir, shader_directories
 
 
+def get_appleseed_parent_dir():
+    appleseed_parent_dir = get_appleseed_bin_dir()
+    while os.path.basename(appleseed_parent_dir) != 'bin':
+        appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
+    appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
+
+    return appleseed_parent_dir
+
+
+def load_appleseed_python_paths():
+    python_path = find_python_path()
+    sys.path.append(python_path)
+    print("[appleseed] Python path set to: {0}".format(python_path))
+
+    if platform.system() == 'Windows':
+        bin_dir = get_appleseed_bin_dir()
+        os.environ['PATH'] += os.pathsep + bin_dir
+        print("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
+
+
+def unload_appleseed_python_paths():
+    sys.path.remove(find_python_path())
+
+    if platform.system() == 'Windows':
+        os.environ['PATH'] = str(os.environ['PATH'].split(os.pathsep)[0:-1])
+
+
+def find_python_path():
+    if 'APPLESEED_PYTHON_PATH' in os.environ:
+        python_path = os.environ['APPLESEED_PYTHON_PATH']
+    else:
+        python_path = os.path.join(get_appleseed_parent_dir(), 'lib', 'python2.7')
+
+    return python_path
+
+
 def read_osl_shaders():
-    """Reads all .oso parameters"""
+    if 'USE_APPLESEED_PYTHON' in os.environ:
+        nodes = read_osl_shaders_python()
+    else:
+        nodes = read_osl_shaders_oslinfo()
+
+    return nodes
+
+
+def read_osl_shaders_python():
+    '''
+    Reads parameters from OSL .oso files using the ShaderQuery function that is built
+    into the Python bindings for appleseed.  These parameters are used to create a dictionary
+    of the shader parameters that is then added to a list.  This shader list is passed
+    on to the oslnode.generate_node function.
+    '''
+
+    nodes = []
+
+    if not get_appleseed_bin_dir():
+        print("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
+        return nodes
+
+    tool_dir, shader_directories = get_osl_search_paths()
+
+    import appleseed as asr
+
+    q = asr.ShaderQuery()
+
+    print("[appleseed] Parsing OSL shaders...")
+
+    for shader_dir in shader_directories:
+        if os.path.isdir(shader_dir):
+            print("[appleseed] Searching {0} for OSO files...".format(shader_dir))
+            for file in os.listdir(shader_dir):
+                if file.endswith(".oso"):
+                    print("[appleseed] Reading {0}...".format(file))
+                    d = {}
+                    filename = os.path.join(shader_dir, file)
+                    q.open(filename)
+                    d['inputs'] = []
+                    d['outputs'] = []
+                    d['name'] = q.get_metadata()['as_blender_node_name']['value']
+                    d['filename'] = file.replace(".oso", "")
+                    d['category'] = q.get_metadata()['as_blender_category']['value']
+                    num_of_params = q.get_num_params()
+                    for x in range(0, num_of_params):
+                        param = q.get_param_info(x)
+                        keys = param.keys()
+                        metadata = param['metadata']
+                        metadata_keys = metadata.keys()
+                        param_data = {}
+                        param_data['name'] = param['name']
+                        param_data['type'] = param['type']
+                        param_data['connectable'] = True
+                        param_data['hide_ui'] = param['validdefault'] is False
+                        if 'default' in keys:
+                            param_data['default'] = param['default']
+                        if 'label' in metadata_keys:
+                            param_data['label'] = metadata['label']['value']
+                        if 'widget' in metadata_keys:
+                            param_data['widget'] = metadata['widget']['value']
+                            if param_data['widget'] == 'null':
+                                param_data['hide_ui'] = True
+                        if 'min' in metadata_keys:
+                            param_data['min'] = metadata['min']['value']
+                        if 'max' in metadata_keys:
+                            param_data['max'] = metadata['max']['value']
+                        if 'softmin' in metadata_keys:
+                            param_data['softmin'] = metadata['softmin']['value']
+                        if 'softmax' in metadata_keys:
+                            param_data['softmax'] = metadata['softmax']['value']
+                        if 'help' in metadata_keys:
+                            param_data['help'] = metadata['help']['value']
+                        if 'options' in metadata_keys:
+                            param_data['options'] = metadata['options']['value'].split(" = ")[-1].replace("\"", "").split("|")
+                        if 'as_blender_input_socket' in metadata_keys:
+                            param_data['connectable'] = False if metadata['as_blender_input_socket']['value'] == 0.0 else True
+
+                        if param['isoutput'] is True:
+                            d['outputs'].append(param_data)
+                        else:
+                            d['inputs'].append(param_data)
+
+                    nodes.append(d)
+
+    print("[appleseed] OSL parsing complete.")
+
+    return nodes
+
+
+def read_osl_shaders_oslinfo():
+    '''
+    This reads the parameters of OSL .oso files using the oslinfo command line utility.  Oslinfo's output is gathered
+    and sent to the create_osl_dict function to be processed into a parameter dictionary.  This dictionary is then added to
+    a list of all shader nodes that is then passed to the oslnode.generate_node function.nodes
+    '''
 
     nodes = []
 
@@ -133,6 +261,10 @@ def read_osl_shaders():
 
 
 def create_osl_dict(file, content=None):
+    '''
+    This function processes the raw output from oslinfo into a dictionary of parameters and metadata for the scanned shader.
+    '''
+
     d = {}
     current_element = None
     for line in content:
