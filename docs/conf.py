@@ -105,9 +105,9 @@ html_theme_options = {
         ("Quickstart", "quickstart"),
         ("Reference", "reference"),
         ("About", "about"),
-        # ("Tutorials", "tutorials/tutorials"),
+        ("Tutorials", "tutorials"),
         ("appleseedhq", "https://appleseedhq.net", True),
-        ("vimeo", "https://vimeo.com/appleseedhq", True)
+        # ("vimeo", "https://vimeo.com/appleseedhq", True)
     ],
 
     # Render the next and previous page links in navbar. (Default: true)
