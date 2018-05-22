@@ -75,16 +75,14 @@ class AppleseedLampPanel(bpy.types.Panel):
             col.prop(asr_lamp, "radiance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
 
             if asr_lamp.radiance_multiplier_use_tex:
-                layout.prop_search(asr_lamp, "radiance_multiplier_tex", lamp_data, "texture_slots", text="")
-                if asr_lamp.radiance_multiplier_tex != '' and asr_lamp.radiance_multiplier_use_tex:
-                    radiance_multiplier_tex = bpy.data.textures[asr_lamp.radiance_multiplier_tex]
-                    layout.prop(radiance_multiplier_tex.image.colorspace_settings, "name", text="Color Space")
+                layout.prop(asr_lamp, "radiance_multiplier_tex", text="")
 
             layout.prop(lamp_data, "spot_blend", text="Inner Angle")
             layout.prop(lamp_data, "spot_size", text="Outer Angle")
             layout.prop(asr_lamp, "tilt_angle", text="Tilt Angle")
             layout.prop(lamp_data, "show_cone")
             layout.prop(asr_lamp, "exposure", text="Exposure")
+            layout.prop(asr_lamp, "exposure_multiplier", text="Exposure Multiplier")
             layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
@@ -111,7 +109,42 @@ class AppleseedLampPanel(bpy.types.Panel):
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'AREA':
-            layout.label("Area lights are unsupported in blenderseed")
+            col = layout.column(align=True)
+            col.prop(lamp_data, "shape", text="")
+            col.prop(lamp_data, "size", text="Size X")
+            if lamp_data.shape == 'RECTANGLE':
+                col.prop(lamp_data, "size_y", text="Size Y")
+
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Intensity:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_lamp, "radiance", text="")
+
+            col = split.column()
+            col.prop(asr_lamp, "radiance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+
+            if asr_lamp.radiance_use_tex:
+                layout.prop(asr_lamp, "radiance_tex", text="")
+
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_lamp, "radiance_multiplier", text="Intensity Multiplier")
+
+            col = split.column()
+            col.prop(asr_lamp, "radiance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+
+            if asr_lamp.radiance_multiplier_use_tex:
+                layout.prop(asr_lamp, "radiance_multiplier_tex", text="")
+
+            layout.prop(asr_lamp, "light_emission_profile")
+            if asr_lamp.light_emission_profile == 'cone_edf':
+                layout.prop(asr_lamp, "light_cone_edf_angle", text="Cone EDF Angle")
+            layout.prop(asr_lamp, "exposure", text="Exposure")
+            layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
+            layout.prop(asr_lamp, "light_near_start", text="Light Near Start")
+            layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
 
 
 def register():

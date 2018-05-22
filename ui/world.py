@@ -77,13 +77,16 @@ class AppleseedWorldPanel(bpy.types.Panel):
             layout.prop(scene.world, "horizon_color", text="Lower Radiance")
 
         elif asr_sky_props.env_type == "mirrorball_map":
-            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="")
-            layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
-
-        elif asr_sky_props.env_type == "latlong_map":
-            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="")
+            layout.prop(asr_sky_props, "env_tex", text="")
             layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
             layout.prop(asr_sky_props, "env_exposure", text="Exposure")
+            layout.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")
+
+        elif asr_sky_props.env_type == "latlong_map":
+            layout.prop(asr_sky_props, "env_tex", text="Radiance")
+            layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
+            layout.prop(asr_sky_props, "env_exposure", text="Exposure")
+            layout.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")
             layout.prop(asr_sky_props, "horizontal_shift", text="Horizontal Shift")
             layout.prop(asr_sky_props, "vertical_shift", text="Vertical Shift")
 

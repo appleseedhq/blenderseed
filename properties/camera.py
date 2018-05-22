@@ -55,9 +55,13 @@ class AppleseedCameraSettings(bpy.types.PropertyGroup):
                                         description="Enable depth of field",
                                         default=False)
 
+    enable_autofocus = bpy.props.BoolProperty(name="enable_autofocus",
+                                              description="",
+                                              default=False)
+
     f_number = bpy.props.FloatProperty(name="f_number",
                                        description="Thin lens camera f-stop value",
-                                       default=32.0,
+                                       default=8.0,
                                        min=0.0,
                                        max=32.0,
                                        step=3,

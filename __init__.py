@@ -54,7 +54,6 @@ else:
     import bpy
     from . import properties
     from . import operators
-    from . import export
     from . import ui
     from . import render    # not superfluous
     from . import preferences
@@ -66,6 +65,7 @@ def register():
     util.load_appleseed_python_paths()
     properties.register()
     operators.register()
+    from . import export
     export.register()
     ui.register()
     bpy.utils.register_module(__name__)

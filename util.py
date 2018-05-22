@@ -40,6 +40,9 @@ from . import bl_info
 import subprocess
 
 
+image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
+
+
 def safe_register_class(cls):
     try:
         print("[appleseed] Registering class {0}...".format(cls))
@@ -87,23 +90,28 @@ def get_appleseed_parent_dir():
 
 def load_appleseed_python_paths():
     python_path = find_python_path()
-    sys.path.append(python_path)
-    print("[appleseed] Python path set to: {0}".format(python_path))
+    if python_path != "":
+        sys.path.append(python_path)
+        print("[appleseed] Python path set to: {0}".format(python_path))
 
-    if platform.system() == 'Windows':
-        bin_dir = get_appleseed_bin_dir()
-        os.environ['PATH'] += os.pathsep + bin_dir
-        print("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
+        if platform.system() == 'Windows':
+            bin_dir = get_appleseed_bin_dir()
+            os.environ['PATH'] += os.pathsep + bin_dir
+            print("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
 
 
 def unload_appleseed_python_paths():
-    sys.path.remove(find_python_path())
+    python_path = find_python_path()
 
-    if platform.system() == 'Windows':
-        os.environ['PATH'] = str(os.environ['PATH'].split(os.pathsep)[0:-1])
+    if python_path != "":
+        sys.path.remove(python_path)
+
+        if platform.system() == 'Windows':
+            os.environ['PATH'] = str(os.environ['PATH'].split(os.pathsep)[0:-1])
 
 
 def find_python_path():
+    python_path = ""
     if 'APPLESEED_PYTHON_PATH' in os.environ:
         python_path = os.environ['APPLESEED_PYTHON_PATH']
     else:

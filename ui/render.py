@@ -26,6 +26,7 @@
 #
 
 import bpy
+import os
 from .. import util
 
 
@@ -57,6 +58,8 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
 
         row = layout.row(align=True)
         row.operator("appleseed.export_scene", text="Export Frame")
+        if 'USE_APPLESEED_PYTHON' in os.environ:
+            row.operator("appleseed.export_scene_python", text="Python Export")
         row.operator("appleseed.export_anim_scene", text="Export Animation")
 
         split = layout.split(percentage=0.33)
@@ -83,6 +86,8 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col = split.column()
         col.enabled = not asr_scene_props.threads_auto
         col.prop(asr_scene_props, "threads", text="Threads")
+
+        layout.prop(asr_scene_props, "tex_cache", text="Texture Cache Size")
 
         row = layout.row()
         row.prop(asr_scene_props, "generate_mesh_files", text="Export Geometry")
@@ -181,8 +186,9 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         asr_scene_props = scene.appleseed
 
         col = layout.column()
-        col.prop(asr_scene_props, "lighting_engine", text="Engine")
-        col.prop(asr_scene_props, "light_sampler", text="Light Sampler")
+        row = col.row()
+        row.prop(asr_scene_props, "lighting_engine", text="Engine", expand=True)
+        layout.prop(asr_scene_props, "light_sampler", text="Light Sampler")
         if asr_scene_props.lighting_engine == 'pt':
             layout.separator()
             col = layout.column()

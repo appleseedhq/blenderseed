@@ -35,6 +35,7 @@ import shutil
 from . import projectwriter
 from . import util
 
+from .translators import SceneTranslator
 
 class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
     """
@@ -78,6 +79,32 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
 
+class ExportAppleseedScenePython(bpy.types.Operator, ExportHelper):
+    """
+    Export the scene to an appleseed project on disk.
+    """
+
+    bl_idname = "appleseed.export_scene_python"
+    bl_label = "Export appleseed Scene with Python"
+
+    filename_ext = ".appleseed"
+    filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'})
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER' and 'USE_APPLESEED_PYTHON' in os.environ
+
+    def execute(self, context):
+        export_path = util.realpath(self.filepath)
+
+        scene_translator = SceneTranslator.create_project_export_translator(context.scene, export_path)
+        scene_translator.translate_scene()
+        scene_translator.write_project(export_path)
+
+        return {'FINISHED'}
+
+
 class ExportAppleseedAnimationScene(bpy.types.Operator, ExportHelper):
     """
     Export the scene to an appleseed project on disk.
@@ -112,15 +139,18 @@ class ExportAppleseedAnimationScene(bpy.types.Operator, ExportHelper):
 def menu_func_export_scene(self, context):
     self.layout.operator(ExportAppleseedScene.bl_idname, text="appleseed (.appleseed)")
     self.layout.operator(ExportAppleseedAnimationScene.bl_idname, text="appleseed animation (.appleseed)")
+    self.layout.operator(ExportAppleseedScenePython.bl_idname, text="appleseeed python (.appleseed)")
 
 
 def register():
     util.safe_register_class(ExportAppleseedScene)
     util.safe_register_class(ExportAppleseedAnimationScene)
+    util.safe_register_class(ExportAppleseedScenePython)
     bpy.types.INFO_MT_file_export.append(menu_func_export_scene)
 
 
 def unregister():
     bpy.types.INFO_MT_file_export.remove(menu_func_export_scene)
+    util.safe_unregister_class(ExportAppleseedScenePython)
     util.safe_unregister_class(ExportAppleseedAnimationScene)
     util.safe_unregister_class(ExportAppleseedScene)

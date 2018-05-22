@@ -58,10 +58,10 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                       default="gradient")
 
     sun_model = bpy.props.EnumProperty(name="Sky Model",
-                                       items=[("hosek_environment_edf", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
-                                              ('preetham_environment_edf', "Preetham", 'Preetham physical sun/sky model')],
+                                       items=[("hosek", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
+                                              ('preetham', "Preetham", 'Preetham physical sun/sky model')],
                                        description="Physical sun/sky model",
-                                       default="hosek_environment_edf")
+                                       default="hosek")
 
     sun_theta = bpy.props.FloatProperty(name="sun_theta",
                                         description="Sun polar (vertical) angle in degrees",
@@ -114,14 +114,15 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                             min=0.0,
                                             max=1.0)
 
-    env_tex_mult = bpy.props.FloatProperty(name="env_tex_mult",
-                                           description="",
-                                           default=1.0,
-                                           min=0.0)
+    env_tex_mult = bpy.props.StringProperty(name="env_tex_mult",
+                                            description="",
+                                            default="",
+                                            subtype='FILE_PATH')
 
     env_tex = bpy.props.StringProperty(name="env_tex",
                                        description="Texture to influence environment",
-                                       default="")
+                                       default="",
+                                       subtype='FILE_PATH')
 
     horizontal_shift = bpy.props.FloatProperty(name="horizontal_shift",
                                                description="Environment texture horizontal shift in degrees",
@@ -144,6 +145,12 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
     env_exposure = bpy.props.FloatProperty(name="env_exposure",
                                            description="Environment exposure",
                                            default=0.0)
+
+    env_exposure_multiplier = bpy.props.FloatProperty(name="env_exposure_multiplier",
+                                                      description="",
+                                                      default=1.0,
+                                                      soft_min=-64.0,
+                                                      soft_max=64.0)
 
 
 def register():

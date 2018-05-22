@@ -28,7 +28,7 @@
 
 import bpy
 import subprocess
-from ..projectwriter import image_extensions
+from ..util import image_extensions
 from .. import util
 import os
 
@@ -201,7 +201,7 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
 
     def execute(self, context):
         material = context.object.active_material
-        nodetree = bpy.data.node_groups.new('%s appleseed OSL Nodetree' % material.name, 'AppleseedOSLNodeTree')
+        nodetree = bpy.data.node_groups.new('%s_appleseed_osl_nodetree' % material.name, 'AppleseedOSLNodeTree')
         nodetree.use_fake_user = True
         material.appleseed.osl_node_tree = nodetree
         return {'FINISHED'}

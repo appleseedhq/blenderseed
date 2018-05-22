@@ -66,6 +66,12 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                        default="lambertian_brdf",
                                        update=refresh_preview)
 
+    shader_lighting_samples = bpy.props.IntProperty(name="lighting_samples",
+                                                    description="",
+                                                    min=1,
+                                                    soft_max=1000,
+                                                    default=1)
+
     #
     # Ashikhmin-Shirley BRDF.
     #

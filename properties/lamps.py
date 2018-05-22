@@ -45,7 +45,8 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
 
     radiance_tex = bpy.props.StringProperty(name="radiance_tex",
                                             description="Texture to influence lamp intensity",
-                                            default="")
+                                            default="",
+                                            subtype='FILE_PATH')
 
     radiance_multiplier = bpy.props.FloatProperty(name="radiance_multiplier",
                                                   description="Multiplier of lamp intensity",
@@ -59,13 +60,20 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
 
     radiance_multiplier_tex = bpy.props.StringProperty(name="radiance_multiplier_tex",
                                                        description="Texture to influence intensity multiplier",
-                                                       default="")
+                                                       default="",
+                                                       subtype='FILE_PATH')
 
     exposure = bpy.props.FloatProperty(name="exposure",
                                        description="Exposure",
                                        default=0.0,
                                        min=-64.0,
                                        max=64.0)
+
+    exposure_multiplier = bpy.props.FloatProperty(name="exposure_multiplier",
+                                                  description="Spotlight exposure multiplier",
+                                                  default=1.0,
+                                                  soft_min=-64.0,
+                                                  soft_max=64.0)
 
     cast_indirect = bpy.props.BoolProperty(name="cast_indirect",
                                            description="Lamp casts indirect light",
@@ -105,6 +113,24 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                          min=-360,
                                          max=360)
 
+    # Area lamp specific parameters.
+    light_near_start = bpy.props.FloatProperty(name="light_near_start",
+                                               description="Amount by which to extend the start of light's influence away from the emissive material",
+                                               default=0.0,
+                                               min=0,
+                                               max=10)
+
+    light_emission_profile = bpy.props.EnumProperty(name="Profile",
+                                                    description="Profile for emission",
+                                                    items=[('diffuse_edf', "Diffuse EDF", ""),
+                                                           ('cone_edf', "Cone EDF", "")],
+                                                    default='diffuse_edf')
+
+    light_cone_edf_angle = bpy.props.FloatProperty(name="light_cone_edf_angle",
+                                                   description="Angle of spread for cone EDF",
+                                                   default=90.0,
+                                                   min=0.0,
+                                                   max=180.0)
 
 def register():
     util.safe_register_class(AppleseedLampProps)

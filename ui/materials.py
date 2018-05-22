@@ -36,9 +36,11 @@ def osl_node_tree_selector_draw(layout, mat):
     except:
         return False
 
-    if mat.appleseed.osl_node_tree == None:
+    if mat.appleseed.osl_node_tree is None:
         layout.operator('appleseed.add_osl_nodetree', text="Add appleseed Material Node", icon='NODETREE')
         return False
+    else:
+        layout.operator('appleseed.view_nodetree', text="View Nodetree")
 
     return True
 
@@ -66,7 +68,7 @@ class AppleseedMaterialPreview(bpy.types.Panel):
 
 
 class AppleseedMaterialShading(bpy.types.Panel):
-    bl_label = 'Surface Shader'
+    bl_label = 'Shader Model'
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -88,958 +90,984 @@ class AppleseedMaterialShading(bpy.types.Panel):
         material = object.active_material
         asr_mat = material.appleseed
 
+        layout.prop(asr_mat, "shader_lighting_samples", text="Lighting Samples")
+        layout.separator()
         osl_node_tree_selector_draw(layout, material)
 
-        if asr_mat.osl_node_tree == None:
-            layout.prop(asr_mat, "bsdf_type", text="Surface")
-            layout.separator()
-
-            #
-            # Ashikhmin-Shirley BRDF.
-            #
-
-            if asr_mat.bsdf_type == "ashikhmin_brdf":
-                # reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Diffuse Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "ashikhmin_brdf_reflectance", text="")
-
-                if asr_mat.ashikhmin_brdf_use_diffuse_tex:
-                    layout.prop_search(asr_mat, "ashikhmin_brdf_diffuse_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "ashikhmin_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.ashikhmin_brdf_diffuse_tex != '' and asr_mat.ashikhmin_brdf_use_diffuse_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.ashikhmin_brdf_diffuse_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
-                row = layout.row()
-                row.prop(asr_mat, "ashikhmin_brdf_multiplier", text="Diffuse Reflectance Multiplier")
-
-                # glossiness
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Glossy Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "ashikhmin_brdf_glossy", text="")
-
-                if asr_mat.ashikhmin_brdf_use_glossy_tex:
-                    layout.prop_search(asr_mat, "ashikhmin_brdf_glossy_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "ashikhmin_brdf_use_glossy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.ashikhmin_brdf_glossy_tex != '' and asr_mat.ashikhmin_brdf_use_glossy_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.ashikhmin_brdf_glossy_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
-                row = layout.row()
-                row.prop(asr_mat, "ashikhmin_brdf_glossy_multiplier", text="Glossy Reflectance Multiplier")
-
-                # fresnel
-                col = layout.column()
-                col.prop(asr_mat, "ashikhmin_brdf_fresnel", text="Fresnel Multiplier")
-                layout.prop(asr_mat, "ashikhmin_brdf_shininess_u", text="Shininess U")
-                layout.prop(asr_mat, "ashikhmin_brdf_shininess_v", text="Shininess V")
-
-            #
-            # Blinn BRDF.
-            #
-
-            elif asr_mat.bsdf_type == "blinn_brdf":
-                # exponent
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "blinn_brdf_exponent", text="Exponent")
-
-                if asr_mat.blinn_brdf_exponent_use_tex:
-                    layout.prop_search(asr_mat, "blinn_brdf_exponent_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "blinn_brdf_exponent_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.blinn_brdf_exponent_tex != '' and asr_mat.blinn_brdf_exponent_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.blinn_brdf_exponent_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # ior
-                col = layout.column()
-                col.prop(asr_mat, "blinn_brdf_ior", text="Index of Refraction")
-
-            #
-            # Diffuse BTDF.
-            #
-
-            elif asr_mat.bsdf_type == "diffuse_btdf":
-                # reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Transmittance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "diffuse_btdf_transmittance_color", text="")
-                if asr_mat.diffuse_btdf_use_diffuse_tex:
-                    layout.prop_search(asr_mat, "diffuse_btdf_diffuse_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "diffuse_btdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.diffuse_btdf_diffuse_tex != '' and asr_mat.diffuse_btdf_use_diffuse_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.diffuse_btdf_diffuse_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # transmittance
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "diffuse_btdf_transmittance_multiplier", text="Transmittance Multiplier:")
-                if asr_mat.diffuse_btdf_transmittance_use_mult_tex:
-                    layout.prop_search(asr_mat, "diffuse_btdf_transmittance_mult_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "diffuse_btdf_transmittance_use_mult_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.diffuse_btdf_transmittance_mult_tex != '' and asr_mat.diffuse_btdf_transmittance_use_mult_tex:
-                    mult_tex = bpy.data.textures[asr_mat.diffuse_btdf_transmittance_mult_tex]
-                    layout.prop(mult_tex.image.colorspace_settings, "name", text="Color Space")
-
-            #
-            # Disney BRDF.
-            #
-
-            elif asr_mat.bsdf_type == "disney_brdf":
-                # base color
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Base Color:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_base", text="")
-
-                if asr_mat.disney_brdf_use_base_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_base_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_base_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_base_tex != '' and asr_mat.disney_brdf_use_base_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.disney_brdf_base_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # subsurface
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_subsurface", text="Subsurface")
-                if asr_mat.disney_brdf_use_subsurface_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_subsurface_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_subsurface_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_subsurface_tex != '' and asr_mat.disney_brdf_use_subsurface_tex:
-                    subsurface_tex = bpy.data.textures[asr_mat.disney_brdf_subsurface_tex]
-                    layout.prop(subsurface_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # metallic
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_metallic", text="Metallic")
-                if asr_mat.disney_brdf_use_metallic_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_metallic_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_metallic_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_metallic_tex != '' and asr_mat.disney_brdf_use_metallic_tex:
-                    metal_brdf_tex = bpy.data.textures[asr_mat.disney_brdf_metallic_tex]
-                    layout.prop(metal_brdf_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # specular
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_spec", text="Specular")
-                if asr_mat.disney_brdf_use_specular_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_specular_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_specular_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_specular_tex != '' and asr_mat.disney_brdf_use_specular_tex:
-                    specular_tex = bpy.data.textures[asr_mat.disney_brdf_specular_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # specular tint
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_specular_tint", text="Specular Tint")
-                if asr_mat.disney_brdf_use_specular_tint_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_specular_tint_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_specular_tint_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_specular_tint_tex != '' and asr_mat.disney_brdf_use_specular_tint_tex:
-                    specular_tint_tex = bpy.data.textures[asr_mat.disney_brdf_specular_tint_tex]
-                    layout.prop(specular_tint_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # anisotropy
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_anisotropy", text="Anisotropy")
-                if asr_mat.disney_brdf_use_anisotropy_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_anisotropy_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_anisotropy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_anisotropy_tex != '' and asr_mat.disney_brdf_use_anisotropy_tex:
-                    anisotropy_tex = bpy.data.textures[asr_mat.disney_brdf_anisotropy_tex]
-                    layout.prop(anisotropy_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # roughness
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_roughness", text="Roughness")
-                if asr_mat.disney_brdf_use_roughness_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_roughness_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_roughness_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_roughness_tex != '' and asr_mat.disney_brdf_use_roughness_tex:
-                    rough_tex = bpy.data.textures[asr_mat.disney_brdf_roughness_tex]
-                    layout.prop(rough_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # sheen
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_sheen", text="Sheen")
-                if asr_mat.disney_brdf_use_sheen_brdf_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_sheen_brdf_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_sheen_brdf_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_sheen_brdf_tex != '' and asr_mat.disney_brdf_use_sheen_brdf_tex:
-                    sheen_brdf_tex = bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tex]
-                    layout.prop(sheen_brdf_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # sheen tint
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_sheen_brdf_tint", text="Sheen Tint")
-                if asr_mat.disney_brdf_use_sheen_brdf_tint_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_sheen_brdf_tint_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_sheen_brdf_tint_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_sheen_brdf_tint_tex != '' and asr_mat.disney_brdf_use_sheen_brdf_tint_tex:
-                    sheen_brdf_tint_tex = bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tint_tex]
-                    layout.prop(sheen_brdf_tint_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # clear coat
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_clearcoat", text="Clear Coat")
-                if asr_mat.disney_brdf_use_clearcoat_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_clearcoat_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_clearcoat_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_clearcoat_tex != '' and asr_mat.disney_brdf_use_clearcoat_tex:
-                    clearcoat_tex = bpy.data.textures[asr_mat.disney_brdf_clearcoat_tex]
-                    layout.prop(clearcoat_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # clear coat gloss
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_clearcoat_gloss", text="Clear Coat Gloss")
-                if asr_mat.disney_brdf_use_clearcoat_glossy_tex:
-                    layout.prop_search(asr_mat, "disney_brdf_clearcoat_glossy_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "disney_brdf_use_clearcoat_glossy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.disney_brdf_clearcoat_glossy_tex != '' and asr_mat.disney_brdf_use_clearcoat_glossy_tex:
-                    clearcoat_glossy_tex = bpy.data.textures[asr_mat.disney_brdf_clearcoat_glossy_tex]
-                    layout.prop(clearcoat_glossy_tex.image.colorspace_settings, "name", text="Color Space")
-
-            #
-            # Glass BSDF.
-            #
-
-            elif asr_mat.bsdf_type == "glass_bsdf":
-                # mdf
-                col = layout.column()
-                col.prop(asr_mat, "glass_bsdf_mdf", text="Microfacet Distribution Function")
-
-                # surface transmittance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Surface Transmittance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_surface_transmittance", text="")
-
-                if asr_mat.glass_bsdf_surface_transmittance_use_tex:
-                    layout.prop_search(asr_mat, "glass_bsdf_surface_transmittance_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_surface_transmittance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glass_bsdf_surface_transmittance_tex != '' and asr_mat.glass_bsdf_surface_transmittance_use_tex:
-                    specular_tex = bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # surface transmittance multiplier
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_surface_transmittance_multiplier", text="Surface Transmittance Multiplier")
-
-                if asr_mat.glass_bsdf_surface_transmittance_multiplier_use_tex:
-                    layout.prop_search(asr_mat, "glass_bsdf_surface_transmittance_multiplier_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_surface_transmittance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glass_bsdf_surface_transmittance_multiplier_tex != '' and asr_mat.glass_bsdf_surface_transmittance_multiplier_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_multiplier_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # reflection tint
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Reflection Tint:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_reflection_tint", text="")
-
-                if asr_mat.glass_bsdf_reflection_tint_use_tex:
-                    layout.prop_search(asr_mat, "glass_bsdf_reflection_tint_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_reflection_tint_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glass_bsdf_reflection_tint_tex != '' and asr_mat.glass_bsdf_reflection_tint_use_tex:
-                    specular_tex = bpy.data.textures[asr_mat.glass_bsdf_reflection_tint_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # refraction tint
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Refraction Tint:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_refraction_tint", text="")
-
-                if asr_mat.glass_bsdf_refraction_tint_use_tex:
-                    layout.prop_search(asr_mat, "glass_bsdf_refraction_tint_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_refraction_tint_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glass_bsdf_refraction_tint_tex != '' and asr_mat.glass_bsdf_refraction_tint_use_tex:
-                    specular_tex = bpy.data.textures[asr_mat.glass_bsdf_refraction_tint_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # ior
-                col = layout.column()
-                col.prop(asr_mat, "glass_bsdf_ior", text="Index of Refraction")
-
-                # roughness
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_roughness", text="Roughness")
-
-                if asr_mat.glass_bsdf_roughness_use_tex:
-                    layout.prop_search(asr_mat, "glass_bsdf_roughness_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glass_bsdf_roughness_tex != '' and asr_mat.glass_bsdf_roughness_use_tex:
-                    glass_bsdf_roughness = bpy.data.textures[asr_mat.glass_bsdf_roughness_tex]
-                    layout.prop(glass_bsdf_roughness.image.colorspace_settings, "name", text="Color Space")
-
-                # highlight falloff
-                col = layout.column()
-                col.prop(asr_mat, "glass_bsdf_highlight_falloff", text="Highlight Falloff")
-
-                # anisotropy
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_anisotropy", text="Anisotropy")
-
-                if asr_mat.glass_bsdf_anisotropy_use_tex:
-                    layout.prop_search(asr_mat, "glass_bsdf_anisotropy_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "glass_bsdf_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glass_bsdf_anisotropy_tex != '' and asr_mat.glass_bsdf_anisotropy_use_tex:
-                    glass_bsdf_anisotropy = bpy.data.textures[asr_mat.glass_bsdf_anisotropy_tex]
-                    layout.prop(glass_bsdf_anisotropy.image.colorspace_settings, "name", text="Color Space")
-
-                # volume parameterization
-                col = layout.column()
-                col.prop(asr_mat, "glass_bsdf_volume_parameterization", text="Volume Absorption Parameterization")
-
-                if asr_mat.glass_bsdf_volume_parameterization == 'transmittance':
-                    # normal reflectance
-                    split = layout.split(percentage=0.40)
-                    col = split.column()
-                    col.label("Volume Transmittance:")
-                    split = split.split(percentage=0.83)
-                    col = split.column()
-                    col.prop(asr_mat, "glass_bsdf_volume_transmittance", text="")
-
-                    if asr_mat.glass_bsdf_volume_transmittance_use_tex:
-                        layout.prop_search(asr_mat, "glass_bsdf_volume_transmittance_tex", material, "texture_slots", text="")
-
-                    split = split.split(percentage=1.0)
-                    col = split.column()
-                    col.prop(asr_mat, "glass_bsdf_volume_transmittance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if asr_mat.glass_bsdf_volume_transmittance_tex != '' and asr_mat.glass_bsdf_volume_transmittance_use_tex:
-                        specular_tex = bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_tex]
-                        layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
-
-                    # glass volume transmittance distance
-                    split = layout.split(percentage=0.90)
-                    col = split.column()
-                    col.prop(asr_mat, "glass_bsdf_volume_transmittance_distance", text="Volume Transmittance Distance")
-
-                    if asr_mat.glass_bsdf_volume_transmittance_distance_use_tex:
-                        layout.prop_search(asr_mat, "glass_bsdf_volume_transmittance_distance_tex", material, "texture_slots", text="")
-
-                    col = split.column()
-                    col.prop(asr_mat, "glass_bsdf_volume_transmittance_distance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if asr_mat.glass_bsdf_volume_transmittance_distance_tex != '' and asr_mat.glass_bsdf_volume_transmittance_distance_use_tex:
-                        glass_bsdf_volume_transmittance_distance = bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_distance_tex]
-                        layout.prop(glass_bsdf_volume_transmittance_distance.image.colorspace_settings, "name", text="Color Space")
-
-                else:
-                    # glass volume density
-                    split = layout.split(percentage=0.90)
-                    col = split.column()
-                    col.prop(asr_mat, "glass_bsdf_volume_density", text="Volume Density")
-
-                    if asr_mat.glass_bsdf_volume_density_use_tex:
-                        layout.prop_search(asr_mat, "glass_bsdf_volume_density_tex", material, "texture_slots", text="")
-
-                    col = split.column()
-                    col.prop(asr_mat, "glass_bsdf_volume_density_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if asr_mat.glass_bsdf_volume_density_tex != '' and asr_mat.glass_bsdf_volume_density_use_tex:
-                        glass_bsdf_volume_density = bpy.data.textures[asr_mat.glass_bsdf_volume_density_tex]
-                        layout.prop(glass_bsdf_volume_density.image.colorspace_settings, "name", text="Color Space")
-
-                    # glass absorption
-                    split = layout.split(percentage=0.40)
-                    col = split.column()
-                    col.label("Volume Absorption:")
-                    split = split.split(percentage=0.83)
-                    col = split.column()
-                    col.prop(asr_mat, "glass_bsdf_volume_absorption", text="")
-
-                    if asr_mat.glass_bsdf_volume_absorption_use_tex:
-                        layout.prop_search(asr_mat, "glass_bsdf_volume_absorption_tex", material, "texture_slots", text="")
-
-                    split = split.split(percentage=1.0)
-                    col = split.column()
-                    col.prop(asr_mat, "glass_bsdf_volume_absorption_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                    if asr_mat.glass_bsdf_volume_absorption_tex != '' and asr_mat.glass_bsdf_volume_absorption_use_tex:
-                        specular_tex = bpy.data.textures[asr_mat.glass_bsdf_volume_absorption_tex]
-                        layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # scale
-                col = layout.column()
-                col.prop(asr_mat, "glass_bsdf_volume_scale", text="Volume Scale")
-
-            #
-            # Glossy BRDF.
-            #
-
-            elif asr_mat.bsdf_type == "glossy_brdf":
-                # mdf
-                col = layout.column()
-                col.prop(asr_mat, "glossy_brdf_mdf", text="Microfacet Distribution Function")
-
-                # reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "glossy_brdf_reflectance", text="")
-
-                if asr_mat.glossy_brdf_reflectance_use_tex:
-                    layout.prop_search(asr_mat, "glossy_brdf_reflectance_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "glossy_brdf_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glossy_brdf_reflectance_tex != '' and asr_mat.glossy_brdf_reflectance_use_tex:
-                    specular_tex = bpy.data.textures[asr_mat.glossy_brdf_reflectance_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # reflectance multiplier
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "glossy_brdf_reflectance_multiplier", text="Reflectance Multiplier")
-
-                if asr_mat.glossy_brdf_reflectance_multiplier_use_tex:
-                    layout.prop_search(asr_mat, "glossy_brdf_reflectance_multiplier_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "glossy_brdf_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glossy_brdf_reflectance_multiplier_tex != '' and asr_mat.glossy_brdf_reflectance_multiplier_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.glossy_brdf_reflectance_multiplier_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # roughness
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "glossy_brdf_roughness", text="Roughness")
-
-                if asr_mat.glossy_brdf_roughness_use_tex:
-                    layout.prop_search(asr_mat, "glossy_brdf_roughness_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "glossy_brdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glossy_brdf_roughness_tex != '' and asr_mat.glossy_brdf_roughness_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.glossy_brdf_roughness_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # highlight falloff
-                col = layout.column()
-                col.prop(asr_mat, "glossy_brdf_highlight_falloff", text="Highlight Falloff")
-
-                # anisotropy
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "glossy_brdf_anisotropy", text="Anisotropy")
-
-                if asr_mat.glossy_brdf_anisotropy_use_tex:
-                    layout.prop_search(asr_mat, "glossy_brdf_anisotropy_tex", material, "texture_slots", text="")
-
-                col = split.column()
-                col.prop(asr_mat, "glossy_brdf_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.glossy_brdf_anisotropy_tex != '' and asr_mat.glossy_brdf_anisotropy_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.glossy_brdf_anisotropy_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-
-                # ior
-                col = layout.column()
-                col.prop(asr_mat, "glossy_brdf_ior", text="Index of Refraction")
-
-            #
-            # Kelemen BRDF.
-            #
-
-            elif asr_mat.bsdf_type == "kelemen_brdf":
-                # reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Matte Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "kelemen_brdf_matte_reflectance", text="")
-
-                if asr_mat.kelemen_brdf_use_diffuse_tex:
-                    layout.prop_search(asr_mat, "kelemen_brdf_diffuse_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "kelemen_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.kelemen_brdf_diffuse_tex != '' and asr_mat.kelemen_brdf_use_diffuse_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.kelemen_brdf_diffuse_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-                row = layout.row()
-                row.prop(asr_mat, "kelemen_brdf_matte_multiplier", text="Matte Reflectance Multiplier")
-
-                layout.prop(asr_mat, "kelemen_brdf_specular_reflectance", text="Specular Reflectance")
-                layout.prop(asr_mat, "kelemen_brdf_specular_multiplier", text="Specular Reflectance Multiplier")
-                layout.prop(asr_mat, "kelemen_brdf_roughness", text="Roughness")
-
-            #
-            # Lambertian BRDF.
-            #
-
-            elif asr_mat.bsdf_type == "lambertian_brdf":
-                # reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "lambertian_brdf_reflectance", text="")
-
-                if asr_mat.lambertian_brdf_use_diffuse_tex:
-                    layout.prop_search(asr_mat, "lambertian_brdf_diffuse_tex", material, "texture_slots", text="")
-
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "lambertian_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.lambertian_brdf_diffuse_tex != '' and asr_mat.lambertian_brdf_use_diffuse_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.lambertian_brdf_diffuse_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
-                layout.prop(asr_mat, "lambertian_brdf_multiplier", text="Reflectance Multiplier")
-
-            #
-            # Metal BRDF.
-            #
-
-            elif asr_mat.bsdf_type == "metal_brdf":
-                # mdf
-                col = layout.column()
-                col.prop(asr_mat, "metal_brdf_mdf", text="Microfacet Distribution Function")
 
+class AppleseedMaterialSurfaceShading(bpy.types.Panel):
+    bl_label = 'Surface Shader'
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+
+    @classmethod
+    def poll(cls, context):
+        material = context.object.active_material is not None
+        if material:
+            renderer = context.scene.render.engine == 'APPLESEED_RENDER'
+            obj = context.object is not None
+            obj_type = context.object.type == 'MESH'
+            is_not_nodemat = context.object.active_material.appleseed.osl_node_tree == None
+            return renderer and obj and obj_type and is_not_nodemat
+        return False
+
+    def draw(self, context):
+        layout = self.layout
+        object = context.object
+        material = object.active_material
+        asr_mat = material.appleseed
+
+        layout.prop(asr_mat, "bsdf_type", text="Surface")
+        layout.separator()
+
+        #
+        # Ashikhmin-Shirley BRDF.
+        #
+
+        if asr_mat.bsdf_type == "ashikhmin_brdf":
+            # reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Diffuse Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "ashikhmin_brdf_reflectance", text="")
+
+            if asr_mat.ashikhmin_brdf_use_diffuse_tex:
+                layout.prop_search(asr_mat, "ashikhmin_brdf_diffuse_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "ashikhmin_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.ashikhmin_brdf_diffuse_tex != '' and asr_mat.ashikhmin_brdf_use_diffuse_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.ashikhmin_brdf_diffuse_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+            row = layout.row()
+            row.prop(asr_mat, "ashikhmin_brdf_multiplier", text="Diffuse Reflectance Multiplier")
+
+            # glossiness
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Glossy Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "ashikhmin_brdf_glossy", text="")
+
+            if asr_mat.ashikhmin_brdf_use_glossy_tex:
+                layout.prop_search(asr_mat, "ashikhmin_brdf_glossy_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "ashikhmin_brdf_use_glossy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.ashikhmin_brdf_glossy_tex != '' and asr_mat.ashikhmin_brdf_use_glossy_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.ashikhmin_brdf_glossy_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+            row = layout.row()
+            row.prop(asr_mat, "ashikhmin_brdf_glossy_multiplier", text="Glossy Reflectance Multiplier")
+
+            # fresnel
+            col = layout.column()
+            col.prop(asr_mat, "ashikhmin_brdf_fresnel", text="Fresnel Multiplier")
+            layout.prop(asr_mat, "ashikhmin_brdf_shininess_u", text="Shininess U")
+            layout.prop(asr_mat, "ashikhmin_brdf_shininess_v", text="Shininess V")
+
+        #
+        # Blinn BRDF.
+        #
+
+        elif asr_mat.bsdf_type == "blinn_brdf":
+            # exponent
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "blinn_brdf_exponent", text="Exponent")
+
+            if asr_mat.blinn_brdf_exponent_use_tex:
+                layout.prop_search(asr_mat, "blinn_brdf_exponent_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "blinn_brdf_exponent_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.blinn_brdf_exponent_tex != '' and asr_mat.blinn_brdf_exponent_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.blinn_brdf_exponent_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # ior
+            col = layout.column()
+            col.prop(asr_mat, "blinn_brdf_ior", text="Index of Refraction")
+
+        #
+        # Diffuse BTDF.
+        #
+
+        elif asr_mat.bsdf_type == "diffuse_btdf":
+            # reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Transmittance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "diffuse_btdf_transmittance_color", text="")
+            if asr_mat.diffuse_btdf_use_diffuse_tex:
+                layout.prop_search(asr_mat, "diffuse_btdf_diffuse_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "diffuse_btdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.diffuse_btdf_diffuse_tex != '' and asr_mat.diffuse_btdf_use_diffuse_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.diffuse_btdf_diffuse_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # transmittance
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "diffuse_btdf_transmittance_multiplier", text="Transmittance Multiplier:")
+            if asr_mat.diffuse_btdf_transmittance_use_mult_tex:
+                layout.prop_search(asr_mat, "diffuse_btdf_transmittance_mult_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "diffuse_btdf_transmittance_use_mult_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.diffuse_btdf_transmittance_mult_tex != '' and asr_mat.diffuse_btdf_transmittance_use_mult_tex:
+                mult_tex = bpy.data.textures[asr_mat.diffuse_btdf_transmittance_mult_tex]
+                layout.prop(mult_tex.image.colorspace_settings, "name", text="Color Space")
+
+        #
+        # Disney BRDF.
+        #
+
+        elif asr_mat.bsdf_type == "disney_brdf":
+            # base color
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Base Color:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_base", text="")
+
+            if asr_mat.disney_brdf_use_base_tex:
+                layout.prop_search(asr_mat, "disney_brdf_base_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_base_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_base_tex != '' and asr_mat.disney_brdf_use_base_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.disney_brdf_base_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # subsurface
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_subsurface", text="Subsurface")
+            if asr_mat.disney_brdf_use_subsurface_tex:
+                layout.prop_search(asr_mat, "disney_brdf_subsurface_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_subsurface_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_subsurface_tex != '' and asr_mat.disney_brdf_use_subsurface_tex:
+                subsurface_tex = bpy.data.textures[asr_mat.disney_brdf_subsurface_tex]
+                layout.prop(subsurface_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # metallic
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_metallic", text="Metallic")
+            if asr_mat.disney_brdf_use_metallic_tex:
+                layout.prop_search(asr_mat, "disney_brdf_metallic_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_metallic_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_metallic_tex != '' and asr_mat.disney_brdf_use_metallic_tex:
+                metal_brdf_tex = bpy.data.textures[asr_mat.disney_brdf_metallic_tex]
+                layout.prop(metal_brdf_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # specular
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_spec", text="Specular")
+            if asr_mat.disney_brdf_use_specular_tex:
+                layout.prop_search(asr_mat, "disney_brdf_specular_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_specular_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_specular_tex != '' and asr_mat.disney_brdf_use_specular_tex:
+                specular_tex = bpy.data.textures[asr_mat.disney_brdf_specular_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # specular tint
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_specular_tint", text="Specular Tint")
+            if asr_mat.disney_brdf_use_specular_tint_tex:
+                layout.prop_search(asr_mat, "disney_brdf_specular_tint_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_specular_tint_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_specular_tint_tex != '' and asr_mat.disney_brdf_use_specular_tint_tex:
+                specular_tint_tex = bpy.data.textures[asr_mat.disney_brdf_specular_tint_tex]
+                layout.prop(specular_tint_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # anisotropy
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_anisotropy", text="Anisotropy")
+            if asr_mat.disney_brdf_use_anisotropy_tex:
+                layout.prop_search(asr_mat, "disney_brdf_anisotropy_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_anisotropy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_anisotropy_tex != '' and asr_mat.disney_brdf_use_anisotropy_tex:
+                anisotropy_tex = bpy.data.textures[asr_mat.disney_brdf_anisotropy_tex]
+                layout.prop(anisotropy_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # roughness
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_roughness", text="Roughness")
+            if asr_mat.disney_brdf_use_roughness_tex:
+                layout.prop_search(asr_mat, "disney_brdf_roughness_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_roughness_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_roughness_tex != '' and asr_mat.disney_brdf_use_roughness_tex:
+                rough_tex = bpy.data.textures[asr_mat.disney_brdf_roughness_tex]
+                layout.prop(rough_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # sheen
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_sheen", text="Sheen")
+            if asr_mat.disney_brdf_use_sheen_brdf_tex:
+                layout.prop_search(asr_mat, "disney_brdf_sheen_brdf_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_sheen_brdf_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_sheen_brdf_tex != '' and asr_mat.disney_brdf_use_sheen_brdf_tex:
+                sheen_brdf_tex = bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tex]
+                layout.prop(sheen_brdf_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # sheen tint
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_sheen_brdf_tint", text="Sheen Tint")
+            if asr_mat.disney_brdf_use_sheen_brdf_tint_tex:
+                layout.prop_search(asr_mat, "disney_brdf_sheen_brdf_tint_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_sheen_brdf_tint_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_sheen_brdf_tint_tex != '' and asr_mat.disney_brdf_use_sheen_brdf_tint_tex:
+                sheen_brdf_tint_tex = bpy.data.textures[asr_mat.disney_brdf_sheen_brdf_tint_tex]
+                layout.prop(sheen_brdf_tint_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # clear coat
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_clearcoat", text="Clear Coat")
+            if asr_mat.disney_brdf_use_clearcoat_tex:
+                layout.prop_search(asr_mat, "disney_brdf_clearcoat_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_clearcoat_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_clearcoat_tex != '' and asr_mat.disney_brdf_use_clearcoat_tex:
+                clearcoat_tex = bpy.data.textures[asr_mat.disney_brdf_clearcoat_tex]
+                layout.prop(clearcoat_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # clear coat gloss
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_clearcoat_gloss", text="Clear Coat Gloss")
+            if asr_mat.disney_brdf_use_clearcoat_glossy_tex:
+                layout.prop_search(asr_mat, "disney_brdf_clearcoat_glossy_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "disney_brdf_use_clearcoat_glossy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.disney_brdf_clearcoat_glossy_tex != '' and asr_mat.disney_brdf_use_clearcoat_glossy_tex:
+                clearcoat_glossy_tex = bpy.data.textures[asr_mat.disney_brdf_clearcoat_glossy_tex]
+                layout.prop(clearcoat_glossy_tex.image.colorspace_settings, "name", text="Color Space")
+
+        #
+        # Glass BSDF.
+        #
+
+        elif asr_mat.bsdf_type == "glass_bsdf":
+            # mdf
+            col = layout.column()
+            col.prop(asr_mat, "glass_bsdf_mdf", text="Microfacet Distribution Function")
+
+            # surface transmittance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Surface Transmittance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_surface_transmittance", text="")
+
+            if asr_mat.glass_bsdf_surface_transmittance_use_tex:
+                layout.prop_search(asr_mat, "glass_bsdf_surface_transmittance_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_surface_transmittance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glass_bsdf_surface_transmittance_tex != '' and asr_mat.glass_bsdf_surface_transmittance_use_tex:
+                specular_tex = bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # surface transmittance multiplier
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_surface_transmittance_multiplier", text="Surface Transmittance Multiplier")
+
+            if asr_mat.glass_bsdf_surface_transmittance_multiplier_use_tex:
+                layout.prop_search(asr_mat, "glass_bsdf_surface_transmittance_multiplier_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_surface_transmittance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glass_bsdf_surface_transmittance_multiplier_tex != '' and asr_mat.glass_bsdf_surface_transmittance_multiplier_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.glass_bsdf_surface_transmittance_multiplier_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # reflection tint
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Reflection Tint:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_reflection_tint", text="")
+
+            if asr_mat.glass_bsdf_reflection_tint_use_tex:
+                layout.prop_search(asr_mat, "glass_bsdf_reflection_tint_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_reflection_tint_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glass_bsdf_reflection_tint_tex != '' and asr_mat.glass_bsdf_reflection_tint_use_tex:
+                specular_tex = bpy.data.textures[asr_mat.glass_bsdf_reflection_tint_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # refraction tint
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Refraction Tint:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_refraction_tint", text="")
+
+            if asr_mat.glass_bsdf_refraction_tint_use_tex:
+                layout.prop_search(asr_mat, "glass_bsdf_refraction_tint_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_refraction_tint_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glass_bsdf_refraction_tint_tex != '' and asr_mat.glass_bsdf_refraction_tint_use_tex:
+                specular_tex = bpy.data.textures[asr_mat.glass_bsdf_refraction_tint_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # ior
+            col = layout.column()
+            col.prop(asr_mat, "glass_bsdf_ior", text="Index of Refraction")
+
+            # roughness
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_roughness", text="Roughness")
+
+            if asr_mat.glass_bsdf_roughness_use_tex:
+                layout.prop_search(asr_mat, "glass_bsdf_roughness_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glass_bsdf_roughness_tex != '' and asr_mat.glass_bsdf_roughness_use_tex:
+                glass_bsdf_roughness = bpy.data.textures[asr_mat.glass_bsdf_roughness_tex]
+                layout.prop(glass_bsdf_roughness.image.colorspace_settings, "name", text="Color Space")
+
+            # highlight falloff
+            col = layout.column()
+            col.prop(asr_mat, "glass_bsdf_highlight_falloff", text="Highlight Falloff")
+
+            # anisotropy
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_anisotropy", text="Anisotropy")
+
+            if asr_mat.glass_bsdf_anisotropy_use_tex:
+                layout.prop_search(asr_mat, "glass_bsdf_anisotropy_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "glass_bsdf_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glass_bsdf_anisotropy_tex != '' and asr_mat.glass_bsdf_anisotropy_use_tex:
+                glass_bsdf_anisotropy = bpy.data.textures[asr_mat.glass_bsdf_anisotropy_tex]
+                layout.prop(glass_bsdf_anisotropy.image.colorspace_settings, "name", text="Color Space")
+
+            # volume parameterization
+            col = layout.column()
+            col.prop(asr_mat, "glass_bsdf_volume_parameterization", text="Volume Absorption Parameterization")
+
+            if asr_mat.glass_bsdf_volume_parameterization == 'transmittance':
                 # normal reflectance
                 split = layout.split(percentage=0.40)
                 col = split.column()
-                col.label("Normal Reflectance:")
+                col.label("Volume Transmittance:")
                 split = split.split(percentage=0.83)
                 col = split.column()
-                col.prop(asr_mat, "metal_brdf_normal_reflectance", text="")
+                col.prop(asr_mat, "glass_bsdf_volume_transmittance", text="")
 
-                if asr_mat.metal_brdf_normal_reflectance_use_tex:
-                    layout.prop_search(asr_mat, "metal_brdf_normal_reflectance_tex", material, "texture_slots", text="")
+                if asr_mat.glass_bsdf_volume_transmittance_use_tex:
+                    layout.prop_search(asr_mat, "glass_bsdf_volume_transmittance_tex", material, "texture_slots", text="")
 
                 split = split.split(percentage=1.0)
                 col = split.column()
-                col.prop(asr_mat, "metal_brdf_normal_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.metal_brdf_normal_reflectance_tex != '' and asr_mat.metal_brdf_normal_reflectance_use_tex:
-                    specular_tex = bpy.data.textures[asr_mat.metal_brdf_normal_reflectance_tex]
+                col.prop(asr_mat, "glass_bsdf_volume_transmittance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                if asr_mat.glass_bsdf_volume_transmittance_tex != '' and asr_mat.glass_bsdf_volume_transmittance_use_tex:
+                    specular_tex = bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_tex]
                     layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
 
-                # edge tint
+                # glass volume transmittance distance
+                split = layout.split(percentage=0.90)
+                col = split.column()
+                col.prop(asr_mat, "glass_bsdf_volume_transmittance_distance", text="Volume Transmittance Distance")
+
+                if asr_mat.glass_bsdf_volume_transmittance_distance_use_tex:
+                    layout.prop_search(asr_mat, "glass_bsdf_volume_transmittance_distance_tex", material, "texture_slots", text="")
+
+                col = split.column()
+                col.prop(asr_mat, "glass_bsdf_volume_transmittance_distance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                if asr_mat.glass_bsdf_volume_transmittance_distance_tex != '' and asr_mat.glass_bsdf_volume_transmittance_distance_use_tex:
+                    glass_bsdf_volume_transmittance_distance = bpy.data.textures[asr_mat.glass_bsdf_volume_transmittance_distance_tex]
+                    layout.prop(glass_bsdf_volume_transmittance_distance.image.colorspace_settings, "name", text="Color Space")
+
+            else:
+                # glass volume density
+                split = layout.split(percentage=0.90)
+                col = split.column()
+                col.prop(asr_mat, "glass_bsdf_volume_density", text="Volume Density")
+
+                if asr_mat.glass_bsdf_volume_density_use_tex:
+                    layout.prop_search(asr_mat, "glass_bsdf_volume_density_tex", material, "texture_slots", text="")
+
+                col = split.column()
+                col.prop(asr_mat, "glass_bsdf_volume_density_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                if asr_mat.glass_bsdf_volume_density_tex != '' and asr_mat.glass_bsdf_volume_density_use_tex:
+                    glass_bsdf_volume_density = bpy.data.textures[asr_mat.glass_bsdf_volume_density_tex]
+                    layout.prop(glass_bsdf_volume_density.image.colorspace_settings, "name", text="Color Space")
+
+                # glass absorption
                 split = layout.split(percentage=0.40)
                 col = split.column()
-                col.label("Edge Tint:")
+                col.label("Volume Absorption:")
                 split = split.split(percentage=0.83)
                 col = split.column()
-                col.prop(asr_mat, "metal_brdf_edge_tint", text="")
+                col.prop(asr_mat, "glass_bsdf_volume_absorption", text="")
 
-                if asr_mat.metal_brdf_edge_tint_use_tex:
-                    layout.prop_search(asr_mat, "metal_brdf_edge_tint_tex", material, "texture_slots", text="")
+                if asr_mat.glass_bsdf_volume_absorption_use_tex:
+                    layout.prop_search(asr_mat, "glass_bsdf_volume_absorption_tex", material, "texture_slots", text="")
 
                 split = split.split(percentage=1.0)
                 col = split.column()
-                col.prop(asr_mat, "metal_brdf_edge_tint_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.metal_brdf_edge_tint_tex != '' and asr_mat.metal_brdf_edge_tint_use_tex:
-                    specular_tex = bpy.data.textures[asr_mat.metal_brdf_edge_tint_tex]
+                col.prop(asr_mat, "glass_bsdf_volume_absorption_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+                if asr_mat.glass_bsdf_volume_absorption_tex != '' and asr_mat.glass_bsdf_volume_absorption_use_tex:
+                    specular_tex = bpy.data.textures[asr_mat.glass_bsdf_volume_absorption_tex]
                     layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
 
-                # reflectance multiplier
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "metal_brdf_reflectance_multiplier", text="Reflectance Multiplier")
+            # scale
+            col = layout.column()
+            col.prop(asr_mat, "glass_bsdf_volume_scale", text="Volume Scale")
 
-                if asr_mat.metal_brdf_reflectance_multiplier_use_tex:
-                    layout.prop_search(asr_mat, "metal_brdf_reflectance_multiplier_tex", material, "texture_slots", text="")
+        #
+        # Glossy BRDF.
+        #
 
-                col = split.column()
-                col.prop(asr_mat, "metal_brdf_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.metal_brdf_reflectance_multiplier_tex != '' and asr_mat.metal_brdf_reflectance_multiplier_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.metal_brdf_reflectance_multiplier_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+        elif asr_mat.bsdf_type == "glossy_brdf":
+            # mdf
+            col = layout.column()
+            col.prop(asr_mat, "glossy_brdf_mdf", text="Microfacet Distribution Function")
 
-                # roughness
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "metal_brdf_roughness", text="Roughness")
+            # reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "glossy_brdf_reflectance", text="")
 
-                if asr_mat.metal_brdf_roughness_use_tex:
-                    layout.prop_search(asr_mat, "metal_brdf_roughness_tex", material, "texture_slots", text="")
+            if asr_mat.glossy_brdf_reflectance_use_tex:
+                layout.prop_search(asr_mat, "glossy_brdf_reflectance_tex", material, "texture_slots", text="")
 
-                col = split.column()
-                col.prop(asr_mat, "metal_brdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.metal_brdf_roughness_tex != '' and asr_mat.metal_brdf_roughness_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.metal_brdf_roughness_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "glossy_brdf_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glossy_brdf_reflectance_tex != '' and asr_mat.glossy_brdf_reflectance_use_tex:
+                specular_tex = bpy.data.textures[asr_mat.glossy_brdf_reflectance_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
 
-                col = layout.column()
-                col.prop(asr_mat, "metal_brdf_highlight_falloff", text="Highlight Falloff")
+            # reflectance multiplier
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "glossy_brdf_reflectance_multiplier", text="Reflectance Multiplier")
 
-                # anisotropy
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "metal_brdf_anisotropy", text="Anisotropy")
+            if asr_mat.glossy_brdf_reflectance_multiplier_use_tex:
+                layout.prop_search(asr_mat, "glossy_brdf_reflectance_multiplier_tex", material, "texture_slots", text="")
 
-                if asr_mat.metal_brdf_anisotropy_use_tex:
-                    layout.prop_search(asr_mat, "metal_brdf_anisotropy_tex", material, "texture_slots", text="")
+            col = split.column()
+            col.prop(asr_mat, "glossy_brdf_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glossy_brdf_reflectance_multiplier_tex != '' and asr_mat.glossy_brdf_reflectance_multiplier_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.glossy_brdf_reflectance_multiplier_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
-                col = split.column()
-                col.prop(asr_mat, "metal_brdf_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.metal_brdf_anisotropy_tex != '' and asr_mat.metal_brdf_anisotropy_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.metal_brdf_anisotropy_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            # roughness
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "glossy_brdf_roughness", text="Roughness")
 
-            #
-            # Oren-Nayar BRDF.
-            #
+            if asr_mat.glossy_brdf_roughness_use_tex:
+                layout.prop_search(asr_mat, "glossy_brdf_roughness_tex", material, "texture_slots", text="")
 
-            elif asr_mat.bsdf_type == "orennayar_brdf":
-                # reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "orennayar_brdf_reflectance", text="")
+            col = split.column()
+            col.prop(asr_mat, "glossy_brdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glossy_brdf_roughness_tex != '' and asr_mat.glossy_brdf_roughness_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.glossy_brdf_roughness_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
-                if asr_mat.orennayar_brdf_use_diffuse_tex:
-                    layout.prop_search(asr_mat, "orennayar_brdf_diffuse_tex", material, "texture_slots", text="")
+            # highlight falloff
+            col = layout.column()
+            col.prop(asr_mat, "glossy_brdf_highlight_falloff", text="Highlight Falloff")
 
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "orennayar_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.orennayar_brdf_diffuse_tex != '' and asr_mat.orennayar_brdf_use_diffuse_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.orennayar_brdf_diffuse_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            # anisotropy
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "glossy_brdf_anisotropy", text="Anisotropy")
 
-                # reflectance multiplier
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "orennayar_brdf_reflectance_multiplier", text="Reflectance Multiplier")
-                if asr_mat.orennayar_brdf_use_reflect_multiplier_tex:
-                    layout.prop_search(asr_mat, "orennayar_brdf_reflect_multiplier_tex", material, "texture_slots", text="")
+            if asr_mat.glossy_brdf_anisotropy_use_tex:
+                layout.prop_search(asr_mat, "glossy_brdf_anisotropy_tex", material, "texture_slots", text="")
 
-                col = split.column()
-                col.prop(asr_mat, "orennayar_brdf_use_reflect_multiplier_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.orennayar_brdf_reflect_multiplier_tex != '' and asr_mat.orennayar_brdf_use_reflect_multiplier_tex:
-                    reflect_multiplier_tex = bpy.data.textures[asr_mat.orennayar_brdf_reflect_multiplier_tex]
-                    layout.prop(reflect_multiplier_tex.image.colorspace_settings, "name", text="Color Space")
+            col = split.column()
+            col.prop(asr_mat, "glossy_brdf_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.glossy_brdf_anisotropy_tex != '' and asr_mat.glossy_brdf_anisotropy_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.glossy_brdf_anisotropy_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
-                # roughness
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "orennayar_brdf_roughness", text="Roughness")
-                if asr_mat.orennayar_brdf_use_rough_tex:
-                    layout.prop_search(asr_mat, "orennayar_brdf_rough_tex", material, "texture_slots", text="")
+            # ior
+            col = layout.column()
+            col.prop(asr_mat, "glossy_brdf_ior", text="Index of Refraction")
 
-                col = split.column()
-                col.prop(asr_mat, "orennayar_brdf_use_rough_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.orennayar_brdf_rough_tex != '' and asr_mat.orennayar_brdf_use_rough_tex:
-                    rough_tex = bpy.data.textures[asr_mat.orennayar_brdf_rough_tex]
-                    layout.prop(rough_tex.image.colorspace_settings, "name", text="Color Space")
+        #
+        # Kelemen BRDF.
+        #
 
-            #
-            # Plastic BRDF.
-            #
+        elif asr_mat.bsdf_type == "kelemen_brdf":
+            # reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Matte Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "kelemen_brdf_matte_reflectance", text="")
 
-            elif asr_mat.bsdf_type == "plastic_brdf":
-                # mdf
-                col = layout.column()
-                col.prop(asr_mat, "plastic_brdf_mdf", text="Microfacet Distribution Function")
+            if asr_mat.kelemen_brdf_use_diffuse_tex:
+                layout.prop_search(asr_mat, "kelemen_brdf_diffuse_tex", material, "texture_slots", text="")
 
-                # specular reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Specular Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_specular_reflectance", text="")
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "kelemen_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.kelemen_brdf_diffuse_tex != '' and asr_mat.kelemen_brdf_use_diffuse_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.kelemen_brdf_diffuse_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            row = layout.row()
+            row.prop(asr_mat, "kelemen_brdf_matte_multiplier", text="Matte Reflectance Multiplier")
 
-                if asr_mat.plastic_brdf_specular_reflectance_use_tex:
-                    layout.prop_search(asr_mat, "plastic_brdf_specular_reflectance_tex", material, "texture_slots", text="")
+            layout.prop(asr_mat, "kelemen_brdf_specular_reflectance", text="Specular Reflectance")
+            layout.prop(asr_mat, "kelemen_brdf_specular_multiplier", text="Specular Reflectance Multiplier")
+            layout.prop(asr_mat, "kelemen_brdf_roughness", text="Roughness")
 
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_specular_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.plastic_brdf_specular_reflectance_tex != '' and asr_mat.plastic_brdf_specular_reflectance_use_tex:
-                    specular_tex = bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+        #
+        # Lambertian BRDF.
+        #
 
-                # specular reflectance multiplier
-                split = layout.split(percentage=0.9)
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_specular_reflectance_multiplier", text="Specular Reflectance Multiplier")
+        elif asr_mat.bsdf_type == "lambertian_brdf":
+            # reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "lambertian_brdf_reflectance", text="")
 
-                if asr_mat.plastic_brdf_specular_reflectance_multiplier_use_tex:
-                    layout.prop_search(asr_mat, "plastic_brdf_specular_reflectance_multiplier_tex", material, "texture_slots", text="")
+            if asr_mat.lambertian_brdf_use_diffuse_tex:
+                layout.prop_search(asr_mat, "lambertian_brdf_diffuse_tex", material, "texture_slots", text="")
 
-                split = split.split()
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_specular_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.plastic_brdf_specular_reflectance_multiplier_tex != '' and asr_mat.plastic_brdf_specular_reflectance_multiplier_use_tex:
-                    specular_tex = bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_multiplier_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "lambertian_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.lambertian_brdf_diffuse_tex != '' and asr_mat.lambertian_brdf_use_diffuse_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.lambertian_brdf_diffuse_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            layout.prop(asr_mat, "lambertian_brdf_multiplier", text="Reflectance Multiplier")
 
-                # roughness
-                split = layout.split(percentage=0.9)
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_roughness", text="Roughness")
+        #
+        # Metal BRDF.
+        #
 
-                if asr_mat.plastic_brdf_roughness_use_tex:
-                    layout.prop_search(asr_mat, "plastic_brdf_roughness_tex", material, "texture_slots", text="")
+        elif asr_mat.bsdf_type == "metal_brdf":
+            # mdf
+            col = layout.column()
+            col.prop(asr_mat, "metal_brdf_mdf", text="Microfacet Distribution Function")
 
-                split = split.split()
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.plastic_brdf_roughness_tex != '' and asr_mat.plastic_brdf_roughness_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.plastic_brdf_roughness_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            # normal reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Normal Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_normal_reflectance", text="")
 
-                col = layout.column()
-                col.prop(asr_mat, "plastic_brdf_highlight_falloff", text="Highlight Falloff")
-                col.prop(asr_mat, "plastic_brdf_ior", text="Index of Refraction")
+            if asr_mat.metal_brdf_normal_reflectance_use_tex:
+                layout.prop_search(asr_mat, "metal_brdf_normal_reflectance_tex", material, "texture_slots", text="")
 
-                # diffuse reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Diffuse Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_diffuse_reflectance", text="")
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_normal_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.metal_brdf_normal_reflectance_tex != '' and asr_mat.metal_brdf_normal_reflectance_use_tex:
+                specular_tex = bpy.data.textures[asr_mat.metal_brdf_normal_reflectance_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
 
-                if asr_mat.plastic_brdf_diffuse_reflectance_use_tex:
-                    layout.prop_search(asr_mat, "plastic_brdf_diffuse_reflectance_tex", material, "texture_slots", text="")
+            # edge tint
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Edge Tint:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_edge_tint", text="")
 
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_diffuse_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.plastic_brdf_diffuse_reflectance_tex != '' and asr_mat.plastic_brdf_diffuse_reflectance_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            if asr_mat.metal_brdf_edge_tint_use_tex:
+                layout.prop_search(asr_mat, "metal_brdf_edge_tint_tex", material, "texture_slots", text="")
 
-                # diffuse reflectance multiplier
-                split = layout.split(percentage=0.9)
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_diffuse_reflectance_multiplier", text="Diffuse Reflectance Multiplier")
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_edge_tint_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.metal_brdf_edge_tint_tex != '' and asr_mat.metal_brdf_edge_tint_use_tex:
+                specular_tex = bpy.data.textures[asr_mat.metal_brdf_edge_tint_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
 
-                if asr_mat.plastic_brdf_diffuse_reflectance_multiplier_use_tex:
-                    layout.prop_search(asr_mat, "plastic_brdf_diffuse_reflectance_multiplier_tex", material, "texture_slots", text="")
+            # reflectance multiplier
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_reflectance_multiplier", text="Reflectance Multiplier")
 
-                split = split.split()
-                col = split.column()
-                col.prop(asr_mat, "plastic_brdf_diffuse_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex != '' and asr_mat.plastic_brdf_diffuse_reflectance_multiplier_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            if asr_mat.metal_brdf_reflectance_multiplier_use_tex:
+                layout.prop_search(asr_mat, "metal_brdf_reflectance_multiplier_tex", material, "texture_slots", text="")
 
-                col = layout.column()
-                col.prop(asr_mat, "plastic_brdf_internal_scattering", text="Internal Scattering")
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.metal_brdf_reflectance_multiplier_tex != '' and asr_mat.metal_brdf_reflectance_multiplier_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.metal_brdf_reflectance_multiplier_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
-            #
-            # Sheen BRDF.
-            #
+            # roughness
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_roughness", text="Roughness")
 
-            elif asr_mat.bsdf_type == "sheen_brdf":
-                # reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "sheen_brdf_reflectance", text="")
+            if asr_mat.metal_brdf_roughness_use_tex:
+                layout.prop_search(asr_mat, "metal_brdf_roughness_tex", material, "texture_slots", text="")
 
-                if asr_mat.sheen_brdf_reflectance_use_tex:
-                    layout.prop_search(asr_mat, "sheen_brdf_reflectance_tex", material, "texture_slots", text="")
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.metal_brdf_roughness_tex != '' and asr_mat.metal_brdf_roughness_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.metal_brdf_roughness_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "sheen_brdf_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.sheen_brdf_reflectance_tex != '' and asr_mat.sheen_brdf_reflectance_use_tex:
-                    specular_tex = bpy.data.textures[asr_mat.sheen_brdf_reflectance_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+            col = layout.column()
+            col.prop(asr_mat, "metal_brdf_highlight_falloff", text="Highlight Falloff")
 
-                # reflectance multiplier
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "sheen_brdf_reflectance_multiplier", text="Reflectance Multiplier")
+            # anisotropy
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_anisotropy", text="Anisotropy")
 
-                if asr_mat.sheen_brdf_reflectance_multiplier_use_tex:
-                    layout.prop_search(asr_mat, "sheen_brdf_reflectance_multiplier_tex", material, "texture_slots", text="")
+            if asr_mat.metal_brdf_anisotropy_use_tex:
+                layout.prop_search(asr_mat, "metal_brdf_anisotropy_tex", material, "texture_slots", text="")
 
-                col = split.column()
-                col.prop(asr_mat, "sheen_brdf_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.sheen_brdf_reflectance_multiplier_tex != '' and asr_mat.sheen_brdf_reflectance_multiplier_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.sheen_brdf_reflectance_multiplier_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            col = split.column()
+            col.prop(asr_mat, "metal_brdf_anisotropy_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.metal_brdf_anisotropy_tex != '' and asr_mat.metal_brdf_anisotropy_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.metal_brdf_anisotropy_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
-            #
-            # Specular BRDF.
-            #
+        #
+        # Oren-Nayar BRDF.
+        #
 
-            elif asr_mat.bsdf_type == "specular_brdf":
-                # glossiness
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Specular Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "specular_brdf_reflectance", text="")
+        elif asr_mat.bsdf_type == "orennayar_brdf":
+            # reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "orennayar_brdf_reflectance", text="")
 
-                if asr_mat.specular_brdf_use_glossy_tex:
-                    layout.prop_search(asr_mat, "specular_brdf_glossy_tex", material, "texture_slots", text="")
+            if asr_mat.orennayar_brdf_use_diffuse_tex:
+                layout.prop_search(asr_mat, "orennayar_brdf_diffuse_tex", material, "texture_slots", text="")
 
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "specular_brdf_use_glossy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.specular_brdf_glossy_tex != '' and asr_mat.specular_brdf_use_glossy_tex:
-                    specular_tex = bpy.data.textures[asr_mat.specular_brdf_glossy_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "orennayar_brdf_use_diffuse_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.orennayar_brdf_diffuse_tex != '' and asr_mat.orennayar_brdf_use_diffuse_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.orennayar_brdf_diffuse_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
-                layout.prop(asr_mat, "specular_brdf_multiplier", text="Specular Reflectance Multiplier")
+            # reflectance multiplier
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "orennayar_brdf_reflectance_multiplier", text="Reflectance Multiplier")
+            if asr_mat.orennayar_brdf_use_reflect_multiplier_tex:
+                layout.prop_search(asr_mat, "orennayar_brdf_reflect_multiplier_tex", material, "texture_slots", text="")
 
-            #
-            # Specular BTDF.
-            #
+            col = split.column()
+            col.prop(asr_mat, "orennayar_brdf_use_reflect_multiplier_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.orennayar_brdf_reflect_multiplier_tex != '' and asr_mat.orennayar_brdf_use_reflect_multiplier_tex:
+                reflect_multiplier_tex = bpy.data.textures[asr_mat.orennayar_brdf_reflect_multiplier_tex]
+                layout.prop(reflect_multiplier_tex.image.colorspace_settings, "name", text="Color Space")
 
-            elif asr_mat.bsdf_type == "specular_btdf":
-                # specular reflectance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Specular Reflectance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "specular_btdf_reflectance", text="")
+            # roughness
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "orennayar_brdf_roughness", text="Roughness")
+            if asr_mat.orennayar_brdf_use_rough_tex:
+                layout.prop_search(asr_mat, "orennayar_brdf_rough_tex", material, "texture_slots", text="")
 
-                if asr_mat.specular_btdf_use_specular_tex:
-                    layout.prop_search(asr_mat, "specular_btdf_specular_tex", material, "texture_slots", text="")
+            col = split.column()
+            col.prop(asr_mat, "orennayar_brdf_use_rough_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.orennayar_brdf_rough_tex != '' and asr_mat.orennayar_brdf_use_rough_tex:
+                rough_tex = bpy.data.textures[asr_mat.orennayar_brdf_rough_tex]
+                layout.prop(rough_tex.image.colorspace_settings, "name", text="Color Space")
 
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "specular_btdf_use_specular_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.specular_btdf_specular_tex != '' and asr_mat.specular_btdf_use_specular_tex:
-                    specular_tex = bpy.data.textures[asr_mat.specular_btdf_specular_tex]
-                    layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+        #
+        # Plastic BRDF.
+        #
 
-                layout.prop(asr_mat, "specular_btdf_refl_mult", text="Specular Reflectance Multiplier")
+        elif asr_mat.bsdf_type == "plastic_brdf":
+            # mdf
+            col = layout.column()
+            col.prop(asr_mat, "plastic_brdf_mdf", text="Microfacet Distribution Function")
 
-                # transmittance
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Specular Transmittance:")
-                split = split.split(percentage=0.83)
-                col = split.column()
-                col.prop(asr_mat, "specular_btdf_transmittance", text="")
+            # specular reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Specular Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_specular_reflectance", text="")
 
-                if asr_mat.specular_btdf_use_trans_tex:
-                    layout.prop_search(asr_mat, "specular_btdf_trans_tex", material, "texture_slots", text="")
+            if asr_mat.plastic_brdf_specular_reflectance_use_tex:
+                layout.prop_search(asr_mat, "plastic_brdf_specular_reflectance_tex", material, "texture_slots", text="")
 
-                split = split.split(percentage=1.0)
-                col = split.column()
-                col.prop(asr_mat, "specular_btdf_use_trans_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.specular_btdf_trans_tex != '' and asr_mat.specular_btdf_use_trans_tex:
-                    trans_tex = bpy.data.textures[asr_mat.specular_btdf_trans_tex]
-                    layout.prop(trans_tex.image.colorspace_settings, "name", text="Color Space")
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_specular_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.plastic_brdf_specular_reflectance_tex != '' and asr_mat.plastic_brdf_specular_reflectance_use_tex:
+                specular_tex = bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
 
-                layout.prop(asr_mat, "specular_btdf_trans_mult", text="Specular Transmittance Multiplier")
+            # specular reflectance multiplier
+            split = layout.split(percentage=0.9)
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_specular_reflectance_multiplier", text="Specular Reflectance Multiplier")
 
-                # Fresnel multiplier
-                split = layout.split(percentage=0.90)
-                col = split.column()
-                col.prop(asr_mat, "specular_btdf_fresnel_multiplier", text="Fresnel Multiplier")
+            if asr_mat.plastic_brdf_specular_reflectance_multiplier_use_tex:
+                layout.prop_search(asr_mat, "plastic_brdf_specular_reflectance_multiplier_tex", material, "texture_slots", text="")
 
-                if asr_mat.specular_btdf_fresnel_multiplier_use_tex:
-                    layout.prop_search(asr_mat, "specular_btdf_fresnel_multiplier_tex", material, "texture_slots", text="")
+            split = split.split()
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_specular_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.plastic_brdf_specular_reflectance_multiplier_tex != '' and asr_mat.plastic_brdf_specular_reflectance_multiplier_use_tex:
+                specular_tex = bpy.data.textures[asr_mat.plastic_brdf_specular_reflectance_multiplier_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
 
-                col = split.column()
-                col.prop(asr_mat, "specular_btdf_fresnel_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-                if asr_mat.specular_btdf_fresnel_multiplier_tex != '' and asr_mat.specular_btdf_fresnel_multiplier_use_tex:
-                    diffuse_tex = bpy.data.textures[asr_mat.specular_btdf_fresnel_multiplier_tex]
-                    layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+            # roughness
+            split = layout.split(percentage=0.9)
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_roughness", text="Roughness")
 
-                # IOR
-                layout.prop(asr_mat, "specular_btdf_ior", text="Index of Refraction")
+            if asr_mat.plastic_brdf_roughness_use_tex:
+                layout.prop_search(asr_mat, "plastic_brdf_roughness_tex", material, "texture_slots", text="")
 
-                # volume
-                layout.prop(asr_mat, "specular_btdf_volume_density", text="Volume Density")
+            split = split.split()
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_roughness_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.plastic_brdf_roughness_tex != '' and asr_mat.plastic_brdf_roughness_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.plastic_brdf_roughness_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
 
-                # volume density
-                layout.prop(asr_mat, "specular_btdf_volume_scale", text="Volume Scale")
+            col = layout.column()
+            col.prop(asr_mat, "plastic_brdf_highlight_falloff", text="Highlight Falloff")
+            col.prop(asr_mat, "plastic_brdf_ior", text="Index of Refraction")
+
+            # diffuse reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Diffuse Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_diffuse_reflectance", text="")
+
+            if asr_mat.plastic_brdf_diffuse_reflectance_use_tex:
+                layout.prop_search(asr_mat, "plastic_brdf_diffuse_reflectance_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_diffuse_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.plastic_brdf_diffuse_reflectance_tex != '' and asr_mat.plastic_brdf_diffuse_reflectance_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # diffuse reflectance multiplier
+            split = layout.split(percentage=0.9)
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_diffuse_reflectance_multiplier", text="Diffuse Reflectance Multiplier")
+
+            if asr_mat.plastic_brdf_diffuse_reflectance_multiplier_use_tex:
+                layout.prop_search(asr_mat, "plastic_brdf_diffuse_reflectance_multiplier_tex", material, "texture_slots", text="")
+
+            split = split.split()
+            col = split.column()
+            col.prop(asr_mat, "plastic_brdf_diffuse_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex != '' and asr_mat.plastic_brdf_diffuse_reflectance_multiplier_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.plastic_brdf_diffuse_reflectance_multiplier_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+            col = layout.column()
+            col.prop(asr_mat, "plastic_brdf_internal_scattering", text="Internal Scattering")
+
+        #
+        # Sheen BRDF.
+        #
+
+        elif asr_mat.bsdf_type == "sheen_brdf":
+            # reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "sheen_brdf_reflectance", text="")
+
+            if asr_mat.sheen_brdf_reflectance_use_tex:
+                layout.prop_search(asr_mat, "sheen_brdf_reflectance_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "sheen_brdf_reflectance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.sheen_brdf_reflectance_tex != '' and asr_mat.sheen_brdf_reflectance_use_tex:
+                specular_tex = bpy.data.textures[asr_mat.sheen_brdf_reflectance_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # reflectance multiplier
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "sheen_brdf_reflectance_multiplier", text="Reflectance Multiplier")
+
+            if asr_mat.sheen_brdf_reflectance_multiplier_use_tex:
+                layout.prop_search(asr_mat, "sheen_brdf_reflectance_multiplier_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "sheen_brdf_reflectance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.sheen_brdf_reflectance_multiplier_tex != '' and asr_mat.sheen_brdf_reflectance_multiplier_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.sheen_brdf_reflectance_multiplier_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+        #
+        # Specular BRDF.
+        #
+
+        elif asr_mat.bsdf_type == "specular_brdf":
+            # glossiness
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Specular Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "specular_brdf_reflectance", text="")
+
+            if asr_mat.specular_brdf_use_glossy_tex:
+                layout.prop_search(asr_mat, "specular_brdf_glossy_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "specular_brdf_use_glossy_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.specular_brdf_glossy_tex != '' and asr_mat.specular_brdf_use_glossy_tex:
+                specular_tex = bpy.data.textures[asr_mat.specular_brdf_glossy_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+
+            layout.prop(asr_mat, "specular_brdf_multiplier", text="Specular Reflectance Multiplier")
+
+        #
+        # Specular BTDF.
+        #
+
+        elif asr_mat.bsdf_type == "specular_btdf":
+            # specular reflectance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Specular Reflectance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "specular_btdf_reflectance", text="")
+
+            if asr_mat.specular_btdf_use_specular_tex:
+                layout.prop_search(asr_mat, "specular_btdf_specular_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "specular_btdf_use_specular_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.specular_btdf_specular_tex != '' and asr_mat.specular_btdf_use_specular_tex:
+                specular_tex = bpy.data.textures[asr_mat.specular_btdf_specular_tex]
+                layout.prop(specular_tex.image.colorspace_settings, "name", text="Color Space")
+
+            layout.prop(asr_mat, "specular_btdf_refl_mult", text="Specular Reflectance Multiplier")
+
+            # transmittance
+            split = layout.split(percentage=0.40)
+            col = split.column()
+            col.label("Specular Transmittance:")
+            split = split.split(percentage=0.83)
+            col = split.column()
+            col.prop(asr_mat, "specular_btdf_transmittance", text="")
+
+            if asr_mat.specular_btdf_use_trans_tex:
+                layout.prop_search(asr_mat, "specular_btdf_trans_tex", material, "texture_slots", text="")
+
+            split = split.split(percentage=1.0)
+            col = split.column()
+            col.prop(asr_mat, "specular_btdf_use_trans_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.specular_btdf_trans_tex != '' and asr_mat.specular_btdf_use_trans_tex:
+                trans_tex = bpy.data.textures[asr_mat.specular_btdf_trans_tex]
+                layout.prop(trans_tex.image.colorspace_settings, "name", text="Color Space")
+
+            layout.prop(asr_mat, "specular_btdf_trans_mult", text="Specular Transmittance Multiplier")
+
+            # Fresnel multiplier
+            split = layout.split(percentage=0.90)
+            col = split.column()
+            col.prop(asr_mat, "specular_btdf_fresnel_multiplier", text="Fresnel Multiplier")
+
+            if asr_mat.specular_btdf_fresnel_multiplier_use_tex:
+                layout.prop_search(asr_mat, "specular_btdf_fresnel_multiplier_tex", material, "texture_slots", text="")
+
+            col = split.column()
+            col.prop(asr_mat, "specular_btdf_fresnel_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            if asr_mat.specular_btdf_fresnel_multiplier_tex != '' and asr_mat.specular_btdf_fresnel_multiplier_use_tex:
+                diffuse_tex = bpy.data.textures[asr_mat.specular_btdf_fresnel_multiplier_tex]
+                layout.prop(diffuse_tex.image.colorspace_settings, "name", text="Color Space")
+
+            # IOR
+            layout.prop(asr_mat, "specular_btdf_ior", text="Index of Refraction")
+
+            # volume
+            layout.prop(asr_mat, "specular_btdf_volume_density", text="Volume Density")
+
+            # volume density
+            layout.prop(asr_mat, "specular_btdf_volume_scale", text="Volume Scale")
 
 
 class AppleseedMaterialSSSShading(bpy.types.Panel):
@@ -1318,7 +1346,7 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
             renderer = context.scene.render.engine == 'APPLESEED_RENDER'
             obj = context.object is not None
             obj_type = context.object.type == 'MESH'
-            is_nodemat = context.object.active_material.appleseed.osl_node_tree != None
+            is_nodemat = context.object.active_material.appleseed.osl_node_tree is not None
             return renderer and obj and obj_type and is_nodemat
         return False
 
@@ -1357,6 +1385,7 @@ def register():
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
     util.safe_register_class(AppleseedMaterialPreview)
     util.safe_register_class(AppleseedMaterialShading)
+    util.safe_register_class(AppleseedMaterialSurfaceShading)
     util.safe_register_class(AppleseedMaterialSSSShading)
     util.safe_register_class(AppleseedMaterialVolumeShading)
     util.safe_register_class(AppleseedMatEmissionPanel)
@@ -1373,6 +1402,7 @@ def unregister():
     util.safe_unregister_class(AppleseedMaterialVolumeShading)
     util.safe_unregister_class(AppleseedMaterialSSSShading)
     util.safe_unregister_class(AppleseedMaterialShading)
+    util.safe_unregister_class(AppleseedMaterialSurfaceShading)
     util.safe_unregister_class(AppleseedMaterialPreview)
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')

@@ -115,6 +115,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                     min=1,
                                     max=max_threads)
 
+    tex_cache = bpy.props.IntProperty(name="tex_cache",
+                                      description="Size of the texture cache in MB",
+                                      default=1024)
+
     generate_mesh_files = bpy.props.BoolProperty(name="Export Geometry",
                                                  description="Write geometry to disk as .obj files",
                                                  default=True)
