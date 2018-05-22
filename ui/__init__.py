@@ -26,8 +26,6 @@
 # THE SOFTWARE.
 #
 
-import bpy
-import bl_ui
 from . import render
 from . import scene
 from . import world
@@ -35,18 +33,6 @@ from . import camera
 from . import objects
 from . import materials
 from . import lamps
-
-import bl_ui.properties_texture as properties_texture
-INCLUDE_TEXTURE = ['TEXTURE_MT_specials', 'TEXTURE_PT_context_texture', 'TEXTURE_PT_image', 'TEXTURE_UL_texslots', 'Panel',
-                   'Object', 'Material', 'Texture', 'TextureSlotPanel', 'TextureButtonsPanel', 'UIList', 'id_tex_datablock', 'context_tex_datablock']
-for member in dir(properties_texture):
-    if member in INCLUDE_TEXTURE:
-        subclass = getattr(properties_texture, member)
-        try:
-            subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-        except:
-            pass
-del properties_texture
 
 # Enable all existing panels for these contexts
 

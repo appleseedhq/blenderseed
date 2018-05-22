@@ -195,10 +195,7 @@ def register():
     node_list = util.read_osl_shaders()
     for node in node_list:
         try:
-            if 'USE_APPLESEED_PYTHON' in os.environ:
-                node_name, node_category = oslnode.generate_node_python(node)
-            else:
-                node_name, node_category = oslnode.generate_node_oslinfo(node)
+            node_name, node_category = oslnode.generate_node(node)
             osl_node_names.append([node_name, node_category])
         except:
             pass

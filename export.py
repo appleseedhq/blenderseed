@@ -48,48 +48,6 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
     filename_ext = ".appleseed"
     filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'})
 
-    compress_export = bpy.props.BoolProperty(name="Create compressed archive",
-                                             description="Compress export (including all textures) into archive file",
-                                             default=False)
-
-    @classmethod
-    def poll(cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER'
-
-    def execute(self, context):
-        export_path = util.realpath(self.filepath)
-        writer = projectwriter.Writer()
-        writer.write(context.scene, export_path)
-
-        if self.compress_export:
-            appleseed_bin_dir = util.get_appleseed_bin_dir()
-            projecttool_path = os.path.join(appleseed_bin_dir, "projecttool")
-            cmd = (projecttool_path, 'pack', export_path)
-            try:
-                process = subprocess.Popen(cmd, cwd=appleseed_bin_dir, env=os.environ.copy(), stdout=subprocess.PIPE)
-                process.wait()
-            except OSError as e:
-                self.report({'ERROR'}, "Failed to run {0} with project {1}: {2}.".format(projecttool_path, export_path, e))
-                return
-            dir_path = os.path.dirname(export_path)
-            shutil.rmtree(os.path.join(dir_path, "meshes"))
-            os.remove(export_path)
-
-        return {'FINISHED'}
-
-
-class ExportAppleseedScenePython(bpy.types.Operator, ExportHelper):
-    """
-    Export the scene to an appleseed project on disk.
-    """
-
-    bl_idname = "appleseed.export_scene_python"
-    bl_label = "Export appleseed Scene with Python"
-
-    filename_ext = ".appleseed"
-    filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'})
-
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render
@@ -145,12 +103,10 @@ def menu_func_export_scene(self, context):
 def register():
     util.safe_register_class(ExportAppleseedScene)
     util.safe_register_class(ExportAppleseedAnimationScene)
-    util.safe_register_class(ExportAppleseedScenePython)
     bpy.types.INFO_MT_file_export.append(menu_func_export_scene)
 
 
 def unregister():
     bpy.types.INFO_MT_file_export.remove(menu_func_export_scene)
-    util.safe_unregister_class(ExportAppleseedScenePython)
     util.safe_unregister_class(ExportAppleseedAnimationScene)
     util.safe_unregister_class(ExportAppleseedScene)

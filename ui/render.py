@@ -58,8 +58,6 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
 
         row = layout.row(align=True)
         row.operator("appleseed.export_scene", text="Export Frame")
-        if 'USE_APPLESEED_PYTHON' in os.environ:
-            row.operator("appleseed.export_scene_python", text="Python Export")
         row.operator("appleseed.export_anim_scene", text="Export Animation")
 
         split = layout.split(percentage=0.33)
