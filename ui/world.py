@@ -84,6 +84,7 @@ class AppleseedWorldPanel(bpy.types.Panel):
 
         elif asr_sky_props.env_type == "latlong_map":
             layout.prop(asr_sky_props, "env_tex", text="Radiance")
+            layout.prop(asr_sky_props, "env_tex_colorspace", text="Color Space")
             layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
             layout.prop(asr_sky_props, "env_exposure", text="Exposure")
             layout.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")

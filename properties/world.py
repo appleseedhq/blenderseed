@@ -114,10 +114,17 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                             min=0.0,
                                             max=1.0)
 
-    env_tex_mult = bpy.props.StringProperty(name="env_tex_mult",
+    env_tex_mult = bpy.props.FloatProperty(name="env_tex_mult",
                                             description="",
-                                            default="",
-                                            subtype='FILE_PATH')
+                                            default=1)
+
+    env_tex_colorspace = bpy.props.EnumProperty(name="env_tex_colorspace",
+                                                description="Color space of input texture",
+                                                items=[
+                                                    ('srgb', "sRGB", ""),
+                                                    ('linear_rgb', "Linear RGB", ""),
+                                                    ('ciexyz', "CIE XYZ", "")],
+                                                default="linear_rgb")
 
     env_tex = bpy.props.StringProperty(name="env_tex",
                                        description="Texture to influence environment",

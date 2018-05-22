@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -26,9 +25,9 @@
 # THE SOFTWARE.
 #
 
-from .translator import Translator
-
 import appleseed as asr
+
+from .translator import Translator
 
 
 class WorldTranslator(Translator):
@@ -37,6 +36,8 @@ class WorldTranslator(Translator):
         self.__bl_world = scene
         self.__horizon_radiance = None
         self.__zenith_radiance = None
+        self.__env_tex = None
+        self.__env_tex_inst = None
 
     def create_entities(self):
         as_data = self.__bl_world.appleseed_sky
@@ -60,7 +61,12 @@ class WorldTranslator(Translator):
                                                      self._convert_color(self.__bl_world.world.zenith_color))
 
         if env_type in ('latlong_map', 'mirrorball_map'):
-            pass
+            inst_params = {'addressing_mode': 'wrap',
+                           'filtering_mode': 'bilinear'}
+
+            self.__env_tex = asr.Texture('disk_texture_2d', 'environment_tex', {'filename': as_data.env_tex,
+                                                                                'color_space': as_data.env_tex_colorspace}, [])
+            self.__env_tex_inst = asr.TextureInstance('environment_tex_inst', inst_params, 'environment_tex', asr.Transformf(asr.Matrix4f.identity()))
 
         self.set_edf_params()
 
@@ -69,16 +75,16 @@ class WorldTranslator(Translator):
         edf_params = {}
 
         if as_sky.env_type == 'latlong_map':
-            edf_params = {'radiance': as_sky.env_tex + "_inst",
-                          'radiance_multiplier': as_sky.env_tex_mult + "_inst",
+            edf_params = {'radiance': "environment_tex_inst",
+                          'radiance_multiplier': as_sky.env_tex_mult,
                           'exposure': as_sky.env_exposure,
                           'vertical_shift': as_sky.vertical_shift,
                           'horizontal_shift': as_sky.horizontal_shift}
 
         elif as_sky.env_type == 'mirrorball_map':
-            edf_params = {'radiance': as_sky.env_tex + "_inst",
-                          'radiance_multiplier': as_sky.env_tex_mult + "_inst",
-                          'exposure': as_sky.env_exposure}
+            edf_params = {'radiance': "environment_tex_inst",
+                          'exposure': as_sky.env_exposure,
+                          'radiance_multiplier': as_sky.env_tex_mult}
 
         elif as_sky.env_type == 'constant':
             edf_params = {'radiance': 'horizon_radiance_color'}
@@ -114,6 +120,9 @@ class WorldTranslator(Translator):
             scene.colors().insert(self.__horizon_radiance)
         if self.__zenith_radiance is not None:
             scene.colors().insert(self.__zenith_radiance)
+        if self.__env_tex != None:
+            scene.textures().insert(self.__env_tex)
+            scene.texture_instances().insert(self.__env_tex_inst)
 
         scene.environment_edfs().insert(self.__as_env_edf)
         scene.environment_shaders().insert(self.__as_env_shader)
