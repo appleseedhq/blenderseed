@@ -229,6 +229,11 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
         material = context.object.active_material
         nodetree = bpy.data.node_groups.new('%s_appleseed_osl_nodetree' % material.name, 'AppleseedOSLNodeTree')
         nodetree.use_fake_user = True
+        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
+        surface.location = (0, 0)
+        disney_node = nodetree.nodes.new('AppleseedasDisneyMaterialNode')
+        disney_node.location = (-300, 0)
+        nodetree.links.new(disney_node.outputs[0], surface.inputs[0])
         material.appleseed.osl_node_tree = nodetree
         return {'FINISHED'}
 
