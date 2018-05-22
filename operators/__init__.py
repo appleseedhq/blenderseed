@@ -33,6 +33,32 @@ from .. import util
 import os
 
 
+class AppleseedViewNode(bpy.types.Operator):
+    bl_label = "View OSL Nodetree"
+    bl_description = ""
+    bl_idname = "appleseed.view_nodetree"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return obj and obj.active_material and obj.active_material.appleseed.osl_node_tree
+
+    def execute(self, context):
+        mat = context.active_object.active_material
+        node_tree = mat.appleseed.osl_node_tree
+
+        for area in context.screen.areas:
+            if area.type == "NODE_EDITOR":
+                for space in area.spaces:
+                    if space.type == "NODE_EDITOR":
+                        space.tree_type = node_tree.bl_idname
+                        space.node_tree = node_tree
+                        return {"FINISHED"}
+
+        self.report({"ERROR"}, "Open a node editor first")
+        return {"CANCELLED"}
+
+
 class AppleseedConvertTextures(bpy.types.Operator):
     bl_label = "Convert Textures"
     bl_description = "Convert textures"
@@ -208,6 +234,7 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
 
 
 def register():
+    util.safe_register_class(AppleseedViewNode)
     util.safe_register_class(AppleseedConvertTextures)
     util.safe_register_class(AppleseedRefreshTexture)
     util.safe_register_class(AppleseedAddTexture)
@@ -225,3 +252,4 @@ def unregister():
     util.safe_unregister_class(AppleseedAddTexture)
     util.safe_unregister_class(AppleseedRefreshTexture)
     util.safe_unregister_class(AppleseedConvertTextures)
+    util.safe_unregister_class(AppleseedViewNode)
