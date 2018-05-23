@@ -53,12 +53,6 @@ class CameraTranslator(Translator):
         if model == 'pinhole_camera' and self.__bl_camera.data.appleseed.enable_dof:
             model = 'thinlens_camera'
 
-        self.__as_camera = asr.Camera("pinhole_camera", self.__bl_camera.name, {})
-
-        self.set_params(model)
-        self.set_transform()
-
-    def set_params(self, model):
         camera = self.__bl_camera.data
         scene = self.__scene
         focal_length = camera.lens / 1000
@@ -106,9 +100,7 @@ class CameraTranslator(Translator):
                           'shutter_open_begin_time': scene.appleseed.shutter_open,
                           'shutter_close_end_time': scene.appleseed.shutter_close}
 
-        self.__as_camera.set_parameters(cam_params)
-
-    def set_transform(self):
+        self.__as_camera = asr.Camera("pinhole_camera", self.__bl_camera.name, cam_params)
 
         self.__as_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self.__bl_camera.matrix_world))
 

@@ -44,7 +44,7 @@ class MaterialTranslator(Translator):
         osl_params = {'osl_surface': as_mat_data.osl_node_tree.name,
                       'surface_shader': "{0}_surface_shader".format(self.__material.name)}
 
-        self.__as_mat = asr.Material('osl_material', self.__material.name, osl_params)
+        self.__as_mat = asr.Material('osl_material', self.__material.name + "_mat", osl_params)
 
     def flush_entities(self, project):
 
@@ -52,4 +52,3 @@ class MaterialTranslator(Translator):
         assembly = scene.assemblies()['assembly']
         assembly.surface_shaders().insert(self.__as_shader)
         assembly.materials().insert(self.__as_mat)
-

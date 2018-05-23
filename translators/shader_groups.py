@@ -43,12 +43,8 @@ class ShaderGroupTranslator(Translator):
         self.__scene = scene
 
     def create_entities(self):
-
         self.__shader_group = asr.ShaderGroup(self.__node_group.name)
 
-        self.set_parameters()
-
-    def set_parameters(self):
         surface_shader = None
         for shader in self.__shaders:
             if shader.node_type == 'osl_surface':

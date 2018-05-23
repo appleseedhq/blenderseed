@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -36,9 +35,6 @@ import bpy
 import mathutils
 
 from . import bl_info
-
-import subprocess
-
 
 image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
 
@@ -200,6 +196,7 @@ def read_osl_shaders():
     print("[appleseed] OSL parsing complete.")
 
     return nodes
+
 
 # ------------------------------------
 # Generic utilities and settings.
@@ -568,3 +565,11 @@ def sample_psys_mblur(ob, scene, psys, index, start, current_total):
         ob.dupli_list_clear()
     frame_set(frame_orig)
     return dupli_dict, index
+
+
+def register():
+    pass
+
+
+def unregister():
+    pass

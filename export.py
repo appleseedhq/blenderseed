@@ -37,6 +37,7 @@ from . import util
 
 from .translators import SceneTranslator
 
+
 class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
     """
     Export the scene to an appleseed project on disk.
