@@ -40,15 +40,10 @@ class WorldTranslator(Translator):
         self.__env_tex_inst = None
 
     def create_entities(self):
-        as_data = self.__bl_world.appleseed_sky
-        env_type = as_data.env_type
+        as_sky = self.__bl_world.appleseed_sky
+        env_type = as_sky.env_type
         if env_type == 'sunsky':
-            env_type = as_data.sun_model
-
-        self.__as_env_edf = asr.EnvironmentEDF(env_type + "_environment_edf", "sky_edf", {})
-        self.__as_env_shader = asr.EnvironmentShader("edf_environment_shader", "sky_shader", {'environment_edf': 'sky_edf',
-                                                                                              'alpha_value': as_data.env_alpha})
-        self.__as_env = asr.Environment("sky", {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
+            env_type = as_sky.sun_model
 
         if env_type == 'constant':
             self.__horizon_radiance = asr.ColorEntity('horizon_radiance_color', {'color_space': 'linear_rgb'},
@@ -61,18 +56,14 @@ class WorldTranslator(Translator):
                                                      self._convert_color(self.__bl_world.world.zenith_color))
 
         if env_type in ('latlong_map', 'mirrorball_map'):
-            inst_params = {'addressing_mode': 'wrap',
+            tex_inst_params = {'addressing_mode': 'wrap',
                            'filtering_mode': 'bilinear'}
 
-            self.__env_tex = asr.Texture('disk_texture_2d', 'environment_tex', {'filename': as_data.env_tex,
-                                                                                'color_space': as_data.env_tex_colorspace}, [])
-            self.__env_tex_inst = asr.TextureInstance('environment_tex_inst', inst_params, 'environment_tex', asr.Transformf(asr.Matrix4f.identity()))
+            self.__env_tex = asr.Texture('disk_texture_2d', 'environment_tex', {'filename': as_sky.env_tex,
+                                                                                'color_space': as_sky.env_tex_colorspace}, [])
 
-        self.set_edf_params()
-
-    def set_edf_params(self):
-        as_sky = self.__bl_world.appleseed_sky
-        edf_params = {}
+            self.__env_tex_inst = asr.TextureInstance('environment_tex_inst', tex_inst_params, 'environment_tex',
+                                                      asr.Transformf(asr.Matrix4f.identity()))
 
         if as_sky.env_type == 'latlong_map':
             edf_params = {'radiance': "environment_tex_inst",
@@ -110,7 +101,12 @@ class WorldTranslator(Translator):
         if as_sky.sun_model == 'preetham':
             del edf_params['ground_albedo']
 
-        self.__as_env_edf.set_parameters(edf_params)
+        self.__as_env_edf = asr.EnvironmentEDF(env_type + "_environment_edf", "sky_edf", edf_params)
+
+        self.__as_env_shader = asr.EnvironmentShader("edf_environment_shader", "sky_shader", {'environment_edf': 'sky_edf',
+                                                                                              'alpha_value': as_data.env_alpha})
+
+        self.__as_env = asr.Environment("sky", {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
 
     def flush_entities(self, project):
 

@@ -39,10 +39,11 @@ class ObjectTranslator(Translator):
         self.__scene = scene
 
     def create_entities(self):
+        mat_name = self.__obj.material_slots[0].name + "_mat"
         self.__as_obj = asr.MeshObject('mesh', {'primitive': 'sphere',
                                                 'radius': 1.0})
 
-        self.__as_obj_instance = asr.ObjectInstance('mesh_inst', {}, 'mesh', self._convert_matrix(self.__obj.matrix_world), {"default": "Material", "default2": "Material"})
+        self.__as_obj_instance = asr.ObjectInstance('mesh_inst', {}, 'mesh', self._convert_matrix(self.__obj.matrix_world), {"default": mat_name})
 
     def set_parameters(self):
         pass
