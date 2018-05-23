@@ -381,6 +381,9 @@ class SceneTranslator(object):
                 if obj.data.type == 'AREA':
                     print("[appleseed] Creating area lamp translator for {0}".format(obj.name))
                     self.__lamp_translators[obj.name] = AreaLampTranslator(self.__scene, obj)
+                    if obj.data.appleseed.area_node_tree is not None:
+                        print("[appleseed] Creating shader group translator for {0}".format(obj.name))
+                        self.__osl_translators[obj.data.appleseed.area_node_tree.name] = ShaderGroupTranslator(self.__scene, obj.data.appleseed.area_node_tree)
                 else:
                     print("[appleseed] Creating lamp translator for {0}".format(obj.name))
                     self.__lamp_translators[obj.name] = LampTranslator(self.__scene, obj)
