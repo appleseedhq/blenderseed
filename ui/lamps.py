@@ -109,42 +109,29 @@ class AppleseedLampPanel(bpy.types.Panel):
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'AREA':
+
+            layout.prop(asr_lamp, "area_shape", text="Area Lamp Shape")
             col = layout.column(align=True)
-            col.prop(lamp_data, "shape", text="")
-            col.prop(lamp_data, "size", text="Size X")
-            if lamp_data.shape == 'RECTANGLE':
-                col.prop(lamp_data, "size_y", text="Size Y")
+            if asr_lamp.area_shape == 'grid':
+                col.prop(lamp_data, "shape", text="")
+                if lamp_data.shape == 'RECTANGLE':
+                    col.prop(lamp_data, "size", text="Size X")
+                    col.prop(lamp_data, "size_y", text="Size Y")
+                else:
+                    col.prop(lamp_data, "size", text="Size")
+            else:
+                col.prop(lamp_data, "size", text="Size")
 
-            split = layout.split(percentage=0.40)
-            col = split.column()
-            col.label("Intensity:")
-            split = split.split(percentage=0.83)
-            col = split.column()
-            col.prop(asr_lamp, "radiance", text="")
-
-            col = split.column()
-            col.prop(asr_lamp, "radiance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-
-            if asr_lamp.radiance_use_tex:
-                layout.prop(asr_lamp, "radiance_tex", text="")
-
-            split = layout.split(percentage=0.90)
-            col = split.column()
-            col.prop(asr_lamp, "radiance_multiplier", text="Intensity Multiplier")
-
-            col = split.column()
-            col.prop(asr_lamp, "radiance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
-
-            if asr_lamp.radiance_multiplier_use_tex:
-                layout.prop(asr_lamp, "radiance_multiplier_tex", text="")
-
-            layout.prop(asr_lamp, "light_emission_profile")
-            if asr_lamp.light_emission_profile == 'cone_edf':
-                layout.prop(asr_lamp, "light_cone_edf_angle", text="Cone EDF Angle")
-            layout.prop(asr_lamp, "exposure", text="Exposure")
-            layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
-            layout.prop(asr_lamp, "light_near_start", text="Light Near Start")
-            layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
+            layout.prop(asr_lamp, "area_visibility", text="Camera Visibility")
+            if not asr_lamp.area_node_tree:
+                layout.prop(asr_lamp, "area_color", text="Color")
+                layout.prop(asr_lamp, "area_intensity", text="Intensity")
+                layout.prop(asr_lamp, "area_intensity_scale", text="Intensity Scale")
+                layout.prop(asr_lamp, "area_exposure", text="Exposure")
+                layout.prop(asr_lamp, "area_normalize", text="Normalize", toggle=True)
+                layout.operator('appleseed.add_lap_osl_nodetree', text="Add Node Tree")
+            else:
+                layout.operator('appleseed.view_lamp_nodetree', text="View Nodetree")
 
 
 def register():

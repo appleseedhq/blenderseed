@@ -41,11 +41,37 @@ class AppleseedViewNode(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.object
-        return obj and obj.active_material and obj.active_material.appleseed.osl_node_tree
+        return obj
 
     def execute(self, context):
         mat = context.active_object.active_material
         node_tree = mat.appleseed.osl_node_tree
+
+        for area in context.screen.areas:
+            if area.type == "NODE_EDITOR":
+                for space in area.spaces:
+                    if space.type == "NODE_EDITOR":
+                        space.tree_type = node_tree.bl_idname
+                        space.node_tree = node_tree
+                        return {"FINISHED"}
+
+        self.report({"ERROR"}, "Open a node editor first")
+        return {"CANCELLED"}
+
+
+class AppleseedViewLampNode(bpy.types.Operator):
+    bl_label = "View OSL Nodetree"
+    bl_description = ""
+    bl_idname = "appleseed.view_lamp_nodetree"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return obj
+
+    def execute(self, context):
+        lamp = context.active_object.data.appleseed
+        node_tree = lamp.area_node_tree
 
         for area in context.screen.areas:
             if area.type == "NODE_EDITOR":
@@ -238,13 +264,37 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
+    """
+    appleseed material node tree generator.
+    """
+
+    bl_idname = "appleseed.add_lap_osl_nodetree"
+    bl_label = "Add appleseed OSL Material Node Tree"
+    bl_description = "Create an appleseed OSL material node tree and link it to the current lamp"
+
+    def execute(self, context):
+        lamp = context.object.data
+        nodetree = bpy.data.node_groups.new('%s_appleseed_lamp_osl_nodetree' % lamp.name, 'AppleseedOSLNodeTree')
+        nodetree.use_fake_user = True
+        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
+        surface.location = (0, 0)
+        area_lamp_node = nodetree.nodes.new('AppleseedasAreaLightNode')
+        area_lamp_node.location = (-300, 0)
+        nodetree.links.new(area_lamp_node.outputs[0], surface.inputs[0])
+        lamp.appleseed.area_node_tree = nodetree
+        return {'FINISHED'}
+
+
 def register():
     util.safe_register_class(AppleseedViewNode)
+    util.safe_register_class(AppleseedViewLampNode)
     util.safe_register_class(AppleseedConvertTextures)
     util.safe_register_class(AppleseedRefreshTexture)
     util.safe_register_class(AppleseedAddTexture)
     util.safe_register_class(AppleseedRemoveTexture)
     util.safe_register_class(AppleseedNewOSLNodeTree)
+    util.safe_register_class(AppleseedNewLampOSLNodeTree)
     util.safe_register_class(AppleseedAddSssSet)
     util.safe_register_class(AppleseedRemoveSssSet)
 
@@ -252,9 +302,11 @@ def register():
 def unregister():
     util.safe_unregister_class(AppleseedRemoveSssSet)
     util.safe_unregister_class(AppleseedAddSssSet)
+    util.safe_unregister_class(AppleseedNewLampOSLNodeTree)
     util.safe_unregister_class(AppleseedNewOSLNodeTree)
     util.safe_unregister_class(AppleseedRemoveTexture)
     util.safe_unregister_class(AppleseedAddTexture)
     util.safe_unregister_class(AppleseedRefreshTexture)
     util.safe_unregister_class(AppleseedConvertTextures)
+    util.safe_unregister_class(AppleseedViewLampNode)
     util.safe_unregister_class(AppleseedViewNode)

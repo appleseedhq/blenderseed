@@ -114,23 +114,40 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                          max=360)
 
     # Area lamp specific parameters.
-    light_near_start = bpy.props.FloatProperty(name="light_near_start",
-                                               description="Amount by which to extend the start of light's influence away from the emissive material",
-                                               default=0.0,
-                                               min=0,
-                                               max=10)
+    area_shape = bpy.props.EnumProperty(name="area_shape",
+                                        description="",
+                                        items=[('grid', "Rectangle", ""),
+                                               ('disk', "Disk", ""),
+                                               ('sphere', "Sphere", "")],
+                                        default='grid')
 
-    light_emission_profile = bpy.props.EnumProperty(name="Profile",
-                                                    description="Profile for emission",
-                                                    items=[('diffuse_edf', "Diffuse EDF", ""),
-                                                           ('cone_edf', "Cone EDF", "")],
-                                                    default='diffuse_edf')
+    area_color = bpy.props.FloatVectorProperty(name="area_color",
+                                               description="Color of area lamp",
+                                               subtype='COLOR',
+                                               default=(1.0, 1.0, 1.0))
 
-    light_cone_edf_angle = bpy.props.FloatProperty(name="light_cone_edf_angle",
-                                                   description="Angle of spread for cone EDF",
-                                                   default=90.0,
-                                                   min=0.0,
-                                                   max=180.0)
+    area_intensity = bpy.props.FloatProperty(name="area_intensity",
+                                             description="Intensity of area light",
+                                             default=1.0)
+
+    area_intensity_scale = bpy.props.FloatProperty(name="area_intensity_scale",
+                                                   description="Intensity of area light",
+                                                   default=1.0)
+
+    area_exposure = bpy.props.FloatProperty(name="exposure",
+                                            description="Intensity of area light",
+                                            default=1.0)
+
+    area_normalize = bpy.props.BoolProperty(name="area_normalize",
+                                            description="",
+                                            default=False)
+
+    area_visibility = bpy.props.BoolProperty(name="area_visibility",
+                                             description="",
+                                             default=True)
+
+    area_node_tree = bpy.props.PointerProperty(name="Lamp OSL Node Tree", type=bpy.types.NodeTree)
+
 
 def register():
     util.safe_register_class(AppleseedLampProps)

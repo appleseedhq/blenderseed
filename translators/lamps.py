@@ -25,11 +25,11 @@
 # THE SOFTWARE.
 #
 
-import math
-
 import appleseed as asr
 
 from .translator import Translator
+
+import math
 
 
 class LampTranslator(Translator):
@@ -47,30 +47,17 @@ class LampTranslator(Translator):
                         'SUN': 'sun_light'}
 
         self.model = type_mapping[lamp.data.type]
-        self.__as_light = asr.Light(self.model, self.__bl_lamp.name, {})
-        radiance = self._convert_color(as_lamp_data.radiance)
-        lamp_radiance_name = "{0}_radiance".format(self.__bl_lamp.name)
-        self.__as_light_radiance = asr.ColorEntity(lamp_radiance_name, {'color_space': 'linear_rgb'}, radiance)
 
-        self.set_parameters()
-        self.set_transform()
-
-    def set_parameters(self):
-        lamp = self.__bl_lamp.data
-        as_lamp_data = lamp.appleseed
         light_params = {'intensity': "{0}_radiance".format(self.__bl_lamp.name),
                         'intensity_multiplier': as_lamp_data.radiance_multiplier,
                         'exposure': as_lamp_data.exposure,
                         'cast_indirect_light': as_lamp_data.cast_indirect,
                         'importance_multiplier': as_lamp_data.importance_multiplier}
 
+        # TODO: Textures for spot lamp
         if self.model == 'spot_light':
-            if as_lamp_data.radiance_use_tex and as_lamp_data.radiance_tex != '':
-                light_params['intensity'] = as_lamp_data.radiance_tex + "_inst"
-            if as_lamp_data.radiance_multiplier_use_tex and as_lamp_data.radiance_multiplier_tex != '':
-                light_params['intensity_multiplier'] = as_lamp_data.radiance_multiplier_tex + "_ins"
-            outer_angle = math.degrees(lamp.spot_size)
-            inner_angle = (1.0 - lamp.spot_blend) * outer_angle
+            outer_angle = math.degrees(lamp.data.spot_size)
+            inner_angle = (1.0 - lamp.data.spot_blend) * outer_angle
             light_params['exposure_multiplier'] = as_lamp_data.exposure_multiplier
             light_params['tilt_angle'] = as_lamp_data.tilt_angle
             light_params['inner_angle'] = inner_angle
@@ -92,10 +79,12 @@ class LampTranslator(Translator):
             if as_lamp_data.use_edf:
                 light_params['environment_edf'] = 'sky_edf'
 
-        self.__as_light.set_parameters(light_params)
-
-    def set_transform(self):
+        self.__as_light = asr.Light(self.model, self.__bl_lamp.name, light_params)
         self.__as_light.set_transform(self._convert_matrix(self.__bl_lamp.matrix_world))
+
+        radiance = self._convert_color(as_lamp_data.radiance)
+        lamp_radiance_name = "{0}_radiance".format(self.__bl_lamp.name)
+        self.__as_light_radiance = asr.ColorEntity(lamp_radiance_name, {'color_space': 'linear_rgb'}, radiance)
 
     def flush_entities(self, project):
 
@@ -109,68 +98,72 @@ class AreaLampTranslator(Translator):
 
     def __init__(self, scene, lamp):
         self.__bl_lamp = lamp
-        self.__lamp_radiance_color = None
+        self.__lamp_shader_group = None
 
     def create_entities(self):
         lamp_data = self.__bl_lamp.data
         as_lamp_data = lamp_data.appleseed
 
-        shape_params = {'primitive': 'grid',
-                        'width': self.__bl_lamp.data.size,
-                        'height': self.__bl_lamp.data.size}
+        # Create area light mesh shape
+        shape_params = {'primitive': as_lamp_data.area_shape}
 
-        if lamp_data.shape == 'RECTANGLE':
-            shape_params['height'] = self.__bl_lamp.data.size_y
+        if as_lamp_data.area_shape == 'grid':
+            shape_params['width'] = self.__bl_lamp.data.size
+            shape_params['height'] = self.__bl_lamp.data.size
+
+            if lamp_data.shape == 'RECTANGLE':
+                shape_params['height'] = self.__bl_lamp.data.size_y
+
+        elif as_lamp_data.area_shape == 'disk':
+            shape_params['radius'] = self.__bl_lamp.data.size / 2
+
+        else:
+            shape_params['radius'] = self.__bl_lamp.data.size / 2
+            shape_params['resolution_u'] = 12
+            shape_params['resolution_v'] = 12
 
         self.__as_area_mesh = self.__as_obj = asr.MeshObject(self.__bl_lamp.name + "_mesh", shape_params)
 
-        self.__as_area_mesh_inst = asr.ObjectInstance('area_inst', {}, self.__bl_lamp.name + "_mesh",
+        # Create area light object instance, set visibility flags
+        lamp_inst_params = {'visibility': {'camera': False}} if not as_lamp_data.area_visibility else {}
+
+        self.__as_area_mesh_inst = asr.ObjectInstance('area_inst', lamp_inst_params, self.__bl_lamp.name + "_mesh",
                                                       self._convert_matrix(self.__bl_lamp.matrix_world, area=True),
-                                                      {"default": "emissive"})
+                                                      {"default": self.__bl_lamp.name + "_mat"})
 
-        lamp_params = {'radiance_multiplier': as_lamp_data.radiance_multiplier,
-                       'exposure': as_lamp_data.exposure,
-                       'angle': as_lamp_data.light_cone_edf_angle,
-                       'cast_indirect_light': as_lamp_data.cast_indirect,
-                       'importance_multiplier': as_lamp_data.importance_multiplier,
-                       'light_near_start': as_lamp_data.light_near_start}
+        # Emit basic lamp shader group
+        if lamp_data.appleseed.area_node_tree is None:
+            shader_name = self.__bl_lamp.name + "_tree"
+            self.__lamp_shader_group = asr.ShaderGroup(shader_name)
 
-        if as_lamp_data.radiance_use_tex and as_lamp_data.radiance_tex != '':
-            lamp_params['radiance'] = as_lamp_data.radiance_tex + "_inst"
+            lamp_params = {'in_color': "color {0}".format(" ".join(map(str, as_lamp_data.area_color))),
+                           'in_intensity': "float {0}".format(as_lamp_data.area_intensity),
+                           'in_intensity_scale': "float {0}".format(as_lamp_data.area_intensity_scale),
+                           'in_exposure': "float {0}".format(as_lamp_data.area_exposure),
+                           'in_normalize': "int {0}".format(as_lamp_data.area_normalize)}
+
+            self.__lamp_shader_group.add_shader("shader", "as_blender_areaLight", "asAreaLight", lamp_params)
+            self.__lamp_shader_group.add_shader("surface", "as_closure2surface", "asClosure2Surface", {})
+            self.__lamp_shader_group.add_connection("asAreaLight", "out_output", "asClosure2Surface", "in_input")
+            osl_params = {'osl_surface': shader_name,
+                          'surface_shader': "{0}_surface_shader".format(self.__bl_lamp.name)}
         else:
-            self.__lamp_radiance_color = asr.ColorEntity("{0}_radiance_color".format(self.__bl_lamp.name),
-                                                         {'color_space': 'linear_rgb'},
-                                                         self._convert_color(as_lamp_data.radiance))
-            lamp_params['radiance'] = "{0}_radiance_color".format(self.__bl_lamp.name)
+            osl_params = {'osl_surface': as_lamp_data.area_node_tree.name,
+                          'surface_shader': "{0}_surface_shader".format(self.__bl_lamp.name)}
 
-        if as_lamp_data.radiance_multiplier_use_tex and as_lamp_data.radiance_multiplier_tex != '':
-            lamp_params['radiance_multiplier'] = as_lamp_data.radiance_multiplier_tex + "_inst"
+        # Emit are lamp material and surface shader.
+        self.__edf_mat = asr.Material('osl_material', self.__bl_lamp.name + "_mat", osl_params)
 
-        if as_lamp_data.light_emission_profile != 'diffuse_edf':
-            del lamp_params['angle']
-
-        self.__edf = asr.EDF(as_lamp_data.light_emission_profile, 'edf_item', lamp_params)
-
-        self.__edf_mat = asr.Material('generic_material', 'emissive', {'surface_shader': 'edf_surface_shader',
-                                                                       'edf': 'edf_item'})
-
-        self.__as_shader = asr.SurfaceShader("physical_surface_shader", "edf_surface_shader",
-                                             {})
-
-    def set_parameters(self):
-        pass
-
-    def set_transform(self):
-        pass
+        self.__as_shader = asr.SurfaceShader("physical_surface_shader",
+                                             "{0}_surface_shader".format(self.__bl_lamp.name), {})
 
     def flush_entities(self, project):
 
         scene = project.get_scene()
         assembly = scene.assemblies()['assembly']
-        if self.__lamp_radiance_color is not None:
-            scene.colors().insert(self.__lamp_radiance_color)
         assembly.objects().insert(self.__as_area_mesh)
         assembly.object_instances().insert(self.__as_area_mesh_inst)
-        assembly.edfs().insert(self.__edf)
         assembly.surface_shaders().insert(self.__as_shader)
         assembly.materials().insert(self.__edf_mat)
+        if self.__lamp_shader_group is not None:
+            assembly.shader_groups().insert(self.__lamp_shader_group)
