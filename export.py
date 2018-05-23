@@ -101,7 +101,7 @@ class ExportAppleseedAnimationScene(bpy.types.Operator, ExportHelper):
 
         for frame in range(frame_start, frame_end + 1):
             scene.frame_set(frame)
-            file_split = self.filepath.split(".")
+            file_split = os.path.splitext(self.filepath)
             export_path = util.realpath(os.path.join('{0}_{1}.{2}'.format(file_split[0], frame, file_split[1])))
             writer = projectwriter.Writer()
             writer.write(context.scene, export_path, animation=True)
