@@ -132,15 +132,67 @@ class AppleseedWorldSssSets(bpy.types.Panel):
             layout.prop(current_set, "name", text="SSS Set Name")
 
 
+class AppleseedTextureConvertSlots(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        texture = item.name
+        if 'DEFAULT' in self.layout_type:
+            layout.label(text=texture, translate=False, icon_value=icon)
+
+
+class AppleseedTextureConverterPanel(bpy.types.Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+
+    bl_context = "world"
+    bl_label = "Texture Converter"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        asr_scene_props = scene.appleseed
+        textures = asr_scene_props.textures
+
+        row = layout.row()
+        row.template_list("AppleseedTextureConvertSlots", "", asr_scene_props,
+                          "textures", asr_scene_props, "textures_index", rows=1, maxrows=16, type="DEFAULT")
+
+        col = layout.column(align=True)
+
+        row = col.row(align=True)
+        row.operator("appleseed.add_texture", text="Add Texture", icon="ZOOMIN")
+        row.operator("appleseed.remove_texture", text="Remove Texture", icon="ZOOMOUT")
+        row = col.row(align=True)
+        row.operator("appleseed.refresh_textures", text="Refresh", icon='FILE_REFRESH')
+        row.operator("appleseed.convert_textures", text="Convert", icon='PLAY')
+
+        layout.prop(asr_scene_props, "del_unused_tex", text="Delete Unused .tx Files", toggle=True)
+        layout.prop(asr_scene_props, "sub_textures", text="Use Converted Textures", toggle=True)
+
+        if textures:
+            current_set = textures[asr_scene_props.textures_index]
+            layout.prop(current_set, "name", text="Texture")
+            layout.prop(current_set, "input_space", text="Color Space")
+            layout.prop(current_set, "output_depth", text="Depth")
+            layout.prop(current_set, "command_string", text="Command")
+
+
 def register():
     bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    util.safe_register_class(AppleseedWorldPanel)
     util.safe_register_class(SSSSetsProps)
     util.safe_register_class(AppleseedWorldSssSets)
+    util.safe_register_class(AppleseedTextureConvertSlots)
+    util.safe_register_class(AppleseedTextureConverterPanel)
 
 
 def unregister():
+    util.safe_unregister_class(AppleseedTextureConverterPanel)
+    util.safe_unregister_class(AppleseedTextureConvertSlots)
     util.safe_unregister_class(AppleseedWorldSssSets)
     util.safe_unregister_class(SSSSetsProps)
+    util.safe_unregister_class(AppleseedWorldPanel)
     bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')

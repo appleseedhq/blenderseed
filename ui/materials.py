@@ -83,61 +83,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
         layout.prop(asr_mat, "shader_lighting_samples", text="Lighting Samples")
 
 
-class TextureConvertSlots(bpy.types.UIList):
 
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        texture = item.name
-        if 'DEFAULT' in self.layout_type:
-            layout.label(text=texture, translate=False, icon_value=icon)
-
-
-class AppleseedTextureConverterPanel(bpy.types.Panel):
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-
-    bl_context = "material"
-    bl_label = "Texture Converter"
-    COMPAT_ENGINES = {'APPLESEED_RENDER'}
-
-    @classmethod
-    def poll(cls, context):
-        material = context.object.active_material is not None
-        if material:
-            renderer = context.scene.render.engine == 'APPLESEED_RENDER'
-            obj = context.object is not None
-            obj_type = context.object.type == 'MESH'
-            is_nodemat = context.object.active_material.appleseed.osl_node_tree is not None
-            return renderer and obj and obj_type and is_nodemat
-        return False
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        asr_scene_props = scene.appleseed
-        textures = asr_scene_props.textures
-
-        row = layout.row()
-        row.template_list("TextureConvertSlots", "", asr_scene_props,
-                          "textures", asr_scene_props, "textures_index", rows=1, maxrows=16, type="DEFAULT")
-
-        col = layout.column(align=True)
-
-        row = col.row(align=True)
-        row.operator("appleseed.add_texture", text="Add Texture", icon="ZOOMIN")
-        row.operator("appleseed.remove_texture", text="Remove Texture", icon="ZOOMOUT")
-        row = col.row(align=True)
-        row.operator("appleseed.refresh_textures", text="Refresh", icon='FILE_REFRESH')
-        row.operator("appleseed.convert_textures", text="Convert", icon='PLAY')
-
-        layout.prop(asr_scene_props, "del_unused_tex", text="Delete Unused .tx Files", toggle=True)
-        layout.prop(asr_scene_props, "sub_textures", text="Use Converted Textures", toggle=True)
-
-        if textures:
-            current_set = textures[asr_scene_props.textures_index]
-            layout.prop(current_set, "name", text="Texture")
-            layout.prop(current_set, "input_space", text="Color Space")
-            layout.prop(current_set, "output_depth", text="Depth")
-            layout.prop(current_set, "command_string", text="Command")
 
 
 def register():
@@ -145,13 +91,9 @@ def register():
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
     util.safe_register_class(AppleseedMaterialPreview)
     util.safe_register_class(AppleseedMaterialShading)
-    util.safe_register_class(TextureConvertSlots)
-    util.safe_register_class(AppleseedTextureConverterPanel)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedTextureConverterPanel)
-    util.safe_unregister_class(TextureConvertSlots)
     util.safe_unregister_class(AppleseedMaterialShading)
     util.safe_unregister_class(AppleseedMaterialPreview)
     bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.remove('APPLESEED_RENDER')
