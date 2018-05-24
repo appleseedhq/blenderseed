@@ -28,6 +28,7 @@ When blenderseed scans an OSL shader it looks for several specific metadata tags
 		
 			- filename (tells blenderseed to add a file selection button to a string property)
 			- null (tells blenderseed to hide the direct control for a parameter)
+			- checkBox (tells blenderseed that the value should be expressed as a checkbox.  Requires an integer value and int as_blender_input_socket to be set to 0)
 
 |
 
