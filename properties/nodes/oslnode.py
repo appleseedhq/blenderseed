@@ -135,13 +135,13 @@ def generate_node(node):
 
     # create socket classes
     for in_socket in input_sockets:
+        keys = in_socket.keys()
         if not in_socket['connectable'] and in_socket['hide_ui']:
             continue
-        if not in_socket['connectable']:
+        if not in_socket['connectable'] or 'options' in keys:
             non_connected_props.append(in_socket)
         else:
             socket_name = 'Appleseed{0}{1}'.format(node['name'], in_socket['name'].capitalize())
-            keys = in_socket.keys()
             helper = ""
             minimum = None
             maximum = None

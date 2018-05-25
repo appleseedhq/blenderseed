@@ -127,6 +127,7 @@ def node_categories(osl_nodes):
     osl_utilities = []
     osl_3d_textures = []
     osl_surface = []
+    osl_other = []
 
     for node in osl_nodes:
         node_item = NodeItem(node[0])
@@ -139,16 +140,18 @@ def node_categories(osl_nodes):
             osl_utilities.append(node_item)
         elif node_category == '3d_texture':
             osl_3d_textures.append(node_item)
-        else:
+        elif node_category == 'surface':
             osl_surface.append(node_item)
+        else:
+            osl_other.append(node_item)
 
     appleseed_node_categories = [
         AppleseedOSLNodeCategory("OSL_Surfaces", "OSL Surface", items=osl_surface),
         AppleseedOSLNodeCategory("OSL_Shaders", "OSL Shader", items=osl_shaders),
         AppleseedOSLNodeCategory("OSL_Textures", "OSL Texture", items=osl_textures),
         AppleseedOSLNodeCategory("OSL_3D_Textures", "OSL 3D Texture", items=osl_3d_textures),
-        AppleseedOSLNodeCategory("OSL_Utilities", "OSL Utility", items=osl_utilities)
-    ]
+        AppleseedOSLNodeCategory("OSL_Utilities", "OSL Utility", items=osl_utilities),
+        AppleseedOSLNodeCategory("OSL_other", "No Category", items=osl_other)]
 
     return appleseed_node_categories
 

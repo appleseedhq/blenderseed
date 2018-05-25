@@ -149,14 +149,25 @@ def read_osl_shaders():
                     q.open(filename)
                     d['inputs'] = []
                     d['outputs'] = []
-                    d['name'] = q.get_metadata()['as_blender_node_name']['value']
+                    shader_meta = q.get_metadata()
+                    shader_meta_keys = shader_meta.keys()
+                    if 'as_blender_node_name' in shader_meta_keys:
+                        d['name'] = shader_meta['as_blender_node_name']['value']
+                    else:
+                        d['name'] = q.get_shader_name()
                     d['filename'] = file.replace(".oso", "")
-                    d['category'] = q.get_metadata()['as_blender_category']['value']
+                    if 'as_blender_category' in shader_meta_keys:
+                        d['category'] = shader_meta['as_blender_category']['value']
+                    else:
+                        d['category'] = 'other'
                     num_of_params = q.get_num_params()
                     for x in range(0, num_of_params):
+                        metadata_keys = []
+                        metadata = {}
                         param = q.get_param_info(x)
                         keys = param.keys()
-                        metadata = param['metadata']
+                        if 'metadata' in keys:
+                            metadata = param['metadata']
                         metadata_keys = metadata.keys()
                         param_data = {}
                         param_data['name'] = param['name']
