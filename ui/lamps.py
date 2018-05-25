@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,6 +26,7 @@
 #
 
 import bpy
+
 from .. import util
 
 
@@ -109,7 +109,6 @@ class AppleseedLampPanel(bpy.types.Panel):
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'AREA':
-
             layout.prop(asr_lamp, "area_shape", text="Area Lamp Shape")
             col = layout.column(align=True)
             if asr_lamp.area_shape == 'grid':
@@ -124,12 +123,12 @@ class AppleseedLampPanel(bpy.types.Panel):
 
             layout.prop(asr_lamp, "area_visibility", text="Camera Visibility")
             if not asr_lamp.area_node_tree:
+                layout.operator('appleseed.add_lap_osl_nodetree', text="Add Node Tree")
                 layout.prop(asr_lamp, "area_color", text="Color")
                 layout.prop(asr_lamp, "area_intensity", text="Intensity")
                 layout.prop(asr_lamp, "area_intensity_scale", text="Intensity Scale")
                 layout.prop(asr_lamp, "area_exposure", text="Exposure")
                 layout.prop(asr_lamp, "area_normalize", text="Normalize", toggle=True)
-                layout.operator('appleseed.add_lap_osl_nodetree', text="Add Node Tree")
             else:
                 layout.operator('appleseed.view_lamp_nodetree', text="View Nodetree")
 
