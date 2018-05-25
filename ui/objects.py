@@ -31,7 +31,7 @@ from .. import util
 
 
 class AppleseedObjFlagsPanel(bpy.types.Panel):
-    bl_label = "Object Visibility"
+    bl_label = "Visibility"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -42,16 +42,11 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         renderer = context.scene.render
         return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
 
-    def draw_header(self, context):
-        header = self.layout
-        asr_obj = context.object.appleseed
-        header.prop(asr_obj, "enable_visibility_flags", text="")
-
     def draw(self, context):
         layout = self.layout
         asr_obj = context.object.appleseed
+        sss_lists = context.scene.appleseed_sss_sets
         col = layout.column()
-        col.active = asr_obj.enable_visibility_flags
         row = col.row()
         row.prop(asr_obj, "camera_visible", text="Camera")
         row.prop(asr_obj, "diffuse_visible", text="Diffuse")
@@ -64,45 +59,26 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         row = col.row()
         row.prop(asr_obj, "transparency_visible", text="Transparency")
 
-
-class AppleseedObjOptionsPanel(bpy.types.Panel):
-    bl_label = "Object Options"
-    COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "object"
-
-    @classmethod
-    def poll(cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
-
-    def draw(self, context):
-        layout = self.layout
-        asr_obj = context.object.appleseed
-        scene = context.scene
-        sss_lists = scene.appleseed_sss_sets
-
+        layout.separator()
         split = layout.split(percentage=0.90)
-        col = split.column()
-        col.prop(asr_obj, "object_alpha", text="Object Alpha")
+        row = split.row()
+        row.prop(asr_obj, "object_alpha", text="Object Alpha")
+        row = split.row()
+        row.prop(asr_obj, "object_alpha_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
 
-        if asr_obj.object_alpha_use_texture:
-            layout.prop(asr_obj, "object_alpha_texture", text="Alpha Texture")
-            layout.prop(asr_obj, "object_alpha_texture_colorspace")
-            layout.prop(asr_obj, "object_alpha_texture_wrap_mode")
+        col = layout.column(align=True)
+        col.enabled = asr_obj.object_alpha_use_texture
+        col.prop(asr_obj, "object_alpha_texture", text="")
+        col.prop(asr_obj, "object_alpha_texture_colorspace", text="")
+        col.prop(asr_obj, "object_alpha_texture_wrap_mode", text="")
 
-        col = split.column()
-        col.prop(asr_obj, "object_alpha_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
+        layout.separator()
 
         layout.prop(asr_obj, "medium_priority", text="Nested Glass Priority")
-
-        layout.prop(asr_obj, "ray_bias_method", text="Ray Bias")
-        row = layout.row()
-        row.enabled = asr_obj.ray_bias_method != 'none'
-        row.prop(asr_obj, "ray_bias_distance", text="Ray Bias Distance")
-
         layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
+
+
+
 
 
 class AppleseedObjMBlurPanel(bpy.types.Panel):
@@ -139,13 +115,11 @@ def register():
             pass
     del properties_object
     util.safe_register_class(AppleseedObjFlagsPanel)
-    util.safe_register_class(AppleseedObjOptionsPanel)
     util.safe_register_class(AppleseedObjMBlurPanel)
 
 
 def unregister():
     util.safe_unregister_class(AppleseedObjMBlurPanel)
-    util.safe_unregister_class(AppleseedObjOptionsPanel)
     util.safe_unregister_class(AppleseedObjFlagsPanel)
     import bl_ui.properties_object as properties_object
     for member in dir(properties_object):
