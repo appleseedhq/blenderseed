@@ -26,7 +26,7 @@
 #
 
 import bpy
-import os
+
 from .. import util
 
 
@@ -47,18 +47,20 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
 
     def draw(self, context):
         layout = self.layout
-
-        rd = context.scene.render
         scene = context.scene
         rd = scene.render
+        asr_scene_data = scene.appleseed
 
-        row = layout.row(align=True)
-        row.operator("render.render", text="Render", icon='RENDER_STILL')
-        row.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
+        layout.prop(asr_scene_data, "scene_export_mode", text="Rendering Mode")
 
-        row = layout.row(align=True)
-        row.operator("appleseed.export_scene", text="Export Frame")
-        row.operator("appleseed.export_anim_scene", text="Export Animation")
+        if asr_scene_data.scene_export_mode in ('render', 'export_render'):
+            row = layout.row(align=True)
+            row.operator("render.render", text="Render", icon='RENDER_STILL')
+            row.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
+        else:
+            row = layout.row(align=True)
+            row.operator("appleseed.export_scene", text="Render", icon='RENDER_STILL')
+            row.operator("appleseed.export_anim_scene", text="Animation", icon='RENDER_ANIMATION')
 
         split = layout.split(percentage=0.33)
 
@@ -70,7 +72,7 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
 
 class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_label = "General"
+    bl_label = "System"
 
     def draw(self, context):
         layout = self.layout
@@ -95,26 +97,10 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         row = layout.row()
         row.prop(asr_scene_props, "clean_cache", text="Delete Cache")
 
-        layout.prop(asr_scene_props, "tile_ordering", text="Tile Ordering")
-
-
-class AppleseedRenderStampPanel(bpy.types.Panel, AppleseedRenderPanelBase):
-    COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_label = "Render Stamp"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw_header(self, context):
-        header = self.layout
-        asr_scene_props = context.scene.appleseed
-        header.prop(asr_scene_props, "enable_render_stamp", text="")
-
-    def draw(self, context):
-        layout = self.layout
-        asr_scene_props = context.scene.appleseed
-
-        layout.active = asr_scene_props.enable_render_stamp
-        layout.prop(asr_scene_props, "render_stamp", text="Stamp Text")
-        layout.prop(asr_scene_props, "render_stamp_patterns", text="Stamp Type")
+        box = layout.box()
+        box.label(text="Render Stamp:")
+        box.prop(asr_scene_props, "render_stamp", text="")
+        box.prop(asr_scene_props, "render_stamp_patterns", text="Stamp Blocks")
 
 
 class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
@@ -131,6 +117,8 @@ class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             layout.prop(asr_scene_props, "denoise_output_dir", text="Output Directory")
         col = layout.column(align=True)
         col.active = asr_scene_props.denoise_mode != 'off'
+        col.prop(asr_scene_props, "random_pixel_order", text="Random Pixe Order", toggle=True)
+        col.prop(asr_scene_props, "skip_denoised", text="Skip Denoised Pixels", toggle=True)
         col.prop(asr_scene_props, "prefilter_spikes", text="Prefilter Spikes", toggle=True)
         col.prop(asr_scene_props, "spike_threshold", text="Spike Threshold")
         col.prop(asr_scene_props, "patch_distance_threshold", text="Patch Distance")
@@ -139,7 +127,7 @@ class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
 class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_label = "Sampling"
+    bl_label = "Image Sampling"
 
     def draw(self, context):
         layout = self.layout
@@ -147,31 +135,15 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         asr_scene_props = scene.appleseed
 
         row = layout.row(align=True)
-        row.label("Tile Size:")
-        row.prop(asr_scene_props, "tile_width", text="Width")
-        row.prop(asr_scene_props, "tile_height", text="Height")
+        row.prop(asr_scene_props, "sampler_max_samples", text="Samples")
+        row.prop(asr_scene_props, "renderer_passes", text="Passes")
+        box = layout.box()
+        box.prop(asr_scene_props, "tile_ordering")
+        box.prop(asr_scene_props, "tile_size", text="Tile Size")
 
-        row = layout.row(align=True)
-        layout.prop(asr_scene_props, "pixel_filter", text="Filter")
-        layout.prop(asr_scene_props, "pixel_filter_size", text="Filter Size")
-
-        layout.separator()
-        layout.prop(asr_scene_props, "pixel_sampler", text="Pixel Sampler")
-        layout.prop(asr_scene_props, "renderer_passes", text="Passes")
-
-        if asr_scene_props.pixel_sampler == 'adaptive':
-            row = layout.row(align=True)
-            row.prop(asr_scene_props, "sampler_min_samples", text="Min Samples")
-            row.prop(asr_scene_props, "sampler_max_samples", text="Max Samples")
-        else:
-            layout.prop(asr_scene_props, "sampler_max_samples", text="Samples")
-            split = layout.split()
-            row = split.row()
-            row.enabled = asr_scene_props.sampler_max_samples == 1
-            row.prop(asr_scene_props, "force_aa", text="Force Anti-Aliasing")
-            split = split.split()
-            row = split.row()
-            row.prop(asr_scene_props, "decorrelate_pixels", text="Decorrelate Pixels")
+        box = layout.box()
+        box.prop(asr_scene_props, "pixel_filter", text="Filter")
+        box.prop(asr_scene_props, "pixel_filter_size", text="Filter Size")
 
 
 class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
@@ -186,120 +158,120 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col = layout.column()
         row = col.row()
         row.prop(asr_scene_props, "lighting_engine", text="Engine", expand=True)
-        layout.prop(asr_scene_props, "light_sampler", text="Light Sampler")
         if asr_scene_props.lighting_engine == 'pt':
             layout.separator()
             col = layout.column()
             col.prop(asr_scene_props, "record_light_paths", text="Record Light Paths")
-        split = layout.split()
+            col = layout.column(align=True)
+            row = col.row(align=True)
+            row.prop(asr_scene_props, "enable_dl", text="Directly Sample Lights", toggle=True)
+            row.prop(asr_scene_props, "dl_light_samples", text="Samples")
+            row = col.row()
+            row.enabled = asr_scene_props.enable_dl
+            row.prop(asr_scene_props, "dl_low_light_threshold", text="Low Light Threshold")
+            col.separator()
+            col = layout.column()
+            col.enabled = asr_scene_props.next_event_estimation
+            row = col.row(align=True)
+            row.prop(asr_scene_props, "enable_ibl", text="Environment Emits Light", toggle=True)
+            row.prop(asr_scene_props, "ibl_env_samples", text="Samples")
+            layout.separator()
+            layout.prop(asr_scene_props, "enable_caustics", text="Caustics", toggle=True)
 
-        # Path tracing UI
-        if asr_scene_props.lighting_engine == 'pt':
-            if asr_scene_props.pixel_sampler == 'adaptive':
-                row = layout.row()
-                row.prop(asr_scene_props, "adaptive_sampler_enable_diagnostics", text="Diagnostics")
-                row.prop(asr_scene_props, "adaptive_sampler_quality", text="Quality")
-            layout.prop(asr_scene_props, "next_event_estimation", text="Next Event Estimation")
-            if asr_scene_props.next_event_estimation:
-                row = layout.row()
-                row.prop(asr_scene_props, "enable_dl", text="Direct Lighting")
-                if asr_scene_props.enable_dl:
-                    row.prop(asr_scene_props, "dl_light_samples", text="DL Samples")
-                    row = layout.row()
-                    row.prop(asr_scene_props, "dl_low_light_threshold", text="Low Light Threshold")
-                row = layout.row()
-                row.prop(asr_scene_props, "enable_ibl", text="Image-Based Lighting")
-                if asr_scene_props.enable_ibl:
-                    row.prop(asr_scene_props, "ibl_env_samples", text="IBL Samples")
+            layout.separator()
+            layout.label("Bounces:")
 
-            layout.prop(asr_scene_props, "enable_caustics", text="Caustics")
+            split = layout.split(percentage=0.25, align=True)
+            split.label(text="Max")
+            split = split.split(percentage=0.33)
+            row = split.row()
+            row.prop(asr_scene_props, "max_bounces_unlimited", text="Unlimited", toggle=True)
+            row = split.row()
+            row.enabled = not asr_scene_props.max_bounces_unlimited
+            row.prop(asr_scene_props, "max_bounces", text="")
 
-            layout.label("Bounces")
+            split = layout.split(percentage=0.25, align=True)
+            split.label(text="Diffuse")
+            split = split.split(percentage=0.33)
+            row = split.row()
+            row.prop(asr_scene_props, "max_diffuse_bounces_unlimited", text="Unlimited", toggle=True)
+            row = split.row()
+            row.enabled = not asr_scene_props.max_diffuse_bounces_unlimited
+            row.prop(asr_scene_props, "max_diffuse_bounces", text="")
 
-            split = layout.split()
-            col = split.column()
-            col.prop(asr_scene_props, "max_bounces_unlimited", text="Unlimited")
-            split = split.split()
-            col = split.column()
-            col.enabled = not asr_scene_props.max_bounces_unlimited
-            col.prop(asr_scene_props, "max_bounces", text="Global")
+            split = layout.split(percentage=0.25, align=True)
+            split.label(text="Glossy")
+            split = split.split(percentage=0.33)
+            row = split.row()
+            row.prop(asr_scene_props, "max_glossy_brdf_bounces_unlimited", text="Unlimited", toggle=True)
+            row = split.row()
+            row.enabled = not asr_scene_props.max_glossy_brdf_bounces_unlimited
+            row.prop(asr_scene_props, "max_glossy_brdf_bounces", text="")
 
-            split = layout.split()
-            col = split.column()
-            col.prop(asr_scene_props, "max_diffuse_bounces_unlimited", text="Unlimited")
-            split = split.split()
-            col = split.column()
-            col.enabled = not asr_scene_props.max_diffuse_bounces_unlimited
-            col.prop(asr_scene_props, "max_diffuse_bounces", text="Diffuse")
+            split = layout.split(percentage=0.25, align=True)
+            split.label(text="Specular")
+            split = split.split(percentage=0.33)
+            row = split.row()
+            row.prop(asr_scene_props, "max_specular_bounces_unlimited", text="Unlimited", toggle=True)
+            row = split.row()
+            row.enabled = not asr_scene_props.max_specular_bounces_unlimited
+            row.prop(asr_scene_props, "max_specular_bounces", text="")
 
-            split = layout.split()
-            col = split.column()
-            col.prop(asr_scene_props, "max_glossy_brdf_bounces_unlimited", text="Unlimited")
-            split = split.split()
-            col = split.column()
-            col.enabled = not asr_scene_props.max_glossy_brdf_bounces_unlimited
-            col.prop(asr_scene_props, "max_glossy_brdf_bounces", text="Glossy")
+            # split = layout.split(percentage=0.25, align=True)
+            # split.label(text="Volume")
+            # split = split.split(percentage=0.33)
+            # row = split.row()
+            # row.prop(asr_scene_props, "max_volume_bounces_unlimited", text="Unlimited", toggle=True)
+            # row = split.row()
+            # row.enabled = not asr_scene_props.max_volume_bounces_unlimited
+            # row.prop(asr_scene_props, "max_volume_bounces", text="")
 
-            split = layout.split()
-            col = split.column()
-            col.prop(asr_scene_props, "max_specular_bounces_unlimited", text="Unlimited")
-            split = split.split()
-            col = split.column()
-            col.enabled = not asr_scene_props.max_specular_bounces_unlimited
-            col.prop(asr_scene_props, "max_specular_bounces", text="Specular")
+            layout.separator()
 
-            split = layout.split()
+            split = layout.split(percentage=0.25, align=True)
             col = split.column()
-            col.prop(asr_scene_props, "max_volume_bounces_unlimited", text="Unlimited")
-            split = split.split()
+            col.label(text="Max Ray Intensity")
+            split = split.split(percentage=0.33)
             col = split.column()
-            col.enabled = not asr_scene_props.max_volume_bounces_unlimited
-            col.prop(asr_scene_props, "max_volume_bounces", text="Volume")
-
-            split = layout.split()
-            col = split.column()
-            col.prop(asr_scene_props, "max_ray_intensity_unlimited", text="Unlimited")
-            split = split.split()
+            col.prop(asr_scene_props, "max_ray_intensity_unlimited", text="Unlimited", toggle=True)
+            split = split.split(percentage=1.0, align=True)
             col = split.column()
             col.enabled = not asr_scene_props.max_ray_intensity_unlimited
-            col.prop(asr_scene_props, "max_ray_intensity", text="Max Ray Intensity")
+            col.prop(asr_scene_props, "max_ray_intensity", text="")
+
+            layout.separator()
             layout.prop(asr_scene_props, "rr_start", text="Russian Roulette Start Bounce")
 
-            layout.separator()
-
-            layout.prop(asr_scene_props, "volume_distance_samples", text="Volume Distance Samples")
-            layout.prop(asr_scene_props, "optimize_for_lights_outside_volumes", text="Optimize for Lights Outside Volumes")
-
-            layout.separator()
-
-            layout.prop(asr_scene_props, "light_mats_radiance_multiplier", text="Mesh Light Multiplier")
-            layout.prop(asr_scene_props, "export_emitting_obj_as_lights", text="Export Mesh Lights")
+            # layout.separator()
+            # col = layout.column(align=True)
+            # col.prop(asr_scene_props, "optimize_for_lights_outside_volumes", text="Optimize for Lights Outside Volumes", toggle=True)
+            # col.prop(asr_scene_props, "volume_distance_samples", text="Volume Distance Samples")
 
         # SPPM UI
         elif asr_scene_props.lighting_engine == 'sppm':
+            layout.separator()
             layout.prop(asr_scene_props, "sppm_dl_mode", text="Direct Lighting")
-            layout.prop(asr_scene_props, "enable_ibl", text="Image-Based Lighting")
-            layout.prop(asr_scene_props, "enable_caustics", text="Caustics")
+            row = layout.row(align=True)
+            row.prop(asr_scene_props, "enable_ibl", text="Environment Emits Light", toggle=True)
+            row.prop(asr_scene_props, "ibl_env_samples", text="Samples")
+            layout.prop(asr_scene_props, "enable_caustics", text="Caustics", toggle=True)
 
             layout.label("Photon Tracing")
 
-            layout.prop(asr_scene_props, "sppm_photon_max_length", text="Max Bounces")
-            layout.prop(asr_scene_props, "sppm_photon_rr_start", text="Russian Roulette Start Bounce")
-            layout.prop(asr_scene_props, "sppm_light_photons", text="Light Photons")
-            layout.prop(asr_scene_props, "sppm_env_photons", text="Environment Photons")
+            col = layout.column(align=True)
+            col.prop(asr_scene_props, "sppm_photon_max_length", text="Max Bounces")
+            col.prop(asr_scene_props, "sppm_photon_rr_start", text="Russian Roulette Start Bounce")
+            col.prop(asr_scene_props, "sppm_light_photons", text="Light Photons")
+            col.prop(asr_scene_props, "sppm_env_photons", text="Environment Photons")
 
             layout.label("Radiance Estimation")
 
-            layout.prop(asr_scene_props, "sppm_pt_max_length", text="Max Bounces")
-            layout.prop(asr_scene_props, "sppm_pt_rr_start", text="Russian Roulette Start Bounce")
-            layout.prop(asr_scene_props, "sppm_initial_radius", text="Initial Radius")
-            layout.prop(asr_scene_props, "sppm_max_per_estimate", text="Max Photons")
-            layout.prop(asr_scene_props, "sppm_alpha", text="Alpha")
-
-            layout.separator()
-
-            layout.prop(asr_scene_props, "light_mats_radiance_multiplier", text="Mesh Light Multiplier")
-            layout.prop(asr_scene_props, "export_emitting_obj_as_lights", text="Export Mesh Lights")
+            col = layout.column(align=True)
+            col.prop(asr_scene_props, "sppm_pt_max_length", text="Max Bounces")
+            col.prop(asr_scene_props, "sppm_pt_rr_start", text="Russian Roulette Start Bounce")
+            col.prop(asr_scene_props, "sppm_initial_radius", text="Initial Radius")
+            col.prop(asr_scene_props, "sppm_max_per_estimate", text="Max Photons")
+            col.prop(asr_scene_props, "sppm_alpha", text="Alpha")
 
 
 class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
@@ -320,17 +292,16 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         layout.prop(asr_scene_props, "shutter_open", text="Shutter Open")
         layout.prop(asr_scene_props, "shutter_close", text="Shutter Close")
 
-        row = layout.row(align=True)
-        row.prop(asr_scene_props, "enable_camera_blur", text="Camera Blur")
-        row.prop(asr_scene_props, "enable_object_blur", text="Object Blur")
-        layout.prop(asr_scene_props, "enable_deformation_blur", text="Deformation Blur")
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "enable_camera_blur", text="Camera Blur", toggle=True)
+        col.prop(asr_scene_props, "enable_object_blur", text="Object Blur", toggle=True)
+        col.prop(asr_scene_props, "enable_deformation_blur", text="Deformation Blur", toggle=True)
 
 
 def register():
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.add('APPLESEED_RENDER')
     util.safe_register_class(AppleseedRender)
-    util.safe_register_class(AppleseedRenderStampPanel)
     util.safe_register_class(AppleseedRenderSettingsPanel)
     util.safe_register_class(AppleseedDenoiserPanel)
     util.safe_register_class(AppleseedSamplingPanel)
@@ -344,7 +315,6 @@ def unregister():
     util.safe_unregister_class(AppleseedSamplingPanel)
     util.safe_unregister_class(AppleseedDenoiserPanel)
     util.safe_unregister_class(AppleseedRenderSettingsPanel)
-    util.safe_unregister_class(AppleseedRenderStampPanel)
     util.safe_unregister_class(AppleseedRender)
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.remove('APPLESEED_RENDER')

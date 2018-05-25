@@ -105,6 +105,14 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     # Scene render settings.
 
+    scene_export_mode = bpy.props.EnumProperty(name="scene_export_mode",
+                                               description="",
+                                               items=[
+                                                   ('render', "Render", ""),
+                                                   ('export_only', "Export Scene Files", ""),
+                                                   ('export_render', "Export Scene Files and Render", "")],
+                                               default='render')
+
     threads_auto = bpy.props.BoolProperty(name="threads_auto",
                                           description="Automatically determine the number of rendering threads",
                                           default=True)
@@ -144,15 +152,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 description='Avoid correlation patterns at the expense of slightly more sampling noise',
                                                 default=True)
 
-    tile_width = bpy.props.IntProperty(name="tile_width",
+    tile_size = bpy.props.IntProperty(name="tile_width",
                                        description="Set the width of the render tile",
                                        default=64,
                                        min=1)
-
-    tile_height = bpy.props.IntProperty(name="tile_height",
-                                        description="Set the height of the render tile",
-                                        default=64,
-                                        min=1)
 
     pixel_filter = bpy.props.EnumProperty(name="Pixel Filter",
                                           description="Pixel filter to use",
@@ -456,6 +459,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                   description="Where the denoise files will be exported",
                                                   default="",
                                                   subtype="DIR_PATH")
+
+    random_pixel_order = bpy.props.BoolProperty(name="random_pixel_order",
+                                                default=True)
+
+    skip_denoised = bpy.props.BoolProperty(name="skip_denoised",
+                                           default=True)
 
     prefilter_spikes = bpy.props.BoolProperty(name="prefilter_spikes",
                                               description="This filter attempts to filter pixels that show a strong 'spike' over the average of their neighbors, i.e. fireflies",
