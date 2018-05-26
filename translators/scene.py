@@ -1,3 +1,4 @@
+
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -25,25 +26,30 @@
 # THE SOFTWARE.
 #
 
-import os
-
-import appleseed as asr
-import bpy
+from .translator import Translator, ObjectKey, ProjectExportMode
 
 from .camera import CameraTranslator
 from .lamps import LampTranslator, AreaLampTranslator
-from .materials import MaterialTranslator
-from .objects import ObjectTranslator
-from .shader_groups import ShaderGroupTranslator
-from .translator import ProjectExportMode
 from .world import WorldTranslator
-from ..util import get_osl_search_paths
+from .texture import TextureTranslator
+from .object import MeshTranslator, InstanceTranslator
+from .group import GroupTranslator
+from ..util import get_osl_search_paths, Timer
+
+import appleseed as asr
+
+import bpy
+
+import os
+
+from ..logger import get_logger
+logger = get_logger()
 
 
-class SceneTranslator(object):
-    """
+class SceneTranslator(GroupTranslator):
+    '''
     Class that translates a Blender scene to an appleseed project.
-    """
+    '''
 
     #
     # Constants and settings.
@@ -52,21 +58,18 @@ class SceneTranslator(object):
     OBJECT_TYPES_TO_IGNORE = {'ARMATURE'}
 
     #
-    # Object Creation.
+    # Constructors.
     #
 
     @classmethod
     def create_project_export_translator(cls, scene, filename):
-        """
+        '''
         Create a scene translator to export the scene to an appleseed project on disk.
-        """
-
-        translator = cls(scene, ProjectExportMode.PROJECT_EXPORT)
-
-        # Create directories to store geometry and textures in the same
-        # directory as the project.
+        '''
 
         project_dir = os.path.dirname(filename)
+
+        logger.debug("Creating texture and geometry directories in %s", project_dir)
 
         geometry_dir = os.path.join(project_dir, "_geometry")
         textures_dir = os.path.join(project_dir, "_textures")
@@ -77,62 +80,92 @@ class SceneTranslator(object):
         if not os.path.exists(textures_dir):
             os.makedirs(textures_dir)
 
-        return translator
+        logger.debug("Creating project export scene translator, filename: %s", filename)
+
+        return cls(
+            scene, 
+            export_mode=ProjectExportMode.PROJECT_EXPORT,
+            selected_only=False,
+            geometry_dir=geometry_dir,
+            textures_dir=textures_dir)
 
     @classmethod
     def create_final_render_translator(cls, scene):
-        """
+        '''
         Create a scene translator to export the scene to an in memory appleseed project.
-        """
+        '''
 
+        logger.debug("Creating final render scene translator, filename: %s", filename)
         raise NotImplementedError()
 
     @classmethod
     def create_interactive_render_translator(cls, scene):
-        """
+        '''
         Create a scene translator to export the scene to an in memory appleseed project
         optimized for quick interactive edits.
-        """
+        '''
 
+        logger.debug("Creating final render scene translator, filename: %s", filename)
         raise NotImplementedError()
 
-    def __init__(self, scene, export_mode):
-        """
+    def __init__(self, scene, export_mode, selected_only, geometry_dir, textures_dir):
+        '''
         Constructor. Do not use it to create instances of this class.
         Use instead SceneTranslator.create_project_export_translator() or
         The other @classmethods.
-        """
+        '''
 
-        self.__scene = scene
-        self.__export_mode = export_mode
+        super(SceneTranslator, self).__init__(scene, export_mode, geometry_dir, textures_dir)
+
+        self.__selected_only = selected_only
 
         # Translators.
         self.__world_translator = None
-        self.__camera_translators = {}
-        self.__material_translators = {}
-        self.__lamp_translators = {}
-        self.__object_translators = {}
-        self.__osl_translators = {}
         self.__texture_translators = {}
+        self.__camera_translators = {}
+        self.__group_translators = {}
+
+        self.__project = None
 
     #
-    # Getters & Setters.
+    # Properties.
     #
 
-    def get_project(self):
-        """
+    @property
+    def bl_scene(self):
+        return self._bl_obj
+
+    @property
+    def as_project(self):
+        '''
         Return the appleseed project.
-        """
+        '''
         return self.__project
+
+    @property
+    def as_scene(self):
+        '''
+        Return the appleseed scene.
+        '''
+        return self.__project.get_scene()
+
+    @property
+    def selected_only(self):
+        return self.__selected_only
 
     #
     # Scene Translation.
     #
 
     def translate_scene(self):
-        """
-        Translate the Blenderscene to an appleseed project.
-        """
+        '''
+        Translate the Blender scene to an appleseed project.
+        '''
+
+        logger.debug("Translating scene %s", self.bl_scene.name)
+
+        prof_timer = Timer()
+        prof_timer.start()
 
         self.__create_project()
 
@@ -143,59 +176,42 @@ class SceneTranslator(object):
 
         # Create appleseed entities.
 
-        if self.__world_translator:
-            self.__world_translator.create_entities()
+        self.__world_translator.create_entities(self.bl_scene)
 
-        for t in self.__camera_translators.values():
-            t.create_entities()
+        for x in self.__texture_translators.values():
+            x.create_entities(self.bl_scene)
 
-        for t in self.__object_translators.values():
-            t.create_entities()
+        for x in self.__camera_translators.values():
+            x.create_entities(self.bl_scene)
 
-        for t in self.__lamp_translators.values():
-            t.create_entities()
+        self._do_create_entities(self.bl_scene)
 
-        for t in self.__osl_translators.values():
-            t.create_entities()
-
-        for t in self.__material_translators.values():
-            t.create_entities()
-
-        for t in self.__texture_translators.values():
-            t.create_entities()
-
-        # todo: repeat for other translators.
+        for x in self.__group_translators.values():
+            x.create_entities(self.bl_scene)
 
         # Insert appleseed entities into the project.
 
-        if self.__world_translator:
-            self.__world_translator.flush_entities(self.__project)
+        self.__world_translator.flush_entities(self.as_scene)
 
-        for t in self.__camera_translators.values():
-            t.flush_entities(self.__project)
+        for x in self.__texture_translators.values():
+            x.flush_entities(self.as_scene)
 
-        for t in self.__object_translators.values():
-            t.flush_entities(self.__project)
+        for x in self.__camera_translators.values():
+            x.flush_entities(self.as_scene)
 
-        for t in self.__lamp_translators.values():
-            t.flush_entities(self.__project)
+        self._do_flush_entities(self.__main_assembly)
 
-        for t in self.__material_translators.values():
-            t.flush_entities(self.__project)
+        for x in self.__group_translators.values():
+            x.flush_entities(self.__main_assembly)
 
-        for t in self.__osl_translators.values():
-            t.flush_entities(self.__project)
-
-        for t in self.__texture_translators.values():
-            t.flush_entities(self.__project)
-
-        # todo: repeat for other translators.
+        prof_timer.stop()
+        logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
     def write_project(self, filename):
-        """Write the appleseed project."""
+        '''Write the appleseed project.'''
 
         asr.ProjectFileWriter().write(
-            self.__project,
+            self.as_project,
             filename,
             asr.ProjectFileWriterOptions.OmitWritingGeometryFiles | asr.ProjectFileWriterOptions.OmitHandlingAssetFiles)
 
@@ -203,10 +219,73 @@ class SceneTranslator(object):
     # Internal methods.
     #
 
-    def __create_project(self):
-        """Create a default empty project."""
+    def __create_translators(self):
+        '''
+        Create translators for each Blender object.  These translators contain all the functions and information
+        necessary to convert Blender objects, lights, cameras and materials into equivalent appleseed entities.
+        '''
 
-        self.__project = asr.Project(self.__scene.name)
+        self.__create_world_translator()
+
+        # Create translators for all objects in the scene.
+
+        super(SceneTranslator, self)._create_translators()
+
+        for obj in self.bl_scene.objects:
+
+            # Skip object types that are not renderable.
+            if obj.type in SceneTranslator.OBJECT_TYPES_TO_IGNORE:
+                logger.debug("Ignoring object %s of type %s", obj.name, obj.type)
+                continue
+
+            # todo: check visibility, layers, ... and skip the object
+            #       if it is not renderable.
+
+            if self.selected_only and not obj.select:
+                continue
+
+            obj_key = ObjectKey(obj)
+
+            if obj.type == 'CAMERA':
+                logger.debug("Creating camera translator for object %s", obj_key)
+                self.__camera_translators[obj_key] = CameraTranslator(obj)
+
+            elif obj.type == 'EMPTY':
+                if obj.is_duplicator and obj.dupli_type == 'GROUP':
+                    group = obj.dupli_group
+
+                    group_key = ObjectKey(group)
+
+                    # Create a translator for the group if needed.
+                    if not group_key in self.__group_translators:
+                        logger.debug("Creating group translator for group %s", group_key)
+                        self.__group_translators[group_key] = GroupTranslator(group, self.export_mode, self.geometry_dir, self.textures_dir)
+
+                    # Instance the group into the scene.
+                    logger.debug("Creating group instance translator for object %s", obj.name)
+                    self._object_translators[obj_key] = InstanceTranslator(obj, self.__group_translators[group_key])
+
+    def __create_world_translator(self):
+        logger.debug("Creating world translator")
+
+        self.__world_translator = WorldTranslator(self.bl_scene)
+
+        # It doesn't look like it is possible to add world texture
+        # slots when appleseed is selected as the renderer...
+        '''
+        for tex in self.bl_scene.world.texture_slots:
+            if tex is not None:
+
+                if tex.texture not in self.__texture_translators:
+                    self.__texture_translators[tex.name] = TextureTranslator(self.bl_scene, tex)
+        '''
+
+    def __create_project(self):
+        '''Create a default empty project.'''
+
+        logger.debug("Creating appleseed project")
+
+        self.__project = asr.Project(self.bl_scene.name)
 
         # Render settings.
         self.__project.add_default_configurations()
@@ -230,27 +309,28 @@ class SceneTranslator(object):
         self.__project.get_scene().assembly_instances().insert(assembly_inst)
 
     def __translate_render_settings(self):
-        """
+        '''
         Convert render settings (AA samples, lighting engine, ...) to appleseed properties.
-        """
-        project = self.__project
-        scene = self.__scene
+        '''
+
+        logger.debug("Translating render settings")
+
+        scene = self.bl_scene
         asr_scene_props = scene.appleseed
 
-        conf_final = project.configurations()['final']
-        conf_interactive = project.configurations()['interactive']
+        conf_final = self.as_project.configurations()['final']
+        conf_interactive = self.as_project.configurations()['interactive']
 
-        parameters = {
-            'uniform_pixel_sampler': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
-                                      'force_antialiasing': True if asr_scene_props.force_aa else False,
-                                      'samples': asr_scene_props.sampler_max_samples},
-            'pixel_renderer': asr_scene_props.pixel_sampler,
-            'lighting_engine': asr_scene_props.lighting_engine,
-            'generic_frame_renderer': {'passes': asr_scene_props.renderer_passes,
-                                       'tile_ordering': asr_scene_props.tile_ordering},
-            'texture_store': {'max_size': asr_scene_props.tex_cache * 1024 * 1024},
-            'light_sampler': {'algorithm': asr_scene_props.light_sampler},
-            'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}
+        parameters = {'uniform_pixel_sampler': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
+                                                'force_antialiasing': True if asr_scene_props.force_aa else False,
+                                                'samples': asr_scene_props.sampler_max_samples},
+                      'pixel_renderer': asr_scene_props.pixel_sampler,
+                      'lighting_engine': asr_scene_props.lighting_engine,
+                      'generic_frame_renderer': {'passes': asr_scene_props.renderer_passes,
+                                                 'tile_ordering': asr_scene_props.tile_ordering},
+                      'texture_store': {'max_size': asr_scene_props.tex_cache * 1024 * 1024},
+                      'light_sampler': {'algorithm': asr_scene_props.light_sampler},
+                      'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}
 
         if asr_scene_props.lighting_engine == 'pt':
             parameters['pt'] = {'enable_ibl': True if asr_scene_props.enable_ibl else False,
@@ -298,26 +378,28 @@ class SceneTranslator(object):
         conf_interactive.set_parameters(parameters)
 
     def __translate_frame(self):
-        """
+        '''
         Convert image related settings (resolution, crop windows, AOVs, ...) to appleseed.
-        """
+        '''
 
-        asr_scene_props = self.__scene.appleseed
-        scale = self.__scene.render.resolution_percentage / 100.0
-        width = int(self.__scene.render.resolution_x * scale)
-        height = int(self.__scene.render.resolution_y * scale)
+        logger.debug("Translating frame")
+
+        asr_scene_props = self.bl_scene.appleseed
+        scale = self.bl_scene.render.resolution_percentage / 100.0
+        width = int(self.bl_scene.render.resolution_x * scale)
+        height = int(self.bl_scene.render.resolution_y * scale)
 
         frame_params = {
             'resolution': asr.Vector2i(width, height),
-            'camera': self.__scene.camera.name,
-            'tile_size': asr.Vector2i(asr_scene_props.tile_width, asr_scene_props.tile_width),
+            'camera': self.bl_scene.camera.name,
+            'tile_size': asr.Vector2i(asr_scene_props.tile_size, asr_scene_props.tile_size),
             'filter': asr_scene_props.pixel_filter,
             'filter_size': asr_scene_props.pixel_filter_size}
 
         # AOVs.
         aovs = asr.AOVContainer()
 
-        if self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             if asr_scene_props.diffuse_aov:
                 aovs.insert(asr.AOV('diffuse_aov', {}))
             if asr_scene_props.direct_diffuse_aov:
@@ -342,65 +424,11 @@ class SceneTranslator(object):
         # Create and set the frame in the project.
         frame = asr.Frame("beauty", frame_params, aovs)
 
-        if self.__scene.render.use_border:
-            min_x = int(self.__scene.render.border_min_x * width)
-            max_x = int(self.__scene.render.border_max_x * width)
-            min_y = height - int(self.__scene.render.border_max_y * height) - 1
-            max_y = height - int(self.__scene.render.border_min_y * height) - 1
+        if self.bl_scene.render.use_border:
+            min_x = int(self.bl_scene.render.border_min_x * width)
+            max_x = int(self.bl_scene.render.border_max_x * width)
+            min_y = height - int(self.bl_scene.render.border_max_y * height) - 1
+            max_y = height - int(self.bl_scene.render.border_min_y * height) - 1
             frame.set_crop_window([min_x, min_y, max_x, max_y])
 
         self.__project.set_frame(frame)
-
-    def __create_translators(self):
-        """
-        Create translators for each Blender object.  These translators contain all the functions and information
-        necessary to convert Blender objects, lights, cameras and materials into equivalent appleseed items.
-        """
-
-        print("[appleseed] Creating translators")
-        materials = []
-
-        # Create world translator
-
-        self.__world_translator = WorldTranslator(self.__scene)
-        print("[appleseed] Creating world translator for {0}".format(self.__scene.world.name))
-
-        # Create translators for all objects in the scene.
-
-        for obj in self.__scene.objects:
-
-            # Skip object types we don't support
-            if obj.type in SceneTranslator.OBJECT_TYPES_TO_IGNORE:
-                continue
-
-            if obj.type in 'CAMERA':
-                self.__camera_translators[obj.name] = CameraTranslator(self.__scene, obj)
-                print("[appleseed] Creating camera translator for {0}".format(obj.name))
-
-            if obj.type in 'LAMP':
-                if obj.data.type == 'AREA':
-                    print("[appleseed] Creating area lamp translator for {0}".format(obj.name))
-                    self.__lamp_translators[obj.name] = AreaLampTranslator(self.__scene, obj)
-                    if obj.data.appleseed.area_node_tree is not None:
-                        print("[appleseed] Creating shader group translator for {0}".format(obj.name))
-                        self.__osl_translators[obj.data.appleseed.area_node_tree.name] = ShaderGroupTranslator(self.__scene, obj.data.appleseed.area_node_tree)
-                else:
-                    print("[appleseed] Creating lamp translator for {0}".format(obj.name))
-                    self.__lamp_translators[obj.name] = LampTranslator(self.__scene, obj)
-
-            if obj.type in 'MESH':
-                print("[appleseed] Creating object translator for {0}".format(obj.name))
-                self.__object_translators[obj.name] = ObjectTranslator(self.__scene, obj)
-
-                for mat in obj.material_slots:
-                    if mat.material not in materials:
-                        materials.append(mat.material)
-
-        for mat in materials:
-            print("[appleseed] Creating material translator for {0}".format(mat.name))
-            self.__material_translators[mat.name] = MaterialTranslator(self.__scene, mat)
-
-            print("[appleseed] Creating shader group translator for {0}".format(mat.name))
-            self.__osl_translators[mat.appleseed.osl_node_tree.name] = ShaderGroupTranslator(self.__scene, mat.appleseed.osl_node_tree)
-
-            # Todo: create other translators here...

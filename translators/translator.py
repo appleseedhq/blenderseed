@@ -27,10 +27,13 @@
 #
 
 import appleseed as asr
+
+from enum import Enum
 import math
 import mathutils
 
-from enum import Enum
+from ..logger import get_logger
+logger = get_logger()
 
 
 class ProjectExportMode(Enum):
@@ -39,20 +42,80 @@ class ProjectExportMode(Enum):
     PROJECT_EXPORT = 3
 
 
+class ObjectKey(object):
+    '''
+    Class used to uniquely identify blender objects.
+    '''
+
+    def __init__(self, obj):
+        self.name = obj.name
+        self.library_name = None
+
+        if obj.library:
+            self.library_name = obj.library.name
+
+    def __hash__(self):
+        return hash((self.name, self.library_name))
+
+    def __eq__(self, other):
+        return (self.name, self.library_name) == (other.name, other.library_name)
+
+    def __ne__(self, other):
+        return not(self == other)
+
+    def __str__(self):
+        if self.library_name:
+            return self.library_name + "|" + self.name
+        
+        return self.name
+
+
 class Translator(object):
     """
     Base class for translators that convert Blender objects to appleseed Entities.
     """
 
-    def create_entities(self):
+    #
+    # Constructor.
+    #
+
+    def __init__(self, obj):
+        """todo: document me..."""
+
+        self._bl_obj = obj
+        self._obj_key = ObjectKey(obj)
+        self._name = str(self._obj_key)
+
+    #
+    # Properties.
+    #
+
+    @property
+    def appleseed_name(self):
+        """todo: document me..."""
+
+        return self._name
+
+    #
+    # Entity translation.
+    #
+
+    def create_entities(self, scene):
+        """todo: document me..."""
 
         raise NotImplementedError()
 
-    def flush_entities(self, project):
+    def flush_entities(self, project, assembly):
+        """todo: document me..."""
 
         raise NotImplementedError()
 
-    def _convert_matrix(self, m, area=False):
+    #
+    # Utility methods.
+    #
+
+    @staticmethod
+    def _convert_matrix(m):
         """
         Converts a Blender matrix to an appleseed matrix
 
@@ -70,11 +133,7 @@ class Translator(object):
         """
 
         rot = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
-
-        if area:
-            m = rot * m * rot
-        else:
-            m = rot * m
+        m = rot * m
 
         matrix = asr.Matrix4d([m[0][0], m[0][1], m[0][2], m[0][3],
                                m[1][0], m[1][1], m[1][2], m[1][3],
@@ -85,5 +144,6 @@ class Translator(object):
 
     @staticmethod
     def _convert_color(color):
+        """todo: document me..."""
 
         return [color[0], color[1], color[2]]

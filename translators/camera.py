@@ -26,7 +26,7 @@
 # THE SOFTWARE.
 #
 
-from .translator import Translator
+from .translator import Translator, ObjectKey
 
 import math
 
@@ -35,30 +35,66 @@ import appleseed as asr
 import bpy
 import bpy_extras
 
+from ..logger import get_logger
+logger = get_logger()
 
 class CameraTranslator(Translator):
 
-    def __init__(self, scene, camera):
-        self.__bl_camera = camera
-        self.__scene = scene
+    #
+    # Constructor.
+    #
 
-    def create_entities(self):
+    def __init__(self, camera):
+        super(CameraTranslator, self).__init__(camera)
+
+    #
+    # Properties.
+    #
+
+    @property
+    def bl_camera(self):
+        return self._bl_obj
+
+    #
+    # Entity translation.
+    #
+
+    def create_entities(self, scene):
+        logger.debug("Creating camera entity for camera: %s" % self.bl_camera.name)
 
         cam_mapping = {'PERSP': 'pinhole_camera',
                        'ORTHO': 'orthographic_camera',
                        'PANO': 'spherical_camera'}
 
-        model = cam_mapping[self.__bl_camera.data.type]
+        model = cam_mapping[self.bl_camera.data.type]
 
-        if model == 'pinhole_camera' and self.__bl_camera.data.appleseed.enable_dof:
+        if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof:
             model = 'thinlens_camera'
 
-        camera = self.__bl_camera.data
-        scene = self.__scene
+        cam_key = ObjectKey(self.bl_camera)
+        self.__as_camera = asr.Camera(model, str(cam_key), {})
+
+        self.set_transform()
+        self.set_params(scene)
+
+    def flush_entities(self, scene):
+        logger.debug("Creating camera entity for camera: %s" % self.bl_camera.name)
+
+        # Insert the camera into the scene.
+        scene.cameras().insert(self.__as_camera)
+
+    #
+    # Internal methods.
+    #
+
+    def set_params(self, scene):
+        camera = self.bl_camera.data
         focal_length = camera.lens / 1000
         film_width = camera.sensor_width / 1000
         film_height = camera.sensor_height / 1000
-        aspect_ratio = self.get_frame_aspect_ratio()
+        aspect_ratio = self.get_frame_aspect_ratio(scene)
+
+        model = self.__as_camera.get_model()
 
         if model == 'pinhole_camera':
             cam_params = {'film_dimensions': asr.Vector2f(film_width, film_height),
@@ -71,7 +107,7 @@ class CameraTranslator(Translator):
         elif model == 'thinlens_camera':
             if camera.dof_object is not None:
                 cam_target = bpy.data.objects[camera.dof_object.name]
-                focal_distance = (cam_target.location - self.__bl_camera.location).magnitude
+                focal_distance = (cam_target.location - self.bl_camera.location).magnitude
             else:
                 focal_distance = camera.dof_distance
             cam_params = {'film_dimensions': asr.Vector2f(film_width, film_height),
@@ -86,7 +122,7 @@ class CameraTranslator(Translator):
                           'diaphragm_tilt_angle': camera.appleseed.diaphragm_angle,
                           'focal_distance': focal_distance}
             if camera.appleseed.enable_autofocus:
-                cam_params['autofocus_target'] = self.find_auto_focus_point()
+                cam_params['autofocus_target'] = self.find_auto_focus_point(scene)
                 cam_params['autofocus_enabled'] = True
 
         elif model == 'spherical_camera':
@@ -100,12 +136,12 @@ class CameraTranslator(Translator):
                           'shutter_open_begin_time': scene.appleseed.shutter_open,
                           'shutter_close_end_time': scene.appleseed.shutter_close}
 
-        self.__as_camera = asr.Camera("pinhole_camera", self.__bl_camera.name, cam_params)
+        self.__as_camera.set_parameters(cam_params)
 
-        self.__as_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self.__bl_camera.matrix_world))
+    def set_transform(self):
+        self.__as_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self.bl_camera.matrix_world))
 
-    def find_auto_focus_point(self):
-        scene = self.__scene
+    def find_auto_focus_point(self, scene):
         cam = scene.camera
         co = scene.cursor_location
         co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
@@ -113,16 +149,11 @@ class CameraTranslator(Translator):
 
         return asr.Vector2f(co_2d.x, co_2d.y)
 
-    def get_frame_aspect_ratio(self):
-        render = self.__scene.render
+    def get_frame_aspect_ratio(self, scene):
+        render = scene.render
         scale = render.resolution_percentage / 100.0
         width = int(render.resolution_x * scale)
         height = int(render.resolution_y * scale)
         xratio = width * render.pixel_aspect_x
         yratio = height * render.pixel_aspect_y
         return xratio / yratio
-
-    def flush_entities(self, project):
-        # Insert the camera into the project.
-        scene = project.get_scene()
-        scene.cameras().insert(self.__as_camera)
