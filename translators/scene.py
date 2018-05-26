@@ -310,7 +310,7 @@ class SceneTranslator(object):
         frame_params = {
             'resolution': asr.Vector2i(width, height),
             'camera': self.__scene.camera.name,
-            'tile_size': asr.Vector2i(asr_scene_props.tile_width, asr_scene_props.tile_height),
+            'tile_size': asr.Vector2i(asr_scene_props.tile_width, asr_scene_props.tile_width),
             'filter': asr_scene_props.pixel_filter,
             'filter_size': asr_scene_props.pixel_filter_size}
 
