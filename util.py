@@ -29,6 +29,7 @@ import multiprocessing
 import os
 import platform
 import sys
+import datetime
 from math import tan, atan, degrees
 
 import bpy
@@ -577,6 +578,32 @@ def sample_psys_mblur(ob, scene, psys, index, start, current_total):
     frame_set(frame_orig)
     return dupli_dict, index
 
+
+# ------------------------------------
+# Simple timer for profiling.
+# ------------------------------------
+
+class Timer(object):
+    '''
+    Simple timer for profiling operations.
+    '''
+
+    def __init__(self):
+        self.start()
+
+    def start(self):
+        self.__start = datetime.datetime.now()
+
+    def stop(self):
+        self.__end = datetime.datetime.now()
+        
+    def elapsed(self):
+        delta = self.__end - self.__start
+        return delta.total_seconds()
+
+# ------------------------------------
+# Blender addon.
+# ------------------------------------
 
 def register():
     pass
