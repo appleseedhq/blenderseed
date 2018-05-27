@@ -84,6 +84,10 @@ class MeshTranslator(ObjectTranslator):
         self.__geom_dir = geom_directory
         self.__mesh_filenames = []
 
+        # Materials
+        self.__front_materials = {}
+        self.__back_materials = {}
+
         self.__object_instance_params = {}
 
     #
@@ -96,15 +100,30 @@ class MeshTranslator(ObjectTranslator):
         # Copy the transform.
         self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_obj.matrix_world))
 
+        # Convert the blender mesh.
         mesh_key = ObjectKey(self.bl_obj.data)
         mesh_name = str(mesh_key)
 
-        # Convert the blender mesh.
         self.__mesh_object = asr.MeshObject(mesh_name, {})
         me = self.__get_blender_mesh(scene, triangulate=True)
 
-        # Material slots
-        self.__mesh_object.push_material_slot("default")
+        # Materials & material  slots
+        material_slots = self.bl_obj.material_slots
+        if len(material_slots) > 1:
+            for i, m in enumerate(material_slots):
+                self.__mesh_object.push_material_slot("slot-%s" % i)
+
+                mat_key = ObjectKey(m.material)
+                self.__front_materials["slot-%s" % i] = str(mat_key)
+        else:
+            self.__mesh_object.push_material_slot("default")
+            mat_key = ObjectKey(material_slots[0].material)
+            self.__front_materials["default"] = str(mat_key)
+
+        double_sided_materials = False # todo: fetch this from obj settings
+
+        if double_sided_materials:
+            self.__back_materials = self.__front_materials
 
         # Vertices
         self.__mesh_object.reserve_vertices(len(me.vertices))
@@ -125,7 +144,69 @@ class MeshTranslator(ObjectTranslator):
 
             self.__mesh_object.push_triangle(tri)
 
-        # todo: handle normals and UVs.
+        loops = me.loops
+
+        # UVs.
+        export_uvs = True # todo: get this from an object setting.
+
+        if export_uvs and len(me.uv_textures) > 0:
+            uv_texture = me.uv_textures.active.data[:]
+            uv_layer = me.uv_layers.active.data[:]
+
+            self.__mesh_object.reserve_tex_coords(len(me.polygons) * 3)
+
+            uv_index = 0
+
+            for i, f in enumerate(me.polygons):
+                loop = f.loop_indices
+                tri = self.__mesh_object.get_triangle(i)
+
+                uv = uv_layer[f.loop_indices[0]].uv
+                self.__mesh_object.push_tex_coords(asr.Vector2f(uv[0], uv[1]))
+                tri.m_a0 = uv_index
+                uv_index += 1
+
+                uv = uv_layer[f.loop_indices[1]].uv
+                self.__mesh_object.push_tex_coords(asr.Vector2f(uv[0], uv[1]))
+                tri.m_a1 = uv_index
+                uv_index += 1
+
+                uv = uv_layer[f.loop_indices[2]].uv
+                self.__mesh_object.push_tex_coords(asr.Vector2f(uv[0], uv[1]))
+                tri.m_a2 = uv_index
+                uv_index += 1
+
+        # Normals.
+        export_normals = True # todo: get this from an object setting.
+
+        if export_normals:
+            me.calc_normals_split()
+
+            self.__mesh_object.reserve_tex_coords(len(me.polygons) * 3)
+
+            normal_index = 0
+
+            for i, f in enumerate(me.polygons):
+                loop = f.loop_indices
+                tri = self.__mesh_object.get_triangle(i)
+
+                n = loops[f.loop_indices[0]].normal
+                self.__mesh_object.push_vertex_normal(asr.Vector3f(n[0], n[1], n[2]))
+                tri.m_n0 = normal_index
+                normal_index += 1
+
+                n = loops[f.loop_indices[1]].normal
+                self.__mesh_object.push_vertex_normal(asr.Vector3f(n[0], n[1], n[2]))
+                tri.m_n1 = normal_index
+                normal_index += 1
+
+                n = loops[f.loop_indices[2]].normal
+                self.__mesh_object.push_vertex_normal(asr.Vector3f(n[0], n[1], n[2]))
+                tri.m_n2 = normal_index
+                normal_index += 1
+
+        # Tangents.
+        # todo: handle this...
 
         bpy.data.meshes.remove(me)
 
@@ -157,10 +238,6 @@ class MeshTranslator(ObjectTranslator):
 
             mesh_name += ".mesh"
 
-        # Materials
-        front_materials = {}
-        back_materials = {}
-
         self._xform_seq.optimize()
 
         logger.debug(
@@ -185,8 +262,8 @@ class MeshTranslator(ObjectTranslator):
                 self.__object_instance_params,
                 mesh_name,
                 asr.Transformd(asr.Matrix4d().identity()),
-                front_materials,
-                back_materials)
+                self.__front_materials,
+                self.__back_materials)
 
             ass.objects().insert(self.__mesh_object)
             ass.object_instances().insert(obj_inst)
@@ -211,8 +288,8 @@ class MeshTranslator(ObjectTranslator):
                 self.__object_instance_params,
                 mesh_name,
                 self._xform_seq.get_earliest_transform(),
-                front_materials,
-                back_materials)
+                self.__front_materials,
+                self.__back_materials)
 
             assembly.objects().insert(self.__mesh_object)
             assembly.object_instances().insert(obj_inst)
