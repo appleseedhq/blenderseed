@@ -75,7 +75,7 @@ class MaterialTranslator(Translator):
 
             osl_params['osl_surface'] = as_mat_data.osl_node_tree.name,
 
-        self.__as_mat = asr.Material('osl_material', self.bl_mat.name + "_mat", osl_params)
+        self.__as_mat = asr.Material('osl_material', self.appleseed_name, osl_params)
 
     def flush_entities(self, assembly):
         assembly.surface_shaders().insert(self.__as_shader)
