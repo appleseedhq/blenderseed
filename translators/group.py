@@ -28,6 +28,7 @@
 
 from .translator import Translator, ObjectKey, ProjectExportMode
 
+from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
 from .object import MeshTranslator, InstanceTranslator
 

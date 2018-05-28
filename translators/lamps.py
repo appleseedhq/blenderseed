@@ -109,7 +109,6 @@ class LampTranslator(Translator):
     def flush_entities(self, assembly):
 
         assembly.colors().insert(self.__as_light_radiance)
-        assembly = scene.assemblies()['assembly']
         assembly.lights().insert(self.__as_light)
 
 
