@@ -791,6 +791,7 @@ class Writer(object):
         self.__close_element("shader_group")
 
     def __get_osl_node_params(self, node, scene):
+        asr_scene_props = scene.appleseed
         parameters = {}
         parameter_types = node.parameter_types
         for key in parameter_types.keys():
@@ -801,8 +802,14 @@ class Writer(object):
                     parameter = bpy.path.abspath(parameter)
                     if scene.appleseed.sub_textures is True:
                         if parameter.endswith(image_extensions):
-                            base_filename = parameter.split('.')
-                            parameter = "{0}.tx".format(base_filename[0])
+                            image_path_segments = os.path.split(parameter)
+                            image_name = os.path.splitext(image_path_segments[1])
+                            new_image_name = "{0}.tx".format(image_name[0])
+                            if asr_scene_props.tex_output_use_cust_dir:
+                                parameter = os.path.join(asr_scene_props.tex_output_dir, new_image_name)
+                            else:
+                                parameter = os.path.join(image_path_segments[0], new_image_name)
+
 
                 if parameter_value == "int checkbox":
                     parameter_value = "int"

@@ -169,6 +169,11 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
 
         layout.prop(asr_scene_props, "del_unused_tex", text="Delete Unused .tx Files", toggle=True)
         layout.prop(asr_scene_props, "sub_textures", text="Use Converted Textures", toggle=True)
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "tex_output_use_cust_dir", text="Use Custom Output Directory", toggle=True)
+        row = col.row()
+        row.enabled = asr_scene_props.tex_output_use_cust_dir
+        row.prop(asr_scene_props, "tex_output_dir", text="")
 
         if textures:
             current_set = textures[asr_scene_props.textures_index]
