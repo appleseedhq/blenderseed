@@ -27,6 +27,7 @@
 #
 
 import appleseed as asr
+import mathutils
 
 from .translator import Translator
 
@@ -156,7 +157,7 @@ class AreaLampTranslator(Translator):
             shape_params['resolution_u'] = 12
             shape_params['resolution_v'] = 12
 
-        self.__as_area_mesh = self.__as_obj = asr.MeshObject(self.bl_lamp.name + "_mesh", shape_params)
+        self.__as_area_mesh = asr.MeshObject(self.bl_lamp.name + "_mesh", shape_params)
 
         # Create area light object instance, set visibility flags
         lamp_inst_params = {'visibility': {'camera': False}} if not as_lamp_data.area_visibility else {}
@@ -207,4 +208,4 @@ class AreaLampTranslator(Translator):
         rot = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
         m = rot * m * rot
 
-        super(AreaLampTranslator, self)._convert_matrix(m)
+        return super(AreaLampTranslator, self)._convert_matrix(m)
