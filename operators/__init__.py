@@ -53,6 +53,10 @@ class AppleseedConvertTextures(bpy.types.Operator):
                 cmd.insert(-1, '-d {0}'.format(tex.output_depth))
             if tex.command_string:
                 cmd.insert(-1, '{0}'.format(tex.command_string))
+            if textures.tex_output_use_cust_dir:
+                tex_name = os.path.basename(filename).split('.')[0]
+                out_path = os.path.join(textures.tex_output_dir, '{0}.tx'.format(tex_name))
+                cmd.insert(-1, '-o "{0}"'.format(out_path))
             process = subprocess.Popen(" ".join(cmd), cwd=tool_dir, shell=True, bufsize=1)
             process.wait()
 
