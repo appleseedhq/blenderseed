@@ -29,8 +29,8 @@
 import multiprocessing
 
 import bpy
-from .. import util
 
+from .. import util
 
 try:
     threads = multiprocessing.cpu_count()
@@ -87,6 +87,15 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
         self.render_stamp += self.render_stamp_patterns
 
     # Texture conversion
+
+    tex_output_dir = bpy.props.StringProperty(name="tex_output_dir",
+                                              description="",
+                                              default="",
+                                              subtype='DIR_PATH')
+
+    tex_output_use_cust_dir = bpy.props.BoolProperty(name="tex_output_use_cust_dir",
+                                                     description="",
+                                                     default=False)
 
     sub_textures = bpy.props.BoolProperty(name="sub_textures",
                                           default=False)
