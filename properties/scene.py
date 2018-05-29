@@ -62,7 +62,7 @@ class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
                                               ('linear', "Linear", ""),
                                               ('sRGB', "sRGB", ""),
                                               ('Rec709', "Rec.709", "")],
-                                         default='sRGB')
+                                         default='linear')
 
     output_depth = bpy.props.EnumProperty(name="Output Bit Depth",
                                           description="The bit depth of the output file.  Leave at default for no conversion",
