@@ -146,7 +146,7 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                              description="",
                                              default=True)
 
-    area_node_tree = bpy.props.PointerProperty(name="Lamp OSL Node Tree", type=bpy.types.NodeTree)
+    osl_node_tree = bpy.props.PointerProperty(name="Lamp OSL Node Tree", type=bpy.types.NodeTree)
 
 
 def register():

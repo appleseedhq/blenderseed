@@ -122,7 +122,7 @@ class AppleseedLampPanel(bpy.types.Panel):
                 col.prop(lamp_data, "size", text="Size")
 
             layout.prop(asr_lamp, "area_visibility", text="Camera Visibility")
-            if not asr_lamp.area_node_tree:
+            if not asr_lamp.osl_node_tree:
                 layout.operator('appleseed.add_lap_osl_nodetree', text="Add Node Tree")
                 layout.prop(asr_lamp, "area_color", text="Color")
                 layout.prop(asr_lamp, "area_intensity", text="Intensity")

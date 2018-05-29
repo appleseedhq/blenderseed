@@ -26,11 +26,14 @@
 #
 
 import appleseed as asr
+import bpy
 
 from .translator import Translator
-
 from ..logger import get_logger
+from ..util import image_extensions
+
 logger = get_logger()
+
 
 class MaterialTranslator(Translator):
 
@@ -63,17 +66,19 @@ class MaterialTranslator(Translator):
 
     def create_entities(self, scene):
         as_mat_data = self.bl_mat.appleseed
+        params = {'lighting_samples': as_mat_data.shader_lighting_samples} if hasattr(as_mat_data, "shader_lighting_samples") else {}
+
         self.__as_shader = asr.SurfaceShader("physical_surface_shader",
-                                             "{0}_surface_shader".format(self.bl_mat.name),
-                                             {'lighting_samples': as_mat_data.shader_lighting_samples})
+                                             "{0}_surface_shader".format(self.bl_mat.name), params)
 
         osl_params = {'surface_shader': "{0}_surface_shader".format(self.bl_mat.name)}
 
         if self.bl_node_tree:
             self.__shader_group = asr.ShaderGroup(self.bl_node_tree.name)
-            self.set_shader_group_parameters()
+            self.set_shader_group_parameters(scene)
 
-            osl_params['osl_surface'] = as_mat_data.osl_node_tree.name,
+            osl_params['osl_surface'] = as_mat_data.osl_node_tree.name
+
 
         self.__as_mat = asr.Material('osl_material', self.appleseed_name, osl_params)
 
@@ -88,11 +93,11 @@ class MaterialTranslator(Translator):
     # Internal methods.
     #
 
-    def set_shader_group_parameters(self):
+    def set_shader_group_parameters(self, scene):
         for shader in self.__shaders:
             if shader.node_type == 'osl_surface':
                 surface_shader = shader
-            self.__shader_list = surface_shader.traverse_tree()
+                self.__shader_list = surface_shader.traverse_tree()
 
         self.__shader_group.clear()
 
@@ -106,7 +111,7 @@ class MaterialTranslator(Translator):
                     parameter = getattr(shader, key)
                     if key in shader.filepaths:
                         parameter = bpy.path.abspath(parameter)
-                        if self.__scene.appleseed.sub_textures is True:
+                        if scene.appleseed.sub_textures is True:
                             if parameter.endswith(image_extensions):
                                 base_filename = parameter.split('.')
                                 parameter = "{0}.tx".format(base_filename[0])

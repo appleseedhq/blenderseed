@@ -71,7 +71,7 @@ class AppleseedViewLampNode(bpy.types.Operator):
 
     def execute(self, context):
         lamp = context.active_object.data.appleseed
-        node_tree = lamp.area_node_tree
+        node_tree = lamp.osl_node_tree
 
         for area in context.screen.areas:
             if area.type == "NODE_EDITOR":
@@ -286,7 +286,7 @@ class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
         area_lamp_node = nodetree.nodes.new('AppleseedasAreaLightNode')
         area_lamp_node.location = (-300, 0)
         nodetree.links.new(area_lamp_node.outputs[0], surface.inputs[0])
-        lamp.appleseed.area_node_tree = nodetree
+        lamp.appleseed.osl_node_tree = nodetree
         return {'FINISHED'}
 
 
