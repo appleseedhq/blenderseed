@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -29,8 +28,8 @@
 import appleseed as asr
 
 from .translator import Translator
-
 from ..logger import get_logger
+
 logger = get_logger()
 
 
@@ -77,7 +76,7 @@ class WorldTranslator(Translator):
 
         if env_type in ('latlong_map', 'mirrorball_map'):
             tex_inst_params = {'addressing_mode': 'wrap',
-                           'filtering_mode': 'bilinear'}
+                               'filtering_mode': 'bilinear'}
 
             self.__env_tex = asr.Texture('disk_texture_2d', 'environment_tex', {'filename': as_sky.env_tex,
                                                                                 'color_space': as_sky.env_tex_colorspace}, [])
@@ -121,30 +120,22 @@ class WorldTranslator(Translator):
         if as_sky.sun_model == 'preetham':
             del edf_params['ground_albedo']
 
-        # todo: as_data undefined error. Fix it...
-        '''
         self.__as_env_edf = asr.EnvironmentEDF(env_type + "_environment_edf", "sky_edf", edf_params)
 
         self.__as_env_shader = asr.EnvironmentShader("edf_environment_shader", "sky_shader", {'environment_edf': 'sky_edf',
-                                                                                              'alpha_value': as_data.env_alpha})
+                                                                                              'alpha_value': as_sky.env_alpha})
 
         self.__as_env = asr.Environment("sky", {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
-        '''
 
     def flush_entities(self, scene):
-
-        # todo: enable this after fixing the above issue.
-        pass
-        '''
         if self.__horizon_radiance is not None:
             scene.colors().insert(self.__horizon_radiance)
         if self.__zenith_radiance is not None:
             scene.colors().insert(self.__zenith_radiance)
-        if self.__env_tex != None:
+        if self.__env_tex is not None:
             scene.textures().insert(self.__env_tex)
             scene.texture_instances().insert(self.__env_tex_inst)
 
         scene.environment_edfs().insert(self.__as_env_edf)
         scene.environment_shaders().insert(self.__as_env_shader)
         scene.set_environment(self.__as_env)
-        '''

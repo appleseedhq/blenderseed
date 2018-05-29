@@ -220,10 +220,10 @@ class SceneTranslator(GroupTranslator):
     #
 
     def __create_translators(self):
-        '''
+        """
         Create translators for each Blender object.  These translators contain all the functions and information
         necessary to convert Blender objects, lights, cameras and materials into equivalent appleseed entities.
-        '''
+        """
 
         self.__create_world_translator()
 
@@ -270,15 +270,6 @@ class SceneTranslator(GroupTranslator):
 
         self.__world_translator = WorldTranslator(self.bl_scene)
 
-        # It doesn't look like it is possible to add world texture
-        # slots when appleseed is selected as the renderer...
-        '''
-        for tex in self.bl_scene.world.texture_slots:
-            if tex is not None:
-
-                if tex.texture not in self.__texture_translators:
-                    self.__texture_translators[tex.name] = TextureTranslator(self.bl_scene, tex)
-        '''
 
     def __create_project(self):
         '''Create a default empty project.'''
