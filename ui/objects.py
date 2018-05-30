@@ -47,30 +47,23 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         asr_obj = context.object.appleseed
         sss_lists = context.scene.appleseed_sss_sets
         col = layout.column()
-        row = col.row()
-        row.prop(asr_obj, "camera_visible", text="Camera")
-        row.prop(asr_obj, "diffuse_visible", text="Diffuse")
-        row = col.row()
-        row.prop(asr_obj, "shadow_visible", text="Shadow")
-        row.prop(asr_obj, "glossy_visible", text="Glossy")
-        row = col.row()
-        row.prop(asr_obj, "light_visible", text="Light")
-        row.prop(asr_obj, "specular_visible", text="Specular")
-        row = col.row()
-        row.prop(asr_obj, "transparency_visible", text="Transparency")
+        col.prop(asr_obj, "camera_visible", text="Camera")
+        col.prop(asr_obj, "light_visible", text="Light")
+        col.prop(asr_obj, "shadow_visible", text="Shadow")
+        col.prop(asr_obj, "diffuse_visible", text="Diffuse")
+        col.prop(asr_obj, "glossy_visible", text="Glossy")
+        col.prop(asr_obj, "specular_visible", text="Specular")
+        col.prop(asr_obj, "transparency_visible", text="Transparency")
 
         layout.separator()
-        split = layout.split(percentage=0.90)
-        row = split.row()
+        row = layout.row()
+        row.active = asr_obj.object_alpha_texture == ""
         row.prop(asr_obj, "object_alpha", text="Object Alpha")
-        row = split.row()
-        row.prop(asr_obj, "object_alpha_use_texture", text="", icon="TEXTURE_SHADED", toggle=True)
 
-        col = layout.column(align=True)
-        col.enabled = asr_obj.object_alpha_use_texture
+        col = layout.column()
         col.prop(asr_obj, "object_alpha_texture", text="")
-        col.prop(asr_obj, "object_alpha_texture_colorspace", text="")
-        col.prop(asr_obj, "object_alpha_texture_wrap_mode", text="")
+        col.prop(asr_obj, "object_alpha_texture_colorspace", text="Color Space")
+        col.prop(asr_obj, "object_alpha_texture_wrap_mode", text="Wrap Mode")
 
         layout.separator()
 
@@ -82,7 +75,7 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
 
 
 class AppleseedObjMBlurPanel(bpy.types.Panel):
-    bl_label = "Object Motion Blur"
+    bl_label = "Motion Blur"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -93,16 +86,15 @@ class AppleseedObjMBlurPanel(bpy.types.Panel):
         renderer = context.scene.render
         return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
 
-    def draw_header(self, context):
-        header = self.layout
-        asr_obj = context.object.appleseed
-        header.prop(asr_obj, "enable_motion_blur", text="")
-
     def draw(self, context):
         layout = self.layout
         asr_obj = context.object.appleseed
-        layout.active = asr_obj.enable_motion_blur
-        layout.prop(asr_obj, "motion_blur_type", text="Type")
+
+        col = layout.column()
+        col.prop(asr_obj, "enable_motion_blur", text="Enable Motion Blur")
+        row = col.row()
+        row.active = asr_obj.enable_motion_blur
+        row.prop(asr_obj, "motion_blur_type", text="Type")
 
 
 def register():
