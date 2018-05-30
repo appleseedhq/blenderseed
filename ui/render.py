@@ -298,6 +298,20 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col.prop(asr_scene_props, "enable_deformation_blur", text="Deformation Blur", toggle=True)
 
 
+class AppleseedPostProcessing(bpy.types.Panel, AppleseedRenderPanelBase):
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_label = "Post Processing"
+
+    def draw(self, context):
+        layout = self.layout
+
+        rd = context.scene.render
+
+        col = layout.column()
+        col.prop(rd, "use_compositing")
+        col.prop(rd, "use_sequencer")
+
+
 def register():
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.add('APPLESEED_RENDER')
@@ -307,9 +321,11 @@ def register():
     util.safe_register_class(AppleseedSamplingPanel)
     util.safe_register_class(AppleseedLightingPanel)
     util.safe_register_class(AppleseedMotionBlurPanel)
+    util.safe_register_class(AppleseedPostProcessing)
 
 
 def unregister():
+    util.safe_unregister_class(AppleseedPostProcessing)
     util.safe_unregister_class(AppleseedMotionBlurPanel)
     util.safe_unregister_class(AppleseedLightingPanel)
     util.safe_unregister_class(AppleseedSamplingPanel)
