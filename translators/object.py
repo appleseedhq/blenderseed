@@ -122,7 +122,7 @@ class MeshTranslator(ObjectTranslator):
             else:
                 self.__front_materials["default"] = "default_material"
 
-        double_sided_materials = False # todo: fetch this from obj settings
+        double_sided_materials = False if self.bl_obj.appleseed.double_sided is False else True
 
         if double_sided_materials:
             self.__back_materials = self.__front_materials
