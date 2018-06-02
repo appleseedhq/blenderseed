@@ -385,7 +385,15 @@ class SceneTranslator(GroupTranslator):
             'camera': self.bl_scene.camera.name,
             'tile_size': asr.Vector2i(asr_scene_props.tile_size, asr_scene_props.tile_size),
             'filter': asr_scene_props.pixel_filter,
-            'filter_size': asr_scene_props.pixel_filter_size}
+            'filter_size': asr_scene_props.pixel_filter_size,
+            'denoiser': asr_scene_props.denoise_mode,
+            'skip_denoised': asr_scene_props.skip_denoised,
+            'random_pixel_order': asr_scene_props.random_pixel_order,
+            'prefilter_spikes': asr_scene_props.prefilter_spikes,
+            'spike_threshold': asr_scene_props.spike_threshold,
+            'patch_distance_threshold': asr_scene_props.patch_distance_threshold,
+            'denoise_scales': asr_scene_props.denoise_scales,
+            'mark_invalid_pixels': asr_scene_props.mark_invalid_pixels}
 
         # AOVs.
         aovs = asr.AOVContainer()
