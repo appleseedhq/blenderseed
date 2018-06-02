@@ -136,10 +136,13 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Generate project on disk.
         self.update_stats("", "appleseed Rendering: Exporting Scene")
-        writer = projectwriter.Writer()
-        writer.write(scene, project_filepath)
 
         # Render project.
+        from .translators.scene import SceneTranslator
+        scene_translator = SceneTranslator.create_project_export_translator(scene, project_filepath)
+        scene_translator.translate_scene()
+        scene_translator.write_project(project_filepath)
+
         self.__render_project_file(scene, project_filepath, project_dir)
 
     def __render_material_preview(self, scene):
@@ -248,8 +251,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
             max_y = height - 1
 
         # Compute number of tiles.
-        vertical_tiles = int(ceil((max_y - min_y + 1) / scene.appleseed.tile_height))
-        horizontal_tiles = int(ceil((max_x - min_x + 1) / scene.appleseed.tile_width))
+        vertical_tiles = int(ceil((max_y - min_y + 1) / scene.appleseed.tile_size))
+        horizontal_tiles = int(ceil((max_x - min_x + 1) / scene.appleseed.tile_size))
         self.total_tiles = vertical_tiles * horizontal_tiles
         self.pass_number = 1
         self.total_passes = scene.appleseed.renderer_passes
