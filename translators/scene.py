@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -26,23 +25,18 @@
 # THE SOFTWARE.
 #
 
-from .translator import Translator, ObjectKey, ProjectExportMode
-
-from .camera import CameraTranslator
-from .lamps import LampTranslator, AreaLampTranslator
-from .world import WorldTranslator
-from .texture import TextureTranslator
-from .object import MeshTranslator, InstanceTranslator
-from .group import GroupTranslator
-from ..util import get_osl_search_paths, Timer
+import os
 
 import appleseed as asr
 
-import bpy
-
-import os
-
+from .camera import CameraTranslator
+from .group import GroupTranslator
+from .object import InstanceTranslator
+from .translator import ObjectKey, ProjectExportMode
+from .world import WorldTranslator
 from ..logger import get_logger
+from ..util import get_osl_search_paths, Timer
+
 logger = get_logger()
 
 
@@ -83,7 +77,7 @@ class SceneTranslator(GroupTranslator):
         logger.debug("Creating project export scene translator, filename: %s", filename)
 
         return cls(
-            scene, 
+            scene,
             export_mode=ProjectExportMode.PROJECT_EXPORT,
             selected_only=False,
             geometry_dir=geometry_dir,
@@ -270,7 +264,6 @@ class SceneTranslator(GroupTranslator):
 
         self.__world_translator = WorldTranslator(self.bl_scene)
 
-
     def __create_project(self):
         '''Create a default empty project.'''
 
@@ -298,6 +291,23 @@ class SceneTranslator(GroupTranslator):
         assembly_inst = asr.AssemblyInstance("assembly_inst", {}, "assembly")
         assembly_inst.transform_sequence().set_transform(0.0, asr.Transformd(asr.Matrix4d.identity()))
         self.__project.get_scene().assembly_instances().insert(assembly_inst)
+
+        # Export default material for objects without a node tree
+        self.__create_default_material()
+
+    def __create_default_material(self):
+        shader_group = asr.ShaderGroup("default_tree")
+
+        shader_group.add_shader("shader", "as_disney_material", "Shader", {})
+        shader_group.add_shader("surface", "as_closure2surface", "Surface", {})
+        shader_group.add_connection("Shader", "out_outColor", "Surface", "in_input")
+
+        surface_shader = asr.SurfaceShader("physical_surface_shader", "default_surface_shader", {})
+        material = asr.Material('osl_material', "default_material", {'osl_surface': "default_tree", 'surface_shader': 'default_surface_shader'})
+
+        self.__main_assembly.shader_groups().insert(shader_group)
+        self.__main_assembly.surface_shaders().insert(surface_shader)
+        self.__main_assembly.materials().insert(material)
 
     def __translate_render_settings(self):
         '''
