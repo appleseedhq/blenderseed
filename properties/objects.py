@@ -82,6 +82,9 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                             description="Medium priority for nested dielectrics.  Higher numbers take priority over lower numbers.",
                                             default=0)
 
+    double_sided = bpy.props.BoolProperty(name="double_sided",
+                                          default=True)
+
     ray_bias_distance = bpy.props.FloatProperty(name="ray_bias_distance",
                                                 description="Ray bias distance",
                                                 default=0.0)
