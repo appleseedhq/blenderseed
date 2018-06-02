@@ -94,15 +94,15 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                               subtype='DIR_PATH')
 
     tex_output_use_cust_dir = bpy.props.BoolProperty(name="tex_output_use_cust_dir",
-                                                         description="",
-                                                         default=False)
+                                                     description="",
+                                                     default=False)
 
     sub_textures = bpy.props.BoolProperty(name="sub_textures",
                                           default=False)
 
     del_unused_tex = bpy.props.BoolProperty(name="del_unused_tex",
-                                                    description="Removes unused .tx files when the list is refreshed",
-                                                    default=True)
+                                            description="Removes unused .tx files when the list is refreshed",
+                                            default=True)
 
     textures = bpy.props.CollectionProperty(type=AppleseedTextureConvertProps,
                                             name="appleseed Texture",
@@ -162,9 +162,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 default=True)
 
     tile_size = bpy.props.IntProperty(name="tile_width",
-                                       description="Set the width of the render tile",
-                                       default=64,
-                                       min=1)
+                                      description="Set the width of the render tile",
+                                      default=64,
+                                      min=1)
 
     pixel_filter = bpy.props.EnumProperty(name="Pixel Filter",
                                           description="Pixel filter to use",
@@ -465,7 +465,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                           default='off')
 
     denoise_output_dir = bpy.props.StringProperty(name="denoise_output_dir",
-                                                  description="Where the denoise files will be exported",
+                                                  description="Where the denoiser files will be exported",
                                                   default="",
                                                   subtype="DIR_PATH")
 
@@ -496,6 +496,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                            default=3,
                                            min=1,
                                            max=10)
+
+    mark_invalid_pixels = bpy.props.BoolProperty(name="mark_invalid_pixels",
+                                                 default=False)
 
     # Motion blur settings.
 

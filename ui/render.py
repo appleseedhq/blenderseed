@@ -123,6 +123,7 @@ class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col.prop(asr_scene_props, "spike_threshold", text="Spike Threshold")
         col.prop(asr_scene_props, "patch_distance_threshold", text="Patch Distance")
         col.prop(asr_scene_props, "denoise_scales", text="Denoise Scales")
+        col.prop(asr_scene_props, "mark_invalid_pixels", text="Mark Invalid Pixels")
 
 
 class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
