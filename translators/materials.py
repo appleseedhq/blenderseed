@@ -79,6 +79,8 @@ class MaterialTranslator(Translator):
 
             osl_params['osl_surface'] = as_mat_data.osl_node_tree.name
 
+        else:
+            osl_params['osl_surface'] = "default_tree"
 
         self.__as_mat = asr.Material('osl_material', self.appleseed_name, osl_params)
 

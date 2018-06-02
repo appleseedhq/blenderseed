@@ -26,16 +26,15 @@
 # THE SOFTWARE.
 #
 
-from .translator import Translator, ObjectKey, ProjectExportMode
-
-import appleseed as asr
-
-import bpy
-import bmesh
-
 import os
 
+import appleseed as asr
+import bmesh
+import bpy
+
+from .translator import Translator, ObjectKey, ProjectExportMode
 from ..logger import get_logger
+
 logger = get_logger()
 
 
@@ -117,8 +116,11 @@ class MeshTranslator(ObjectTranslator):
                 self.__front_materials["slot-%s" % i] = str(mat_key)
         else:
             self.__mesh_object.push_material_slot("default")
-            mat_key = ObjectKey(material_slots[0].material)
-            self.__front_materials["default"] = str(mat_key)
+            if len(material_slots) == 1:
+                mat_key = ObjectKey(material_slots[0].material)
+                self.__front_materials["default"] = str(mat_key)
+            else:
+                self.__front_materials["default"] = "default_material"
 
         double_sided_materials = False # todo: fetch this from obj settings
 
@@ -300,7 +302,7 @@ class MeshTranslator(ObjectTranslator):
 
     def __get_blender_mesh(self, scene, triangulate=True):
         me = self.bl_obj.to_mesh(
-            scene, 
+            scene,
             apply_modifiers=True,
             settings='RENDER',
             calc_tessface=False)
@@ -362,7 +364,6 @@ class InstanceTranslator(ObjectTranslator):
         self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_obj.matrix_world))
 
     def flush_entities(self, assembly):
-
         logger.debug("Creating assembly instance for object %s", self.appleseed_name)
 
         self._xform_seq.optimize()
