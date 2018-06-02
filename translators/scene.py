@@ -35,7 +35,7 @@ from .object import InstanceTranslator
 from .translator import ObjectKey, ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
-from ..util import get_osl_search_paths, Timer
+from ..util import get_osl_search_paths, Timer, inscenelayer
 
 logger = get_logger()
 
@@ -232,8 +232,12 @@ class SceneTranslator(GroupTranslator):
                 logger.debug("Ignoring object %s of type %s", obj.name, obj.type)
                 continue
 
-            # todo: check visibility, layers, ... and skip the object
-            #       if it is not renderable.
+            if obj.hide_render:
+                continue
+
+            if not inscenelayer(obj, self.bl_scene):
+                print("not visible")
+                continue
 
             if self.selected_only and not obj.select:
                 continue
