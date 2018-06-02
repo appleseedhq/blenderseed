@@ -55,9 +55,9 @@ else:
     from . import properties
     from . import operators
     from . import ui
-    from . import render    # not superfluous
     from . import preferences
     from . import util
+    from . import render  # not superfluous
 
 
 def register():
