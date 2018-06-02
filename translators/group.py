@@ -31,6 +31,7 @@ from .translator import Translator, ObjectKey, ProjectExportMode
 from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
 from .object import MeshTranslator, InstanceTranslator
+from ..util import inscenelayer
 
 import appleseed as asr
 
@@ -134,8 +135,12 @@ class GroupTranslator(Translator):
                 logger.debug("Ignoring object %s of type %s", obj.name, obj.type)
                 continue
 
-            # todo: should we check visibility, layers, ... here?
-            #       check how it works with linked groups and stuff like that.
+            if obj.hide_render:
+                continue
+
+            if not inscenelayer(obj, self.bl_scene):
+                print("not visible")
+                continue
 
             obj_key = ObjectKey(obj)
 
