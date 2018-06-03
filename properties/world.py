@@ -48,14 +48,15 @@ class AppleseedSSSSets(bpy.types.PropertyGroup):
 class AppleseedSkySettings(bpy.types.PropertyGroup):
 
     env_type = bpy.props.EnumProperty(name="Environment Type",
-                                      items=[("constant", "Constant", "Use constant color for sky"),
-                                             ("gradient", "Gradient", "Use sky color gradient"),
-                                             ("latlong_map", "HDRI Environment", "Use HDRI map texture"),
-                                             ("mirrorball_map", "Mirror Ball", "Use mirror ball texture"),
-                                             ("sunsky", "Physical Sky", ""),
-                                             ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere")],
+                                      items=[("constant", "Constant", "Use constant color for sky", "", 1),
+                                             ("gradient", "Gradient", "Use sky color gradient", "", 2),
+                                             ("latlong_map", "HDRI Environment", "Use HDRI map texture", "", 3),
+                                             ("mirrorball_map", "Mirror Ball", "Use mirror ball texture", "", 4),
+                                             ("none", "None", "", "", 7),
+                                             ("sunsky", "Physical Sky", "", "", 5),
+                                             ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere", "", 6)],
                                       description="Select environment type",
-                                      default="gradient")
+                                      default="none")
 
     sun_model = bpy.props.EnumProperty(name="Sky Model",
                                        items=[("hosek", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),

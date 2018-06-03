@@ -169,8 +169,8 @@ class SceneTranslator(GroupTranslator):
         self.__create_translators()
 
         # Create appleseed entities.
-
-        self.__world_translator.create_entities(self.bl_scene)
+        if self.__world_translator:
+            self.__world_translator.create_entities(self.bl_scene)
 
         for x in self.__texture_translators.values():
             x.create_entities(self.bl_scene)
@@ -184,8 +184,8 @@ class SceneTranslator(GroupTranslator):
             x.create_entities(self.bl_scene)
 
         # Insert appleseed entities into the project.
-
-        self.__world_translator.flush_entities(self.as_scene)
+        if self.__world_translator:
+            self.__world_translator.flush_entities(self.as_scene)
 
         for x in self.__texture_translators.values():
             x.flush_entities(self.as_scene)
@@ -218,8 +218,8 @@ class SceneTranslator(GroupTranslator):
         Create translators for each Blender object.  These translators contain all the functions and information
         necessary to convert Blender objects, lights, cameras and materials into equivalent appleseed entities.
         """
-
-        self.__create_world_translator()
+        if self.bl_scene.appleseed_sky.env_type != 'none':
+            self.__create_world_translator()
 
         # Create translators for all objects in the scene.
 
