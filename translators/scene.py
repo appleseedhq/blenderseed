@@ -115,7 +115,6 @@ class SceneTranslator(GroupTranslator):
 
         # Translators.
         self.__world_translator = None
-        self.__texture_translators = {}
         self.__camera_translators = {}
         self.__group_translators = {}
 
@@ -172,9 +171,6 @@ class SceneTranslator(GroupTranslator):
         if self.__world_translator:
             self.__world_translator.create_entities(self.bl_scene)
 
-        for x in self.__texture_translators.values():
-            x.create_entities(self.bl_scene)
-
         for x in self.__camera_translators.values():
             x.create_entities(self.bl_scene)
 
@@ -186,9 +182,6 @@ class SceneTranslator(GroupTranslator):
         # Insert appleseed entities into the project.
         if self.__world_translator:
             self.__world_translator.flush_entities(self.as_scene)
-
-        for x in self.__texture_translators.values():
-            x.flush_entities(self.as_scene)
 
         for x in self.__camera_translators.values():
             x.flush_entities(self.as_scene)
