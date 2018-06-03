@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,11 +26,11 @@
 #
 
 import bpy
+
 from .. import util
 
 
 class AppleseedLampProps(bpy.types.PropertyGroup):
-
     radiance = bpy.props.FloatVectorProperty(name="radiance",
                                              description="Color of light emitted by lamp",
                                              default=(0.8, 0.8, 0.8),
@@ -48,6 +47,11 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                             default="",
                                             subtype='FILE_PATH')
 
+    radiance_tex_color_space = bpy.props.EnumProperty(name="radiance_tex_color_space",
+                                                      items=[('linear_rgb', "Linear", ""),
+                                                             ('srgb', "sRGB", "")],
+                                                      default='linear_rgb')
+
     radiance_multiplier = bpy.props.FloatProperty(name="radiance_multiplier",
                                                   description="Multiplier of lamp intensity",
                                                   default=1,
@@ -62,6 +66,11 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                                        description="Texture to influence intensity multiplier",
                                                        default="",
                                                        subtype='FILE_PATH')
+
+    radiance_multiplier_tex_color_space = bpy.props.EnumProperty(name="radiance_multiplier_tex_color_space",
+                                                                 items=[('linear_rgb', "Linear", ""),
+                                                                        ('srgb', "sRGB", "")],
+                                                                 default='linear_rgb')
 
     exposure = bpy.props.FloatProperty(name="exposure",
                                        description="Exposure",

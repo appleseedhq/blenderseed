@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -26,14 +25,14 @@
 # THE SOFTWARE.
 #
 
+import math
+
 import appleseed as asr
 import mathutils
 
 from .translator import Translator
-
-import math
-
 from ..logger import get_logger
+
 logger = get_logger()
 
 
@@ -45,6 +44,10 @@ class LampTranslator(Translator):
 
     def __init__(self, lamp):
         super(LampTranslator, self).__init__(lamp)
+        self.__radiance_tex = None
+        self.__radiance_tex_inst = None
+        self.__radiance_mult_tex = None
+        self.__radiance_mult_tex_inst = None
 
     #
     # Properties.
@@ -83,6 +86,28 @@ class LampTranslator(Translator):
             light_params['tilt_angle'] = as_lamp_data.tilt_angle
             light_params['inner_angle'] = inner_angle
             light_params['outer_angle'] = outer_angle
+            if as_lamp_data.radiance_use_tex and as_lamp_data.radiance_tex != "":
+                light_params['intensity'] = lamp.name + "_radiance_tex_inst"
+                self.__radiance_tex = asr.Texture('disk_texture_2d', lamp.name + "_radiance_tex",
+                                                  {'filename': as_lamp_data.radiance_tex,
+                                                   'color_space': as_lamp_data.radiance_tex_color_space}, [])
+                self.__radiance_tex_inst = asr.TextureInstance(lamp.name + "_radiance_tex_inst",
+                                                               {'addressing_mode': 'wrap',
+                                                                'filtering_mode': 'bilinear'},
+                                                               lamp.name + "_radiance_tex",
+                                                               asr.Transformf(asr.Matrix4f.identity()))
+
+            if as_lamp_data.radiance_multiplier_use_tex and as_lamp_data.radiance_multiplier_tex != "":
+                light_params['intensity_multiplier'] = lamp.name + "_radiance_mult_tex_inst"
+                self.__radiance_mult_tex = asr.Texture('disk_texture_2d', lamp.name + "_radiance_mult_tex",
+                                                       {'filename': as_lamp_data.radiance_multiplier_tex,
+                                                        'color_space': as_lamp_data.radiance_multiplier_tex_color_space}, [])
+                self.__radiance_mult_tex_inst = asr.TextureInstance(lamp.name + "_radiance_mult_tex_inst",
+                                                                    {'addressing_mode': 'wrap',
+                                                                     'filtering_mode': 'bilinear'},
+                                                                    lamp.name + "_radiance_mult_tex",
+                                                                    asr.Transformf(asr.Matrix4f.identity()))
+
         if self.model == 'directional_light':
             light_params['irradiance'] = light_params.pop('intensity')
             light_params['irradiance_multiplier'] = light_params.pop('intensity_multiplier')
@@ -111,6 +136,14 @@ class LampTranslator(Translator):
 
         assembly.colors().insert(self.__as_light_radiance)
         assembly.lights().insert(self.__as_light)
+        if self.__radiance_tex is not None:
+            assembly.textures().insert(self.__radiance_tex)
+        if self.__radiance_tex_inst is not None:
+            assembly.texture_instances().insert(self.__radiance_tex_inst)
+        if self.__radiance_mult_tex is not None:
+            assembly.textures().insert(self.__radiance_mult_tex)
+        if self.__radiance_mult_tex_inst is not None:
+            assembly.texture_instances().insert(self.__radiance_mult_tex_inst)
 
 
 class AreaLampTranslator(Translator):
@@ -124,7 +157,6 @@ class AreaLampTranslator(Translator):
         self.__lamp_shader_group = None
         self.__as_shader = None
         self.__edf_mat = None
-
 
     #
     # Properties.
@@ -190,7 +222,7 @@ class AreaLampTranslator(Translator):
             self.__edf_mat = asr.Material('osl_material', self.bl_lamp.name, osl_params)
 
             self.__as_shader = asr.SurfaceShader("physical_surface_shader",
-                                             "{0}_surface_shader".format(self.bl_lamp.name), {})
+                                                 "{0}_surface_shader".format(self.bl_lamp.name), {})
 
     def flush_entities(self, assembly):
         assembly.objects().insert(self.__as_area_mesh)
