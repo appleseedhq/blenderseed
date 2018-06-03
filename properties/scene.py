@@ -29,8 +29,8 @@
 import multiprocessing
 
 import bpy
-from .. import util
 
+from .. import util
 
 try:
     threads = multiprocessing.cpu_count()
@@ -510,13 +510,25 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                      description="Global toggle for rendering of deformation motion blur. Warning: objects with deformation motion blur enabled will add to export time.",
                                                      default=False)
 
+    deformation_blur_samples = bpy.props.IntProperty(name="object_blur_samples",
+                                                     min=2,
+                                                     default=2)
+
     enable_object_blur = bpy.props.BoolProperty(name="enable_object_blur",
                                                 description="Global toggle for rendering of object motion blur",
                                                 default=False)
 
+    object_blur_samples = bpy.props.IntProperty(name="object_blur_samples",
+                                                min=1,
+                                                default=1)
+
     enable_camera_blur = bpy.props.BoolProperty(name="enable_camera_blur",
                                                 description="Enable rendering of camera motion blur",
                                                 default=False)
+
+    camera_blur_samples = bpy.props.IntProperty(name="camera_blur_samples",
+                                                min=1,
+                                                default=1)
 
     shutter_open = bpy.props.FloatProperty(name="shutter_open",
                                            description="Shutter open time (relative to start of current frame)",
@@ -526,6 +538,14 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                            step=3,
                                            precision=3)
 
+    shutter_open_end_time = bpy.props.FloatProperty(name="shutter_open_end_time",
+                                                    description="Shutter open ending time (relative to start of current frame)",
+                                                    default=0.0,
+                                                    soft_min=0.0,
+                                                    soft_max=1.0,
+                                                    step=3,
+                                                    precision=3)
+
     shutter_close = bpy.props.FloatProperty(name="shutter_close",
                                             description="Shutter close time (relative to end of current frame)",
                                             default=1.0,
@@ -533,6 +553,14 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                             soft_max=1.0,
                                             step=3,
                                             precision=3)
+
+    shutter_close_begin_time = bpy.props.FloatProperty(name="shutter_close_begin_time",
+                                                       description="Shutter close begin time (relative to start of current frame)",
+                                                       default=1.0,
+                                                       soft_min=0.0,
+                                                       soft_max=1.0,
+                                                       step=3,
+                                                       precision=3)
 
     # AOV export
 

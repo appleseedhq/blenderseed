@@ -279,24 +279,27 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_label = "Motion Blur"
 
-    def draw_header(self, context):
-        header = self.layout
-        asr_scene_props = context.scene.appleseed
-        header.prop(asr_scene_props, "enable_motion_blur", text="")
-
     def draw(self, context):
         layout = self.layout
         asr_scene_props = context.scene.appleseed
 
-        layout.active = asr_scene_props.enable_motion_blur
-
-        layout.prop(asr_scene_props, "shutter_open", text="Shutter Open")
-        layout.prop(asr_scene_props, "shutter_close", text="Shutter Close")
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "shutter_open", text="Shutter Open Begin")
+        col.prop(asr_scene_props, "shutter_open_end_time", text="Shutter Open End")
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "shutter_close_begin_time", text="Shutter Close Begin")
+        col.prop(asr_scene_props, "shutter_close", text="Shutter Close End")
 
         col = layout.column(align=True)
-        col.prop(asr_scene_props, "enable_camera_blur", text="Camera Blur", toggle=True)
-        col.prop(asr_scene_props, "enable_object_blur", text="Object Blur", toggle=True)
-        col.prop(asr_scene_props, "enable_deformation_blur", text="Deformation Blur", toggle=True)
+        row = col.row(align=True)
+        row.prop(asr_scene_props, "enable_camera_blur", text="Camera Blur", toggle=True)
+        row.prop(asr_scene_props, "camera_blur_samples", text="Samples")
+        row = col.row(align=True)
+        row.prop(asr_scene_props, "enable_object_blur", text="Object Blur", toggle=True)
+        row.prop(asr_scene_props, "object_blur_samples", text="Samples")
+        row = col.row(align=True)
+        row.prop(asr_scene_props, "enable_deformation_blur", text="Deformation Blur", toggle=True)
+        row.prop(asr_scene_props, "deformation_blur_samples", text="Samples")
 
 
 class AppleseedPostProcessing(bpy.types.Panel, AppleseedRenderPanelBase):

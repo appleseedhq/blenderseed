@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -26,17 +25,15 @@
 # THE SOFTWARE.
 #
 
-from .translator import Translator, ObjectKey
-
-import math
-
 import appleseed as asr
-
 import bpy
 import bpy_extras
 
+from .translator import Translator, ObjectKey
 from ..logger import get_logger
+
 logger = get_logger()
+
 
 class CameraTranslator(Translator):
 
@@ -101,7 +98,9 @@ class CameraTranslator(Translator):
                           'focal_length': focal_length,
                           'aspect_ratio': aspect_ratio,
                           'near_z': camera.appleseed.near_z,
+                          'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
                           'shutter_open_begin_time': scene.appleseed.shutter_open,
+                          'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
                           'shutter_close_end_time': scene.appleseed.shutter_close}
 
         elif model == 'thinlens_camera':
@@ -114,26 +113,32 @@ class CameraTranslator(Translator):
                           'focal_length': focal_length,
                           'aspect_ratio': aspect_ratio,
                           'near_z': camera.appleseed.near_z,
-                          'shutter_open_begin_time': scene.appleseed.shutter_open,
-                          'shutter_close_end_time': scene.appleseed.shutter_close,
                           'f_stop': camera.appleseed.f_number,
                           'autofocus_enabled': False,
                           'diaphragm_blades': camera.appleseed.diaphragm_blades,
                           'diaphragm_tilt_angle': camera.appleseed.diaphragm_angle,
-                          'focal_distance': focal_distance}
+                          'focal_distance': focal_distance,
+                          'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
+                          'shutter_open_begin_time': scene.appleseed.shutter_open,
+                          'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
+                          'shutter_close_end_time': scene.appleseed.shutter_close}
             if camera.appleseed.enable_autofocus:
                 cam_params['autofocus_target'] = self.find_auto_focus_point(scene)
                 cam_params['autofocus_enabled'] = True
 
         elif model == 'spherical_camera':
-            cam_params = {'shutter_open_begin_time': scene.appleseed.shutter_open,
+            cam_params = {'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
+                          'shutter_open_begin_time': scene.appleseed.shutter_open,
+                          'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
                           'shutter_close_end_time': scene.appleseed.shutter_close}
 
         else:
             cam_params = {'film_width': camera.ortho_scale,
                           'aspect_ratio': aspect_ratio,
                           'near_z': camera.appleseed.near_z,
+                          'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
                           'shutter_open_begin_time': scene.appleseed.shutter_open,
+                          'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
                           'shutter_close_end_time': scene.appleseed.shutter_close}
 
         self.__as_camera.set_parameters(cam_params)
