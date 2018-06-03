@@ -78,7 +78,6 @@ class LampTranslator(Translator):
                         'cast_indirect_light': as_lamp_data.cast_indirect,
                         'importance_multiplier': as_lamp_data.importance_multiplier}
 
-        # TODO: Textures for spot lamp
         if self.model == 'spot_light':
             outer_angle = math.degrees(lamp.data.spot_size)
             inner_angle = (1.0 - lamp.data.spot_blend) * outer_angle
