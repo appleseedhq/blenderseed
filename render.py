@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -28,9 +27,9 @@
 
 import array
 import os
+import shutil
 import struct
 import subprocess
-import shutil
 import tempfile
 import threading
 import time
@@ -385,8 +384,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
             pix.extend(floats[p * 4:p * 4 + 4] for p in range(start_pix, end_pix))
 
         # Window-space coordinates of the intersection between the tile and the render window.
-        x0 = ix0 - min_x    # left
-        y0 = max_y - iy1    # bottom
+        x0 = ix0 - min_x  # left
+        y0 = max_y - iy1  # bottom
 
         # Update image.
         result = self.begin_result(x0, y0, take_x, take_y)
@@ -405,7 +404,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.pass_number += 1
             self.rendered_tiles = 0
         self.rendered_tiles += 1
-        self.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.pass_number, self.total_passes, self.rendered_tiles, self.total_tiles), "Time Remaining: {0}".format(self.format_seconds_to_hhmmss(remaining_seconds)))
+        self.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.pass_number, self.total_passes, self.rendered_tiles, self.total_tiles),
+                          "Time Remaining: {0}".format(self.format_seconds_to_hhmmss(remaining_seconds)))
 
         if (self.total_passes == self.pass_number) and (self.rendered_tiles == self.total_tiles) and self.do_denoise:
             self.update_stats("appleseed Rendering: Denoising Image", "")
@@ -434,10 +434,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
         iy1 = min(tile_y + tile_h - 1, max_y)
 
         # Window-space coordinates of the intersection between the tile and the render window.
-        x0 = ix0 - min_x    # left
-        x1 = ix1 - min_x    # right
-        y0 = max_y - iy1    # bottom
-        y1 = max_y - iy0    # top
+        x0 = ix0 - min_x  # left
+        x1 = ix1 - min_x  # right
+        y0 = max_y - iy1  # bottom
+        y1 = max_y - iy0  # top
 
         # Bracket parameters.
         bracket_extent = 5
@@ -565,8 +565,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 pix.extend(floats[p * 3:p * 3 + 3] for p in range(start_pix, end_pix))
 
         # Window-space coordinates of the intersection between the tile and the render window.
-        x0 = ix0 - min_x    # left
-        y0 = max_y - iy1    # bottom
+        x0 = ix0 - min_x  # left
+        y0 = max_y - iy1  # bottom
 
         # Update image.
         # Beauty output is always the first pass sent.
@@ -596,7 +596,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 self.pass_number += 1
                 self.rendered_tiles = 0
             self.rendered_tiles += 1
-            self.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.pass_number, self.total_passes, self.rendered_tiles, self.total_tiles), "Time Remaining: {0}".format(self.format_seconds_to_hhmmss(remaining_seconds)))
+            self.update_stats("Time Remaining: {0}".format(self.format_seconds_to_hhmmss(remaining_seconds)),
+                              "appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.pass_number, self.total_passes, self.rendered_tiles, self.total_tiles))
 
         return True
 
