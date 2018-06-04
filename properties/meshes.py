@@ -26,36 +26,27 @@
 # THE SOFTWARE.
 #
 
-from . import scene
-from . import world
-from . import objects
-from . import materials
-from . import meshes
-from . import camera
-from . import nodes
-from . import particles
-from . import lamps
+import bpy
+from .. import util
+
+
+class AppleseedMeshSettings(bpy.types.PropertyGroup):
+
+    export_normals = bpy.props.BoolProperty(name="export_normals",
+                                               default=True)
+
+    export_uvs = bpy.props.BoolProperty(name="export_uvs",
+                                        default=True)
+
+    smooth_tangents = bpy.props.BoolProperty(name="smooth_tangents",
+                                             default=False)
 
 
 def register():
-    scene.register()
-    world.register()
-    objects.register()
-    materials.register()
-    meshes.register()
-    camera.register()
-    nodes.register()
-    particles.register()
-    lamps.register()
+    util.safe_register_class(AppleseedMeshSettings)
+    bpy.types.Mesh.appleseed = bpy.props.PointerProperty(type=AppleseedMeshSettings)
 
 
 def unregister():
-    lamps.unregister()
-    particles.unregister()
-    nodes.unregister()
-    camera.unregister()
-    meshes.unregister()
-    materials.unregister()
-    objects.unregister()
-    world.unregister()
-    scene.unregister()
+    del bpy.types.Mesh.appleseed
+    util.safe_unregister_class(AppleseedMeshSettings)

@@ -149,7 +149,7 @@ class MeshTranslator(ObjectTranslator):
         loops = me.loops
 
         # UVs.
-        export_uvs = True # todo: get this from an object setting.
+        export_uvs = True if self.bl_obj.data.appleseed.export_uvs else False
 
         if export_uvs and len(me.uv_textures) > 0:
             uv_texture = me.uv_textures.active.data[:]
@@ -179,7 +179,7 @@ class MeshTranslator(ObjectTranslator):
                 uv_index += 1
 
         # Normals.
-        export_normals = True # todo: get this from an object setting.
+        export_normals = True if self.bl_obj.data.appleseed.export_normals else False
 
         if export_normals:
             me.calc_normals_split()
@@ -208,7 +208,9 @@ class MeshTranslator(ObjectTranslator):
                 normal_index += 1
 
         # Tangents.
-        # todo: handle this...
+        if self.bl_obj.data.appleseed.smooth_tangents and self.bl_obj.data.appleseed.export_uvs:
+            asr.compute_smooth_vertex_tangents(self.__mesh_object)
+
 
         bpy.data.meshes.remove(me)
 
@@ -217,7 +219,19 @@ class MeshTranslator(ObjectTranslator):
             self.__write_mesh(mesh_key)
 
     def flush_entities(self, assembly):
+        asr_obj_props = self.bl_obj.appleseed
         mesh_name = self.__mesh_object.get_name()
+        self.__object_instance_params = {'visibility': {'camera': asr_obj_props.camera_visible,
+                                                        'light': asr_obj_props.light_visible,
+                                                        'shadow': asr_obj_props.shadow_visible,
+                                                        'diffuse': asr_obj_props.diffuse_visible,
+                                                        'glossy': asr_obj_props.glossy_visible,
+                                                        'specular': asr_obj_props.specular_visible,
+                                                        'transparency': asr_obj_props.transparency_visible},
+                                         'medium_priority': asr_obj_props.medium_priority}
+
+        if asr_obj_props.object_sss_set != "":
+            self.__object_instance_params['sss_set_id'] = asr_obj_props.object_sss_set
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Replace the MeshObject by an empty one referencing

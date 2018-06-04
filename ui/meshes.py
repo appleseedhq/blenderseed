@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -26,36 +25,34 @@
 # THE SOFTWARE.
 #
 
-from . import scene
-from . import world
-from . import objects
-from . import materials
-from . import meshes
-from . import camera
-from . import nodes
-from . import particles
-from . import lamps
+import bpy
+
+from .. import util
+
+
+class AppleseedObjExportPanel(bpy.types.Panel):
+    bl_label = "Export"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "data"
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
+
+    def draw(self, context):
+        layout = self.layout
+        asr_obj = context.object.data.appleseed
+        layout.prop(asr_obj, "export_normals", text="Export Normals")
+        layout.prop(asr_obj, "export_uvs", text="Export UVs")
+        layout.prop(asr_obj, "smooth_tangents", text="Calculate Smooth Tangents")
 
 
 def register():
-    scene.register()
-    world.register()
-    objects.register()
-    materials.register()
-    meshes.register()
-    camera.register()
-    nodes.register()
-    particles.register()
-    lamps.register()
+    util.safe_register_class(AppleseedObjExportPanel)
 
 
 def unregister():
-    lamps.unregister()
-    particles.unregister()
-    nodes.unregister()
-    camera.unregister()
-    meshes.unregister()
-    materials.unregister()
-    objects.unregister()
-    world.unregister()
-    scene.unregister()
+    util.safe_unregister_class(AppleseedObjExportPanel)
