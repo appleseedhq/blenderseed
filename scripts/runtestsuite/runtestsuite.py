@@ -261,7 +261,7 @@ class ReportWriter:
 def render_project_file(args, project_filepath, output_filepath, log_filepath):
     with open(log_filepath, "w", 0) as log_file:
         # Base command line.
-        command = '"{0}" -b "{1}" -o "{2}" -x 0 -f 1'.format(args.tool_path, project_filepath, output_filepath)
+        command = '"{0}" -b "{1}" -o "{2}" -x 1 -f 1'.format(args.tool_path, project_filepath, output_filepath)
 
         # Built-in additional arguments.
         # command += " " + BLENDER_BASE_ARGS
@@ -366,9 +366,10 @@ def render_test_scene(args, logger, report_writer, project_directory, project_fi
     output_directory = os.path.join(project_directory, 'renders')
     ref_directory = os.path.join(project_directory, 'ref')
 
-    output_filename = project_basename + '.png'
-    output_filepath = os.path.join(output_directory, output_filename)
-    ref_filepath = os.path.join(ref_directory, output_filename)
+    output_blender_filename = os.path.join(output_directory, project_basename)
+    output_filepath = output_blender_filename + "0001.png"
+    ref_image = project_basename + "0001.png"
+    ref_filepath = os.path.join(ref_directory, ref_image)
 
     log_filename = project_basename + '.txt'
     log_filepath = os.path.join(output_directory, log_filename)
@@ -382,7 +383,7 @@ def render_test_scene(args, logger, report_writer, project_directory, project_fi
         safe_remove(log_filepath)
         rendering_success, rendering_time = render_project_file(args,
                                                                 project_filepath,
-                                                                output_filepath,
+                                                                output_blender_filename,
                                                                 log_filepath)
     else:
         rendering_success = True
@@ -390,7 +391,7 @@ def render_test_scene(args, logger, report_writer, project_directory, project_fi
 
     if not rendering_success:
         logger.fail_rendering(rendering_time, "Failed")
-        report_writer.report_simple_failure(project_filepath, ref_filepath, output_filepath, log_filepath, "Rendering failed")
+        report_writer.report_simple_failure(project_filepath, ref_filepath, output_blender_filename, log_filepath, "Rendering failed")
         return False
 
     if not os.path.exists(output_filepath):
@@ -399,12 +400,12 @@ def render_test_scene(args, logger, report_writer, project_directory, project_fi
             return True
         else:
             logger.fail_rendering(rendering_time, "No Output")
-            report_writer.report_simple_failure(project_filepath, ref_filepath, output_filepath, log_filepath, "Output image is missing")
+            report_writer.report_simple_failure(project_filepath, ref_filepath, output_blender_filename, log_filepath, "Output image is missing")
             return False
     else:
         if not os.path.exists(ref_filepath):
             logger.fail_rendering(rendering_time, "No Reference")
-            report_writer.report_simple_failure(project_filepath, ref_filepath, output_filepath, log_filepath, "Reference image is missing")
+            report_writer.report_simple_failure(project_filepath, ref_filepath, output_blender_filename, log_filepath, "Reference image is missing")
             return False
 
     out_width, out_height, out_rows = read_png_file(output_filepath)
