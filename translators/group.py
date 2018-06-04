@@ -138,7 +138,7 @@ class GroupTranslator(Translator):
             if obj.hide_render:
                 continue
 
-            if not inscenelayer(obj, self.bl_scene):
+            if not inscenelayer(obj, self.bl_group):
                 print("not visible")
                 continue
 
