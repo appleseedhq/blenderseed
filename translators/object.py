@@ -120,6 +120,7 @@ class MeshTranslator(ObjectTranslator):
                 mat_key = ObjectKey(material_slots[0].material)
                 self.__front_materials["default"] = str(mat_key)
             else:
+                logger.debug("Mesh %s has no materials, assigning default material instead", mesh_name)
                 self.__front_materials["default"] = "default_material"
 
         double_sided_materials = False if self.bl_obj.appleseed.double_sided is False else True

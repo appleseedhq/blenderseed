@@ -293,6 +293,7 @@ class SceneTranslator(GroupTranslator):
         self.__create_default_material()
 
     def __create_default_material(self):
+        logger.debug("Creating default material")
         shader_group = asr.ShaderGroup("default_tree")
 
         shader_group.add_shader("shader", "as_disney_material", "Shader", {})
