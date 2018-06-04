@@ -85,18 +85,6 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
     double_sided = bpy.props.BoolProperty(name="double_sided",
                                           default=True)
 
-    ray_bias_distance = bpy.props.FloatProperty(name="ray_bias_distance",
-                                                description="Ray bias distance",
-                                                default=0.0)
-
-    ray_bias_method = bpy.props.EnumProperty(name="Ray Bias Method",
-                                             description="Ray bias method",
-                                             items=[('none', "None", ""),
-                                                    ('incoming_direction', "Shift Along Incoming Direction", ""),
-                                                    ('outgoing_direction', "Shift Along Outgoing Direction", ""),
-                                                    ('normal', "Shift Along Surface Normal", "")],
-                                             default='none')
-
     object_alpha = bpy.props.FloatProperty(name="object_alpha",
                                            description="Object Alpha",
                                            default=1.0,

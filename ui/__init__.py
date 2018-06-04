@@ -32,6 +32,7 @@ from . import world
 from . import camera
 from . import objects
 from . import materials
+from . import meshes
 from . import lamps
 
 # Enable all existing panels for these contexts
@@ -141,6 +142,7 @@ def register():
     scene.register()
     world.register()
     materials.register()
+    meshes.register()
     camera.register()
     objects.register()
 #    particles.register()
@@ -152,6 +154,7 @@ def unregister():
 #    particles.unregister()
     objects.unregister()
     camera.unregister()
+    meshes.unregister()
     materials.unregister()
     world.unregister()
     scene.unregister()

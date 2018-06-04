@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,6 +26,7 @@
 #
 
 import bpy
+
 from .. import util
 
 
@@ -67,12 +67,9 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
 
         layout.separator()
 
-        layout.prop(asr_obj,"double_sided", text="Double Sided Shading")
+        layout.prop(asr_obj, "double_sided", text="Double Sided Shading")
         layout.prop(asr_obj, "medium_priority", text="Nested Glass Priority")
         layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
-
-
-
 
 
 class AppleseedObjMBlurPanel(bpy.types.Panel):
