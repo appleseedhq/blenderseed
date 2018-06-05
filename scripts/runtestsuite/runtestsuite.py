@@ -43,10 +43,9 @@ import urllib
 # Constants.
 #--------------------------------------------------------------------------------------------------
 
-DEFAULT_TOOL_FILEPATH = "C:\\Program Files\\Blender Foundation\\Blender\\blender.exe" #if os.name == "nt" else \
-                        #"../../sandbox/bin/Release/appleseed.cli"
+DEFAULT_TOOL_FILEPATH = "C:\\Program Files\\Blender Foundation\\Blender\\blender.exe" if os.name == "nt" else "./blender"
 
-BLENDER_BASE_ARGS = "--parameter sampling_mode=qmc"
+BLENDER_BASE_ARGS = ""
 
 VALUE_THRESHOLD = 2                 # max allowed absolute diff between two pixel components, in [0, 255]
 MAX_DIFFERING_COMPONENTS = 4 * 2    # max number of pixel components that are allowed to differ significantly
