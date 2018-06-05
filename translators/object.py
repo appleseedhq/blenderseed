@@ -112,13 +112,19 @@ class MeshTranslator(ObjectTranslator):
             for i, m in enumerate(material_slots):
                 self.__mesh_object.push_material_slot("slot-%s" % i)
 
-                mat_key = ObjectKey(m.material)
-                self.__front_materials["slot-%s" % i] = str(mat_key)
+                if m.material.appleseed.osl_node_tree is not None:
+                    mat_key = ObjectKey(m.material)
+                    self.__front_materials["slot-%s" % i] = str(mat_key)
+                else:
+                    self.__front_materials["slot-%s" % i] = "default_material"
         else:
             self.__mesh_object.push_material_slot("default")
             if len(material_slots) == 1:
-                mat_key = ObjectKey(material_slots[0].material)
-                self.__front_materials["default"] = str(mat_key)
+                if material_slots[0].material.appleseed.osl_node_tree is not None:
+                    mat_key = ObjectKey(material_slots[0].material)
+                    self.__front_materials["default"] = str(mat_key)
+                else:
+                    self.__front_materials["default"] = "default_material"
             else:
                 logger.debug("Mesh %s has no materials, assigning default material instead", mesh_name)
                 self.__front_materials["default"] = "default_material"
