@@ -45,11 +45,11 @@ if "bpy" in locals():
     imp.reload(operators)
     imp.reload(export)
     imp.reload(ui)
-    # imp.reload(render)
+    imp.reload(render)
     imp.reload(util)
     imp.reload(preferences)
     imp.reload(projectwriter)
-    imp.reload(python_render)
+    # imp.reload(python_render)
 
 else:
     import bpy
@@ -58,8 +58,8 @@ else:
     from . import ui
     from . import preferences
     from . import util
-    # from . import render  # not superfluous
-    from . import python_render
+    from . import render  # not superfluous
+    # from . import python_render
 
 def register():
     preferences.register()
@@ -69,12 +69,12 @@ def register():
     from . import export
     export.register()
     ui.register()
-    python_render.register()
+    # python_render.register()
     bpy.utils.register_module(__name__)
 
 
 def unregister():
-    python_render.unregister()
+    # python_render.unregister()
     ui.unregister()
     export.unregister()
     operators.unregister()
