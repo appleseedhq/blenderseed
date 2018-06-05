@@ -127,13 +127,8 @@ class Translator(object):
            In Blender, given a matrix m, m[i][j] is the element at the i'th row, j'th column.
 
          The only difference between the coordinate systems of Blender and appleseed is the up vector:
-         in Blender, up is Z+; in appleseed, up is Y+. We can go from Blender's coordinate system to
-         appleseed's one by rotating by +90 degrees around the X axis. That means that Blender
-         objects must be rotated by -90 degrees around X before being exported to appleseed.
+         in Blender, up is Z+; in appleseed, up is Y+.
         """
-
-        rot = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
-        m = rot * m
 
         matrix = asr.Matrix4d([m[0][0], m[0][1], m[0][2], m[0][3],
                                m[1][0], m[1][1], m[1][2], m[1][3],
