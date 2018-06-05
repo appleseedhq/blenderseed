@@ -138,9 +138,9 @@ class MaterialTranslator(Translator):
 
             self.__shader_group.add_shader("shader", shader.file_name, shader.name, parameters)
 
-            self.__shader_group.add_shader("surface", surface_shader.file_name, surface_shader.name, {})
-
             for output in shader.outputs:
                 if output.is_linked:
                     for link in output.links:
                         self.__shader_group.add_connection(shader.name, output.socket_osl_id, link.to_node.name, link.to_socket.socket_osl_id)
+
+        self.__shader_group.add_shader("surface", surface_shader.file_name, surface_shader.name, {})
