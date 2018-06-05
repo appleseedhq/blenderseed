@@ -376,6 +376,8 @@ class SceneTranslator(GroupTranslator):
 
         conf_final.set_parameters(parameters)
         conf_interactive.set_parameters(parameters)
+        # conf_final.insert_path("shading_engine.override_shading.mode", 'facing_ratio')
+        # conf_interactive.insert_path("shading_engine.override_shading.mode", 'facing_ratio')
 
     def __translate_frame(self):
         '''
