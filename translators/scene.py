@@ -34,8 +34,9 @@ from .group import GroupTranslator
 from .object import InstanceTranslator
 from .translator import ObjectKey, ProjectExportMode
 from .world import WorldTranslator
-from ..logger import get_logger
 from ..util import get_osl_search_paths, Timer, inscenelayer
+
+from ..logger import get_logger
 
 logger = get_logger()
 
@@ -89,8 +90,14 @@ class SceneTranslator(GroupTranslator):
         Create a scene translator to export the scene to an in memory appleseed project.
         '''
 
-        logger.debug("Creating final render scene translator, filename: %s", filename)
-        raise NotImplementedError()
+        logger.debug("Creating final render scene translator")
+
+        return cls(
+            scene,
+            export_mode=ProjectExportMode.FINAL_RENDER,
+            selected_only=False,
+            geometry_dir=None,
+            textures_dir=None)
 
     @classmethod
     def create_interactive_render_translator(cls, scene):
@@ -99,8 +106,14 @@ class SceneTranslator(GroupTranslator):
         optimized for quick interactive edits.
         '''
 
-        logger.debug("Creating final render scene translator, filename: %s", filename)
-        raise NotImplementedError()
+        logger.debug("Creating final render scene translator")
+
+        return cls(
+            scene,
+            export_mode=ProjectExportMode.INTERACTIVE_RENDER,
+            selected_only=False,
+            geometry_dir=None,
+            textures_dir=None)
 
     def __init__(self, scene, export_mode, selected_only, geometry_dir, textures_dir):
         '''
@@ -235,7 +248,7 @@ class SceneTranslator(GroupTranslator):
                 continue
 
             if not inscenelayer(obj, self.bl_scene):
-                print("not visible")
+                logger.debug("skipping invisible object %s", obj.name)
                 continue
 
             if self.selected_only and not obj.select:

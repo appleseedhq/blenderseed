@@ -150,7 +150,7 @@ class CameraTranslator(Translator):
         cam = scene.camera
         co = scene.cursor_location
         co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
-        print("2D Coords:", co_2d)
+        logger.debug("2D Coords:", co_2d)
 
         return asr.Vector2f(co_2d.x, co_2d.y)
 

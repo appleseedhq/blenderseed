@@ -38,8 +38,21 @@ from shutil import copyfile
 
 import bpy
 
-from . import projectwriter
-from . import util
+from .. import projectwriter
+from .. import util
+
+from ..logger import get_logger
+
+logger = get_logger()
+
+
+class RenderThread(threading.Thread):
+    def __init__(self, renderer):
+        super(RenderThread, self).__init__()
+        self.__renderer = renderer
+
+    def run(self):
+        self.__renderer.render()
 
 
 class RenderAppleseed(bpy.types.RenderEngine):
@@ -137,7 +150,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.update_stats("", "appleseed Rendering: Exporting Scene")
 
         # Render project.
-        from .translators.scene import SceneTranslator
+        from ..translators.scene import SceneTranslator
         scene_translator = SceneTranslator.create_project_export_translator(scene, project_filepath)
         scene_translator.translate_scene()
         scene_translator.write_project(project_filepath)
@@ -204,7 +217,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                                              width,
                                              height)
         if not file_written:
-            print('Error while exporting. Check the console for details.')
+            self.report({"ERROR"}, "Error while exporting. Check the console for details.")
             return
 
         # Render the project.
@@ -354,7 +367,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Optional debug message.
         if False:
-            print("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
+            logger.debug("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
 
         # Ignore tiles completely outside the render window.
         if tile_x > max_x or tile_x + tile_w - 1 < min_x:
@@ -530,7 +543,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Optional debug message.
         if False:
-            print("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
+            logger.debug("Received tile: x={0} y={1} w={2} h={3} c={4}".format(tile_x, tile_y, tile_w, tile_h, tile_c))
 
         # Ignore tiles completely outside the render window.
         if tile_x > max_x or tile_x + tile_w - 1 < min_x:

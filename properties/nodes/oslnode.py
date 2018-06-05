@@ -31,6 +31,9 @@ from bpy.types import NodeSocket, Node
 from . import AppleseedNode, AppleseedSocket
 from ... import util
 
+from ...logger import get_logger
+
+logger = get_logger()
 
 class AppleseedOSLInSocket(NodeSocket, AppleseedSocket):
     """appleseed OSL base socket"""
@@ -86,7 +89,7 @@ class AppleseedOSLNode(Node, AppleseedNode):
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
                 if linked_node.node_type != 'osl':
-                    print("ERROR: {0} cannot be used with OSL nodes.  All nodes upstream of {0} will be skipped".format(linked_node.name))
+                    logger.error("{0} cannot be used with OSL nodes.  All nodes upstream of {0} will be skipped".format(linked_node.name))
                 else:
                     linked_node.traverse_tree(material_node)
         material_node.tree.append(self)

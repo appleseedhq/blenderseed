@@ -37,23 +37,28 @@ import mathutils
 
 from . import bl_info
 
+from .logger import get_logger
+
+logger = get_logger()
+
+
 image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
 
 
 def safe_register_class(cls):
     try:
-        print("[appleseed] Registering class {0}...".format(cls))
+        logger.debug("[appleseed] Registering class {0}...".format(cls))
         bpy.utils.register_class(cls)
     except Exception as e:
-        print("[appleseed] ERROR: Failed to register class {0}: {1}".format(cls, e))
+        logger.error("[appleseed] ERROR: Failed to register class {0}: {1}".format(cls, e))
 
 
 def safe_unregister_class(cls):
     try:
-        print("[appleseed] Unregistering class {0}...".format(cls))
+        logger.debug("[appleseed] Unregistering class {0}...".format(cls))
         bpy.utils.unregister_class(cls)
     except Exception as e:
-        print("[appleseed] ERROR: Failed to unregister class {0}: {1}".format(cls, e))
+        logger.error("[appleseed] ERROR: Failed to unregister class {0}: {1}".format(cls, e))
 
 
 def get_appleseed_bin_dir():
@@ -89,12 +94,12 @@ def load_appleseed_python_paths():
     python_path = find_python_path()
     if python_path != "":
         sys.path.append(python_path)
-        print("[appleseed] Python path set to: {0}".format(python_path))
+        logger.debug("[appleseed] Python path set to: {0}".format(python_path))
 
         if platform.system() == 'Windows':
             bin_dir = get_appleseed_bin_dir()
             os.environ['PATH'] += os.pathsep + bin_dir
-            print("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
+            logger.debug("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
 
 
 def unload_appleseed_python_paths():
@@ -128,7 +133,7 @@ def read_osl_shaders():
     nodes = []
 
     if not get_appleseed_bin_dir():
-        print("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
+        logger.warning("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
         return nodes
 
     tool_dir, shader_directories = get_osl_search_paths()
@@ -137,14 +142,14 @@ def read_osl_shaders():
 
     q = asr.ShaderQuery()
 
-    print("[appleseed] Parsing OSL shaders...")
+    logger.debug("[appleseed] Parsing OSL shaders...")
 
     for shader_dir in shader_directories:
         if os.path.isdir(shader_dir):
-            print("[appleseed] Searching {0} for OSO files...".format(shader_dir))
+            logger.debug("[appleseed] Searching {0} for OSO files...".format(shader_dir))
             for file in os.listdir(shader_dir):
                 if file.endswith(".oso"):
-                    print("[appleseed] Reading {0}...".format(file))
+                    logger.debug("[appleseed] Reading {0}...".format(file))
                     d = {}
                     filename = os.path.join(shader_dir, file)
                     q.open(filename)
@@ -205,7 +210,7 @@ def read_osl_shaders():
 
                     nodes.append(d)
 
-    print("[appleseed] OSL parsing complete.")
+    logger.debug("[appleseed] OSL parsing complete.")
 
     return nodes
 

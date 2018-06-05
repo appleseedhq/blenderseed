@@ -139,7 +139,7 @@ class GroupTranslator(Translator):
                 continue
 
             if not inscenelayer(obj, self.bl_group):
-                print("not visible")
+                logger.debug("skipping invisible object %s", obj.name)
                 continue
 
             obj_key = ObjectKey(obj)
