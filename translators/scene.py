@@ -218,6 +218,12 @@ class SceneTranslator(GroupTranslator):
 
         super(SceneTranslator, self)._create_translators()
 
+        # Always create a translator for the active camera even if it is not visible or renderable.
+
+        obj_key = ObjectKey(self.bl_scene.camera)
+        logger.debug("Creating camera translator for active camera  %s", obj_key)
+        self.__camera_translators[obj_key] = CameraTranslator(self.bl_scene.camera)
+
         for obj in self.bl_scene.objects:
 
             # Skip object types that are not renderable.
@@ -238,8 +244,9 @@ class SceneTranslator(GroupTranslator):
             obj_key = ObjectKey(obj)
 
             if obj.type == 'CAMERA':
-                logger.debug("Creating camera translator for object %s", obj_key)
-                self.__camera_translators[obj_key] = CameraTranslator(obj)
+                if not obj_key in self.__camera_translators:
+                    logger.debug("Creating camera translator for camera %s", obj_key)
+                    self.__camera_translators[obj_key] = CameraTranslator(obj)
 
             elif obj.type == 'EMPTY':
                 if obj.is_duplicator and obj.dupli_type == 'GROUP':
