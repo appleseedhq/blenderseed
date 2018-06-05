@@ -85,6 +85,12 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col.enabled = not asr_scene_props.threads_auto
         col.prop(asr_scene_props, "threads", text="Threads")
 
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "shading_override", text="Override Shading", toggle=True)
+        row = col.row(align=True)
+        row.enabled = asr_scene_props.shading_override
+        row.prop(asr_scene_props, "override_mode", text="")
+
         layout.prop(asr_scene_props, "tex_cache", text="Texture Cache Size")
 
         row = layout.row()

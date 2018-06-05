@@ -387,10 +387,10 @@ class SceneTranslator(GroupTranslator):
                                   'photon_tracing_max_path_length': asr_scene_props.sppm_photon_max_length,
                                   'photon_tracing_rr_min_path_length': asr_scene_props.sppm_photon_rr_start}
 
+        if asr_scene_props.shading_override:
+            parameters['shading_engine'] = {'override_shading': {'mode': asr_scene_props.override_mode}}
         conf_final.set_parameters(parameters)
         conf_interactive.set_parameters(parameters)
-        # conf_final.insert_path("shading_engine.override_shading.mode", 'facing_ratio')
-        # conf_interactive.insert_path("shading_engine.override_shading.mode", 'facing_ratio')
 
     def __translate_frame(self):
         '''

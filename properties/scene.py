@@ -601,6 +601,37 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     pixel_time_aov = bpy.props.BoolProperty(name="pixel_time_aov",
                                             default=False)
 
+    # Overrides
+
+    shading_override = bpy.props.BoolProperty(name="shading_override",
+                                              default=False)
+
+    override_mode = bpy.props.EnumProperty(name="override_mode",
+                                           items=[
+                                               ('facing_ratio', "Facing Ratio", ""),
+                                               ('coverage', "Coverage", ""),
+                                               ('geometric_normal', "Geometric Normal", ""),
+                                               ('ambient_occlusion', "Ambient Occlusion", ""),
+                                               ('assembly_instances', "Assembly Instances", ""),
+                                               ('barycentric', "Barycentric", ""),
+                                               ('bitangent', "Bitangent", ""),
+                                               ('color', "Color", ""),
+                                               ('depth', "Depth", ""),
+                                               ('materials', "Materials", ""),
+                                               ('object_instances', "Object Instances", ""),
+                                               ('original_shading_normal', "Original Shading Normal", ""),
+                                               ('primitives', "Primitives", ""),
+                                               ('ray_spread', "Ray Spread", ""),
+                                               ('regions', "Regions", ""),
+                                               ('screen_space_wireframe', "Screen Space Wireframe", ""),
+                                               ('shading_normal', "Shading Normal", ""),
+                                               ('sides', "Sides", ""),
+                                               ('tangent', "Tangent", ""),
+                                               ('uv', "UVs", ""),
+                                               ('world_space_position', "World Space Position", ""),
+                                               ('world_space_wireframe', "World Space Wireframe", "")],
+                                           default='facing_ratio')
+
 
 def register():
     util.safe_register_class(AppleseedTextureConvertProps)
