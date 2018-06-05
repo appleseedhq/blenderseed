@@ -299,7 +299,7 @@ class MeshTranslator(ObjectTranslator):
                 assembly_instance_name,
                 {},
                 self.assembly_name)
-            ass_inst.transform_sequence = self._xform_seq
+            ass_inst.set_transform_sequence(self._xform_seq)
 
             assembly.assemblies().insert(ass)
             assembly.assembly_instances().insert(ass_inst)
