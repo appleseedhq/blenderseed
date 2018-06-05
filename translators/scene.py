@@ -294,16 +294,10 @@ class SceneTranslator(GroupTranslator):
 
     def __create_default_material(self):
         logger.debug("Creating default material")
-        shader_group = asr.ShaderGroup("default_tree")
 
-        shader_group.add_shader("shader", "as_disney_material", "Shader", {})
-        shader_group.add_shader("surface", "as_closure2surface", "Surface", {})
-        shader_group.add_connection("Shader", "out_outColor", "Surface", "in_input")
+        surface_shader = asr.SurfaceShader("diagnostic_surface_shader", "default_surface_shader", {'mode': 'facing_ratio'})
+        material = asr.Material('generic_material', "default_material", {'surface_shader': 'default_surface_shader'})
 
-        surface_shader = asr.SurfaceShader("physical_surface_shader", "default_surface_shader", {})
-        material = asr.Material('osl_material', "default_material", {'osl_surface': "default_tree", 'surface_shader': 'default_surface_shader'})
-
-        self.__main_assembly.shader_groups().insert(shader_group)
         self.__main_assembly.surface_shaders().insert(surface_shader)
         self.__main_assembly.materials().insert(material)
 
