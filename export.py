@@ -31,10 +31,7 @@ from bpy.props import BoolProperty, StringProperty
 
 from bpy_extras.io_utils import ExportHelper
 import os
-import subprocess
-import shutil
 
-from . import projectwriter
 from . import util
 
 from .translators import SceneTranslator

@@ -57,17 +57,15 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
             row = layout.row(align=True)
             row.operator("render.render", text="Render", icon='RENDER_STILL')
             row.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
+            split = layout.split(percentage=0.33)
+
+            split.label(text="Display:")
+            row = split.row(align=True)
+            row.prop(rd, "display_mode", text="")
+            row.prop(rd, "use_lock_interface", icon_only=True)
         else:
             row = layout.row(align=True)
-            row.operator("appleseed.export_scene", text="Render", icon='RENDER_STILL')
-            row.operator("appleseed.export_anim_scene", text="Animation", icon='RENDER_ANIMATION')
-
-        split = layout.split(percentage=0.33)
-
-        split.label(text="Display:")
-        row = split.row(align=True)
-        row.prop(rd, "display_mode", text="")
-        row.prop(rd, "use_lock_interface", icon_only=True)
+            row.operator("appleseed.export_scene", text="Export")
 
 
 class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
