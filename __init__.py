@@ -58,15 +58,15 @@ else:
     from . import ui
     from . import preferences
     from . import util
-    from . import render  # not superfluous
-    # from . import python_render
+    from . import export
+    from .render import __init__  # not superfluous
+    # from .render import python_render
 
 def register():
     preferences.register()
     util.load_appleseed_python_paths()
     properties.register()
     operators.register()
-    from . import export
     export.register()
     ui.register()
     # python_render.register()

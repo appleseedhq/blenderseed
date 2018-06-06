@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -26,15 +25,13 @@
 # THE SOFTWARE.
 #
 
-import bpy
-from bpy.props import BoolProperty, StringProperty
-
-from bpy_extras.io_utils import ExportHelper
 import os
 
-from . import util
+import bpy
+from bpy.props import BoolProperty, StringProperty
+from bpy_extras.io_utils import ExportHelper
 
-from .translators import SceneTranslator
+from . import util
 
 
 class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
@@ -53,8 +50,8 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
 
     animation = BoolProperty(name="Animation", description="Write out an appleseed project for each frame", default=False)
 
-    #selected_only = BoolProperty(name="Selection Only", description="Export selected objects only", default=False)
-    #packed = BoolProperty(name="Pack Project", description="Export packed projects", default=False)
+    # selected_only = BoolProperty(name="Selection Only", description="Export selected objects only", default=False)
+    # packed = BoolProperty(name="Pack Project", description="Export packed projects", default=False)
 
     @classmethod
     def poll(cls, context):
@@ -76,11 +73,11 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
 
             replacements = [
                 ('######', "%06d"),
-                ( '#####', "%05d"),
-                (  '####', "%04d"),
-                (   '###', "%03d"),
-                (    '##', "%02d"),
-                (     '#',   "%d")
+                ('#####', "%05d"),
+                ('####', "%04d"),
+                ('###', "%03d"),
+                ('##', "%02d"),
+                ('#', "%d")
             ]
 
             for i in replacements:
@@ -102,6 +99,7 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
     def __export_project(self, context, export_path):
+        from .translators import SceneTranslator
         scene_translator = SceneTranslator.create_project_export_translator(context.scene, export_path)
         scene_translator.translate_scene()
         scene_translator.write_project(export_path)
