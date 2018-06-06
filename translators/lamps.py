@@ -156,6 +156,7 @@ class AreaLampTranslator(Translator):
         self.__lamp_shader_group = None
         self.__as_shader = None
         self.__edf_mat = None
+        self.__null_mat = None
 
     #
     # Properties.
@@ -198,7 +199,7 @@ class AreaLampTranslator(Translator):
 
         self.__as_area_mesh_inst = asr.ObjectInstance(self.bl_lamp.name + '_inst', lamp_inst_params, self.bl_lamp.name + "_mesh",
                                                       self._convert_matrix(self.bl_lamp.matrix_world),
-                                                      {"default": self.bl_lamp.name})
+                                                      {"default": self.bl_lamp.name}, {"default": "null_material"})
 
         # Emit basic lamp shader group
         if lamp_data.appleseed.osl_node_tree is None:
@@ -220,6 +221,8 @@ class AreaLampTranslator(Translator):
             # Emit are lamp material and surface shader.
             self.__edf_mat = asr.Material('osl_material', self.bl_lamp.name, osl_params)
 
+            self.__null_mat = asr.Material('generic_material', "null_material", {})
+
             self.__as_shader = asr.SurfaceShader("physical_surface_shader",
                                                  "{0}_surface_shader".format(self.bl_lamp.name), {})
 
@@ -230,6 +233,8 @@ class AreaLampTranslator(Translator):
             assembly.surface_shaders().insert(self.__as_shader)
         if self.__edf_mat is not None:
             assembly.materials().insert(self.__edf_mat)
+        if self.__null_mat is not None:
+            assembly.materials().insert(self.__null_mat)
         if self.__lamp_shader_group is not None:
             assembly.shader_groups().insert(self.__lamp_shader_group)
 

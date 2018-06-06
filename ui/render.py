@@ -77,23 +77,30 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         scene = context.scene
         asr_scene_props = scene.appleseed
 
-        split = layout.split()
-        col = split.column()
-        col.prop(asr_scene_props, "threads_auto", text="Auto Threads")
-        split = split.split()
-        col = split.column()
-        col.enabled = not asr_scene_props.threads_auto
-        col.prop(asr_scene_props, "threads", text="Threads")
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "threads_auto", text="Auto Threads", toggle=True)
+        row = col.row(align=True)
+        row.enabled = not asr_scene_props.threads_auto
+        row.prop(asr_scene_props, "threads", text="Threads")
 
-        layout.prop(asr_scene_props, "tex_cache", text="Texture Cache Size")
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "generate_mesh_files", text="Export Geometry", toggle=True)
+        row = col.row(align=True)
+        row.enabled = asr_scene_props.generate_mesh_files
+        row.prop(asr_scene_props, "export_mode", text="")
+        col.prop(asr_scene_props, "clean_cache", text="Delete Cache", toggle=True)
 
-        row = layout.row()
-        row.prop(asr_scene_props, "generate_mesh_files", text="Export Geometry")
-        if asr_scene_props.generate_mesh_files:
-            row.prop(asr_scene_props, "export_mode", text="")
-            # layout.prop(asr_scene_props, "export_hair", text="Export Hair")
-        row = layout.row()
-        row.prop(asr_scene_props, "clean_cache", text="Delete Cache")
+        layout.separator()
+
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "shading_override", text="Override Shading", toggle=True)
+        row = col.row(align=True)
+        row.enabled = asr_scene_props.shading_override
+        row.prop(asr_scene_props, "override_mode", text="")
+
+        box = layout.box()
+        box.label(text="Texture Cache")
+        box.prop(asr_scene_props, "tex_cache", text="Texture Cache Size")
 
         box = layout.box()
         box.label(text="Render Stamp:")
@@ -103,7 +110,7 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
 class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_label = "Denoiser"
+    bl_label = "Denoising"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -118,10 +125,10 @@ class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col.prop(asr_scene_props, "random_pixel_order", text="Random Pixe Order", toggle=True)
         col.prop(asr_scene_props, "skip_denoised", text="Skip Denoised Pixels", toggle=True)
         col.prop(asr_scene_props, "prefilter_spikes", text="Prefilter Spikes", toggle=True)
+        col.prop(asr_scene_props, "mark_invalid_pixels", text="Mark Invalid Pixels", toggle=True)
         col.prop(asr_scene_props, "spike_threshold", text="Spike Threshold")
         col.prop(asr_scene_props, "patch_distance_threshold", text="Patch Distance")
         col.prop(asr_scene_props, "denoise_scales", text="Denoise Scales")
-        col.prop(asr_scene_props, "mark_invalid_pixels", text="Mark Invalid Pixels")
 
 
 class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
@@ -136,12 +143,15 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         row = layout.row(align=True)
         row.prop(asr_scene_props, "sampler_max_samples", text="Samples")
         row.prop(asr_scene_props, "renderer_passes", text="Passes")
+
         box = layout.box()
-        box.prop(asr_scene_props, "tile_ordering")
+        box.label(text="Tile Pattern:")
+        box.prop(asr_scene_props, "tile_ordering", text="")
         box.prop(asr_scene_props, "tile_size", text="Tile Size")
 
         box = layout.box()
-        box.prop(asr_scene_props, "pixel_filter", text="Filter")
+        box.label(text="Pixel Filter:")
+        box.prop(asr_scene_props, "pixel_filter", text="")
         box.prop(asr_scene_props, "pixel_filter_size", text="Filter Size")
 
 

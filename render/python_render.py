@@ -26,12 +26,22 @@
 #
 
 import bpy
-import tempfile
-import os
 import threading
 
-from .util import safe_register_class, safe_unregister_class
+from ..util import safe_register_class, safe_unregister_class
 
+from ..logger import get_logger
+
+logger = get_logger()
+
+
+class RenderThread(threading.Thread):
+    def __init__(self, renderer):
+        super(RenderThread, self).__init__()
+        self.__renderer = renderer
+
+    def run(self):
+        self.__renderer.render()
 
 
 class RenderAppleseed(bpy.types.RenderEngine):
@@ -43,25 +53,48 @@ class RenderAppleseed(bpy.types.RenderEngine):
     render_lock = threading.Lock()
 
     def __init__(self):
-        print("Engine created")
+        logger.debug("Render Engine Created")
+        self.__scene_translator = None
+        self.__proj = None
 
     def __del__(self):
-        print("Engine deleted")
+        logger.debug("Render Engine Deleted")
 
     def update(self, data, scene):
         if self.is_preview:
             pass
         else:
-            print("Render update!")
-            from .translators.scene import SceneTranslator
-            project_dir = os.path.join(tempfile.gettempdir(), "blenderseed", "render")
-            project_filepath = os.path.join(project_dir, "render.appleseed")
-            scene_translator = SceneTranslator.create_project_export_translator(scene, project_filepath)
-            scene_translator.translate_scene()
-            scene_translator.write_project(project_filepath)
+            logger.debug("Create Scene Translator")
+            from ..translators.scene import SceneTranslator
+            self.__scene_translator = SceneTranslator.create_final_render_translator(scene)
+            self.__scene_translator.translate_scene()
 
     def render(self, scene):
-        pass
+        if self.is_preview:
+            pass
+        else:
+            import appleseed as asr
+            from .renderercontroller import RendererController
+            from .tilecallbacks import FinalTileCallback
+            logger.debug("Loading appleseed Project")
+            self.__proj = self.__scene_translator.as_project
+
+            renderer_controller = RendererController(self)
+            tile_callback = FinalTileCallback(self)
+
+            logger.debug("Starting Render")
+            renderer = asr.MasterRenderer(self.__proj,
+                                          self.__proj.configurations()['final'].get_inherited_parameters(),
+                                          renderer_controller,
+                                          tile_callback)
+
+            render_thread = RenderThread(renderer)
+            render_thread.start()
+
+            logger.debug("Rendering")
+
+            while render_thread.isAlive():
+                render_thread.join(0.5)  # seconds
 
 
 def register():

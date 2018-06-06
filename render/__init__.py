@@ -234,7 +234,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 return
 
         # Copy assets from template project to output directory.
-        preview_template_dir = os.path.join(os.sep.join(util.realpath(__file__).split(os.sep)[:-1]), "mat_preview")
+        preview_template_dir = os.path.join(os.sep.join(util.realpath(__file__).split(os.sep)[:-2]), "mat_preview")
         existing_files = os.listdir(preview_output_dir)
         for item in os.listdir(preview_template_dir):
             if item not in existing_files:
