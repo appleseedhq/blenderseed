@@ -31,7 +31,7 @@ from .. import util
 
 
 class AppleseedObjExportPanel(bpy.types.Panel):
-    bl_label = "Export"
+    bl_label = "appleseed Export"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
