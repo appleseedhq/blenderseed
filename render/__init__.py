@@ -30,6 +30,7 @@ import os
 import shutil
 import struct
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -37,6 +38,13 @@ from math import ceil
 from shutil import copyfile
 
 import bpy
+
+import appleseed as asr
+
+from ..translators.scene import SceneTranslator
+
+from .renderercontroller import RendererController
+from .tilecallbacks import FinalTileCallback
 
 from .. import projectwriter
 from .. import util
@@ -134,28 +142,55 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Export and render the scene.
         """
 
-        # Name and location of the exported project.
-        project_dir = os.path.join(tempfile.gettempdir(), "blenderseed", "render")
-        project_filepath = os.path.join(project_dir, "render.appleseed")
+        if False: # New rendering code.
+            scene_translator = SceneTranslator.create_final_render_translator(scene)
+            scene_translator.translate_scene()
 
-        # Create target directories if necessary.
-        if not os.path.exists(project_dir):
-            try:
-                os.makedirs(project_dir)
-            except os.error:
-                self.report({"ERROR"}, "The directory {0} could not be created. Check directory permissions.".format(project_dir))
-                return
+            renderer_controller = RendererController(self)
 
-        # Generate project on disk.
-        self.update_stats("", "appleseed Rendering: Exporting Scene")
+            tile_callback = FinalTileCallback(self)
 
-        # Render project.
-        from ..translators.scene import SceneTranslator
-        scene_translator = SceneTranslator.create_project_export_translator(scene, project_filepath)
-        scene_translator.translate_scene()
-        scene_translator.write_project(project_filepath)
+            project = scene_translator.as_project
 
-        self.__render_project_file(scene, project_filepath, project_dir)
+            renderer = asr.MasterRenderer(project,
+                                        project.configurations()['final'].get_inherited_parameters(),
+                                        renderer_controller,
+                                        tile_callback)
+
+            render_thread = RenderThread(renderer)
+
+            # While debugging, log to the console. This should be configurable.
+            log_target = asr.ConsoleLogTarget(sys.stderr)
+            asr.global_logger().add_target(log_target)
+
+            render_thread.start()
+
+            while render_thread.isAlive():
+                render_thread.join(0.5)  # seconds
+
+            asr.global_logger().remove_target(log_target)
+        else: # Previous rendering code.
+            # Name and location of the exported project.
+            project_dir = os.path.join(tempfile.gettempdir(), "blenderseed", "render")
+            project_filepath = os.path.join(project_dir, "render.appleseed")
+
+            # Create target directories if necessary.
+            if not os.path.exists(project_dir):
+                try:
+                    os.makedirs(project_dir)
+                except os.error:
+                    self.report({"ERROR"}, "The directory {0} could not be created. Check directory permissions.".format(project_dir))
+                    return
+
+            # Generate project on disk.
+            self.update_stats("", "appleseed Rendering: Exporting Scene")
+
+            # Render project.
+            scene_translator = SceneTranslator.create_project_export_translator(scene, project_filepath)
+            scene_translator.translate_scene()
+            scene_translator.write_project(project_filepath)
+
+            self.__render_project_file(scene, project_filepath, project_dir)
 
     def __render_material_preview(self, scene):
         """

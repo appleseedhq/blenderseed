@@ -300,6 +300,9 @@ class SceneTranslator(GroupTranslator):
         paths.extend(x for x in shader_directories)
         self.__project.set_search_paths(paths)
 
+        # Create the environment.
+        self.__project.get_scene().set_environment(asr.Environment("environment", {}))
+
         # Create the main assembly.
         self.__project.get_scene().assemblies().insert(asr.Assembly("assembly", {}))
         self.__main_assembly = self.__project.get_scene().assemblies()["assembly"]

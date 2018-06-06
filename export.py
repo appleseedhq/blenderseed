@@ -59,7 +59,7 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and 'USE_APPLESEED_PYTHON' in os.environ
+        return renderer.engine == 'APPLESEED_RENDER'
 
     def execute(self, context):
         export_path = util.realpath(self.filepath)

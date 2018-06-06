@@ -33,20 +33,11 @@ import appleseed as asr
 class FinalTileCallback(asr.ITileCallback):
     def __init__(self, engine):
         super(FinalTileCallback, self).__init__()
+
         self.__engine = engine
 
+    def on_tile_begin(self, frame, tile_x, tile_y):
+        print("Starting tile %s %s" % (tile_x, tile_y))
+
     def on_tile_end(self, frame, tile_x, tile_y):
-        properties = frame.image().properties()
-
-        tile = frame.image().tile(tile_x, tile_y)
-        x = tile_x * properties.tile_width
-        y = tile_y * properties.tile_height
-
-        # blender image coord system is Y up
-        y = properties.canvas_height - y - properties.tile_height
-
-        # Here we write the pixel values to the RenderResult
-        result = self.__engine.begin_result(x, y, tile.get_width(), tile.get_height())
-        layer = result.layers[0]
-        layer.passes[0].rect = tile.blender_tile_data()
-        self.__engine.end_result(result)
+        print("Finishing tile %s %s" % (tile_x, tile_y))
