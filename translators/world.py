@@ -26,6 +26,8 @@
 #
 
 import appleseed as asr
+import math
+import mathutils
 
 from .translator import Translator
 from ..logger import get_logger
@@ -127,6 +129,8 @@ class WorldTranslator(Translator):
 
         self.__as_env = asr.Environment("sky", {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
 
+        self.__as_env_edf.transform_sequence().set_transform(0.0, asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
+
     def flush_entities(self, scene):
         if self.__horizon_radiance is not None:
             scene.colors().insert(self.__horizon_radiance)
@@ -139,3 +143,9 @@ class WorldTranslator(Translator):
         scene.environment_edfs().insert(self.__as_env_edf)
         scene.environment_shaders().insert(self.__as_env_shader)
         scene.set_environment(self.__as_env)
+
+    def _convert_matrix(self, m):
+        rot = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(90.0))
+        m = rot * m
+
+        return m
