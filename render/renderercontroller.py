@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -28,16 +27,21 @@
 
 import appleseed as asr
 
+from ..logger import get_logger
+
+logger = get_logger()
+
+
 class RendererController(asr.IRendererController):
     def __init__(self, engine):
         super(RendererController, self).__init__()
         self.__engine = engine
 
     def on_rendering_begin(self):
-        pass
+        logger.debug("Starting Render")
 
     def on_rendering_success(self):
-        pass
+        logger.debug("Render Finished")
 
     def on_rendering_abort(self):
         pass

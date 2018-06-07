@@ -304,10 +304,11 @@ class MeshTranslator(ObjectTranslator):
             assembly.assemblies().insert(ass)
             assembly.assembly_instances().insert(ass_inst)
         else:
-            logger.debug("Creating object instance for object %s, name: %s", self.appleseed_name, self.appleseed_name)
+            inst_name = self.appleseed_name + "_inst"
+            logger.debug("Creating object instance for object %s, name: %s", self.appleseed_name, inst_name)
 
             obj_inst = asr.ObjectInstance(
-                self.appleseed_name,
+                inst_name,
                 self.__object_instance_params,
                 mesh_name,
                 self._xform_seq.get_earliest_transform(),

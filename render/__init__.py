@@ -138,6 +138,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         if False:  # New rendering code.
 
+            import appleseed as asr
             from .renderercontroller import RendererController
             from .tilecallbacks import FinalTileCallback
 
