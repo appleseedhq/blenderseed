@@ -39,16 +39,8 @@ from shutil import copyfile
 
 import bpy
 
-import appleseed as asr
-
-from ..translators.scene import SceneTranslator
-
-from .renderercontroller import RendererController
-from .tilecallbacks import FinalTileCallback
-
 from .. import projectwriter
 from .. import util
-
 from ..logger import get_logger
 
 logger = get_logger()
@@ -142,7 +134,13 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Export and render the scene.
         """
 
-        if False: # New rendering code.
+        from ..translators.scene import SceneTranslator
+
+        if False:  # New rendering code.
+
+            from .renderercontroller import RendererController
+            from .tilecallbacks import FinalTileCallback
+
             scene_translator = SceneTranslator.create_final_render_translator(scene)
             scene_translator.translate_scene()
 
@@ -153,9 +151,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
             project = scene_translator.as_project
 
             renderer = asr.MasterRenderer(project,
-                                        project.configurations()['final'].get_inherited_parameters(),
-                                        renderer_controller,
-                                        tile_callback)
+                                          project.configurations()['final'].get_inherited_parameters(),
+                                          renderer_controller,
+                                          tile_callback)
 
             render_thread = RenderThread(renderer)
 
@@ -169,7 +167,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 render_thread.join(0.5)  # seconds
 
             asr.global_logger().remove_target(log_target)
-        else: # Previous rendering code.
+        else:  # Previous rendering code.
             # Name and location of the exported project.
             project_dir = os.path.join(tempfile.gettempdir(), "blenderseed", "render")
             project_filepath = os.path.join(project_dir, "render.appleseed")
