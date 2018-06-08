@@ -362,8 +362,8 @@ def render_test_scene(args, logger, report_writer, project_directory, project_fi
     project_basename = os.path.splitext(project_filename)[0]
     project_filepath = os.path.join(project_directory, project_filename)
 
-    output_directory = os.path.join(project_directory, 'renders')
-    ref_directory = os.path.join(project_directory, 'ref')
+    output_directory = os.path.join(os.path.realpath(project_directory), 'renders')
+    ref_directory = os.path.join(os.path.realpath(project_directory), 'ref')
 
     output_blender_filename = os.path.join(output_directory, project_basename)
     output_filepath = output_blender_filename + "0001.png"
@@ -497,6 +497,9 @@ def main():
 
     if args.tool_path is None:
         args.tool_path = os.path.join(script_directory, DEFAULT_TOOL_FILEPATH)
+
+    if args.directory is None:
+        args.directory = os.path.join(script_directory, 'test scenes')
 
     appleseed_args = BLENDER_BASE_ARGS
     if args.args:
