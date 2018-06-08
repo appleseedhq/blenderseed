@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- The name of the target platform. This parameter is only used to name the final archive.
+         Example values: win64, linux64, mac64, etc. -->
+    <platform>win64</platform>
+
+    <!-- The path to appleseed binaries. -->
+    <appleseed_bin_path>$APPLESEED/bin</appleseed_bin_path>
+
+    <!-- The path to appleseed libraries. -->
+    <appleseed_lib_path>$APPLESEED/lib</appleseed_lib_path>
+
+    <!-- The path to appleseed shaders. -->
+    <appleseed_shaders_path>$APPLESEED/shaders</appleseed_shaders_path>
+
+    <!-- The path to appleseed schemas. -->
+    <appleseed_schemas_path>$APPLESEED/schemas</appleseed_schemas_path>
+
+    <!-- The path to appleseed settings. -->
+    <appleseed_settings_path>$APPLESEED/settings</appleseed_settings_path>
+
+    <!-- The path to appleseed.python. -->
+    <appleseed_python_path>$APPLESEED/lib/python2.7</appleseed_python_path>
+
+    <!-- The path to the maketx binary. -->
+    <maketx_path>$APPLESEED/bin/maketx.exe</maketx_path>
+
+    <!-- The directory inside which the final archive file will be created. -->
+    <package_output_path>C:\Users\jdent\AppData\Roaming\Blender Foundation\Blender\2.79\scripts\addons\blenderseed\appleseed</package_output_path>
+</configuration>
