@@ -25,22 +25,18 @@
 # THE SOFTWARE.
 #
 
+import datetime
 import multiprocessing
 import os
-import platform
-import sys
-import datetime
 from math import tan, atan, degrees
 
 import bpy
 import mathutils
 
 from . import bl_info
-
 from .logger import get_logger
 
 logger = get_logger()
-
 
 image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
 
@@ -62,23 +58,13 @@ def safe_unregister_class(cls):
 
 
 def get_appleseed_bin_dir():
-    appleseed_bin_dir = bpy.context.user_preferences.addons['blenderseed'].preferences.appleseed_binary_directory
+    if "APPLESEED_BIN_DIR" in os.environ:
+        appleseed_bin_dir = os.environ['APPLESEED_BIN_DIR']
+    else:
+        appleseed_bin_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "appleseed", "bin")
     if appleseed_bin_dir:
         appleseed_bin_dir = realpath(appleseed_bin_dir)
     return appleseed_bin_dir
-
-
-def get_osl_search_paths():
-    appleseed_parent_dir = get_appleseed_bin_dir()
-    while os.path.basename(appleseed_parent_dir) != 'bin':
-        appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
-    appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
-
-    shader_directories = (os.path.join(appleseed_parent_dir, 'shaders', 'appleseed'), os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed'))
-
-    tool_dir = os.path.join(appleseed_parent_dir, 'bin')
-
-    return tool_dir, shader_directories
 
 
 def get_appleseed_parent_dir():
@@ -90,36 +76,17 @@ def get_appleseed_parent_dir():
     return appleseed_parent_dir
 
 
-def load_appleseed_python_paths():
-    python_path = find_python_path()
-    if python_path != "":
-        sys.path.append(python_path)
-        logger.debug("[appleseed] Python path set to: {0}".format(python_path))
+def get_osl_search_paths():
+    appleseed_parent_dir = get_appleseed_parent_dir()
 
-        if platform.system() == 'Windows':
-            bin_dir = get_appleseed_bin_dir()
-            os.environ['PATH'] += os.pathsep + bin_dir
-            logger.debug("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
-
-
-def unload_appleseed_python_paths():
-    python_path = find_python_path()
-
-    if python_path != "":
-        sys.path.remove(python_path)
-
-        if platform.system() == 'Windows':
-            os.environ['PATH'] = str(os.environ['PATH'].split(os.pathsep)[0:-1])
-
-
-def find_python_path():
-    python_path = ""
-    if 'APPLESEED_PYTHON_PATH' in os.environ:
-        python_path = os.environ['APPLESEED_PYTHON_PATH']
+    if "APPLESEED_BIN_DIR" in os.environ:
+        shader_directories = [(os.path.join(appleseed_parent_dir, 'shaders', 'appleseed')), (os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed'))]
     else:
-        python_path = os.path.join(get_appleseed_parent_dir(), 'lib', 'python2.7')
+        shader_directories = [(os.path.join(appleseed_parent_dir, 'shaders'))]
 
-    return python_path
+    tool_dir = os.path.join(appleseed_parent_dir, 'bin')
+
+    return tool_dir, shader_directories
 
 
 def read_osl_shaders():
@@ -601,10 +568,11 @@ class Timer(object):
 
     def stop(self):
         self.__end = datetime.datetime.now()
-        
+
     def elapsed(self):
         delta = self.__end - self.__start
         return delta.total_seconds()
+
 
 # ------------------------------------
 # Blender addon.
