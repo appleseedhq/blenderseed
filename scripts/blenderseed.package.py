@@ -233,9 +233,6 @@ class PackageBuilder(object):
         progress("Post-processing package")
         self.post_process_package()
 
-        progress("Building final zip file")
-        self.build_final_zip_file()
-
     def copy_binaries(self):
         bin_dir = os.path.join(self.settings.package_output_path, "bin")
         safe_make_directory(bin_dir)
@@ -269,13 +266,6 @@ class PackageBuilder(object):
             for f in files:
                 if f.endswith(".oso"):
                     shutil.copy(os.path.join(root, f), shaders_dir)
-
-    def build_final_zip_file(self):
-        package_name = "blenderseed-x-x-x"
-
-        old_path = pushd(self.settings.package_output_path)
-        archive_util.make_zipfile(os.path.join(self.settings.this_dir, package_name), ".")
-        os.chdir(old_path)
 
     def run(self, cmdline):
         info("Running command line: {0}".format(cmdline))
@@ -321,9 +311,6 @@ class LinuxPackageBuilder(PackageBuilder):
     def plugin_extension(self):
         return ".so"
 
-    def generate_module_file(self):
-        self.do_generate_module_file("linux")
-
     def copy_dependencies(self):
         # Create the lib directory.
         lib_dir = os.path.join(self.settings.package_output_path, "lib")
@@ -363,10 +350,6 @@ class LinuxPackageBuilder(PackageBuilder):
 
         # for lib in glob.glob(os.path.join(self.settings.package_output_path, "lib", "*")):
         #     self.run("chrpath -d " + lib)
-
-        plugins_dir = os.path.join(self.settings.package_output_path, "plug-ins", self.settings.maya_version)
-        for plugin in glob.glob(os.path.join(plugins_dir, "*.so")):
-            self.run("chrpath -r \$ORIGIN/../../lib " + plugin)
 
         appleseed_python_dir = os.path.join(self.settings.package_output_path, "scripts", "appleseed")
         for py_cpp_module in glob.glob(os.path.join(appleseed_python_dir, "*.so")):
@@ -410,9 +393,6 @@ class LinuxPackageBuilder(PackageBuilder):
 #--------------------------------------------------------------------------------------------------
 
 class WindowsPackageBuilder(PackageBuilder):
-
-    def plugin_extension(self):
-        return ".mll"
 
     def copy_dependencies(self):
         bin_dir = os.path.join(self.settings.package_output_path, "bin")
