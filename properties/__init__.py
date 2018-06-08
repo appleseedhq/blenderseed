@@ -38,13 +38,13 @@ from . import lamps
 
 
 def register():
+    nodes.register()
     scene.register()
     world.register()
     objects.register()
     materials.register()
     meshes.register()
     camera.register()
-    nodes.register()
     particles.register()
     lamps.register()
 
