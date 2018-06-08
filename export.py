@@ -30,6 +30,7 @@ import os
 import bpy
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ExportHelper
+from .translators import SceneTranslator
 
 from . import util
 
@@ -99,7 +100,6 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
     def __export_project(self, context, export_path):
-        from .translators import SceneTranslator
         scene_translator = SceneTranslator.create_project_export_translator(context.scene, export_path)
         scene_translator.translate_scene()
         scene_translator.write_project(export_path)

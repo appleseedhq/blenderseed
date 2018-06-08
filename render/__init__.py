@@ -39,6 +39,11 @@ from shutil import copyfile
 
 import bpy
 
+import appleseed as asr
+from ..translators.scene import SceneTranslator
+from .renderercontroller import RendererController
+from .tilecallbacks import FinalTileCallback
+
 from .. import projectwriter
 from .. import util
 from ..logger import get_logger
@@ -134,13 +139,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Export and render the scene.
         """
 
-        from ..translators.scene import SceneTranslator
-
         if False:  # New rendering code.
-
-            import appleseed as asr
-            from .renderercontroller import RendererController
-            from .tilecallbacks import FinalTileCallback
 
             scene_translator = SceneTranslator.create_final_render_translator(scene)
             scene_translator.translate_scene()
