@@ -100,8 +100,8 @@ class MeshTranslator(ObjectTranslator):
         self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_obj.matrix_world))
 
         # Convert the blender mesh.
-        mesh_key = ObjectKey(self.bl_obj.data)
-        mesh_name = str(mesh_key)
+        mesh_key = str(ObjectKey(self.bl_obj.data)) + "_obj"
+        mesh_name = mesh_key
 
         self.__mesh_object = asr.MeshObject(mesh_name, {})
         me = self.__get_blender_mesh(scene, triangulate=True)
@@ -218,7 +218,6 @@ class MeshTranslator(ObjectTranslator):
         if self.bl_obj.data.appleseed.smooth_tangents and self.bl_obj.data.appleseed.export_uvs:
             asr.compute_smooth_vertex_tangents(self.__mesh_object)
 
-
         bpy.data.meshes.remove(me)
 
         # Write the appleseed mesh if needed.
@@ -304,7 +303,7 @@ class MeshTranslator(ObjectTranslator):
             assembly.assemblies().insert(ass)
             assembly.assembly_instances().insert(ass_inst)
         else:
-            inst_name = self.appleseed_name + "_inst"
+            inst_name = self.appleseed_name
             logger.debug("Creating object instance for object %s, name: %s", self.appleseed_name, inst_name)
 
             obj_inst = asr.ObjectInstance(
