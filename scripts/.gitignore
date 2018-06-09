@@ -1,4 +1,1 @@
 *.zip
-runtestsuite/colorama/
-runtestsuite/png.pyc
-runtestsuite/report.html
