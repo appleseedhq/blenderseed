@@ -28,7 +28,6 @@
 
 import bpy
 import subprocess
-from ..util import image_extensions
 from .. import util
 import os
 
@@ -137,7 +136,7 @@ class AppleseedRefreshTexture(bpy.types.Operator):
                 for param in node.parameter_types:
                     if node.parameter_types[param] == 'string':
                         string = getattr(node, param)
-                        if string.endswith(image_extensions):
+                        if string.endswith(util.image_extensions):
                             scene_textures.append(string)
                             if string not in existing_textures:
                                 collection.add()

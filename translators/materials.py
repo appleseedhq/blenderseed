@@ -78,7 +78,7 @@ class MaterialTranslator(Translator):
             self.set_shader_group_parameters(scene)
 
             osl_params['osl_surface'] = as_mat_data.osl_node_tree.name
-            self.__as_mat = asr.Material('osl_material', self.appleseed_name, osl_params)
+            self.__as_mat = asr.Material('osl_material', self.appleseed_name + "_mat", osl_params)
 
         else:
             pass
