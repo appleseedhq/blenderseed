@@ -37,21 +37,24 @@ import time
 from math import ceil
 from shutil import copyfile
 
+import appleseed as asr
 import bpy
 
-import appleseed as asr
-from ..translators.scene import SceneTranslator
 from .renderercontroller import RendererController
 from .tilecallbacks import FinalTileCallback
-
 from .. import projectwriter
 from .. import util
 from ..logger import get_logger
+from ..translators.scene import SceneTranslator
+from ..translators.preview import PreviewRenderer
 
 logger = get_logger()
 
+__preview_renderer = None
+
 
 class RenderThread(threading.Thread):
+
     def __init__(self, renderer):
         super(RenderThread, self).__init__()
         self.__renderer = renderer
@@ -134,6 +137,18 @@ class RenderAppleseed(bpy.types.RenderEngine):
             else:
                 self.__render_scene(scene)
 
+    def __render_material_preview(self, scene):
+        global __preview_renderer
+
+        if not __preview_renderer:
+            __preview_renderer = PreviewRenderer(scene)
+
+        __preview_renderer.translate_preview()
+
+        project = __preview_renderer.as_project
+
+        self.__render_render(project)
+
     def __render_scene(self, scene):
         """
         Export and render the scene.
@@ -144,29 +159,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
             scene_translator = SceneTranslator.create_final_render_translator(scene)
             scene_translator.translate_scene()
 
-            renderer_controller = RendererController(self)
-
-            tile_callback = FinalTileCallback(self, scene)
-
             project = scene_translator.as_project
 
-            renderer = asr.MasterRenderer(project,
-                                          project.configurations()['final'].get_inherited_parameters(),
-                                          renderer_controller,
-                                          tile_callback)
-
-            render_thread = RenderThread(renderer)
-
-            # While debugging, log to the console. This should be configurable.
-            log_target = asr.ConsoleLogTarget(sys.stderr)
-            asr.global_logger().add_target(log_target)
-
-            render_thread.start()
-
-            while render_thread.isAlive():
-                render_thread.join(0.5)  # seconds
-
-            asr.global_logger().remove_target(log_target)
+            self.__render_render(project)
         else:  # Previous rendering code.
             # Name and location of the exported project.
             project_dir = os.path.join(tempfile.gettempdir(), "blenderseed", "render")
@@ -190,71 +185,28 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
             self.__render_project_file(scene, project_filepath, project_dir)
 
-    def __render_material_preview(self, scene):
-        """
-        Export and render the material preview scene.
-        """
+    def __render_render(self, project):
+        renderer_controller = RendererController(self)
 
-        # Don't render material thumbnails.
-        (width, height) = util.get_render_resolution(scene)
-        if width <= 96:
-            return
+        tile_callback = FinalTileCallback(self)
 
-        # Collect objects and their materials in a object -> [materials] dictionary.
-        objects_materials = {}
-        for obj in (obj for obj in scene.objects if obj.is_visible(scene) and not obj.hide_render):
-            for mat in util.get_instance_materials(obj):
-                if mat is not None:
-                    if obj.name not in objects_materials.keys():
-                        objects_materials[obj] = []
-                    objects_materials[obj].append(mat)
+        renderer = asr.MasterRenderer(project,
+                                      project.configurations()['final'].get_inherited_parameters(),
+                                      renderer_controller,
+                                      tile_callback)
 
-        # Find objects that are likely to be the preview objects.
-        preview_objects = [o for o in objects_materials.keys() if o.name.startswith('preview')]
-        if not preview_objects:
-            return
+        render_thread = RenderThread(renderer)
 
-        # Find the materials attached to the likely preview object.
-        likely_materials = objects_materials[preview_objects[0]]
-        if not likely_materials:
-            return
+        # While debugging, log to the console. This should be configurable.
+        log_target = asr.ConsoleLogTarget(sys.stderr)
+        asr.global_logger().add_target(log_target)
 
-        # Build the path to the output preview project.
-        preview_output_dir = os.path.join(tempfile.gettempdir(), "blenderseed", "material_preview")
-        preview_project_filepath = os.path.join(preview_output_dir, "material_preview.appleseed")
+        render_thread.start()
 
-        # Create target directories if necessary.
-        if not os.path.exists(preview_output_dir):
-            try:
-                os.makedirs(preview_output_dir)
-            except os.error:
-                self.report({"ERROR"}, "The directory {0} could not be created. Check directory permissions.".format(preview_output_dir))
-                return
+        while render_thread.isAlive():
+            render_thread.join(0.5)  # seconds
 
-        # Copy assets from template project to output directory.
-        preview_template_dir = os.path.join(os.sep.join(util.realpath(__file__).split(os.sep)[:-2]), "mat_preview")
-        existing_files = os.listdir(preview_output_dir)
-        for item in os.listdir(preview_template_dir):
-            if item not in existing_files:
-                copyfile(os.path.join(preview_template_dir, item), os.path.join(preview_output_dir, item))
-
-        prev_mat = likely_materials[0]
-        prev_type = prev_mat.preview_render_type.lower()
-
-        # Export the project.
-        writer = projectwriter.Writer()
-        file_written = writer.export_preview(scene,
-                                             preview_project_filepath,
-                                             prev_mat,
-                                             prev_type,
-                                             width,
-                                             height)
-        if not file_written:
-            self.report({"ERROR"}, "Error while exporting. Check the console for details.")
-            return
-
-        # Render the project.
-        self.__render_project_file(scene, preview_project_filepath)
+        asr.global_logger().remove_target(log_target)
 
     def __render_project_file(self, scene, project_filepath, project_dir=None):
         # Check that the path to the bin folder is set.
