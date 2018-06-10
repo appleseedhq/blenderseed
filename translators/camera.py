@@ -83,13 +83,23 @@ class CameraTranslator(Translator):
     #
     # Internal methods.
     #
+    def calc_frame_dimensions(self, camera, aspect_ratio):
+        if camera.sensor_fit in ('AUTO', 'HORIZONTAL'):
+            film_width = camera.sensor_width / 1000
+            film_height = film_width / aspect_ratio
+        else:
+            film_height = camera.sensor_height / 1000
+            film_width = film_height * aspect_ratio
+
+        return film_width, film_height
 
     def set_params(self, scene):
         camera = self.bl_camera.data
         focal_length = camera.lens / 1000
-        film_width = camera.sensor_width / 1000
-        film_height = camera.sensor_height / 1000
+
         aspect_ratio = self.get_frame_aspect_ratio(scene)
+
+        film_width, film_height = self.calc_frame_dimensions(camera, aspect_ratio)
 
         model = self.__as_camera.get_model()
 
