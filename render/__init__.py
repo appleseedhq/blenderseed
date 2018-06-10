@@ -146,7 +146,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
             renderer_controller = RendererController(self)
 
-            tile_callback = FinalTileCallback(self)
+            tile_callback = FinalTileCallback(self, scene)
 
             project = scene_translator.as_project
 
