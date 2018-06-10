@@ -30,6 +30,69 @@ import bpy
 from .. import util
 
 
+class AppleseedMaterialSlots(bpy.types.Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_label = "Material"
+    bl_region_type = 'WINDOW'
+    bl_context = "material"
+    # COMPAT_ENGINES must be defined in each subclass, external engines can add themselves here
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        return (context.material or context.object) and (engine in cls.COMPAT_ENGINES)
+
+    def draw(self, context):
+        layout = self.layout
+
+        mat = context.material
+        ob = context.object
+        slot = context.material_slot
+        space = context.space_data
+
+        if ob:
+            is_sortable = (len(ob.material_slots) > 1)
+
+            rows = 1
+            if is_sortable:
+                rows = 4
+
+            row = layout.row()
+
+            row.template_list("MATERIAL_UL_matslots", "", ob, "material_slots", ob, "active_material_index", rows=rows)
+
+            col = row.column(align=True)
+            col.operator("object.material_slot_add", icon='ZOOMIN', text="")
+            col.operator("object.material_slot_remove", icon='ZOOMOUT', text="")
+
+            col.menu("MATERIAL_MT_specials", icon='DOWNARROW_HLT', text="")
+
+            if is_sortable:
+                col.separator()
+
+                col.operator("object.material_slot_move", icon='TRIA_UP', text="").direction = 'UP'
+                col.operator("object.material_slot_move", icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+            if ob.mode == 'EDIT':
+                row = layout.row(align=True)
+                row.operator("object.material_slot_assign", text="Assign")
+                row.operator("object.material_slot_select", text="Select")
+                row.operator("object.material_slot_deselect", text="Deselect")
+
+        split = layout.split(percentage=0.65)
+
+        if ob:
+            split.template_ID(ob, "active_material", new="appleseed.new_mat")
+            row = split.row()
+            if slot:
+                row.prop(slot, "link", text="")
+            else:
+                row.label()
+        elif mat:
+            split.template_ID(space, "pin_id")
+            split.separator()
+
+
 class AppleseedMaterialPreview(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -83,11 +146,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
         layout.prop(asr_mat, "shader_lighting_samples", text="Lighting Samples")
 
 
-
-
-
 def register():
-    bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    util.safe_register_class(AppleseedMaterialSlots)
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
     util.safe_register_class(AppleseedMaterialPreview)
     util.safe_register_class(AppleseedMaterialShading)
@@ -96,5 +156,5 @@ def register():
 def unregister():
     util.safe_unregister_class(AppleseedMaterialShading)
     util.safe_unregister_class(AppleseedMaterialPreview)
-    bpy.types.MATERIAL_PT_context_material.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+    util.safe_unregister_class(AppleseedMaterialSlots)

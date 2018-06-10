@@ -32,6 +32,22 @@ from .. import util
 import os
 
 
+class AppleseedNewMat(bpy.types.Operator):
+    bl_label = "New Material"
+    bl_description = ""
+    bl_idname = "appleseed.new_mat"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return obj
+
+    def execute(self, context):
+        bpy.ops.material.new()
+        bpy.ops.appleseed.add_osl_nodetree()
+        return {'FINISHED'}
+
+
 class AppleseedViewNode(bpy.types.Operator):
     bl_label = "View OSL Nodetree"
     bl_description = ""
@@ -290,6 +306,7 @@ class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
 
 
 def register():
+    util.safe_register_class(AppleseedNewMat)
     util.safe_register_class(AppleseedViewNode)
     util.safe_register_class(AppleseedViewLampNode)
     util.safe_register_class(AppleseedConvertTextures)
@@ -313,3 +330,4 @@ def unregister():
     util.safe_unregister_class(AppleseedConvertTextures)
     util.safe_unregister_class(AppleseedViewLampNode)
     util.safe_unregister_class(AppleseedViewNode)
+    util.safe_unregister_class(AppleseedNewMat)
