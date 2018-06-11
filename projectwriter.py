@@ -2265,11 +2265,11 @@ class Writer(object):
 
         self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
         self.__emit_parameter("lighting_engine", scene.appleseed.lighting_engine)
-        self.__open_element('parameters name="adaptive_pixel_renderer"')
+        self.__open_element('parameters name="adaptive_tile_renderer"')
         self.__emit_parameter("min_samples", scene.appleseed.sampler_min_samples)
         self.__emit_parameter("max_samples", scene.appleseed.sampler_max_samples)
-        self.__emit_parameter("quality", scene.appleseed.adaptive_sampler_quality)
-        self.__emit_parameter("enable_diagnostics", scene.appleseed.adaptive_sampler_enable_diagnostics)
+        self.__emit_parameter("precision", scene.appleseed.tile_adaptive_sampler_precision)
+        self.__emit_parameter("enable_diagnostics", scene.appleseed.tile_adaptive_sampler_enable_diagnostics)
         self.__close_element("parameters")
 
         self.__open_element('parameters name="uniform_pixel_renderer"')
