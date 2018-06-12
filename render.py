@@ -83,6 +83,13 @@ class RenderAppleseed(bpy.types.RenderEngine):
                     self.register_pass(scene, renderlayer, "Z Depth", 1, "Z", 'VALUE')
                 if asr_scene_props.pixel_time_aov:
                     self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
+                if asr_scene_props.sampler_enable_diagnostics:
+                    self.register_pass(scene, renderlayer, "Invalid Samples", 4, "RGBA", "COLOR")
+                    if asr_scene_props.pixel_sampler == 'adaptive':
+                        self.register_pass(scene, renderlayer, "Variation", 4, "RGBA", "COLOR")
+                        self.register_pass(scene, renderlayer, "Samples", 4, "RGBA", "COLOR")
+
+
 
     def render(self, scene):
         asr_scene_props = scene.appleseed
@@ -109,6 +116,11 @@ class RenderAppleseed(bpy.types.RenderEngine):
                     self.add_pass("Z Depth", 1, "Z")
                 if asr_scene_props.pixel_time_aov:
                     self.add_pass("Pixel Time", 1, "X")
+                if asr_scene_props.sampler_enable_diagnostics:
+                    self.add_pass("Invalid Samples", 4, "RGBA")
+                    if asr_scene_props.pixel_sampler == 'adaptive':
+                        self.add_pass("Variation", 4, "RGBA")
+                        self.add_pass("Samples", 4, "RGBA")
 
         with RenderAppleseed.render_lock:
             if self.is_preview:
@@ -629,6 +641,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
                        'normal': "Normal",
                        'uv': "UV",
                        'pixel_time': "Pixel Time",
-                       'depth': "Z Depth"}
+                       'depth': "Z Depth",
+                       'invalid_samples': "Invalid Samples",
+                       'variation': "Variation",
+                       'samples': "Samples"}
 
         return aov_mapping[aov_name]
