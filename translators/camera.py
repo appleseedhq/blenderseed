@@ -160,9 +160,9 @@ class CameraTranslator(Translator):
         cam = scene.camera
         co = scene.cursor_location
         co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
-        logger.debug("2D Coords:", co_2d)
-
-        return asr.Vector2f(co_2d.x, co_2d.y)
+        y = 1 - co_2d.y
+        logger.debug("2D Coords:{0} {1}".format(co_2d.x, y))
+        return asr.Vector2f(co_2d.x, y)
 
     def get_frame_aspect_ratio(self, scene):
         render = scene.render
