@@ -219,7 +219,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 default=64,
                                                 subtype='UNSIGNED')
 
-    adaptive_sampler_enable_diagnostics = bpy.props.BoolProperty(name="adaptive_sampler_enable_diagnostics",
+    sampler_enable_diagnostics = bpy.props.BoolProperty(name="sampler_enable_diagnostics",
                                                                  description='',
                                                                  default=False)
 

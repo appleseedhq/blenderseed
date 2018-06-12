@@ -169,6 +169,7 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             split = split.split()
             row = split.row()
             row.prop(asr_scene_props, "decorrelate_pixels", text="Decorrelate Pixels")
+        layout.prop(asr_scene_props, "sampler_enable_diagnostics", text="Diagnostics")
 
 
 class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
@@ -193,7 +194,6 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         if asr_scene_props.lighting_engine == 'pt':
             if asr_scene_props.pixel_sampler == 'adaptive':
                 row = layout.row()
-                row.prop(asr_scene_props, "adaptive_sampler_enable_diagnostics", text="Diagnostics")
                 row.prop(asr_scene_props, "adaptive_sampler_quality", text="Quality")
             layout.prop(asr_scene_props, "next_event_estimation", text="Next Event Estimation")
             if asr_scene_props.next_event_estimation:
