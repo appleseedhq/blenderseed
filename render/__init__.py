@@ -35,22 +35,20 @@ import tempfile
 import threading
 import time
 from math import ceil
-from shutil import copyfile
 
 import appleseed as asr
 import bpy
 
 from .renderercontroller import RendererController
 from .tilecallbacks import FinalTileCallback
-from .. import projectwriter
 from .. import util
 from ..logger import get_logger
-from ..translators.scene import SceneTranslator
 from ..translators.preview import PreviewRenderer
+from ..translators.scene import SceneTranslator
 
 logger = get_logger()
 
-__preview_renderer = None
+_preview_renderer = None
 
 
 class RenderThread(threading.Thread):
@@ -138,16 +136,19 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 self.__render_scene(scene)
 
     def __render_material_preview(self, scene):
-        global __preview_renderer
+        global _preview_renderer
 
-        if not __preview_renderer:
-            __preview_renderer = PreviewRenderer(scene)
+        if not _preview_renderer:
+            _preview_renderer = PreviewRenderer()
 
-        __preview_renderer.translate_preview()
+        _preview_renderer.translate_preview(scene)
 
-        project = __preview_renderer.as_project
+        # else:
+        #     _preview_renderer.update_preview(scene)
 
-        self.__render_render(project)
+        project = _preview_renderer.as_project
+
+        self.__render_final(project, scene)
 
     def __render_scene(self, scene):
         """
@@ -161,7 +162,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
             project = scene_translator.as_project
 
-            self.__render_render(project)
+            self.__render_final(project, scene)
         else:  # Previous rendering code.
             # Name and location of the exported project.
             project_dir = os.path.join(tempfile.gettempdir(), "blenderseed", "render")
@@ -185,10 +186,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
             self.__render_project_file(scene, project_filepath, project_dir)
 
-    def __render_render(self, project):
+    def __render_final(self, project, scene):
         renderer_controller = RendererController(self)
 
-        tile_callback = FinalTileCallback(self)
+        tile_callback = FinalTileCallback(self, scene)
 
         renderer = asr.MasterRenderer(project,
                                       project.configurations()['final'].get_inherited_parameters(),
