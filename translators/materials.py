@@ -41,12 +41,13 @@ class MaterialTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, mat):
+    def __init__(self, mat, preview=False):
         super(MaterialTranslator, self).__init__(mat)
+
+        self._preview = preview
 
         if self.bl_node_tree:
             self.__shaders = self.bl_node_tree.nodes
-            self.__shader_list = None
 
     #
     # Properties.
@@ -65,29 +66,30 @@ class MaterialTranslator(Translator):
     #
 
     def create_entities(self, scene):
+        mat_name = self.bl_mat.name + "_mat" if not self._preview else "preview_mat"
+        as_mat_data = self.bl_mat.appleseed
+        osl_params = {'surface_shader': "{0}_surface_shader".format(mat_name)}
+        shader_params = {'lighting_samples': as_mat_data.shader_lighting_samples} if hasattr(as_mat_data, "shader_lighting_samples") else {}
+
+        self.__as_shader = asr.SurfaceShader("physical_surface_shader",
+                                             "{0}_surface_shader".format(mat_name), shader_params)
         if self.bl_node_tree:
-            as_mat_data = self.bl_mat.appleseed
-            params = {'lighting_samples': as_mat_data.shader_lighting_samples} if hasattr(as_mat_data, "shader_lighting_samples") else {}
-
-            self.__as_shader = asr.SurfaceShader("physical_surface_shader",
-                                                 "{0}_surface_shader".format(self.bl_mat.name), params)
-
-            osl_params = {'surface_shader': "{0}_surface_shader".format(self.bl_mat.name)}
+            osl_params['osl_surface'] = as_mat_data.osl_node_tree.name
 
             self.__shader_group = asr.ShaderGroup(self.bl_node_tree.name)
             self.set_shader_group_parameters(scene)
 
-            osl_params['osl_surface'] = as_mat_data.osl_node_tree.name
-            self.__as_mat = asr.Material('osl_material', self.appleseed_name + "_mat", osl_params)
-
-        else:
-            pass
+        self.__as_mat = asr.Material('osl_material', mat_name, osl_params)
 
     def flush_entities(self, assembly):
+
+        assembly.surface_shaders().insert(self.__as_shader)
+        assembly.materials().insert(self.__as_mat)
         if self.bl_node_tree:
-            assembly.surface_shaders().insert(self.__as_shader)
-            assembly.materials().insert(self.__as_mat)
             assembly.shader_groups().insert(self.__shader_group)
+
+    def update_material(self, mat, assembly, scene):
+        pass
 
     #
     # Internal methods.
