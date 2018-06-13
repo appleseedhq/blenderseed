@@ -325,9 +325,9 @@ class SceneTranslator(GroupTranslator):
         self.__main_assembly.materials().insert(material)
 
     def __translate_render_settings(self):
-        '''
+        """
         Convert render settings (AA samples, lighting engine, ...) to appleseed properties.
-        '''
+        """
 
         logger.debug("Translating render settings")
 
@@ -337,7 +337,7 @@ class SceneTranslator(GroupTranslator):
         conf_final = self.as_project.configurations()['final']
         conf_interactive = self.as_project.configurations()['interactive']
 
-        parameters = {'uniform_pixel_sampler': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
+        parameters = {'uniform_pixel_renderer': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
                                                 'force_antialiasing': True if asr_scene_props.force_aa else False,
                                                 'samples': asr_scene_props.sampler_max_samples},
                       'pixel_renderer': asr_scene_props.pixel_sampler,
@@ -354,26 +354,20 @@ class SceneTranslator(GroupTranslator):
                                 'clamp_roughness': True,
                                 'enable_caustics': True if scene.appleseed.enable_caustics else False,
                                 'record_light_paths': True if scene.appleseed.record_light_paths else False,
-                                'next_event_estimation': True if scene.appleseed.next_event_estimation else False,
+                                'next_event_estimation': True,
                                 'rr_min_path_length': asr_scene_props.rr_start,
                                 'optimize_for_lights_outside_volumes': asr_scene_props.optimize_for_lights_outside_volumes,
                                 'volume_distance_samples': asr_scene_props.volume_distance_samples,
                                 'dl_light_samples': asr_scene_props.dl_light_samples,
-                                'ibl_env_samples': asr_scene_props.ibl_env_samples}
+                                'ibl_env_samples': asr_scene_props.ibl_env_samples,
+                                'dl_low_light_threshold': asr_scene_props.dl_low_light_threshold}
             if not asr_scene_props.max_ray_intensity_unlimited:
                 parameters['pt']['max_ray_intensity'] = asr_scene_props.max_ray_intensity
-            if asr_scene_props.dl_low_light_threshold > 0.0:
-                parameters['pt']['dl_low_light_threshold'] = asr_scene_props.dl_low_light_threshold
-            if not asr_scene_props.max_diffuse_bounces_unlimited:
-                parameters['pt']['max_diffuse_bounces'] = asr_scene_props.max_diffuse_bounces
-            if not asr_scene_props.max_glossy_brdf_bounces_unlimited:
-                parameters['pt']['max_glossy_brdf_bounces'] = asr_scene_props.max_glossy_brdf_bounces
-            if not asr_scene_props.max_specular_bounces_unlimited:
-                parameters['pt']['max_specular_bounces'] = asr_scene_props.max_specular_bounces
-            if not asr_scene_props.max_volume_bounces_unlimited:
-                parameters['pt']['max_volume_bounces'] = asr_scene_props.max_volume_bounces
-            if not asr_scene_props.max_bounces_unlimited:
-                parameters['pt']['max_bounces'] = asr_scene_props.max_bounces
+            parameters['pt']['max_diffuse_bounces'] = asr_scene_props.max_diffuse_bounces if not asr_scene_props.max_diffuse_bounces_unlimited else -1
+            parameters['pt']['max_glossy_bounces'] = asr_scene_props.max_glossy_brdf_bounces if not asr_scene_props.max_glossy_brdf_bounces_unlimited else -1
+            parameters['pt']['max_specular_bounces'] = asr_scene_props.max_specular_bounces if not asr_scene_props.max_specular_bounces_unlimited else -1
+            parameters['pt']['max_volume_bounces'] = asr_scene_props.max_volume_bounces if not asr_scene_props.max_volume_bounces_unlimited else -1
+            parameters['pt']['max_bounces'] = asr_scene_props.max_bounces if not asr_scene_props.max_bounces_unlimited else -1
         else:
             parameters['sppm'] = {'alpha': asr_scene_props.sppm_alpha,
                                   'dl_mode': asr_scene_props.sppm_dl_mode,
@@ -421,6 +415,10 @@ class SceneTranslator(GroupTranslator):
             'patch_distance_threshold': asr_scene_props.patch_distance_threshold,
             'denoise_scales': asr_scene_props.denoise_scales,
             'mark_invalid_pixels': asr_scene_props.mark_invalid_pixels}
+
+        if asr_scene_props.enable_render_stamp:
+            frame_params['enable_render_stamp'] = True
+            frame_params["render_stamp_format"] = asr_scene_props.render_stamp
 
         # AOVs.
         aovs = asr.AOVContainer()
