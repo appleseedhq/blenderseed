@@ -67,7 +67,7 @@ class FinalTileCallback(asr.ITileCallback):
         pass
 
     def on_tile_end(self, frame, tile_x, tile_y):
-        logger.debug("Finished tile %s %s", tile_x, tile_y)
+        # logger.debug("Finished tile %s %s", tile_x, tile_y)
 
         image = frame.image()
         properties = image.properties()
