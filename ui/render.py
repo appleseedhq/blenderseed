@@ -104,6 +104,7 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         box = layout.box()
         box.label(text="Render Stamp:")
+        box.prop(asr_scene_props, "enable_render_stamp", toggle=True)
         box.prop(asr_scene_props, "render_stamp", text="")
         box.prop(asr_scene_props, "render_stamp_patterns", text="Stamp Blocks")
 
