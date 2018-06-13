@@ -40,7 +40,7 @@ class AppleseedMaterialSlots(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return (context.material or context.object) and (engine in cls.COMPAT_ENGINES)
+        return (context.material or context.object) and engine == 'APPLESEED_RENDER'
 
     def draw(self, context):
         layout = self.layout
