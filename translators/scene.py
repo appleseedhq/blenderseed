@@ -34,9 +34,8 @@ from .group import GroupTranslator
 from .object import InstanceTranslator
 from .translator import ObjectKey, ProjectExportMode
 from .world import WorldTranslator
-from ..util import get_osl_search_paths, Timer, inscenelayer
-
 from ..logger import get_logger
+from ..util import get_osl_search_paths, Timer, inscenelayer
 
 logger = get_logger()
 
@@ -192,6 +191,32 @@ class SceneTranslator(GroupTranslator):
         for x in self.__group_translators.values():
             x.create_entities(self.bl_scene)
 
+        # Motion Blur
+        if self.export_mode is not ProjectExportMode.INTERACTIVE_RENDER:
+            asr_blur_props = self.bl_scene.appleseed
+            current_frame = self.bl_scene.frame_current
+            if asr_blur_props.enable_camera_blur:
+                logger.debug("Sampling camera motion blur")
+                subframe, subframe_step = self._get_subframes(asr_blur_props, asr_blur_props.camera_blur_samples)
+                for x in range(asr_blur_props.camera_blur_samples + 1):
+                    self.bl_scene.frame_set(current_frame, subframe=subframe)
+                    for x in self.__camera_translators.values():
+                        x.update_transform(subframe)
+                        logger.debug("Sample taken for frame %s, subframe %s" % (current_frame, subframe))
+                    subframe += subframe_step
+                self.bl_scene.frame_set(current_frame)
+
+            if asr_blur_props.enable_object_blur:
+                logger.debug("Sampling object motion blur")
+                subframe, subframe_step = self._get_subframes(asr_blur_props, asr_blur_props.object_blur_samples)
+                for x in range(asr_blur_props.object_blur_samples + 1):
+                    self.bl_scene.frame_set(current_frame, subframe=subframe)
+                    for x in self._object_translators.values():
+                        x.update_transform(subframe)
+                        logger.debug("Sample taken for frame %s, subframe %s" % (current_frame, subframe))
+                    subframe += subframe_step
+                self.bl_scene.frame_set(current_frame)
+
         # Insert appleseed entities into the project.
         if self.__world_translator:
             self.__world_translator.flush_entities(self.as_scene)
@@ -206,6 +231,12 @@ class SceneTranslator(GroupTranslator):
 
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
+
+    def _get_subframes(self, asr_blur_props, sample_mode):
+        subframe = asr_blur_props.shutter_open
+        subframe_step = (asr_blur_props.shutter_close - asr_blur_props.shutter_open) / sample_mode
+
+        return subframe, subframe_step
 
     def write_project(self, filename):
         '''Write the appleseed project.'''
@@ -282,7 +313,9 @@ class SceneTranslator(GroupTranslator):
         self.__world_translator = WorldTranslator(self.bl_scene)
 
     def __create_project(self):
-        '''Create a default empty project.'''
+        """
+        Create a default empty project.
+        """
 
         logger.debug("Creating appleseed project")
 
@@ -338,8 +371,8 @@ class SceneTranslator(GroupTranslator):
         conf_interactive = self.as_project.configurations()['interactive']
 
         parameters = {'uniform_pixel_renderer': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
-                                                'force_antialiasing': True if asr_scene_props.force_aa else False,
-                                                'samples': asr_scene_props.sampler_max_samples},
+                                                 'force_antialiasing': True if asr_scene_props.force_aa else False,
+                                                 'samples': asr_scene_props.sampler_max_samples},
                       'pixel_renderer': asr_scene_props.pixel_sampler,
                       'lighting_engine': asr_scene_props.lighting_engine,
                       'generic_frame_renderer': {'passes': asr_scene_props.renderer_passes,
@@ -390,9 +423,9 @@ class SceneTranslator(GroupTranslator):
         conf_interactive.set_parameters(parameters)
 
     def __translate_frame(self):
-        '''
+        """
         Convert image related settings (resolution, crop windows, AOVs, ...) to appleseed.
-        '''
+        """
 
         logger.debug("Translating frame")
 
@@ -416,9 +449,9 @@ class SceneTranslator(GroupTranslator):
             'denoise_scales': asr_scene_props.denoise_scales,
             'mark_invalid_pixels': asr_scene_props.mark_invalid_pixels}
 
-        if asr_scene_props.enable_render_stamp:
-            frame_params['enable_render_stamp'] = True
-            frame_params["render_stamp_format"] = asr_scene_props.render_stamp
+        # if asr_scene_props.enable_render_stamp:
+        #     frame_params['enable_render_stamp'] = True
+        #     frame_params["render_stamp_format"] = asr_scene_props.render_stamp
 
         # AOVs.
         aovs = asr.AOVContainer()

@@ -43,6 +43,7 @@ class CameraTranslator(Translator):
 
     def __init__(self, camera):
         super(CameraTranslator, self).__init__(camera)
+        self._xform_seq = asr.TransformSequence()
 
     #
     # Properties.
@@ -71,11 +72,16 @@ class CameraTranslator(Translator):
         cam_key = ObjectKey(self.bl_camera)
         self.__as_camera = asr.Camera(model, str(cam_key), {})
 
-        self.set_transform()
+        self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_camera.matrix_world))
+
         self.set_params(scene)
 
     def flush_entities(self, scene):
-        logger.debug("Creating camera entity for camera: %s" % self.bl_camera.name)
+        self._xform_seq.optimize()
+
+        logger.debug("Creating camera entity for camera: %s, num xform keys = %s" % (self.bl_camera.name, self._xform_seq.size()))
+
+        self.__as_camera.set_transform_sequence(self._xform_seq)
 
         # Insert the camera into the scene.
         scene.cameras().insert(self.__as_camera)
@@ -83,23 +89,14 @@ class CameraTranslator(Translator):
     #
     # Internal methods.
     #
-    def calc_frame_dimensions(self, camera, aspect_ratio):
-        if camera.sensor_fit in ('AUTO', 'HORIZONTAL'):
-            film_width = camera.sensor_width / 1000
-            film_height = film_width / aspect_ratio
-        else:
-            film_height = camera.sensor_height / 1000
-            film_width = film_height * aspect_ratio
-
-        return film_width, film_height
 
     def set_params(self, scene):
         camera = self.bl_camera.data
         focal_length = camera.lens / 1000
 
-        aspect_ratio = self.get_frame_aspect_ratio(scene)
+        aspect_ratio = self._get_frame_aspect_ratio(scene)
 
-        film_width, film_height = self.calc_frame_dimensions(camera, aspect_ratio)
+        film_width, film_height = self._calc_frame_dimensions(camera, aspect_ratio)
 
         model = self.__as_camera.get_model()
 
@@ -133,7 +130,7 @@ class CameraTranslator(Translator):
                           'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
                           'shutter_close_end_time': scene.appleseed.shutter_close}
             if camera.appleseed.enable_autofocus:
-                cam_params['autofocus_target'] = self.find_auto_focus_point(scene)
+                cam_params['autofocus_target'] = self._find_auto_focus_point(scene)
                 cam_params['autofocus_enabled'] = True
 
         elif model == 'spherical_camera':
@@ -153,10 +150,10 @@ class CameraTranslator(Translator):
 
         self.__as_camera.set_parameters(cam_params)
 
-    def set_transform(self):
-        self.__as_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self.bl_camera.matrix_world))
+    def update_transform(self, subframe):
+        self._xform_seq.set_transform(subframe, self._convert_matrix(self.bl_camera.matrix_world))
 
-    def find_auto_focus_point(self, scene):
+    def _find_auto_focus_point(self, scene):
         cam = scene.camera
         co = scene.cursor_location
         co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
@@ -164,7 +161,17 @@ class CameraTranslator(Translator):
         logger.debug("2D Coords:{0} {1}".format(co_2d.x, y))
         return asr.Vector2f(co_2d.x, y)
 
-    def get_frame_aspect_ratio(self, scene):
+    def _calc_frame_dimensions(self, camera, aspect_ratio):
+        if camera.sensor_fit in ('AUTO', 'HORIZONTAL'):
+            film_width = camera.sensor_width / 1000
+            film_height = film_width / aspect_ratio
+        else:
+            film_height = camera.sensor_height / 1000
+            film_width = film_height * aspect_ratio
+
+        return film_width, film_height
+
+    def _get_frame_aspect_ratio(self, scene):
         render = scene.render
         scale = render.resolution_percentage / 100.0
         width = int(render.resolution_x * scale)

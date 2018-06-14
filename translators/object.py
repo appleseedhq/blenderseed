@@ -317,6 +317,9 @@ class MeshTranslator(ObjectTranslator):
             assembly.objects().insert(self.__mesh_object)
             assembly.object_instances().insert(obj_inst)
 
+    def update_transform(self, subframe):
+        self._xform_seq.set_transform(subframe, self._convert_matrix(self.bl_obj.matrix_world))
+
     #
     # Internal methods.
     #
