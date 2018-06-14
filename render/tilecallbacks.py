@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -26,7 +25,7 @@
 # THE SOFTWARE.
 #
 
-import bpy
+import time
 
 import appleseed as asr
 
@@ -34,6 +33,7 @@ from .. import util
 from ..logger import get_logger
 
 logger = get_logger()
+
 
 class FinalTileCallback(asr.ITileCallback):
     def __init__(self, engine, scene):
@@ -46,6 +46,8 @@ class FinalTileCallback(asr.ITileCallback):
         # Compute render resolution.
         (width, height) = util.get_render_resolution(self.__scene)
 
+        self.total_passes = self.__scene.appleseed.renderer_passes
+
         # Compute render window.
         if self.__scene.render.use_border:
             self.__min_x = int(self.__scene.render.border_min_x * width)
@@ -57,6 +59,13 @@ class FinalTileCallback(asr.ITileCallback):
             self.__min_y = 0
             self.__max_x = width - 1
             self.__max_y = height - 1
+
+        # Compute total pixel count.
+        self.total_pixels = (self.__max_x - self.__min_x + 1) * (self.__max_y - self.__min_y + 1) * self.total_passes
+
+        self.time_start = time.time()
+
+        self.rendered_pixels = 0
 
         pass
 
@@ -119,3 +128,9 @@ class FinalTileCallback(asr.ITileCallback):
         layer = result.layers[0].passes[0]
         layer.rect = pix
         self.__engine.end_result(result)
+
+        # Update progress bar.
+        self.rendered_pixels += take_x * take_y
+        self.__engine.update_progress(self.rendered_pixels / self.total_pixels)
+
+        self.__engine.update_stats("appleseed Rendering:", "")
