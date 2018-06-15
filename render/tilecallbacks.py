@@ -29,6 +29,7 @@ import time
 
 import appleseed as asr
 
+from math import ceil
 from .. import util
 from ..logger import get_logger
 
@@ -60,12 +61,22 @@ class FinalTileCallback(asr.ITileCallback):
             self.__max_x = width - 1
             self.__max_y = height - 1
 
+        # Compute number of tiles.
+        vertical_tiles = int(ceil((self.__max_y - self.__min_y + 1) / self.__scene.appleseed.tile_size))
+        horizontal_tiles = int(ceil((self.__max_x - self.__min_x + 1) / self.__scene.appleseed.tile_size))
+        self.total_tiles = vertical_tiles * horizontal_tiles
+        self.pass_number = 1
+        self.total_passes = self.__scene.appleseed.renderer_passes
+
         # Compute total pixel count.
         self.total_pixels = (self.__max_x - self.__min_x + 1) * (self.__max_y - self.__min_y + 1) * self.total_passes
 
         self.time_start = time.time()
 
         self.rendered_pixels = 0
+
+        # Total tiles.
+        self.rendered_tiles = 0
 
         pass
 
@@ -79,6 +90,39 @@ class FinalTileCallback(asr.ITileCallback):
         # logger.debug("Finished tile %s %s", tile_x, tile_y)
 
         image = frame.image()
+
+        x0, y0, take_x, take_y, skip_x, skip_y = self._get_tile_coordinates(image, tile_x, tile_y)
+
+        # Update image.
+        result = self.__engine.begin_result(x0, y0, take_x, take_y)
+        layer = result.layers[0].passes["Combined"]
+        pix = self._get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+        layer.rect = pix
+        if len(frame.aovs()) > 0:
+            self.__engine.update_result(result)
+            for aov in frame.aovs():
+                image = aov.get_image()
+                pix = self._get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+                layer = result.layers[0].passes[self._map_aovs(aov.get_name())]
+                layer.rect = pix
+                self.__engine.update_result(result)
+        self.__engine.end_result(result)
+
+        # Update progress bar.
+        self.rendered_pixels += take_x * take_y
+        self.__engine.update_progress(self.rendered_pixels / self.total_pixels)
+
+        # Update stats.
+        seconds_per_pixel = (time.time() - self.time_start) / self.rendered_pixels
+        remaining_seconds = (self.total_pixels - self.rendered_pixels) * seconds_per_pixel
+        if self.rendered_tiles == self.total_tiles:
+            self.pass_number += 1
+            self.rendered_tiles = 0
+        self.rendered_tiles += 1
+        self.__engine.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.pass_number, self.total_passes, self.rendered_tiles, self.total_tiles),
+                          "Time Remaining: {0}".format(self._format_seconds_to_hhmmss(remaining_seconds)))
+
+    def _get_tile_coordinates(self, image, tile_x, tile_y):
         properties = image.properties()
 
         x = tile_x * properties.m_tile_width
@@ -88,7 +132,6 @@ class FinalTileCallback(asr.ITileCallback):
 
         tile_w = tile.get_width()
         tile_h = tile.get_height()
-        tile_c = tile.get_channel_count()
 
         # Ignore tiles completely outside the render window.
         if tile_x > self.__max_x or tile_x + tile_w - 1 < self.__min_x:
@@ -110,27 +153,48 @@ class FinalTileCallback(asr.ITileCallback):
         take_x = ix1 - ix0 + 1
         take_y = iy1 - iy0 + 1
 
-        # Extract relevant tile data and convert them to the format expected by Blender.
+        # Window-space coordinates of the intersection between the tile and the render window.
+        x0 = ix0 - self.__min_x  # left
+        y0 = self.__max_y - iy1  # bottom
+
+        return x0, y0, take_x, take_y, skip_x, skip_y
+
+    def _get_pixels(self, image, tile_x, tile_y, take_x, take_y, skip_x, skip_y):
+        tile = image.tile(tile_x, tile_y)
+        tile_w = tile.get_width()
+        tile_c = tile.get_channel_count()
+
         floats = tile.get_storage()
 
         pix = []
         for y in range(take_y - 1, -1, -1):
             start_pix = (skip_y + y) * tile_w + skip_x
             end_pix = start_pix + take_x
-            pix.extend(floats[p * 4:p * 4 + 4] for p in range(start_pix, end_pix))
+            pix.extend(floats[p * tile_c:p * tile_c + tile_c] for p in range(start_pix, end_pix))
 
-        # Window-space coordinates of the intersection between the tile and the render window.
-        x0 = ix0 - self.__min_x  # left
-        y0 = self.__max_y - iy1  # bottom
+        return pix
 
-        # Update image.
-        result = self.__engine.begin_result(x0, y0, take_x, take_y)
-        layer = result.layers[0].passes[0]
-        layer.rect = pix
-        self.__engine.end_result(result)
+    @staticmethod
+    def _format_seconds_to_hhmmss(seconds):
+        hours = seconds // (60 * 60)
+        seconds %= (60 * 60)
+        minutes = seconds // 60
+        seconds %= 60
+        return "%02i:%02i:%02i" % (hours, minutes, seconds)
 
-        # Update progress bar.
-        self.rendered_pixels += take_x * take_y
-        self.__engine.update_progress(self.rendered_pixels / self.total_pixels)
+    @staticmethod
+    def _map_aovs(aov_name):
 
-        self.__engine.update_stats("appleseed Rendering:", "")
+        aov_mapping = {'beauty': "Combined",
+                       'diffuse': "Diffuse",
+                       'direct_diffuse': "Direct Diffuse",
+                       'indirect_diffuse': "Indirect Diffuse",
+                       'glossy': "Glossy",
+                       'direct_glossy': "Direct Glossy",
+                       'indirect_glossy': "Indirect Glossy",
+                       'normal': "Normal",
+                       'uv': "UV",
+                       'pixel_time': "Pixel Time",
+                       'depth': "Z Depth"}
+
+        return aov_mapping[aov_name]
