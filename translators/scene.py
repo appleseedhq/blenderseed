@@ -191,31 +191,34 @@ class SceneTranslator(GroupTranslator):
         for x in self.__group_translators.values():
             x.create_entities(self.bl_scene)
 
-        # Motion Blur
-        if self.export_mode is not ProjectExportMode.INTERACTIVE_RENDER:
-            asr_blur_props = self.bl_scene.appleseed
-            current_frame = self.bl_scene.frame_current
-            if asr_blur_props.enable_camera_blur:
-                logger.debug("Sampling camera motion blur")
-                subframe, subframe_step = self._get_subframes(asr_blur_props, asr_blur_props.camera_blur_samples)
-                for x in range(asr_blur_props.camera_blur_samples + 1):
-                    self.bl_scene.frame_set(current_frame, subframe=subframe)
-                    for x in self.__camera_translators.values():
-                        x.update_transform(subframe)
-                        logger.debug("Sample taken for frame %s, subframe %s" % (current_frame, subframe))
-                    subframe += subframe_step
-                self.bl_scene.frame_set(current_frame)
-
-            if asr_blur_props.enable_object_blur:
-                logger.debug("Sampling object motion blur")
-                subframe, subframe_step = self._get_subframes(asr_blur_props, asr_blur_props.object_blur_samples)
-                for x in range(asr_blur_props.object_blur_samples + 1):
-                    self.bl_scene.frame_set(current_frame, subframe=subframe)
-                    for x in self._object_translators.values():
-                        x.update_transform(subframe)
-                        logger.debug("Sample taken for frame %s, subframe %s" % (current_frame, subframe))
-                    subframe += subframe_step
-                self.bl_scene.frame_set(current_frame)
+        # Determine xform subframes for motion blur
+        all_times = set()
+        cam_times = set()
+        obj_times = set()
+        shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
+        if self.bl_scene.appleseed.enable_camera_blur:
+            cam_segment = shutter_length / self.bl_scene.appleseed.camera_blur_samples
+            for seg in range(1, self.bl_scene.appleseed.camera_blur_samples):
+                cam_times.update({self.bl_scene.appleseed.shutter_open + (seg * cam_segment)})
+            cam_times.update({self.bl_scene.appleseed.shutter_close})
+            all_times.update(cam_times)
+        if self.bl_scene.appleseed.enable_object_blur:
+            obj_segment = shutter_length / self.bl_scene.appleseed.object_blur_samples
+            for seg in range(1, self.bl_scene.appleseed.object_blur_samples):
+                obj_times.update({self.bl_scene.appleseed.shutter_open + (seg * obj_segment)})
+            obj_times.update({self.bl_scene.appleseed.shutter_close})
+            all_times.update(obj_times)
+        all_times = sorted(list(all_times))
+        current_frame = self.bl_scene.frame_current
+        for time in all_times:
+            self.bl_scene.frame_set(current_frame, subframe=time)
+            if time in cam_times:
+                for x in self.__camera_translators.values():
+                    x.set_transform_key(time)
+            if time in obj_times:
+                for x in self._object_translators.values():
+                    x.set_transform_key(time)
+        self.bl_scene.frame_set(current_frame)
 
         # Insert appleseed entities into the project.
         if self.__world_translator:
@@ -231,12 +234,6 @@ class SceneTranslator(GroupTranslator):
 
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
-
-    def _get_subframes(self, asr_blur_props, sample_mode):
-        subframe = asr_blur_props.shutter_open
-        subframe_step = (asr_blur_props.shutter_close - asr_blur_props.shutter_open) / sample_mode
-
-        return subframe, subframe_step
 
     def write_project(self, filename):
         '''Write the appleseed project.'''
