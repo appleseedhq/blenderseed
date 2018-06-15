@@ -134,8 +134,8 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        object = context.object
-        material = object.active_material
+        obj = context.object
+        material = obj.active_material
         asr_mat = material.appleseed
 
         if material.appleseed.osl_node_tree is None:
