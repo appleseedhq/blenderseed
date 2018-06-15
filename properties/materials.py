@@ -50,11 +50,12 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                     description="",
                                                     min=1,
                                                     soft_max=1000,
-                                                    default=1)
+                                                    default=1,
+                                                    update=refresh_preview)
 
     preview_quality = bpy.props.IntProperty(name="preview_quality",
                                             description="Number of samples used for preview rendering",
-                                            default=2,
+                                            default=3,
                                             min=1,
                                             max=16,
                                             update=refresh_preview)
