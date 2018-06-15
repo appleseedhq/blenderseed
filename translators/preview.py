@@ -207,8 +207,7 @@ class PreviewRenderer(object):
 
     def _set_frame(self, scene):
         width, height = util.get_render_resolution(scene)
-        if width <= 96:
-            return
+
         frame_params = {
             'resolution': asr.Vector2i(width, height),
             'camera': "preview_camera"}
