@@ -150,8 +150,8 @@ class CameraTranslator(Translator):
 
         self.__as_camera.set_parameters(cam_params)
 
-    def update_transform(self, subframe):
-        self._xform_seq.set_transform(subframe, self._convert_matrix(self.bl_camera.matrix_world))
+    def set_transform_key(self, time):
+        self._xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
     def _find_auto_focus_point(self, scene):
         cam = scene.camera
