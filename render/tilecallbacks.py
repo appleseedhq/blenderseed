@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2018 Esteban Tovagliari.
+# Copyright (c) 2018 Esteban Tovagliari, The appleseedhq Organization.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -78,8 +78,6 @@ class FinalTileCallback(asr.ITileCallback):
         # Total tiles.
         self.rendered_tiles = 0
 
-        pass
-
     def on_tiled_frame_end(self, frame):
         pass
 
@@ -91,19 +89,19 @@ class FinalTileCallback(asr.ITileCallback):
 
         image = frame.image()
 
-        x0, y0, take_x, take_y, skip_x, skip_y = self._get_tile_coordinates(image, tile_x, tile_y)
+        x0, y0, take_x, take_y, skip_x, skip_y = self.__get_tile_coordinates(image, tile_x, tile_y)
 
         # Update image.
         result = self.__engine.begin_result(x0, y0, take_x, take_y)
         layer = result.layers[0].passes["Combined"]
-        pix = self._get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+        pix = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
         layer.rect = pix
         if len(frame.aovs()) > 0:
             self.__engine.update_result(result)
             for aov in frame.aovs():
                 image = aov.get_image()
-                pix = self._get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
-                layer = result.layers[0].passes[self._map_aovs(aov.get_name())]
+                pix = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+                layer = result.layers[0].passes[self.__map_aovs(aov.get_name())]
                 layer.rect = pix
                 self.__engine.update_result(result)
         self.__engine.end_result(result)
@@ -120,9 +118,9 @@ class FinalTileCallback(asr.ITileCallback):
             self.rendered_tiles = 0
         self.rendered_tiles += 1
         self.__engine.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.pass_number, self.total_passes, self.rendered_tiles, self.total_tiles),
-                          "Time Remaining: {0}".format(self._format_seconds_to_hhmmss(remaining_seconds)))
+                          "Time Remaining: {0}".format(self.__format_seconds_to_hhmmss(remaining_seconds)))
 
-    def _get_tile_coordinates(self, image, tile_x, tile_y):
+    def __get_tile_coordinates(self, image, tile_x, tile_y):
         properties = image.properties()
 
         x = tile_x * properties.m_tile_width
@@ -159,7 +157,7 @@ class FinalTileCallback(asr.ITileCallback):
 
         return x0, y0, take_x, take_y, skip_x, skip_y
 
-    def _get_pixels(self, image, tile_x, tile_y, take_x, take_y, skip_x, skip_y):
+    def __get_pixels(self, image, tile_x, tile_y, take_x, take_y, skip_x, skip_y):
         tile = image.tile(tile_x, tile_y)
         tile_w = tile.get_width()
         tile_c = tile.get_channel_count()
@@ -175,7 +173,7 @@ class FinalTileCallback(asr.ITileCallback):
         return pix
 
     @staticmethod
-    def _format_seconds_to_hhmmss(seconds):
+    def __format_seconds_to_hhmmss(seconds):
         hours = seconds // (60 * 60)
         seconds %= (60 * 60)
         minutes = seconds // 60
@@ -183,7 +181,7 @@ class FinalTileCallback(asr.ITileCallback):
         return "%02i:%02i:%02i" % (hours, minutes, seconds)
 
     @staticmethod
-    def _map_aovs(aov_name):
+    def __map_aovs(aov_name):
 
         aov_mapping = {'beauty': "Combined",
                        'diffuse': "Diffuse",
