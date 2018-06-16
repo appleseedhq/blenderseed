@@ -188,6 +188,10 @@ class GroupTranslator(Translator):
             for x in t.values():
                 x.create_entities(scene)
 
+    def set_transform_key(self, time):
+        for x in self._object_translators.values():
+            x.set_transform_key(time)
+
     def _do_flush_entities(self, assembly):
         for t in self.all_translators:
             for x in t.values():
