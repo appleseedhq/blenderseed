@@ -30,7 +30,8 @@ from .translator import Translator, ObjectKey, ProjectExportMode
 
 from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
-from .object import MeshTranslator, InstanceTranslator
+from .object import InstanceTranslator
+from .mesh import MeshTranslator
 from ..util import inscenelayer
 
 import appleseed as asr
@@ -148,7 +149,7 @@ class GroupTranslator(Translator):
                 logger.debug("Creating lamp translator for object %s of type %s", obj_key, obj.data.type)
 
                 if obj.data.type == 'AREA':
-                    self._lamp_translators[obj_key] = AreaLampTranslator(obj)
+                    self._lamp_translators[obj_key] = AreaLampTranslator(obj, self.export_mode)
                 else:
                     self._lamp_translators[obj_key] = LampTranslator(obj)
                 if obj.data.appleseed.osl_node_tree is not None:

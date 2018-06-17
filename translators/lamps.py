@@ -30,7 +30,7 @@ import math
 import appleseed as asr
 import mathutils
 
-from .translator import Translator
+from .translator import Translator, ProjectExportMode
 from ..logger import get_logger
 
 logger = get_logger()
@@ -151,12 +151,11 @@ class AreaLampTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, lamp):
+    def __init__(self, lamp, export_mode):
         super(AreaLampTranslator, self).__init__(lamp)
+        self.__export_mode = export_mode
         self.__lamp_shader_group = None
-        self.__as_shader = None
         self.__edf_mat = None
-        self.__null_mat = None
 
     #
     # Properties.
@@ -192,14 +191,19 @@ class AreaLampTranslator(Translator):
             shape_params['resolution_u'] = 12
             shape_params['resolution_v'] = 12
 
-        self.__as_area_mesh = asr.MeshObject(self.bl_lamp.name + "_mesh", shape_params)
+        mesh_name = self.bl_lamp.name + "_mesh"
+
+        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+            self.__as_area_mesh = asr.MeshObject(mesh_name, shape_params)
+        else:
+            self.__as_area_mesh = asr.create_primitive_mesh(mesh_name, shape_params)
 
         # Create area light object instance, set visibility flags
         lamp_inst_params = {'visibility': {'camera': False}} if not as_lamp_data.area_visibility else {}
 
-        self.__as_area_mesh_inst = asr.ObjectInstance(self.bl_lamp.name + '_inst', lamp_inst_params, self.bl_lamp.name + "_mesh",
+        self.__as_area_mesh_inst = asr.ObjectInstance(self.bl_lamp.name + '_inst', lamp_inst_params, mesh_name,
                                                       self._convert_matrix(self.bl_lamp.matrix_world),
-                                                      {"default": self.bl_lamp.name}, {"default": "null_material"})
+                                                      {"default": self.bl_lamp.name}, {"default": "__null_material"})
 
         # Emit basic lamp shader group
         if lamp_data.appleseed.osl_node_tree is None:
@@ -215,26 +219,17 @@ class AreaLampTranslator(Translator):
             self.__lamp_shader_group.add_shader("shader", "as_blender_areaLight", "asAreaLight", lamp_params)
             self.__lamp_shader_group.add_shader("surface", "as_closure2surface", "asClosure2Surface", {})
             self.__lamp_shader_group.add_connection("asAreaLight", "out_output", "asClosure2Surface", "in_input")
-            osl_params = {'osl_surface': shader_name,
-                          'surface_shader': "{0}_surface_shader".format(self.bl_lamp.name)}
 
             # Emit are lamp material and surface shader.
-            self.__edf_mat = asr.Material('osl_material', self.bl_lamp.name, osl_params)
-
-            self.__null_mat = asr.Material('generic_material', "null_material", {})
-
-            self.__as_shader = asr.SurfaceShader("physical_surface_shader",
-                                                 "{0}_surface_shader".format(self.bl_lamp.name), {})
+            self.__edf_mat = asr.Material('osl_material', self.bl_lamp.name, {'osl_surface': shader_name})
 
     def flush_entities(self, assembly):
         assembly.objects().insert(self.__as_area_mesh)
         assembly.object_instances().insert(self.__as_area_mesh_inst)
-        if self.__as_shader is not None:
-            assembly.surface_shaders().insert(self.__as_shader)
+
         if self.__edf_mat is not None:
             assembly.materials().insert(self.__edf_mat)
-        if self.__null_mat is not None:
-            assembly.materials().insert(self.__null_mat)
+
         if self.__lamp_shader_group is not None:
             assembly.shader_groups().insert(self.__lamp_shader_group)
 

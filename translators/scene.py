@@ -371,16 +371,23 @@ class SceneTranslator(GroupTranslator):
         assembly_inst.transform_sequence().set_transform(0.0, asr.Transformd(asr.Matrix4d.identity()))
         self.__project.get_scene().assembly_instances().insert(assembly_inst)
 
-        # Export default material for objects without a node tree
+        # Create default materials.
         self.__create_default_material()
+        self.__create_null_material()
 
     def __create_default_material(self):
         logger.debug("Creating default material")
 
-        surface_shader = asr.SurfaceShader("diagnostic_surface_shader", "default_surface_shader", {'mode': 'facing_ratio'})
-        material = asr.Material('generic_material', "default_material", {'surface_shader': 'default_surface_shader'})
+        surface_shader = asr.SurfaceShader("diagnostic_surface_shader", "__default_surface_shader", {'mode': 'facing_ratio'})
+        material = asr.Material('generic_material', "__default_material", {'surface_shader': '__default_surface_shader'})
 
         self.__main_assembly.surface_shaders().insert(surface_shader)
+        self.__main_assembly.materials().insert(material)
+
+    def __create_null_material(self):
+        logger.debug("Creating null material")
+
+        material = asr.Material('generic_material', "__null_material", {})
         self.__main_assembly.materials().insert(material)
 
     def __translate_render_settings(self):
