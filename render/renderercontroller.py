@@ -39,6 +39,7 @@ class RendererController(asr.IRendererController):
 
     def on_rendering_begin(self):
         logger.debug("Starting Render")
+        self.__engine.update_stats("appleseed Rendering: Creating scene", "Time Remaining: Unknown")
 
     def on_rendering_success(self):
         logger.debug("Render Finished")
