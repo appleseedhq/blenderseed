@@ -58,10 +58,6 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
             row.operator("render.render", text="Render", icon='RENDER_STILL')
             row.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
 
-            if asr_scene_data.scene_export_mode == "export_render":
-                row = layout.row()
-                row.prop(asr_scene_data, "export_path", text="Export Path")
-
             split = layout.split(percentage=0.33)
             split.label(text="Display:")
             row = split.row(align=True)
@@ -86,13 +82,6 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         row = col.row(align=True)
         row.enabled = not asr_scene_props.threads_auto
         row.prop(asr_scene_props, "threads", text="Threads")
-
-        col = layout.column(align=True)
-        col.prop(asr_scene_props, "generate_mesh_files", text="Export Geometry", toggle=True)
-        row = col.row(align=True)
-        row.enabled = asr_scene_props.generate_mesh_files
-        row.prop(asr_scene_props, "export_mode", text="")
-        col.prop(asr_scene_props, "clean_cache", text="Delete Cache", toggle=True)
 
         layout.separator()
 

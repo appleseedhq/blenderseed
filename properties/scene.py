@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -38,18 +37,7 @@ try:
 except:
     threads = 1
     max_threads = 32
-
-
-def scene_enumerator(self, context):
-    matches = []
-    for scene in bpy.data.scenes:
-        matches.append((scene.name, scene.name, ""))
-    return matches
-
-
-def camera_enumerator(self, context):
-    return object_enumerator('CAMERA')
-
+    
 
 class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(name="Texture",
@@ -59,9 +47,9 @@ class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
     input_space = bpy.props.EnumProperty(name="Input Color Space",
                                          description="The color space of the file.  PNG, JPG and TIFF files are usually sRGB, EXR is normally linear",
                                          items=[
-                                              ('linear', "Linear", ""),
-                                              ('sRGB', "sRGB", ""),
-                                              ('Rec709', "Rec.709", "")],
+                                             ('linear', "Linear", ""),
+                                             ('sRGB', "sRGB", ""),
+                                             ('Rec709', "Rec.709", "")],
                                          default='linear')
 
     output_depth = bpy.props.EnumProperty(name="Output Bit Depth",
@@ -118,13 +106,8 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                description="",
                                                items=[
                                                    ('render', "Render", ""),
-                                                   ('export_only', "Export Scene Files", ""),
-                                                   ('export_render', "Export Scene Files and Render", "")],
+                                                   ('export_only', "Export Scene Files", "")],
                                                default='render')
-
-    export_path = bpy.props.StringProperty(name="export_path",
-                                           default="",
-                                           subtype="FILE_PATH")
 
     threads_auto = bpy.props.BoolProperty(name="threads_auto",
                                           description="Automatically determine the number of rendering threads",
@@ -139,21 +122,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     tex_cache = bpy.props.IntProperty(name="tex_cache",
                                       description="Size of the texture cache in MB",
                                       default=1024)
-
-    generate_mesh_files = bpy.props.BoolProperty(name="Export Geometry",
-                                                 description="Write geometry to disk as .obj files",
-                                                 default=True)
-
-    export_mode = bpy.props.EnumProperty(name="Export Mode",
-                                         description="Geometry export mode",
-                                         items=[('all', "All", "Export all geometry, overwriting existing .obj files"),
-                                                ('partial', "Partial", "Only export geometry that has not been written to disk"),
-                                                ('selected', "Selected", "Only export selected geometry")],
-                                         default='all')
-
-    clean_cache = bpy.props.BoolProperty(name="clean_cache",
-                                         description="Delete external files after rendering completes",
-                                         default=False)
 
     export_hair = bpy.props.BoolProperty(name="export_hair",
                                          description="Export hair particle systems as renderable geometry",
@@ -445,18 +413,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                          default=0.7,
                                          min=0.0,
                                          max=1.0)
-
-    # Miscellaneous settings.
-
-    light_mats_radiance_multiplier = bpy.props.FloatProperty(name="light_mats_radiance_multiplier",
-                                                             description="Multiply the exitance of light-emitting materials by this factor",
-                                                             min=0.0,
-                                                             max=100.0,
-                                                             default=1.0)
-
-    export_emitting_obj_as_lights = bpy.props.BoolProperty(name="export_emitting_obj_as_lights",
-                                                           description="Export objects with light-emitting materials as mesh (area) lights",
-                                                           default=True)
 
     # Denoiser settings
 
