@@ -511,10 +511,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 default=False)
 
     enable_deformation_blur = bpy.props.BoolProperty(name="enable_deformation_blur",
-                                                     description="Global toggle for rendering of deformation motion blur. Warning: objects with deformation motion blur enabled will add to export time.",
+                                                     description="Global toggle for rendering of deformation motion blur",
                                                      default=False)
 
-    deformation_blur_samples = bpy.props.IntProperty(name="object_blur_samples",
+    deformation_blur_samples = bpy.props.IntProperty(name="deformation_blur_samples",
                                                      min=2,
                                                      default=2)
 
@@ -523,16 +523,16 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 default=False)
 
     object_blur_samples = bpy.props.IntProperty(name="object_blur_samples",
-                                                min=1,
-                                                default=1)
+                                                min=2,
+                                                default=2)
 
     enable_camera_blur = bpy.props.BoolProperty(name="enable_camera_blur",
                                                 description="Enable rendering of camera motion blur",
                                                 default=False)
 
     camera_blur_samples = bpy.props.IntProperty(name="camera_blur_samples",
-                                                min=1,
-                                                default=1)
+                                                min=2,
+                                                default=2)
 
     shutter_open = bpy.props.FloatProperty(name="shutter_open",
                                            description="Shutter open time (relative to start of current frame)",
