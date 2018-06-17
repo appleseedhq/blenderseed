@@ -69,6 +69,16 @@ class ObjectTranslator(Translator):
     def add_instance(self):
         self._num_instances += 1
 
+    #
+    # Entity translation.
+    #
+
+    def set_transform_key(self, time, key_times):
+        self._xform_seq.set_transform(time, self._convert_matrix(self.bl_obj.matrix_world))
+
+    def set_deform_key(self, time, key_times):
+        pass
+
 
 class MeshTranslator(ObjectTranslator):
 
@@ -82,6 +92,8 @@ class MeshTranslator(ObjectTranslator):
         self.__export_mode = export_mode
         self.__geom_dir = geom_directory
         self.__mesh_filenames = []
+
+        self.__first_deform_key = True
 
         # Materials
         self.__front_materials = {}
@@ -224,6 +236,12 @@ class MeshTranslator(ObjectTranslator):
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             self.__write_mesh(mesh_key)
 
+    def set_deform_key(self, time, key_times):
+        if self.__first_deform_key:
+            # The first deform key is always saved in create_entities.
+            self.__first_deform_key == False
+            return
+
     def flush_entities(self, assembly):
         asr_obj_props = self.bl_obj.appleseed
         mesh_name = self.__mesh_object.get_name()
@@ -316,9 +334,6 @@ class MeshTranslator(ObjectTranslator):
 
             assembly.objects().insert(self.__mesh_object)
             assembly.object_instances().insert(obj_inst)
-
-    def set_transform_key(self, time):
-        self._xform_seq.set_transform(time, self._convert_matrix(self.bl_obj.matrix_world))
 
     #
     # Internal methods.

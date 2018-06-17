@@ -195,26 +195,47 @@ class SceneTranslator(GroupTranslator):
         all_times = set()
         cam_times = set()
         xform_times = set()
-        shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
-        if self.bl_scene.appleseed.enable_camera_blur:
-            cam_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples)
-        all_times.update(cam_times)
-        if self.bl_scene.appleseed.enable_object_blur:
-            xform_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples)
-        all_times.update(xform_times)
-        all_times = sorted(list(all_times))
+        deform_times = set()
+
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
+            if self.bl_scene.appleseed.enable_camera_blur:
+                cam_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples)
+            all_times.update(cam_times)
+
+            if self.bl_scene.appleseed.enable_object_blur:
+                xform_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples)
+            all_times.update(xform_times)
+
+            if self.bl_scene.appleseed.enable_deformation_blur:
+                deform_times = self.__get_subframes(shutter_length, self.__round_up_pow2(self.bl_scene.appleseed.deformation_blur_samples))
+            all_times.update(deform_times)
+
+            all_times = sorted(list(all_times))
+
         current_frame = self.bl_scene.frame_current
+
         for time in all_times:
             self.bl_scene.frame_set(current_frame, subframe=time)
+
             if time in cam_times:
                 for x in self.__camera_translators.values():
-                    x.set_transform_key(time)
+                    x.set_transform_key(time, cam_times)
+
             if time in xform_times:
-                self.set_transform_key(time)
-            if len(self.__group_translators) > 0:
+                self.set_transform_key(time, xform_times)
+
                 for x in self.__group_translators.values():
-                    x.set_transform_key(time)
-        self.bl_scene.frame_set(current_frame)
+                    x.set_transform_key(time, xform_times)
+
+            if time in deform_times:
+                self.set_deform_key(time, deform_times)
+
+                for x in self.__group_translators.values():
+                    x.set_deform_key(time, deform_times)
+
+        if self.bl_scene.frame_current != current_frame:
+            self.bl_scene.frame_set(current_frame)
 
         # Insert appleseed entities into the project.
         if self.__world_translator:
@@ -312,6 +333,10 @@ class SceneTranslator(GroupTranslator):
             times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
 
         return times
+
+    def __round_up_pow2(self, x):
+        assert(x >= 2)
+        return 1 << (x - 1).bit_length()
 
     def __create_project(self):
         """
