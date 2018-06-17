@@ -155,6 +155,15 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Export and render the scene.
         """
 
+        # if scene.appleseed.scene_export_mode == "export_render":
+            # export_path = scene.appleseed.export_path
+            # scene_translator = SceneTranslator.create_project_export_translator(scene, export_path)
+            # scene_translator.translate_scene()
+            # scene_translator.write_project(export_path)
+            #
+            # appleseed_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "appleseed", "schemas")
+            # schema_path = os.path.join(appleseed_dir, "project.xsd")
+            # project = asr.ProjectFileReader.read(export_path, schema_path, asr.ProjectFileReaderOptions.Defaults)
 
         scene_translator = SceneTranslator.create_final_render_translator(scene)
         scene_translator.translate_scene()

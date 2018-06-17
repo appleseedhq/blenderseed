@@ -57,8 +57,12 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
             row = layout.row(align=True)
             row.operator("render.render", text="Render", icon='RENDER_STILL')
             row.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
-            split = layout.split(percentage=0.33)
 
+            if asr_scene_data.scene_export_mode == "export_render":
+                row = layout.row()
+                row.prop(asr_scene_data, "export_path", text="Export Path")
+
+            split = layout.split(percentage=0.33)
             split.label(text="Display:")
             row = split.row(align=True)
             row.prop(rd, "display_mode", text="")
