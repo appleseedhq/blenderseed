@@ -197,10 +197,10 @@ class SceneTranslator(GroupTranslator):
         xform_times = set()
         shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
         if self.bl_scene.appleseed.enable_camera_blur:
-            cam_times = self.__get_times(shutter_length, self.bl_scene.appleseed.camera_blur_samples)
+            cam_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples)
         all_times.update(cam_times)
         if self.bl_scene.appleseed.enable_object_blur:
-            xform_times = self.__get_times(shutter_length, self.bl_scene.appleseed.object_blur_samples)
+            xform_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples)
         all_times.update(xform_times)
         all_times = sorted(list(all_times))
         current_frame = self.bl_scene.frame_current
@@ -230,14 +230,6 @@ class SceneTranslator(GroupTranslator):
 
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
-
-    def __get_times(self, shutter_length, samples):
-        times = set()
-        segment_size = shutter_length / self.bl_scene.appleseed.camera_blur_samples
-        for seg in range(1, samples + 1):
-            times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
-
-        return times
 
     def write_project(self, filename):
         '''Write the appleseed project.'''
@@ -312,6 +304,14 @@ class SceneTranslator(GroupTranslator):
         logger.debug("Creating world translator")
 
         self.__world_translator = WorldTranslator(self.bl_scene)
+
+    def __get_subframes(self, shutter_length, samples):
+        times = set()
+        segment_size = shutter_length / self.bl_scene.appleseed.camera_blur_samples
+        for seg in range(1, samples + 1):
+            times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
+
+        return times
 
     def __create_project(self):
         """
