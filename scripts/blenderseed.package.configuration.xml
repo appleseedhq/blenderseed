@@ -4,6 +4,9 @@
          Example values: win64, linux64, mac64, etc. -->
     <platform>win64</platform>
 
+    <!-- The path to the appleseed source package that files will be copied from. -->
+    <appleseed_source_path>C:\appleseed\archives\releases\appleseed</appleseed_source_path>
+
     <!-- The path to appleseed binaries. -->
     <appleseed_bin_path>$APPLESEED/bin</appleseed_bin_path>
 
@@ -25,6 +28,6 @@
     <!-- The path to the maketx binary. -->
     <maketx_path>$APPLESEED/bin/maketx</maketx_path>
 
-    <!-- The directory inside which the temporary archive file will be created. -->
-    <package_temp_dir>C:/Users/jdent/Desktop/blenderseed_temp</package_temp_dir>
+    <!-- The directory inside which the archive file will be created. -->
+    <output_dir>C:\appleseed\archives\blenderseed</output_dir>
 </configuration>

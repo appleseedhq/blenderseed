@@ -143,10 +143,13 @@ class Settings:
             fatal("Failed to load configuration file '" + SETTINGS_FILENAME + "'")
         self.__load_values(tree)
 
+        os.environ['APPLESEED'] = self.appleseed_source_path
+
         self.print_summary()
 
     def __load_values(self, tree):
         self.platform = self.__get_required(tree, "platform")
+        self.appleseed_source_path = self.__get_required(tree, "appleseed_source_path")
         self.appleseed_bin_path = self.__get_required(tree, "appleseed_bin_path")
         self.appleseed_lib_path = self.__get_required(tree, "appleseed_lib_path")
         self.appleseed_shaders_path = self.__get_required(tree, "appleseed_shaders_path")
@@ -154,7 +157,8 @@ class Settings:
         self.appleseed_settings_path = self.__get_required(tree, "appleseed_settings_path")
         self.appleseed_python_path = self.__get_required(tree, "appleseed_python_path")
         self.maketx_path = self.__get_required(tree, "maketx_path")
-        self.package_temp_dir = self.__get_required(tree, "package_temp_dir")
+        self.output_dir = self.__get_required(tree, "output_dir")
+        self.package_temp_dir = os.path.join(self.output_dir, "blenderseed_build")
 
     def __get_required(self, tree, key):
         value = tree.findtext(key)
@@ -165,6 +169,7 @@ class Settings:
     def print_summary(self):
         print("")
         print("  Platform:                        " + self.platform)
+        print("  Path to appleseed source:        " + self.appleseed_source_path)
         print("  Path to appleseed binaries:      " + self.appleseed_bin_path)
         print("  Path to appleseed libraries:     " + self.appleseed_lib_path)
         print("  Path to appleseed shaders:       " + self.appleseed_shaders_path)
@@ -172,7 +177,7 @@ class Settings:
         print("  Path to appleseed settings:      " + self.appleseed_settings_path)
         print("  Path to appleseed.python:        " + self.appleseed_python_path)
         print("  Path to maketx:                  " + self.maketx_path)
-        print("  Output directory:                " + self.package_temp_dir)
+        print("  Output directory:				  " + self.output_dir)
         print("")
 
 
@@ -182,10 +187,9 @@ class Settings:
 
 class PackageBuilder(object):
 
-    def __init__(self, settings, package_version=None, save_temp=False):
+    def __init__(self, settings, package_version=None, no_release=False):
         self.settings = settings
         self.package_version = package_version
-        self.save_temp = save_temp
 
     def build_package(self):
         print("Building package:")
@@ -195,23 +199,14 @@ class PackageBuilder(object):
         print("The package was successfully built.")
 
     def orchestrate(self):
-        progress("Removing leftovers from previous invocations")
-        safe_delete_directory(self.settings.package_temp_dir)
-
-        progress("Creating deployment directory")
-        safe_make_directory(self.settings.package_temp_dir)
-        safe_make_directory(os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed"))
-
-        progress("Copying license")
-        shutil.copy(os.path.join(self.settings.root_dir, "LICENSE.txt"), os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed"))
 
         progress("Copying appleseed.python")
-        python_dir = os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed", "lib")
+        python_dir = os.path.join(self.settings.root_dir, "appleseed", "lib")
         safe_make_directory(python_dir)
-        dir_util.copy_tree(os.path.expandvars(self.settings.appleseed_python_path), os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed", "lib"))
+        dir_util.copy_tree(os.path.expandvars(self.settings.appleseed_python_path), python_dir)
 
         progress("Removing pyc files")
-        for root, dirs, files in os.walk(os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed", "lib")):
+        for root, dirs, files in os.walk(os.path.join(self.settings.root_dir, "appleseed", "lib")):
             for f in files:
                 if f.endswith(".pyc"):
                     safe_delete_file(os.path.join(root, f))
@@ -220,8 +215,8 @@ class PackageBuilder(object):
         self.copy_binaries()
 
         progress("Copying schemas")
-        dir_util.copy_tree(os.path.expandvars(self.settings.appleseed_schemas_path), os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed", "schemas"))
-        safe_delete_file(os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed", "schemas", ".gitignore"))
+        dir_util.copy_tree(os.path.expandvars(self.settings.appleseed_schemas_path), os.path.join(self.settings.root_dir, "appleseed", "schemas"))
+        safe_delete_file(os.path.join(self.settings.root_dir, "appleseed", "schemas", ".gitignore"))
 
         progress("Downloading settings files")
         self.download_settings()
@@ -229,27 +224,33 @@ class PackageBuilder(object):
         progress("Copying shaders")
         self.copy_shaders()
 
-        progress("Copying blenderseed")
-        self.copy_blenderseed()
-
-        progress("Cleaning project")
-        self.clean_project()
-
         progress("Copying dependencies")
         self.copy_dependencies()
 
         progress("Post-processing package")
         self.post_process_package()
 
+        progress("Removing leftovers from previous invocations")
+        safe_delete_directory(self.settings.package_temp_dir)
+
+        progress("Creating deployment directory")
+        safe_make_directory(self.settings.package_temp_dir)
+        safe_make_directory(os.path.join(self.settings.package_temp_dir, "blenderseed"))
+
+        progress("Copying blenderseed")
+        self.copy_blenderseed()
+
+        progress("Cleaning project")
+        self.clean_project()
+
         progress("Building final zip file")
         self.build_final_zip_file()
 
-        if not self.save_temp:
-            progress("Deleting Temp Output")
-            self.delete_stage_dir()
+        progress("Deleting Temp Output")
+        self.delete_stage_dir()
 
     def copy_binaries(self):
-        bin_dir = os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed", "bin")
+        bin_dir = os.path.join(self.settings.root_dir, "appleseed", "bin")
         safe_make_directory(bin_dir)
 
         binaries_to_copy = [exe("appleseed.cli")]
@@ -259,7 +260,7 @@ class PackageBuilder(object):
         shutil.copy(os.path.expandvars(exe(self.settings.maketx_path)), bin_dir)
 
     def download_settings(self):
-        settings_dir = os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed", "settings")
+        settings_dir = os.path.join(self.settings.root_dir, "appleseed", "settings")
         safe_make_directory(settings_dir)
 
         settings_to_download = ["appleseed.cli.xml"]
@@ -269,7 +270,7 @@ class PackageBuilder(object):
                 os.path.join(settings_dir, file))
 
     def copy_shaders(self):
-        shaders_dir = os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed", "shaders")
+        shaders_dir = os.path.join(self.settings.root_dir, "appleseed", "shaders")
         safe_make_directory(shaders_dir)
 
         for root, dirs, files in os.walk(os.path.join(os.path.expandvars(self.settings.appleseed_shaders_path), "appleseed")):
@@ -283,9 +284,7 @@ class PackageBuilder(object):
                     shutil.copy(os.path.join(root, f), shaders_dir)
 
     def copy_blenderseed(self):
-        base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-
-        dir_util.copy_tree(base_dir, os.path.join(self.settings.package_temp_dir, "blenderseed"))
+        dir_util.copy_tree(self.settings.root_dir, os.path.join(self.settings.package_temp_dir, "blenderseed"))
 
     def clean_project(self):
 
@@ -302,7 +301,7 @@ class PackageBuilder(object):
         package_name = "blenderseed-{0}-{1}".format(self.package_version, self.settings.platform)
 
         old_path = pushd(self.settings.package_temp_dir)
-        archive_util.make_zipfile(os.path.join(self.settings.this_dir, package_name), ".")
+        archive_util.make_zipfile(os.path.join(self.settings.output_dir, package_name), ".")
         os.chdir(old_path)
 
     def delete_stage_dir(self):
@@ -436,11 +435,11 @@ class LinuxPackageBuilder(PackageBuilder):
 class WindowsPackageBuilder(PackageBuilder):
 
     def copy_dependencies(self):
-        bin_dir = os.path.join(self.settings.package_temp_dir, "blenderseed", "appleseed", "bin")
+        bin_dir = self.settings.appleseed_bin_path
 
         dlls_to_copy = ["appleseed.dll", "appleseed.shared.dll"]
         for dll in dlls_to_copy:
-            shutil.copy(os.path.join(os.path.expandvars(self.settings.appleseed_bin_path), dll), bin_dir)
+            shutil.copy(os.path.join(os.path.expandvars(bin_dir), dll), os.path.join(self.settings.root_dir, "appleseed", "bin"))
 
     def post_process_package(self):
         pass
@@ -453,17 +452,11 @@ class WindowsPackageBuilder(PackageBuilder):
 def main():
     parser = argparse.ArgumentParser(description="build a blenderseed package from sources")
 
-    parser.add_argument("-s", "--savetemp", help="save the temporary output")
-    parser.add_argument("version", help="version number of packaged file")
-    parser.add_argument("directory", help="directory of appleseed package")
+    parser.add_argument("--version", help="version number of packaged file")
 
     args = parser.parse_args()
 
-    os.environ['APPLESEED'] = args.directory
-
-    save_temp = args.savetemp
-
-    package_version = args.version
+    package_version = args.version if args.version else "no-version"
 
     print("blenderseed.package version " + VERSION)
     print("")
@@ -472,9 +465,9 @@ def main():
     settings.load()
 
     if os.name == "nt":
-        package_builder = WindowsPackageBuilder(settings, package_version, save_temp)
+        package_builder = WindowsPackageBuilder(settings, package_version)
     elif os.name == "posix" and platform.mac_ver()[0] == "":
-        package_builder = LinuxPackageBuilder(settings, package_version, save_temp)
+        package_builder = LinuxPackageBuilder(settings, package_version)
     else:
         fatal("Unsupported platform: " + os.name)
 
