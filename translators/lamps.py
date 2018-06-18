@@ -203,7 +203,7 @@ class AreaLampTranslator(Translator):
 
         self.__as_area_mesh_inst = asr.ObjectInstance(self.bl_lamp.name + '_inst', lamp_inst_params, mesh_name,
                                                       self._convert_matrix(self.bl_lamp.matrix_world),
-                                                      {"default": self.bl_lamp.name}, {"default": "__null_material"})
+                                                      {"default": lamp_data.name + "_mat"}, {"default": "__null_material"})
 
         # Emit basic lamp shader group
         if lamp_data.appleseed.osl_node_tree is None:
@@ -221,7 +221,7 @@ class AreaLampTranslator(Translator):
             self.__lamp_shader_group.add_connection("asAreaLight", "out_output", "asClosure2Surface", "in_input")
 
             # Emit are lamp material and surface shader.
-            self.__edf_mat = asr.Material('osl_material', self.bl_lamp.name, {'osl_surface': shader_name})
+            self.__edf_mat = asr.Material('osl_material', lamp_data.name + "_mat", {'osl_surface': shader_name})
 
     def flush_entities(self, assembly):
         assembly.objects().insert(self.__as_area_mesh)
