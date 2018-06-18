@@ -202,7 +202,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     pixel_sampler = bpy.props.EnumProperty(name="Pixel Sampler",
                                            description="Sampler",
                                            items=[("uniform", "Uniform", "Uniform"),
-                                                  ("adaptive_tile", "Adaptive", "Adaptive")],
+                                                  ("adaptive", "Adaptive", "Adaptive")],
                                            default="uniform")
 
     sampler_min_samples = bpy.props.IntProperty(name="sampler_min_samples",

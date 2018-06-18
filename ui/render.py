@@ -156,7 +156,7 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         layout.prop(asr_scene_props, "pixel_sampler", text="Pixel Sampler")
         layout.prop(asr_scene_props, "renderer_passes", text="Passes")
 
-        if asr_scene_props.pixel_sampler == 'adaptive_tile':
+        if asr_scene_props.pixel_sampler == 'adaptive':
             row = layout.row(align=True)
             row.prop(asr_scene_props, "sampler_min_samples", text="Min Samples")
             row.prop(asr_scene_props, "sampler_max_samples", text="Max Samples")

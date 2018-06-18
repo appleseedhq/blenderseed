@@ -85,7 +85,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
                     self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
                 if asr_scene_props.sampler_enable_diagnostics:
                     self.register_pass(scene, renderlayer, "Invalid Samples", 4, "RGBA", "COLOR")
-                    if asr_scene_props.pixel_sampler == 'adaptive_tile':
+                    if asr_scene_props.pixel_sampler == 'adaptive':
                         self.register_pass(scene, renderlayer, "Block Coverage", 4, "RGBA", "COLOR")
                         self.register_pass(scene, renderlayer, "Samples", 4, "RGBA", "COLOR")
                         self.register_pass(scene, renderlayer, "Variation", 4, "RGBA", "COLOR")
@@ -95,7 +95,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
     def render(self, scene):
         asr_scene_props = scene.appleseed
 
-        print("PASS, render")
+        #print("PASS, render")
         if not self.is_preview:
             if asr_scene_props.enable_aovs or asr_scene_props.sampler_enable_diagnostics:
                 if asr_scene_props.diffuse_aov:
@@ -120,12 +120,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
                     self.add_pass("Pixel Time", 1, "X")
                 if asr_scene_props.sampler_enable_diagnostics:
                     self.add_pass("Invalid Samples", 4, "RGBA")
-                    print("PASS, added invalid samples")
-                    if asr_scene_props.pixel_sampler == 'adaptive_tile':
+                    #print("PASS, added invalid samples")
+                    if asr_scene_props.pixel_sampler == 'adaptive':
                         self.add_pass("Block Coverage", 4, "RGBA")
                         self.add_pass("Samples", 4, "RGBA")
                         self.add_pass("Variation", 4, "RGBA")
-                        print("PASS, added [block, samples, variation]")
+                        #print("PASS, added [block, samples, variation]")
 
         with RenderAppleseed.render_lock:
             if self.is_preview:
@@ -491,7 +491,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
         tiles_header = struct.unpack("I", os.read(process.stdout.fileno(), 1 * 4))
         self.aov_count = tiles_header[0]
-        print("HEADER [AOV Count:{}]".format(self.aov_count))
+        #print("HEADER [AOV Count:{}]".format(self.aov_count))
 
         return True
 
@@ -511,7 +511,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         aov_nc = aov_header[2]
         aov_name = os.read(process.stdout.fileno(), aov_name_len).decode("utf-8")
 
-        print("AOV [Index:{}, Name:{}, NC:{}]".format(aov_index, aov_name, aov_nc))
+        #print("AOV [Index:{}, Name:{}, NC:{}]".format(aov_index, aov_name, aov_nc))
         self.aovs[aov_index] = self.__map_aovs(aov_name)
 
         return True
@@ -536,7 +536,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         tile_w = tile_header[3]
         tile_h = tile_header[4]
         tile_c = tile_header[5]
-        print("Tile [AOV Index:{}]".format(tile_aov_index))
+        #print("Tile [AOV Index:{}]".format(tile_aov_index))
 
         # Read tile data.
         tile_size = tile_w * tile_h * tile_c * 4
