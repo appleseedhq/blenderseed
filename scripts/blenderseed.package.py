@@ -190,6 +190,7 @@ class PackageBuilder(object):
     def __init__(self, settings, package_version=None, no_release=False):
         self.settings = settings
         self.package_version = package_version
+        self.no_release = no_release
 
     def build_package(self):
         print("Building package:")
@@ -230,24 +231,25 @@ class PackageBuilder(object):
         progress("Post-processing package")
         self.post_process_package()
 
-        progress("Removing leftovers from previous invocations")
-        safe_delete_directory(self.settings.package_temp_dir)
+        if not self.no_release:
+            progress("Removing leftovers from previous invocations")
+            safe_delete_directory(self.settings.package_temp_dir)
 
-        progress("Creating deployment directory")
-        safe_make_directory(self.settings.package_temp_dir)
-        safe_make_directory(os.path.join(self.settings.package_temp_dir, "blenderseed"))
+            progress("Creating deployment directory")
+            safe_make_directory(self.settings.package_temp_dir)
+            safe_make_directory(os.path.join(self.settings.package_temp_dir, "blenderseed"))
 
-        progress("Copying blenderseed")
-        self.copy_blenderseed()
+            progress("Copying blenderseed")
+            self.copy_blenderseed()
 
-        progress("Cleaning project")
-        self.clean_project()
+            progress("Cleaning project")
+            self.clean_project()
 
-        progress("Building final zip file")
-        self.build_final_zip_file()
+            progress("Building final zip file")
+            self.build_final_zip_file()
 
-        progress("Deleting Temp Output")
-        self.delete_stage_dir()
+            progress("Deleting Temp Output")
+            self.delete_stage_dir()
 
     def copy_binaries(self):
         bin_dir = os.path.join(self.settings.root_dir, "appleseed", "bin")
@@ -453,8 +455,11 @@ def main():
     parser = argparse.ArgumentParser(description="build a blenderseed package from sources")
 
     parser.add_argument("--version", help="version number of packaged file")
+    parser.add_argument("--norelease", action="store_true", help="copies appleseed binaries to blenderseed folder but does not build a release package")
 
     args = parser.parse_args()
+
+    no_release = args.norelease
 
     package_version = args.version if args.version else "no-version"
 
@@ -465,9 +470,9 @@ def main():
     settings.load()
 
     if os.name == "nt":
-        package_builder = WindowsPackageBuilder(settings, package_version)
+        package_builder = WindowsPackageBuilder(settings, package_version, no_release)
     elif os.name == "posix" and platform.mac_ver()[0] == "":
-        package_builder = LinuxPackageBuilder(settings, package_version)
+        package_builder = LinuxPackageBuilder(settings, package_version, no_release)
     else:
         fatal("Unsupported platform: " + os.name)
 
