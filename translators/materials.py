@@ -28,7 +28,7 @@
 import appleseed as asr
 import bpy
 
-from .translator import Translator
+from .translator import Translator, ObjectKey
 from ..logger import get_logger
 from ..util import image_extensions
 
@@ -66,7 +66,7 @@ class MaterialTranslator(Translator):
     #
 
     def create_entities(self, scene):
-        mat_name = self.bl_mat.name + "_mat" if not self._preview else "preview_mat"
+        mat_name = str(ObjectKey(self.bl_mat)) + "_mat" if not self._preview else "preview_mat"
         as_mat_data = self.bl_mat.appleseed
         osl_params = {'surface_shader': "{0}_surface_shader".format(mat_name)}
         shader_params = {'lighting_samples': as_mat_data.shader_lighting_samples} if hasattr(as_mat_data, "shader_lighting_samples") else {}

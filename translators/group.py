@@ -206,7 +206,8 @@ class GroupTranslator(Translator):
         for slot in obj.material_slots:
             mat = slot.material
             mat_key = ObjectKey(mat)
+            print(str(mat_key))
 
-            if not mat_key in self._material_translators:
+            if mat_key not in self._material_translators:
                 translator = MaterialTranslator(mat)
                 self._material_translators[mat_key] = translator
