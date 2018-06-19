@@ -177,7 +177,7 @@ class Settings:
         print("  Path to appleseed settings:      " + self.appleseed_settings_path)
         print("  Path to appleseed.python:        " + self.appleseed_python_path)
         print("  Path to maketx:                  " + self.maketx_path)
-        print("  Output directory:				  " + self.output_dir)
+        print("  Output directory:                " + self.output_dir)
         print("")
 
 
