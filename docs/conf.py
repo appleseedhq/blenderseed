@@ -27,9 +27,9 @@ copyright = '2010-2018, The appleseedhq Organization'
 author = 'The appleseedhq Organization'
 
 # The short X.Y version
-version = '0.8.0-beta'
+version = '0.9.0-beta'
 # The full version, including alpha/beta/rc tags
-release = '0.8.0-beta'
+release = '0.9.0-beta'
 
 
 # -- General configuration ---------------------------------------------------

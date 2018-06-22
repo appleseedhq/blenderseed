@@ -5,7 +5,7 @@ Texture Converter
 
 The texture converter is a utility for converting traditional image formats (JPEG, PNG, TIFF, etc...) into tiled, mipmapped .tx files for use with appleseed's OSL shading system.
 
-.. image:: /_static/screenshots/material_panels/tex_convert.PNG
+.. image:: /_static/screenshots/world_panel/texture_converter.PNG
 
 |
 

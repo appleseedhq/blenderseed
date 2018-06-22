@@ -4,9 +4,7 @@ Installation
 ============
 
 Download
-	Download the latest `appleseed release <https://github.com/appleseedhq/appleseed/releases>`_ and unzip it to a location on your hard drive.
-
-	Download the .zip file of the latest `blenderseed release <https://github.com/appleseedhq/blenderseed/releases>`_. [#f1]_ Note that as of 0.8.0 you must use Blender 2.79 or higher.
+	Download the .zip file of the latest `blenderseed release <https://github.com/appleseedhq/blenderseed/releases>`_ for your platform. Note that as of 0.8.0 you must use Blender 2.79 or higher.
 
 	*Blender 2.8 is not yet supported*
 
@@ -18,19 +16,20 @@ Install
 	Extract the blenderseed folder from the .zip file. Move or copy the blenderseed folder to your Blender installation's /scripts/addons directory. The addon relies on being able to find the blenderseed folder in one of a few conspicuous places, so be sure to install the folder under addons or addons_contrib.
 
 Configure
-	If the addon was installed successfully, you will see it among your addons under the "Render" category. Enable the addon, and click the small triangle to the left of the words "Render: appleseed". You will see a text field with a file path selector next to the words "appleseed binary directory". Use the file path selector to point the addon to your appleseed installation's bin directory (the directory containing appleseed.cli.exe and appleseed.studio.exe).  You will need to restart Blender in order for the OSL features to be usable.
-
-|
-
-	.. image:: /_static/screenshots/blenderseed-addon-installation.png
-
-	Blender User Preferences Dialog
-
-|
+	If the addon was installed successfully, you will see it among your addons under the "Render" category. Enable the addon, and click the small triangle to the left of the words "Render: appleseed". 
 
 	Save your user preferences.
 
 	Select "appleseed" from the render dropdown selector.
 
-.. rubric:: Footnotes:
-.. [#f1] If you want access to cutting edge features, you can directly download the latest master branch from Github.  Be aware that the master branch may not be stable or complete and new features may require an up to date build of appleseed.  If you download the master branch, the folder will have a *-master* suffix that needs to be removed before the addon will be usable.
+Using Development Versions of blenderseed
+	If you want access to cutting edge features, you can also download directly from the master branch (or any other visible branches).  Any downloads will have a suffix of *'-branch name'* that needs to be removed before it will work.  Be aware that new or under development features may require up to date build of appleseed itself, and this is not included with direct branch downloads.
+
+Using Development Versions of appleseed
+	While appleseed is packaged with all official releases, external versions of it may be used with blenderseed.  To do so, set the following environment variables before launching Blender (Windows only):
+	
+	- APPLESEED_PYTHON_PATH:
+		Set to the Python27 directory in your appleseed build.
+
+	- APPPLESEED_BIN_DIR:
+		Set to the /bin folder of your appleseed build.

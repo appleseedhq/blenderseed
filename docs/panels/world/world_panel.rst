@@ -7,3 +7,4 @@ The world panel contains settings that affect the entire "world" of the 3D scene
 
 	sss_sets
 	environment
+	texture_converter
