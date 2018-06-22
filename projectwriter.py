@@ -2259,6 +2259,7 @@ class Writer(object):
         self.__open_element('parameters name="generic_tile_renderer"')
         self.__emit_parameter("min_samples", scene.appleseed.sampler_min_samples)
         self.__emit_parameter("max_samples", scene.appleseed.sampler_max_samples)
+        self.__emit_parameter("enable_diagnostics", scene.appleseed.sampler_enable_diagnostics)
         self.__close_element("parameters")
         self.__close_element("configuration")
 

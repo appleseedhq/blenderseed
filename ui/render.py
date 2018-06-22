@@ -171,7 +171,7 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             split = split.split()
             row = split.row()
             row.prop(asr_scene_props, "decorrelate_pixels", text="Decorrelate Pixels")
-        layout.prop(asr_scene_props, "sampler_enable_diagnostics", text="Diagnostics")
+        layout.prop(asr_scene_props, "sampler_enable_diagnostics", text="Diagnostics AOVs")
 
 
 class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
