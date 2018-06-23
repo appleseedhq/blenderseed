@@ -26,6 +26,7 @@
 #
 
 import os
+import math
 
 import appleseed as asr
 
@@ -192,31 +193,36 @@ class SceneTranslator(GroupTranslator):
             x.create_entities(self.bl_scene)
 
         # Calculate xform subframes for motion blur
-        all_times = set()
-        cam_times = set()
-        xform_times = set()
-        deform_times = set()
+        cam_times = {0.0}
+        xform_times = {0.0}
+        deform_times = {0.0}
 
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
             if self.bl_scene.appleseed.enable_camera_blur:
                 cam_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples)
-            all_times.update(cam_times)
 
             if self.bl_scene.appleseed.enable_object_blur:
                 xform_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples)
-            all_times.update(xform_times)
 
             if self.bl_scene.appleseed.enable_deformation_blur:
                 deform_times = self.__get_subframes(shutter_length, self.__round_up_pow2(self.bl_scene.appleseed.deformation_blur_samples))
-            all_times.update(deform_times)
 
-            all_times = sorted(list(all_times))
+        # Merge all subframe times
+        all_times = set()
+        all_times.update(cam_times)
+        all_times.update(xform_times)
+        all_times.update(deform_times)
+        all_times = sorted(list(all_times))
 
         current_frame = self.bl_scene.frame_current
 
         for time in all_times:
-            self.bl_scene.frame_set(current_frame, subframe=time)
+            new_frame = current_frame + time
+            int_frame = math.floor(new_frame)
+            subframe = new_frame - int_frame
+
+            self.bl_scene.frame_set(int_frame, subframe)
 
             if time in cam_times:
                 for x in self.__camera_translators.values():
@@ -229,10 +235,10 @@ class SceneTranslator(GroupTranslator):
                     x.set_transform_key(time, xform_times)
 
             if time in deform_times:
-                self.set_deform_key(time, deform_times)
+                self.set_deform_key(self.bl_scene, time, deform_times)
 
                 for x in self.__group_translators.values():
-                    x.set_deform_key(time, deform_times)
+                    x.set_deform_key(self.bl_scene, time, deform_times)
 
         if self.bl_scene.frame_current != current_frame:
             self.bl_scene.frame_set(current_frame)

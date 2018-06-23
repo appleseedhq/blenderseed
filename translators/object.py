@@ -75,7 +75,7 @@ class ObjectTranslator(Translator):
     def set_transform_key(self, time, key_times):
         self._xform_seq.set_transform(time, self._convert_matrix(self.bl_obj.matrix_world))
 
-    def set_deform_key(self, time, key_times):
+    def set_deform_key(self, scene, time, key_times):
         pass
 
 

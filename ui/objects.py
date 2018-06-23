@@ -72,29 +72,6 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
 
 
-class AppleseedObjMBlurPanel(bpy.types.Panel):
-    bl_label = "Motion Blur"
-    COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "object"
-
-    @classmethod
-    def poll(cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
-
-    def draw(self, context):
-        layout = self.layout
-        asr_obj = context.object.appleseed
-
-        col = layout.column()
-        col.prop(asr_obj, "enable_motion_blur", text="Enable Motion Blur")
-        row = col.row()
-        row.active = asr_obj.enable_motion_blur
-        row.prop(asr_obj, "motion_blur_type", text="Type")
-
-
 def register():
     import bl_ui.properties_object as properties_object
     for member in dir(properties_object):
@@ -105,11 +82,9 @@ def register():
             pass
     del properties_object
     util.safe_register_class(AppleseedObjFlagsPanel)
-    util.safe_register_class(AppleseedObjMBlurPanel)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedObjMBlurPanel)
     util.safe_unregister_class(AppleseedObjFlagsPanel)
     import bl_ui.properties_object as properties_object
     for member in dir(properties_object):

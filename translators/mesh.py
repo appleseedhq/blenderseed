@@ -51,7 +51,9 @@ class MeshTranslator(ObjectTranslator):
         self.__geom_dir = geom_directory
         self.__mesh_filenames = []
 
-        self.__first_deform_key = True
+        # Motion blur
+        self.__key_index = 0
+        self.__deforming = True # todo: compute this..
 
         # Materials
         self.__front_materials = {}
@@ -69,26 +71,20 @@ class MeshTranslator(ObjectTranslator):
         # Copy the transform.
         self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_obj.matrix_world))
 
-        # Convert the blender mesh.
+        # Materials
         mesh_key = str(ObjectKey(self.bl_obj.data)) + "_obj"
         mesh_name = mesh_key
 
-        self.__mesh_object = asr.MeshObject(mesh_name, {})
-        me = self.__get_blender_mesh(scene, triangulate=True)
-
-        # Materials & material  slots
         material_slots = self.bl_obj.material_slots
+
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
-                self.__mesh_object.push_material_slot("slot-%s" % i)
-
                 if m.material.appleseed.osl_node_tree is not None:
                     mat_key = str(ObjectKey(m.material)) + "_mat"
                     self.__front_materials["slot-%s" % i] = mat_key
                 else:
                     self.__front_materials["slot-%s" % i] = "__default_material"
         else:
-            self.__mesh_object.push_material_slot("default")
             if len(material_slots) == 1:
                 if material_slots[0].material.appleseed.osl_node_tree is not None:
                     mat_key = str(ObjectKey(material_slots[0].material)) + "_mat"
@@ -104,104 +100,47 @@ class MeshTranslator(ObjectTranslator):
         if double_sided_materials:
             self.__back_materials = self.__front_materials
 
-        # Vertices
-        self.__mesh_object.reserve_vertices(len(me.vertices))
-
-        for v in me.vertices:
-            self.__mesh_object.push_vertex(asr.Vector3f(v.co[0], v.co[1], v.co[2]))
-
-        # Faces.
-        self.__mesh_object.reserve_triangles(len(me.polygons))
-
-        for f in me.polygons:
-            assert(len(f.vertices) == 3)
-            tri = asr.Triangle(
-                f.vertices[0],
-                f.vertices[1],
-                f.vertices[2],
-                f.material_index)
-
-            self.__mesh_object.push_triangle(tri)
-
-        loops = me.loops
-
-        # UVs.
-        export_uvs = True if self.bl_obj.data.appleseed.export_uvs else False
-
-        if export_uvs and len(me.uv_textures) > 0:
-            uv_texture = me.uv_textures.active.data[:]
-            uv_layer = me.uv_layers.active.data[:]
-
-            self.__mesh_object.reserve_tex_coords(len(me.polygons) * 3)
-
-            uv_index = 0
-
-            for i, f in enumerate(me.polygons):
-                loop = f.loop_indices
-                tri = self.__mesh_object.get_triangle(i)
-
-                uv = uv_layer[f.loop_indices[0]].uv
-                self.__mesh_object.push_tex_coords(asr.Vector2f(uv[0], uv[1]))
-                tri.m_a0 = uv_index
-                uv_index += 1
-
-                uv = uv_layer[f.loop_indices[1]].uv
-                self.__mesh_object.push_tex_coords(asr.Vector2f(uv[0], uv[1]))
-                tri.m_a1 = uv_index
-                uv_index += 1
-
-                uv = uv_layer[f.loop_indices[2]].uv
-                self.__mesh_object.push_tex_coords(asr.Vector2f(uv[0], uv[1]))
-                tri.m_a2 = uv_index
-                uv_index += 1
-
-        # Normals.
-        export_normals = True if self.bl_obj.data.appleseed.export_normals else False
-
-        if export_normals:
-            me.calc_normals_split()
-
-            self.__mesh_object.reserve_tex_coords(len(me.polygons) * 3)
-
-            normal_index = 0
-
-            for i, f in enumerate(me.polygons):
-                loop = f.loop_indices
-                tri = self.__mesh_object.get_triangle(i)
-
-                n = loops[f.loop_indices[0]].normal
-                self.__mesh_object.push_vertex_normal(asr.Vector3f(n[0], n[1], n[2]))
-                tri.m_n0 = normal_index
-                normal_index += 1
-
-                n = loops[f.loop_indices[1]].normal
-                self.__mesh_object.push_vertex_normal(asr.Vector3f(n[0], n[1], n[2]))
-                tri.m_n1 = normal_index
-                normal_index += 1
-
-                n = loops[f.loop_indices[2]].normal
-                self.__mesh_object.push_vertex_normal(asr.Vector3f(n[0], n[1], n[2]))
-                tri.m_n2 = normal_index
-                normal_index += 1
-
-        # Tangents.
-        if self.bl_obj.data.appleseed.smooth_tangents and self.bl_obj.data.appleseed.export_uvs:
-            asr.compute_smooth_vertex_tangents(self.__mesh_object)
-
-        bpy.data.meshes.remove(me)
-
-        # Write the appleseed mesh if needed.
-        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
-            self.__write_mesh(mesh_key)
-
-    def set_deform_key(self, time, key_times):
-        if self.__first_deform_key:
-            # The first deform key is always saved in create_entities.
-            self.__first_deform_key == False
+    def set_deform_key(self, scene, time, key_times):
+        # Don't save keys for non deforming meshes.
+        if not self.__deforming and self.__key_index > 0:
+            logger.debug("Skipping mesh key for non deforming object %s", self.bl_obj.name)
             return
 
+        mesh_key = str(ObjectKey(self.bl_obj.data)) + "_obj"
+        mesh_name = mesh_key
+
+        me = self.__get_blender_mesh(scene, triangulate=True)
+
+        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+            # Write a mesh file for the mesh key.
+            logger.debug("Writting mesh file object %s, time = %s", self.bl_obj.name, time)
+            self.__mesh_object = asr.MeshObject(mesh_name, {})
+            self.__convert_mesh(me)
+            self.__write_mesh(mesh_key)
+        else:
+            if self.__key_index == 0:
+                # First key, convert the mesh and reserve keys.
+                logger.debug("Converting mesh object %s", self.bl_obj.name)
+                self.__mesh_object = asr.MeshObject(mesh_name, {})
+                self.__convert_mesh(me)
+
+                self.__mesh_object.set_motion_segment_count(len(key_times) - 1)
+            else:
+                # Set vertex and normal poses.
+                logger.debug("Setting mesh key for object %s, time = %s", self.bl_obj.name, time)
+                self.__set_mesh_key(me, self.__key_index)
+
+        bpy.data.meshes.remove(me)
+        self.__key_index += 1
+
     def flush_entities(self, assembly):
+        # Compute tangents if needed.
+        if self.__export_mode != ProjectExportMode.PROJECT_EXPORT:
+            if self.bl_obj.data.appleseed.smooth_tangents and self.bl_obj.data.appleseed.export_uvs:
+                asr.compute_smooth_vertex_tangents(self.__mesh_object)
+
         asr_obj_props = self.bl_obj.appleseed
+
         mesh_name = self.__mesh_object.get_name()
         self.__object_instance_params = {'visibility': {'camera': asr_obj_props.camera_visible,
                                                         'light': asr_obj_props.light_visible,
@@ -313,7 +252,122 @@ class MeshTranslator(ObjectTranslator):
 
         return me
 
+    def __convert_mesh(self, me):
+        # Material slots.
+        material_slots = self.bl_obj.material_slots
+
+        self.__mesh_object.reserve_material_slots(len(material_slots))
+
+        if len(material_slots) > 1:
+            for i, m in enumerate(material_slots):
+                self.__mesh_object.push_material_slot("slot-%s" % i)
+        else:
+            self.__mesh_object.push_material_slot("default")
+
+        # Vertices
+        self.__mesh_object.reserve_vertices(len(me.vertices))
+
+        for v in me.vertices:
+            self.__mesh_object.push_vertex(asr.Vector3f(v.co[0], v.co[1], v.co[2]))
+
+        # Faces.
+        self.__mesh_object.reserve_triangles(len(me.polygons))
+
+        for f in me.polygons:
+            assert(len(f.vertices) == 3)
+            tri = asr.Triangle(
+                f.vertices[0],
+                f.vertices[1],
+                f.vertices[2],
+                f.material_index)
+
+            self.__mesh_object.push_triangle(tri)
+
+        loops = me.loops
+
+        # UVs.
+
+        if self.bl_obj.data.appleseed.export_uvs and len(me.uv_textures) > 0:
+            uv_texture = me.uv_textures.active.data[:]
+            uv_layer = me.uv_layers.active.data[:]
+
+            self.__mesh_object.reserve_tex_coords(len(me.polygons) * 3)
+
+            uv_index = 0
+
+            for i, f in enumerate(me.polygons):
+                loop = f.loop_indices
+                tri = self.__mesh_object.get_triangle(i)
+
+                uv = uv_layer[f.loop_indices[0]].uv
+                self.__mesh_object.push_tex_coords(asr.Vector2f(uv[0], uv[1]))
+                tri.m_a0 = uv_index
+                uv_index += 1
+
+                uv = uv_layer[f.loop_indices[1]].uv
+                self.__mesh_object.push_tex_coords(asr.Vector2f(uv[0], uv[1]))
+                tri.m_a1 = uv_index
+                uv_index += 1
+
+                uv = uv_layer[f.loop_indices[2]].uv
+                self.__mesh_object.push_tex_coords(asr.Vector2f(uv[0], uv[1]))
+                tri.m_a2 = uv_index
+                uv_index += 1
+
+        # Normals.
+        if self.bl_obj.data.appleseed.export_normals:
+            me.calc_normals_split()
+
+            self.__mesh_object.reserve_vertex_normals(len(me.polygons) * 3)
+
+            normal_index = 0
+
+            for i, f in enumerate(me.polygons):
+                loop = f.loop_indices
+                tri = self.__mesh_object.get_triangle(i)
+
+                n = loops[f.loop_indices[0]].normal
+                self.__mesh_object.push_vertex_normal(asr.Vector3f(n[0], n[1], n[2]))
+                tri.m_n0 = normal_index
+                normal_index += 1
+
+                n = loops[f.loop_indices[1]].normal
+                self.__mesh_object.push_vertex_normal(asr.Vector3f(n[0], n[1], n[2]))
+                tri.m_n1 = normal_index
+                normal_index += 1
+
+                n = loops[f.loop_indices[2]].normal
+                self.__mesh_object.push_vertex_normal(asr.Vector3f(n[0], n[1], n[2]))
+                tri.m_n2 = normal_index
+                normal_index += 1
+
+    def __set_mesh_key(self, me, key_index):
+        pose = key_index - 1
+
+        # Vertices.
+        for i, v in enumerate(me.vertices):
+            self.__mesh_object.set_vertex_pose(i, pose, asr.Vector3f(v.co[0], v.co[1], v.co[2]))
+
+        # Normals.
+        if self.bl_obj.data.appleseed.export_normals:
+            me.calc_normals_split()
+            loops = me.loops
+
+            normal_index = 0
+
+            for f in me.polygons:
+                loop = f.loop_indices
+
+                for i in range(0, 3):
+                    n = loops[f.loop_indices[i]].normal
+                    self.__mesh_object.set_vertex_normal_pose(normal_index, pose, asr.Vector3f(n[0], n[1], n[2]))
+                    normal_index += 1
+
     def __write_mesh(self, mesh_name):
+        # Compute tangents if needed.
+        if self.bl_obj.data.appleseed.smooth_tangents and self.bl_obj.data.appleseed.export_uvs:
+            asr.compute_smooth_vertex_tangents(self.__mesh_object)
+
         # Compute the mesh signature and the mesh filename.
         hash = asr.MurmurHash()
         asr.compute_signature(hash, self.__mesh_object)
