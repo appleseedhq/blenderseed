@@ -28,7 +28,6 @@
 import datetime
 import multiprocessing
 import os
-from math import tan, atan, degrees
 
 import bpy
 import mathutils
@@ -238,10 +237,6 @@ def inscenelayer(obj, scene):
             return True
 
 
-def do_export(obj, scene):
-    return not obj.hide_render and obj.type in ('MESH', 'SURFACE', 'META', 'TEXT', 'CURVE', 'LAMP') and inscenelayer(obj, scene)
-
-
 def get_render_resolution(scene):
     scale = scene.render.resolution_percentage / 100.0
     width = int(scene.render.resolution_x * scale)
@@ -249,46 +244,9 @@ def get_render_resolution(scene):
     return width, height
 
 
-def get_camera_matrix(camera, global_matrix):
-    """
-    Get the camera transformation decomposed as origin, forward, up and target.
-    """
-    camera_mat = global_matrix * camera.matrix_world
-    origin = camera_mat.col[3]
-    forward = -camera_mat.col[2]
-    up = camera_mat.col[1]
-    target = origin + forward
-    return origin, forward, up, target
-
-
-def calc_fov(camera_ob, width, height):
-    """
-    Calculate horizontal FOV if rendered height is greater than rendered width.
-
-    Thanks to NOX exporter developers for this solution.
-    """
-    camera_angle = degrees(camera_ob.data.angle)
-    if width < height:
-        length = 18.0 / tan(camera_ob.data.angle / 2)
-        camera_angle = 2 * atan(18.0 * width / height / length)
-        camera_angle = degrees(camera_angle)
-    return camera_angle
-
-
-def is_uv_img(tex):
-    return tex and tex.type == 'IMAGE' and tex.image
-
-
 # ------------------------------------
 # Object / instance utilities.
 # ------------------------------------
-
-def ob_mblur_enabled(object, scene):
-    return object.appleseed.enable_motion_blur and object.appleseed.motion_blur_type == 'object' and scene.appleseed.enable_motion_blur and scene.appleseed.enable_object_blur
-
-
-def def_mblur_enabled(object, scene):
-    return object.appleseed.enable_motion_blur and object.appleseed.motion_blur_type == 'deformation' and scene.appleseed.enable_motion_blur and scene.appleseed.enable_deformation_blur
 
 
 def get_instance_materials(ob):
@@ -304,60 +262,21 @@ def get_instance_materials(ob):
     return obmats
 
 
-def is_proxy(ob, scene):
-    if ob.type == 'MESH' and ob.appleseed.is_proxy:
-        if ob.appleseed.use_external:
-            return ob.appleseed.external_instance_mesh != ''
-        else:
-            return ob.appleseed.instance_mesh is not None and scene.objects[ob.appleseed.instance_mesh].type == 'MESH'
-
-
-def get_instances(obj_parent, scene):
-    """
-    Get the instanced objects on the parent object (dupli-faces / dupli-verts).
-    If motion blur is not enabled, returns list of lists [ [dupli_object.object, dupli matrix]]
-    If motion blur is enabled, returns a nested list: [ [dupli_object.object, [dupli matrices]]]
-    """
-    dupli_list = []
-    if ob_mblur_enabled(obj_parent, scene):
-        dupli_list = sample_mblur(obj_parent, scene, dupli=True)
-    else:
-        obj_parent.dupli_list_create(scene)
-        for dupli in obj_parent.dupli_list:
-            dupli_matrix = dupli.matrix.copy()
-            dupli_list.append([dupli.object, dupli_matrix])
-        obj_parent.dupli_list_clear()
-    return dupli_list
-
-
-def sample_mblur(ob, scene, dupli=False):
-    """
-    Sample motion blur matrices for the object or duplis.
-    Returns a list of matrices, if an object only.
-    Returns a nested list of [ [dupli_object.object, [dupli matrix 1, dupli matrix 2]]]
-    """
-    matrices = []
-    asr_scn = scene.appleseed
-    frame_orig = scene.frame_current
-    frame_set = scene.frame_set
-
-    # Collect matrices at shutter open.
-    frame_set(frame_orig, subframe=asr_scn.shutter_open)
-    ob.dupli_list_create(scene)
-    for dupli in ob.dupli_list:
-        matrices.append([dupli.object, [dupli.matrix.copy(), ]])
-    ob.dupli_list_clear()
-
-    # Advance to shutter close, collect matrices.
-    frame_set(frame_orig, subframe=asr_scn.shutter_close)
-    ob.dupli_list_create(scene)
-    for m in range(0, len(ob.dupli_list)):
-        matrices[m][1].append(ob.dupli_list[m].matrix.copy())
-    ob.dupli_list_clear()
-
-    # Reset timeline and return.
-    frame_set(frame_orig)
-    return matrices
+def is_object_deforming(ob):
+    deforming_mods = ['ARMATURE', 'MESH_SEQUENCE_CACHE', 'CAST', 'CLOTH', 'CURVE', 'DISPLACE',
+                      'HOOK', 'LATTICE', 'MESH_DEFORM', 'SHRINKWRAP', 'EXPLODE',
+                      'SIMPLE_DEFORM', 'SMOOTH', 'WAVE', 'SOFT_BODY',
+                      'SURFACE', 'MESH_CACHE', 'FLUID_SIMULATION',
+                      'DYNAMIC_PAINT']
+    if ob.modifiers:
+        for mod in ob.modifiers:
+            if mod.type in deforming_mods:
+                return True
+            else:
+                pass
+    if ob.data and hasattr(ob.data, 'shape_keys') and ob.data.shape_keys:
+        return True
+    return False
 
 
 # ------------------------------------

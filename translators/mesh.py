@@ -35,6 +35,7 @@ import bpy
 from .translator import ObjectKey, ProjectExportMode
 from .object import ObjectTranslator
 from ..logger import get_logger
+from ..util import is_object_deforming
 
 logger = get_logger()
 
@@ -53,7 +54,7 @@ class MeshTranslator(ObjectTranslator):
 
         # Motion blur
         self.__key_index = 0
-        self.__deforming = True # todo: compute this..
+        self.__deforming = is_object_deforming(obj)
 
         # Materials
         self.__front_materials = {}
@@ -113,7 +114,7 @@ class MeshTranslator(ObjectTranslator):
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Write a mesh file for the mesh key.
-            logger.debug("Writting mesh file object %s, time = %s", self.bl_obj.name, time)
+            logger.debug("Writing mesh file object %s, time = %s", self.bl_obj.name, time)
             self.__mesh_object = asr.MeshObject(mesh_name, {})
             self.__convert_mesh(me)
             self.__write_mesh(mesh_key)
