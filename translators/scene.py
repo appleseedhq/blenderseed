@@ -80,7 +80,7 @@ class SceneTranslator(GroupTranslator):
         return cls(
             scene,
             export_mode=ProjectExportMode.PROJECT_EXPORT,
-            selected_only=False,
+            selected_only=scene.appleseed.export_selected,
             geometry_dir=geometry_dir,
             textures_dir=textures_dir)
 

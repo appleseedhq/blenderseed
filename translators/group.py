@@ -143,6 +143,10 @@ class GroupTranslator(Translator):
                 logger.debug("skipping invisible object %s", obj.name)
                 continue
 
+            if self.selected_only and not obj.select:
+                logger.debug("skipping non-selected object %s", obj.name)
+                continue
+
             obj_key = ObjectKey(obj)
 
             if obj.type == 'LAMP':

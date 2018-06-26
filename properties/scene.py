@@ -109,6 +109,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                    ('export_only', "Export Scene Files", "")],
                                                default='render')
 
+    export_selected = bpy.props.BoolProperty(name="export_selected",
+                                             default=False)
+
     threads_auto = bpy.props.BoolProperty(name="threads_auto",
                                           description="Automatically determine the number of rendering threads",
                                           default=True)

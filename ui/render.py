@@ -65,6 +65,8 @@ class AppleseedRender(bpy.types.Panel, AppleseedRenderPanelBase):
             row.prop(rd, "use_lock_interface", icon_only=True)
         else:
             row = layout.row(align=True)
+            row.prop(asr_scene_data, "export_selected", text="Export Selected Objects Only", toggle=True)
+            row = layout.row(align=True)
             row.operator("appleseed.export_scene", text="Export")
 
 
