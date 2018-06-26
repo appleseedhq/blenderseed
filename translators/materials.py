@@ -30,7 +30,6 @@ import bpy
 
 from .translator import Translator, ObjectKey
 from ..logger import get_logger
-from ..util import image_extensions
 
 logger = get_logger()
 
@@ -41,10 +40,11 @@ class MaterialTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, mat, preview=False):
+    def __init__(self, mat, asset_handler, preview=False):
         super(MaterialTranslator, self).__init__(mat)
 
         self._preview = preview
+        self._asset_handler = asset_handler
 
         if self.bl_node_tree:
             self.__shaders = self.bl_node_tree.nodes
@@ -112,11 +112,9 @@ class MaterialTranslator(Translator):
                     parameter_value = parameter_types[key]
                     parameter = getattr(shader, key)
                     if key in shader.filepaths:
-                        parameter = bpy.path.abspath(parameter)
+                        parameter = self._asset_handler.resolve_path(parameter)
                         if scene.appleseed.sub_textures is True:
-                            if parameter.endswith(image_extensions):
-                                base_filename = parameter.split('.')
-                                parameter = "{0}.tx".format(base_filename[0])
+                            parameter = self._asset_handler.substitute_texture(parameter)
 
                     if parameter_value == "int checkbox":
                         parameter_value = "int"

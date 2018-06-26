@@ -32,6 +32,7 @@ import appleseed as asr
 
 from .camera import CameraTranslator
 from .group import GroupTranslator
+from .handlers import AssetHandler
 from .object import InstanceTranslator
 from .translator import ObjectKey, ProjectExportMode
 from .world import WorldTranslator
@@ -68,6 +69,9 @@ class SceneTranslator(GroupTranslator):
 
         geometry_dir = os.path.join(project_dir, "_geometry")
         textures_dir = os.path.join(project_dir, "_textures")
+        shaders_dir = os.path.join(project_dir, "_shaders")
+
+        asset_handler = AssetHandler()
 
         if not os.path.exists(geometry_dir):
             os.makedirs(geometry_dir)
@@ -82,7 +86,9 @@ class SceneTranslator(GroupTranslator):
             export_mode=ProjectExportMode.PROJECT_EXPORT,
             selected_only=scene.appleseed.export_selected,
             geometry_dir=geometry_dir,
-            textures_dir=textures_dir)
+            textures_dir=textures_dir,
+            shaders_dir=shaders_dir,
+            asset_handler=asset_handler)
 
     @classmethod
     def create_final_render_translator(cls, scene):
@@ -97,7 +103,9 @@ class SceneTranslator(GroupTranslator):
             export_mode=ProjectExportMode.FINAL_RENDER,
             selected_only=False,
             geometry_dir=None,
-            textures_dir=None)
+            textures_dir=None,
+            shaders_dir=None,
+            asset_handler=None)
 
     @classmethod
     def create_interactive_render_translator(cls, scene):
@@ -113,16 +121,18 @@ class SceneTranslator(GroupTranslator):
             export_mode=ProjectExportMode.INTERACTIVE_RENDER,
             selected_only=False,
             geometry_dir=None,
-            textures_dir=None)
+            textures_dir=None,
+            shaders_dir=None,
+            asset_handler=None)
 
-    def __init__(self, scene, export_mode, selected_only, geometry_dir, textures_dir):
+    def __init__(self, scene, export_mode, selected_only, geometry_dir, textures_dir, shaders_dir, asset_handler):
         '''
         Constructor. Do not use it to create instances of this class.
         Use instead SceneTranslator.create_project_export_translator() or
         The other @classmethods.
         '''
 
-        super(SceneTranslator, self).__init__(scene, export_mode, geometry_dir, textures_dir)
+        super(SceneTranslator, self).__init__(scene, export_mode, geometry_dir, textures_dir, shaders_dir, asset_handler)
 
         self.__selected_only = selected_only
 

@@ -53,13 +53,14 @@ class GroupTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, group, export_mode, geometry_dir, textures_dir):
+    def __init__(self, group, export_mode, geometry_dir, textures_dir, shaders_dir, asset_handler):
         super(GroupTranslator, self).__init__(group)
 
         self._export_mode = export_mode
 
         self._geometry_dir = geometry_dir
         self._textures_dir = textures_dir
+        self._shaders_dir = shaders_dir
 
         # Translators.
         self._osl_translators = {}
@@ -70,6 +71,8 @@ class GroupTranslator(Translator):
 
         # Map from datablocks to translators for instancing.
         self._datablock_to_translator = {}
+
+        self._asset_handler = asset_handler
 
     #
     # Properties.
@@ -90,6 +93,14 @@ class GroupTranslator(Translator):
     @property
     def textures_dir(self):
         return self._textures_dir
+
+    @property
+    def shaders_dir(self):
+        return self._shaders_dir
+
+    @property
+    def asset_handler(self):
+        return self._asset_handler
 
     @property
     def assembly_name(self):
@@ -213,5 +224,5 @@ class GroupTranslator(Translator):
             print(str(mat_key))
 
             if mat_key not in self._material_translators:
-                translator = MaterialTranslator(mat)
+                translator = MaterialTranslator(mat, self.asset_handler)
                 self._material_translators[mat_key] = translator
