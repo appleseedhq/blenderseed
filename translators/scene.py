@@ -334,7 +334,7 @@ class SceneTranslator(GroupTranslator):
 
     def __get_subframes(self, shutter_length, samples):
         times = set()
-        segment_size = shutter_length / self.bl_scene.appleseed.camera_blur_samples
+        segment_size = shutter_length / samples
         for seg in range(1, samples + 1):
             times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
 
