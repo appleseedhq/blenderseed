@@ -71,8 +71,6 @@ class SceneTranslator(GroupTranslator):
         textures_dir = os.path.join(project_dir, "_textures")
         shaders_dir = os.path.join(project_dir, "_shaders")
 
-        asset_handler = AssetHandler()
-
         if not os.path.exists(geometry_dir):
             os.makedirs(geometry_dir)
 
@@ -87,8 +85,7 @@ class SceneTranslator(GroupTranslator):
             selected_only=scene.appleseed.export_selected,
             geometry_dir=geometry_dir,
             textures_dir=textures_dir,
-            shaders_dir=shaders_dir,
-            asset_handler=asset_handler)
+            shaders_dir=shaders_dir)
 
     @classmethod
     def create_final_render_translator(cls, scene):
@@ -104,8 +101,7 @@ class SceneTranslator(GroupTranslator):
             selected_only=False,
             geometry_dir=None,
             textures_dir=None,
-            shaders_dir=None,
-            asset_handler=None)
+            shaders_dir=None)
 
     @classmethod
     def create_interactive_render_translator(cls, scene):
@@ -122,15 +118,16 @@ class SceneTranslator(GroupTranslator):
             selected_only=False,
             geometry_dir=None,
             textures_dir=None,
-            shaders_dir=None,
-            asset_handler=None)
+            shaders_dir=None)
 
-    def __init__(self, scene, export_mode, selected_only, geometry_dir, textures_dir, shaders_dir, asset_handler):
+    def __init__(self, scene, export_mode, selected_only, geometry_dir, textures_dir, shaders_dir):
         '''
         Constructor. Do not use it to create instances of this class.
         Use instead SceneTranslator.create_project_export_translator() or
         The other @classmethods.
         '''
+
+        asset_handler = AssetHandler()
 
         super(SceneTranslator, self).__init__(scene, export_mode, geometry_dir, textures_dir, shaders_dir, asset_handler)
 
@@ -142,6 +139,8 @@ class SceneTranslator(GroupTranslator):
         self.__group_translators = {}
 
         self.__project = None
+
+
 
     #
     # Properties.
