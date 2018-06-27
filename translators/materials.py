@@ -44,7 +44,7 @@ class MaterialTranslator(Translator):
         super(MaterialTranslator, self).__init__(mat)
 
         self._preview = preview
-        self._asset_handler = asset_handler
+        self.__asset_handler = asset_handler
 
         if self.bl_node_tree:
             self.__shaders = self.bl_node_tree.nodes
@@ -112,9 +112,9 @@ class MaterialTranslator(Translator):
                     parameter_value = parameter_types[key]
                     parameter = getattr(shader, key)
                     if key in shader.filepaths:
-                        parameter = self._asset_handler.resolve_path(parameter)
+                        parameter = self.__asset_handler.resolve_path(parameter)
                         if scene.appleseed.sub_textures is True:
-                            parameter = self._asset_handler.substitute_texture(parameter)
+                            parameter = self.__asset_handler.substitute_texture(parameter)
 
                     if parameter_value == "int checkbox":
                         parameter_value = "int"

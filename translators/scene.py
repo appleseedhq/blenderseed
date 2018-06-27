@@ -340,7 +340,7 @@ class SceneTranslator(GroupTranslator):
     def __create_world_translator(self):
         logger.debug("Creating world translator")
 
-        self.__world_translator = WorldTranslator(self.bl_scene)
+        self.__world_translator = WorldTranslator(self.bl_scene, self.asset_handler)
 
     def __get_subframes(self, shutter_length, samples):
         times = set()

@@ -41,8 +41,9 @@ class WorldTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, scene):
+    def __init__(self, scene, asset_handler):
         self.__bl_world = scene
+        self.__asset_handler = asset_handler
         self.__horizon_radiance = None
         self.__zenith_radiance = None
         self.__env_tex = None
@@ -77,10 +78,11 @@ class WorldTranslator(Translator):
                                                      self._convert_color(self.__bl_world.world.zenith_color))
 
         if env_type in ('latlong_map', 'mirrorball_map'):
+            filename = self.__asset_handler.resolve_path(as_sky.env_tex)
             tex_inst_params = {'addressing_mode': 'wrap',
                                'filtering_mode': 'bilinear'}
 
-            self.__env_tex = asr.Texture('disk_texture_2d', 'environment_tex', {'filename': as_sky.env_tex,
+            self.__env_tex = asr.Texture('disk_texture_2d', 'environment_tex', {'filename': filename,
                                                                                 'color_space': as_sky.env_tex_colorspace}, [])
 
             self.__env_tex_inst = asr.TextureInstance('environment_tex_inst', tex_inst_params, 'environment_tex',
