@@ -70,7 +70,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
     render_lock = threading.Lock()
 
     def __init__(self):
-        pass
+        self._interactive_translator = None
 
     def update(self, data, scene):
         pass
@@ -134,6 +134,21 @@ class RenderAppleseed(bpy.types.RenderEngine):
                     self.__render_material_preview(scene)
             else:
                 self.__render_scene(scene)
+
+    def view_update(self, context):
+        logger.debug("Trigger update")
+        if self._interactive_translator is None:
+            self._interactive_translator = SceneTranslator.create_interactive_render_translator(context)
+            self._interactive_translator.translate_scene()
+
+            project = self._interactive_translator.as_project
+
+        else:
+            self._interactive_translator.update_scene(context.scene)
+
+    def view_draw(self, context):
+        logger.debug("Trigger draw")
+        self._interactive_translator.update_camera(context)
 
     def __render_material_preview(self, scene):
         global _preview_renderer

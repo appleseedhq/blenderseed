@@ -86,6 +86,16 @@ class Translator(object):
         self._obj_key = ObjectKey(obj)
         self._name = str(self._obj_key)
 
+    def reset(self, obj):
+        """
+        This exists in order to reset the basic data on the translator when doing an interactive render update.
+        This is necessary when the name of an object or material changes.
+        """
+
+        self._bl_obj = obj
+        self._obj_key = ObjectKey(obj)
+        self._name = str(self._obj_key)
+
     #
     # Properties.
     #

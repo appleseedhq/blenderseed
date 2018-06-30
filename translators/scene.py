@@ -30,7 +30,7 @@ import math
 
 import appleseed as asr
 
-from .camera import CameraTranslator
+from .camera import CameraTranslator, InteractiveCameraTranslator
 from .group import GroupTranslator
 from .handlers import AssetHandler
 from .object import InstanceTranslator
@@ -83,6 +83,7 @@ class SceneTranslator(GroupTranslator):
             scene,
             export_mode=ProjectExportMode.PROJECT_EXPORT,
             selected_only=scene.appleseed.export_selected,
+            context=None,
             geometry_dir=geometry_dir,
             textures_dir=textures_dir,
             shaders_dir=shaders_dir)
@@ -99,28 +100,30 @@ class SceneTranslator(GroupTranslator):
             scene,
             export_mode=ProjectExportMode.FINAL_RENDER,
             selected_only=False,
+            context=None,
             geometry_dir=None,
             textures_dir=None,
             shaders_dir=None)
 
     @classmethod
-    def create_interactive_render_translator(cls, scene):
+    def create_interactive_render_translator(cls, context):
         '''
         Create a scene translator to export the scene to an in memory appleseed project
         optimized for quick interactive edits.
         '''
 
-        logger.debug("Creating final render scene translator")
+        logger.debug("Creating interactive render scene translator")
 
         return cls(
-            scene,
+            scene=context.scene,
             export_mode=ProjectExportMode.INTERACTIVE_RENDER,
             selected_only=False,
+            context=context,
             geometry_dir=None,
             textures_dir=None,
             shaders_dir=None)
 
-    def __init__(self, scene, export_mode, selected_only, geometry_dir, textures_dir, shaders_dir):
+    def __init__(self, scene, export_mode, selected_only, context, geometry_dir, textures_dir, shaders_dir):
         '''
         Constructor. Do not use it to create instances of this class.
         Use instead SceneTranslator.create_project_export_translator() or
@@ -132,6 +135,8 @@ class SceneTranslator(GroupTranslator):
         super(SceneTranslator, self).__init__(scene, export_mode, geometry_dir, textures_dir, shaders_dir, asset_handler)
 
         self.__selected_only = selected_only
+
+        self.__context = context
 
         # Translators.
         self.__world_translator = None
@@ -205,7 +210,6 @@ class SceneTranslator(GroupTranslator):
         cam_times = {0.0}
         xform_times = {0.0}
         deform_times = {0.0}
-
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
             if self.bl_scene.appleseed.enable_camera_blur:
@@ -267,6 +271,14 @@ class SceneTranslator(GroupTranslator):
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
+    def update_scene(self, scene):
+        logger.debug("Scene update triggered")
+        pass
+
+    def update_camera(self, context):
+        for x in self.__camera_translators.values():
+            x.update_camera(context, self.as_scene)
+
     def write_project(self, filename):
         '''Write the appleseed project.'''
 
@@ -295,7 +307,10 @@ class SceneTranslator(GroupTranslator):
 
         obj_key = ObjectKey(self.bl_scene.camera)
         logger.debug("Creating camera translator for active camera  %s", obj_key)
-        self.__camera_translators[obj_key] = CameraTranslator(self.bl_scene.camera)
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            self.__camera_translators[obj_key] = CameraTranslator(self.bl_scene.camera)
+        else:
+            self.__camera_translators[obj_key] = InteractiveCameraTranslator(self.__context)
 
         for obj in self.bl_scene.objects:
 

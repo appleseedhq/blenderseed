@@ -25,11 +25,12 @@
 # THE SOFTWARE.
 #
 
-import appleseed as asr
 import bpy
 import bpy_extras
+from mathutils import Matrix
 
-from .translator import Translator, ObjectKey
+import appleseed as asr
+from .translator import Translator
 from ..logger import get_logger
 
 logger = get_logger()
@@ -58,7 +59,7 @@ class CameraTranslator(Translator):
     #
 
     def create_entities(self, scene):
-        logger.debug("Creating camera entity for camera: %s" % self.bl_camera.name)
+        logger.debug("Creating camera entity for camera: %s" % self.appleseed_name)
 
         cam_mapping = {'PERSP': 'pinhole_camera',
                        'ORTHO': 'orthographic_camera',
@@ -69,8 +70,8 @@ class CameraTranslator(Translator):
         if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof:
             model = 'thinlens_camera'
 
-        cam_key = ObjectKey(self.bl_camera)
-        self.__as_camera = asr.Camera(model, str(cam_key), {})
+        cam_key = self.appleseed_name
+        self.__as_camera = asr.Camera(model, cam_key, {})
 
         self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_camera.matrix_world))
 
@@ -179,3 +180,77 @@ class CameraTranslator(Translator):
         xratio = width * render.pixel_aspect_x
         yratio = height * render.pixel_aspect_y
         return xratio / yratio
+
+
+class InteractiveCameraTranslator(Translator):
+
+    def __init__(self, context):
+        super(InteractiveCameraTranslator, self).__init__(context.scene.camera)
+
+        self.__context = context
+
+    @property
+    def bl_camera(self):
+        return self._bl_obj
+
+    @property
+    def context(self):
+        return self.__context
+
+    def create_entities(self, scene):
+        logger.debug("Creating camera entity for camera: interactive camera")
+
+        model = self.__get_cam_props()
+
+        self.__as_int_camera = asr.Camera(model, self.appleseed_name, {})
+
+    def set_transform_key(self, time, key_times):
+        self.__as_int_camera.transform_sequence().set_transform(time, self._convert_matrix(self._matrix))
+
+    def flush_entities(self, scene):
+        logger.debug("Flushing camera entity for camera: interactive camera")
+
+        # Insert the camera into the scene.
+        scene.cameras().insert(self.__as_int_camera)
+
+    def update_camera(self, context, scene):
+        logger.debug("Camera update triggered")
+        self.__context = context
+        self.reset(self.context.scene.camera)
+        cam = scene.cameras().get_by_name(self.appleseed_name)
+        current_cam_model = cam.get_model()
+
+        model = self.__get_cam_props()
+
+        if model != current_cam_model:
+            scene.cameras().remove(cam)
+            logger.debug("Deleting interactive camera")
+            self.__as_int_camera = asr.Camera(model, self.appleseed_name, {})
+            self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
+            logger.debug("Inserting interactive camera")
+            scene.cameras().insert(self.__as_int_camera)
+
+        else:
+            cam.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
+
+    def __get_cam_props(self):
+        # todo: Finish this.....
+        view_cam_type = self.context.region_data.view_perspective
+
+        if view_cam_type == "ORTHO":
+            model = 'orthographic_camera'
+            self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+        elif view_cam_type == "PERSP":
+            model = 'pinhole_camera'
+            self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+        elif view_cam_type == "CAMERA":
+            pass
+            # cam_mapping = {'PERSP': 'pinhole_camera',
+            #                'ORTHO': 'orthographic_camera',
+            #                'PANO': 'spherical_camera'}
+            # model = cam_mapping[self.bl_camera.data.type]
+            # if model == 'PANO':
+            #     raise NotImplementedError("Spherical camera not supported for interactive rendering")
+
+        logger.debug("camera matrix = %s", self._convert_matrix(self._matrix))
+        return model
