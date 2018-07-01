@@ -132,7 +132,7 @@ class SceneTranslator(GroupTranslator):
 
         asset_handler = AssetHandler()
 
-        super(SceneTranslator, self).__init__(scene, export_mode, geometry_dir, textures_dir, shaders_dir, asset_handler)
+        super(SceneTranslator, self).__init__(scene, export_mode, selected_only, geometry_dir, textures_dir, shaders_dir, asset_handler)
 
         self.__selected_only = selected_only
 

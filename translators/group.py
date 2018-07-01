@@ -53,10 +53,12 @@ class GroupTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, group, export_mode, geometry_dir, textures_dir, shaders_dir, asset_handler):
+    def __init__(self, group, export_mode, selected_only, geometry_dir, textures_dir, shaders_dir, asset_handler):
         super(GroupTranslator, self).__init__(group)
 
         self._export_mode = export_mode
+
+        self._selected_only = selected_only
 
         self._geometry_dir = geometry_dir
         self._textures_dir = textures_dir
@@ -85,6 +87,10 @@ class GroupTranslator(Translator):
     @property
     def export_mode(self):
         return self._export_mode
+
+    @property
+    def selected_only(self):
+        return self._selected_only
 
     @property
     def geometry_dir(self):
@@ -221,8 +227,8 @@ class GroupTranslator(Translator):
         for slot in obj.material_slots:
             mat = slot.material
             mat_key = ObjectKey(mat)
-            print(str(mat_key))
 
             if mat_key not in self._material_translators:
+                logger.debug("Creating material translator for material %s", mat_key)
                 translator = MaterialTranslator(mat, self.asset_handler)
                 self._material_translators[mat_key] = translator
