@@ -271,13 +271,19 @@ class SceneTranslator(GroupTranslator):
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
+    # Interactive rendering update functions
     def update_scene(self, scene):
-        logger.debug("Scene update triggered")
-        pass
+        # Set internal scene reference to current state of Blender scene
+        self._bl_obj = scene
+
+        # todo: finish this......
 
     def update_camera(self, context):
+        self.__context = context
         for x in self.__camera_translators.values():
-            x.update_camera(context, self.as_scene)
+            x.update_camera(self.__context, self.as_scene)
+
+        self.__translate_frame()
 
     def write_project(self, filename):
         '''Write the appleseed project.'''
@@ -494,8 +500,12 @@ class SceneTranslator(GroupTranslator):
 
         asr_scene_props = self.bl_scene.appleseed
         scale = self.bl_scene.render.resolution_percentage / 100.0
-        width = int(self.bl_scene.render.resolution_x * scale)
-        height = int(self.bl_scene.render.resolution_y * scale)
+        if self.__context:
+            width = int(self.__context.region.width)
+            height = int(self.__context.region.height)
+        else:
+            width = int(self.bl_scene.render.resolution_x * scale)
+            height = int(self.bl_scene.render.resolution_y * scale)
 
         frame_params = {
             'resolution': asr.Vector2i(width, height),
