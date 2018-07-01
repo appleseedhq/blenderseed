@@ -200,9 +200,9 @@ class InteractiveCameraTranslator(Translator):
     def create_entities(self, scene):
         logger.debug("Creating camera entity for camera: interactive camera")
 
-        model = self.__get_cam_props()
+        model, parameters = self.__get_cam_props()
 
-        self.__as_int_camera = asr.Camera(model, self.appleseed_name, {})
+        self.__as_int_camera = asr.Camera(model, self.appleseed_name, parameters)
 
     def set_transform_key(self, time, key_times):
         self.__as_int_camera.transform_sequence().set_transform(time, self._convert_matrix(self._matrix))
@@ -214,35 +214,49 @@ class InteractiveCameraTranslator(Translator):
         scene.cameras().insert(self.__as_int_camera)
 
     def update_camera(self, context, scene):
-        logger.debug("Camera update triggered")
+        logger.debug("Update interactive camera")
         self.__context = context
         self.reset(self.context.scene.camera)
         cam = scene.cameras().get_by_name(self.appleseed_name)
         current_cam_model = cam.get_model()
 
-        model = self.__get_cam_props()
+        model, parameters = self.__get_cam_props()
 
         if model != current_cam_model:
             scene.cameras().remove(cam)
-            logger.debug("Deleting interactive camera")
-            self.__as_int_camera = asr.Camera(model, self.appleseed_name, {})
+            self.__as_int_camera = asr.Camera(model, self.appleseed_name, parameters)
             self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
-            logger.debug("Inserting interactive camera")
             scene.cameras().insert(self.__as_int_camera)
 
         else:
+            cam.set_parameters(parameters)
             cam.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
 
+        print("Matrix %s" % self._matrix)
+
     def __get_cam_props(self):
-        # todo: Finish this.....
+        # todo: Finish this for other camera models.....
+        params = {}
+        model = None
         view_cam_type = self.context.region_data.view_perspective
 
+        width = self.context.region.width
+        height = self.context.region.height
+
+        aspect_ratio = width / height
+
         if view_cam_type == "ORTHO":
-            model = 'orthographic_camera'
-            self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+            pass
+            # model = 'orthographic_camera'
+            # self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
         elif view_cam_type == "PERSP":
             model = 'pinhole_camera'
+            zoom = 2.0
+            sensor_width = 32 * zoom / 1000
             self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+            params = {'focal_length': self.context.space_data.lens,
+                      'aspect_ratio': aspect_ratio,
+                      'film_width': sensor_width}
         elif view_cam_type == "CAMERA":
             pass
             # cam_mapping = {'PERSP': 'pinhole_camera',
@@ -252,5 +266,4 @@ class InteractiveCameraTranslator(Translator):
             # if model == 'PANO':
             #     raise NotImplementedError("Spherical camera not supported for interactive rendering")
 
-        logger.debug("camera matrix = %s", self._convert_matrix(self._matrix))
-        return model
+        return model, params

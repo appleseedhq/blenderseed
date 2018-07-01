@@ -74,9 +74,10 @@ class MaterialTranslator(Translator):
         self.__as_shader = asr.SurfaceShader("physical_surface_shader",
                                              "{0}_surface_shader".format(mat_name), shader_params)
         if self.bl_node_tree:
-            osl_params['osl_surface'] = as_mat_data.osl_node_tree.name
+            osl_params['osl_surface'] = self.bl_node_tree.name
 
-            self.__shader_group = asr.ShaderGroup(self.bl_node_tree.name)
+            if not self.__shader_group:
+                self.__shader_group = asr.ShaderGroup(self.bl_node_tree.name)
             self.set_shader_group_parameters(scene)
 
         self.__as_mat = asr.Material('osl_material', mat_name, osl_params)
@@ -89,7 +90,14 @@ class MaterialTranslator(Translator):
             assembly.shader_groups().insert(self.__shader_group)
 
     def update_material(self, mat, assembly, scene):
-        pass
+        self.reset(mat)
+        if self.bl_node_tree:
+            self.__shaders = self.bl_node_tree.nodes
+
+        mat = assembly.materials().get_by_name(self.appleseed_name)
+        assembly.materials().remove(mat)
+        self.create_entities(scene)
+        self.flush_entities(assembly)
 
     #
     # Internal methods.
