@@ -138,6 +138,8 @@ class SceneTranslator(GroupTranslator):
 
         self.__context = context
 
+        self.__viewport_resolution = None
+
         # Translators.
         self.__world_translator = None
         self.__camera_translators = {}
@@ -283,7 +285,12 @@ class SceneTranslator(GroupTranslator):
         for x in self.__camera_translators.values():
             x.update_camera(self.__context, self.as_scene)
 
-        self.__translate_frame()
+        # Check if the frame needs to be updated
+        width = int(self.__context.region.width)
+        height = int(self.__context.region.height)
+        new_viewport_resolution = [width, height]
+        if new_viewport_resolution != self.__viewport_resolution:
+            self.__translate_frame()
 
     def write_project(self, filename):
         '''Write the appleseed project.'''
@@ -503,6 +510,7 @@ class SceneTranslator(GroupTranslator):
         if self.__context:
             width = int(self.__context.region.width)
             height = int(self.__context.region.height)
+            self.__viewport_resolution = [width, height]
         else:
             width = int(self.bl_scene.render.resolution_x * scale)
             height = int(self.bl_scene.render.resolution_y * scale)
