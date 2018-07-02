@@ -52,7 +52,6 @@ _preview_renderer = None
 
 
 class RenderThread(threading.Thread):
-
     def __init__(self, renderer):
         super(RenderThread, self).__init__()
         self.__renderer = renderer
@@ -70,7 +69,25 @@ class RenderAppleseed(bpy.types.RenderEngine):
     render_lock = threading.Lock()
 
     def __init__(self):
-        self._interactive_translator = None
+        logger.debug("Creating render engine")
+
+        # Common
+        self._renderer_controller = RendererController(self)
+        self._render_thread = None
+
+        # Interactive rendering.
+        self._interactive_scene_translator = None
+        self._interactive_tile_callback = None
+
+    def __del__(self):
+        logger.debug("Deleting render engine")
+
+        # Abort rendering if a render is in progress.
+        try:
+            self._renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
+            self._render_thread.join()
+        except:
+            pass
 
     def update(self, data, scene):
         pass
@@ -133,22 +150,18 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 if not bpy.app.background:
                     self.__render_material_preview(scene)
             else:
-                self.__render_scene(scene)
+                self.__render_final(scene)
 
     def view_update(self, context):
-        logger.debug("Trigger update")
-        if self._interactive_translator is None:
-            self._interactive_translator = SceneTranslator.create_interactive_render_translator(context)
-            self._interactive_translator.translate_scene()
-
-            project = self._interactive_translator.as_project
-
+        if self._interactive_scene_translator is None:
+            self.__start_interactive_render(context)
         else:
-            self._interactive_translator.update_scene(context.scene)
+            self._interactive_scene_translator.update_scene(context.scene)
 
     def view_draw(self, context):
-        logger.debug("Trigger draw")
-        self._interactive_translator.update_camera(context)
+        logger.debug("view_draw called")
+        #self._interactive_scene_translator.update_camera(context)
+        self._interactive_tile_callback.draw_pixels(0, 0, 640, 480)
 
     def __render_material_preview(self, scene):
         global _preview_renderer
@@ -165,7 +178,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__render_final(project, scene)
 
-    def __render_scene(self, scene):
+    def __render_final(self, scene):
         """
         Export and render the scene.
         """
@@ -175,27 +188,47 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         project = scene_translator.as_project
 
-        self.__render_final(project, scene)
-
-    def __render_final(self, project, scene):
-        renderer_controller = RendererController(self)
+        self._renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
 
         tile_callback = FinalTileCallback(self, scene)
 
         renderer = asr.MasterRenderer(project,
                                       project.configurations()['final'].get_inherited_parameters(),
-                                      renderer_controller,
+                                      self._renderer_controller,
                                       tile_callback)
 
-        render_thread = RenderThread(renderer)
+        self._render_thread = RenderThread(renderer)
 
         # While debugging, log to the console. This should be configurable.
         log_target = asr.ConsoleLogTarget(sys.stderr)
         asr.global_logger().add_target(log_target)
 
-        render_thread.start()
+        self._render_thread.start()
 
-        while render_thread.isAlive():
-            render_thread.join(0.5)  # seconds
+        while self._render_thread.isAlive():
+            self._render_thread.join(0.5)  # seconds
 
         asr.global_logger().remove_target(log_target)
+        self._render_thread = None
+
+    def __start_interactive_render(self, context):
+        assert(self._interactive_scene_translator == None)
+
+        logger.debug("Translating scene for interactive rendering")
+
+        self._interactive_scene_translator = SceneTranslator.create_interactive_render_translator(context)
+        self._interactive_scene_translator.translate_scene()
+
+        logger.debug("Starting interactive rendering")
+
+        self._renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
+
+        self._interactive_tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
+
+        renderer = asr.MasterRenderer(project,
+                                      project.configurations()['interactive'].get_inherited_parameters(),
+                                      self._renderer_controller,
+                                      self._interactive_tile_callback)
+
+        self._render_thread = RenderThread(renderer)
+        self._render_thread.start()

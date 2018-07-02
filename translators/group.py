@@ -176,7 +176,7 @@ class GroupTranslator(Translator):
                 if obj.data.appleseed.osl_node_tree is not None:
                     lamp = obj.data
                     lamp_key = ObjectKey(lamp)
-                    translator = MaterialTranslator(lamp)
+                    translator = MaterialTranslator(lamp, self.asset_handler)
                     self._material_translators[lamp_key] = translator
 
             elif obj.type in GroupTranslator.MESH_OBJECTS:
