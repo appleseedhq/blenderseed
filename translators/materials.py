@@ -46,6 +46,8 @@ class MaterialTranslator(Translator):
         self._preview = preview
         self.__asset_handler = asset_handler
 
+        self.__shader_group = None
+
         if self.bl_node_tree:
             self.__shaders = self.bl_node_tree.nodes
 
@@ -76,7 +78,7 @@ class MaterialTranslator(Translator):
         if self.bl_node_tree:
             osl_params['osl_surface'] = self.bl_node_tree.name
 
-            if not self.__shader_group:
+            if self.__shader_group == None:
                 self.__shader_group = asr.ShaderGroup(self.bl_node_tree.name)
             self.set_shader_group_parameters(scene)
 
