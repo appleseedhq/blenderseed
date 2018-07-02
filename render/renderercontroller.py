@@ -36,6 +36,7 @@ class RendererController(asr.IRendererController):
     def __init__(self, engine):
         super(RendererController, self).__init__()
         self.__engine = engine
+        self.__status = asr.IRenderControllerStatus.ContinueRendering
 
     def on_rendering_begin(self):
         logger.debug("Starting Render")
@@ -43,6 +44,15 @@ class RendererController(asr.IRendererController):
 
     def on_rendering_success(self):
         logger.debug("Render Finished")
+
+    def get_status(self):
+        if self.__engine.test_break():
+            return asr.IRenderControllerStatus.AbortRendering
+
+        return self.__status
+
+    def set_status(self, status):
+        self.__status = status
 
     def on_rendering_abort(self):
         pass
@@ -55,9 +65,3 @@ class RendererController(asr.IRendererController):
 
     def on_progress(self):
         pass
-
-    def get_status(self):
-        if self.__engine.test_break():
-            return asr.IRenderControllerStatus.AbortRendering
-
-        return asr.IRenderControllerStatus.ContinueRendering
