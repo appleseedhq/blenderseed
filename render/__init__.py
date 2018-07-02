@@ -52,7 +52,6 @@ _preview_renderer = None
 
 
 class RenderThread(threading.Thread):
-
     def __init__(self, renderer):
         super(RenderThread, self).__init__()
         self.__renderer = renderer

@@ -184,10 +184,8 @@ class CameraTranslator(Translator):
 
 
 class InteractiveCameraTranslator(Translator):
-
     def __init__(self, context):
         super(InteractiveCameraTranslator, self).__init__(context.scene.camera)
-
         self.__context = context
 
     @property
@@ -228,7 +226,6 @@ class InteractiveCameraTranslator(Translator):
             self.__as_int_camera = asr.Camera(model, self.appleseed_name, parameters)
             self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
             scene.cameras().insert(self.__as_int_camera)
-
         else:
             cam.set_parameters(parameters)
             cam.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
