@@ -27,6 +27,7 @@
 
 import bpy
 import bpy_extras
+import math
 from mathutils import Matrix
 
 import appleseed as asr
@@ -97,7 +98,7 @@ class CameraTranslator(Translator):
 
         aspect_ratio = self._get_frame_aspect_ratio(scene)
 
-        film_width, film_height = self._calc_frame_dimensions(camera, aspect_ratio)
+        film_width, film_height = self._calc_frame_dimensions(aspect_ratio)
 
         model = self.__as_camera.get_model()
 
@@ -162,12 +163,12 @@ class CameraTranslator(Translator):
         logger.debug("2D Coords:{0} {1}".format(co_2d.x, y))
         return asr.Vector2f(co_2d.x, y)
 
-    def _calc_frame_dimensions(self, camera, aspect_ratio):
-        if camera.sensor_fit in ('AUTO', 'HORIZONTAL'):
-            film_width = camera.sensor_width / 1000
+    def _calc_frame_dimensions(self, aspect_ratio):
+        if self.bl_camera.data.sensor_fit in ('AUTO', 'HORIZONTAL'):
+            film_width = self.bl_camera.data.sensor_width / 1000
             film_height = film_width / aspect_ratio
         else:
-            film_height = camera.sensor_height / 1000
+            film_height = self.bl_camera.data.sensor_height / 1000
             film_width = film_height * aspect_ratio
 
         return film_width, film_height
@@ -235,7 +236,7 @@ class InteractiveCameraTranslator(Translator):
         print("Matrix %s" % self._matrix)
 
     def __get_cam_props(self):
-        # todo: Finish this for other camera models.....
+        # todo: add view offset
         params = {}
         model = None
         view_cam_type = self.context.region_data.view_perspective
@@ -246,9 +247,14 @@ class InteractiveCameraTranslator(Translator):
         aspect_ratio = width / height
 
         if view_cam_type == "ORTHO":
-            pass
-            # model = 'orthographic_camera'
-            # self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+            model = 'orthographic_camera'
+            self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+            extent_base = self.context.space_data.region_3d.view_distance * 32.0 / self.context.space_data.lens
+            zoom = 2.0
+            sensor_width = zoom * extent_base * 1 / 1000
+            params = {'film_width': sensor_width,
+                      'aspect_ratio': aspect_ratio}
+
         elif view_cam_type == "PERSP":
             model = 'pinhole_camera'
             zoom = 2.0
@@ -258,12 +264,34 @@ class InteractiveCameraTranslator(Translator):
                       'aspect_ratio': aspect_ratio,
                       'film_width': sensor_width}
         elif view_cam_type == "CAMERA":
-            pass
-            # cam_mapping = {'PERSP': 'pinhole_camera',
-            #                'ORTHO': 'orthographic_camera',
-            #                'PANO': 'spherical_camera'}
-            # model = cam_mapping[self.bl_camera.data.type]
-            # if model == 'PANO':
-            #     raise NotImplementedError("Spherical camera not supported for interactive rendering")
+            cam_mapping = {'PERSP': 'pinhole_camera',
+                           'ORTHO': 'orthographic_camera',
+                           'PANO': 'spherical_camera'}
+            model = cam_mapping[self.bl_camera.data.type]
+
+            # Taken from Cycles viewport export code
+            zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
+
+            if model == 'orthographic_camera':
+                sensor_width = self.bl_camera.camera.data.ortho_scale / 1000 * zoom
+                params = {'film_width': sensor_width,
+                          'aspect_ratio': aspect_ratio}
+            elif model == 'spherical_camera':
+                raise NotImplementedError("Spherical camera not supported for interactive rendering")
+            else:
+                film_width, film_height = self._calc_frame_dimensions(aspect_ratio, zoom)
+                params = {'focal_length': self.bl_camera.data.camera.lens / 1000,
+                          'aspect_ratio': aspect_ratio,
+                          'film_dimensions': asr.Vector2f(film_width, film_height)}
 
         return model, params
+
+    def _calc_frame_dimensions(self, aspect_ratio, zoom):
+        if self.bl_camera.camera.sensor_fit in ('AUTO', 'HORIZONTAL'):
+            film_width = self.bl_camera.camera.sensor_width / 1000 * zoom
+            film_height = film_width / aspect_ratio
+        else:
+            film_height = self.bl_camera.camera.sensor_height / 1000 * zoom
+            film_width = film_height * aspect_ratio
+
+        return film_width, film_height
