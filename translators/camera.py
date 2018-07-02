@@ -164,11 +164,11 @@ class CameraTranslator(Translator):
         return asr.Vector2f(co_2d.x, y)
 
     def _calc_frame_dimensions(self, aspect_ratio):
-        if self.bl_camera.camera.sensor_fit in ('AUTO', 'HORIZONTAL'):
-            film_width = self.bl_camera.camera.sensor_width / 1000
+        if self.bl_camera.data.sensor_fit in ('AUTO', 'HORIZONTAL'):
+            film_width = self.bl_camera.data.sensor_width / 1000
             film_height = film_width / aspect_ratio
         else:
-            film_height = self.bl_camera.camera.sensor_height / 1000
+            film_height = self.bl_camera.data.sensor_height / 1000
             film_width = film_height * aspect_ratio
 
         return film_width, film_height

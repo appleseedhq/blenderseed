@@ -125,7 +125,8 @@ class MeshTranslator(ObjectTranslator):
                 self.__mesh_object = asr.MeshObject(mesh_name, {})
                 self.__convert_mesh(me)
 
-                self.__mesh_object.set_motion_segment_count(len(key_times) - 1)
+                if self.__deforming:
+                    self.__mesh_object.set_motion_segment_count(len(key_times) - 1)
             else:
                 # Set vertex and normal poses.
                 logger.debug("Setting mesh key for object %s, time = %s", self.bl_obj.name, time)

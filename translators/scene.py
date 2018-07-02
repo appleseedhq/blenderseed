@@ -358,7 +358,7 @@ class SceneTranslator(GroupTranslator):
                     # Create a translator for the group if needed.
                     if not group_key in self.__group_translators:
                         logger.debug("Creating group translator for group %s", group_key)
-                        self.__group_translators[group_key] = GroupTranslator(group, self.export_mode, self.geometry_dir, self.textures_dir)
+                        self.__group_translators[group_key] = GroupTranslator(group, self.export_mode, False, self.geometry_dir, self.textures_dir, self.shaders_dir, self.asset_handler)
 
                     # Instance the group into the scene.
                     logger.debug("Creating group instance translator for object %s", obj.name)
