@@ -34,7 +34,7 @@ import os
 
 class AppleseedNewMat(bpy.types.Operator):
     bl_label = "New Material"
-    bl_description = ""
+    bl_description = "Add a new appleseed material"
     bl_idname = "appleseed.new_mat"
 
     @classmethod
@@ -50,7 +50,7 @@ class AppleseedNewMat(bpy.types.Operator):
 
 class AppleseedViewNode(bpy.types.Operator):
     bl_label = "View OSL Nodetree"
-    bl_description = ""
+    bl_description = "View the node tree attached to this material"
     bl_idname = "appleseed.view_nodetree"
 
     @classmethod
@@ -76,7 +76,7 @@ class AppleseedViewNode(bpy.types.Operator):
 
 class AppleseedViewLampNode(bpy.types.Operator):
     bl_label = "View OSL Nodetree"
-    bl_description = ""
+    bl_description = "View the node tree attached to this material"
     bl_idname = "appleseed.view_lamp_nodetree"
 
     @classmethod
@@ -101,6 +101,9 @@ class AppleseedViewLampNode(bpy.types.Operator):
 
 
 class AppleseedConvertTextures(bpy.types.Operator):
+    """
+    Converts base textures into mipmapped .tx textures for rendering
+    """
     bl_label = "Convert Textures"
     bl_description = "Convert textures"
     bl_idname = "appleseed.convert_textures"
@@ -153,11 +156,12 @@ class AppleseedRefreshTexture(bpy.types.Operator):
                     if node.parameter_types[param] == 'string':
                         string = getattr(node, param)
                         if string.endswith(util.image_extensions):
-                            scene_textures.append(string)
-                            if string not in existing_textures:
-                                collection.add()
-                                num = len(collection)
-                                collection[num - 1].name = string
+                            if string not in scene_textures:
+                                scene_textures.append(string)
+                                if string not in existing_textures:
+                                    collection.add()
+                                    num = len(collection)
+                                    collection[num - 1].name = string
 
         texture_index = len(collection) - 1
         while texture_index > -1:
@@ -272,7 +276,7 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
 
     def execute(self, context):
         material = context.object.active_material
-        nodetree = bpy.data.node_groups.new('%s_appleseed_osl_nodetree' % material.name, 'AppleseedOSLNodeTree')
+        nodetree = bpy.data.node_groups.new('%s_tree' % material.name, 'AppleseedOSLNodeTree')
         nodetree.use_fake_user = True
         surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
         surface.location = (0, 0)
@@ -285,7 +289,7 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
 
 class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
     """
-    appleseed material node tree generator.
+    appleseed lamp node tree generator.
     """
 
     bl_idname = "appleseed.add_lap_osl_nodetree"
@@ -294,7 +298,7 @@ class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
 
     def execute(self, context):
         lamp = context.object.data
-        nodetree = bpy.data.node_groups.new('%s_appleseed_lamp_osl_nodetree' % lamp.name, 'AppleseedOSLNodeTree')
+        nodetree = bpy.data.node_groups.new('%s_tree' % lamp.name, 'AppleseedOSLNodeTree')
         nodetree.use_fake_user = True
         surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
         surface.location = (0, 0)
