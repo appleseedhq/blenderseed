@@ -177,7 +177,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         project = _preview_renderer.as_project
 
-        self.__render_final(project, scene)
+        self.__render(scene, project)
 
     def __render_final(self, scene):
         """
@@ -188,6 +188,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
         scene_translator.translate_scene()
 
         project = scene_translator.as_project
+
+        self.__render(scene, project)
+
+    def __render(self, scene, project):
 
         self._renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
 

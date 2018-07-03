@@ -30,6 +30,7 @@ import tempfile
 
 import appleseed as asr
 
+from .handlers import AssetHandler
 from .materials import MaterialTranslator
 from .. import util
 
@@ -182,7 +183,7 @@ class PreviewRenderer(object):
         if not likely_materials:
             return
 
-        self.__mat_translator = MaterialTranslator(likely_materials[0], asset_handler=None, preview=True)
+        self.__mat_translator = MaterialTranslator(likely_materials[0], asset_handler=AssetHandler(), preview=True)
 
     def _write_project(self):
         asr.ProjectFileWriter().write(self.as_project, os.path.join(tempfile.gettempdir(), "blenderseed", "preview", "preview.appleseed"))
