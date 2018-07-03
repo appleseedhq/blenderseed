@@ -148,6 +148,11 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
     bl_label = "Texture Converter"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
 
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER'
+
     def draw(self, context):
         layout = self.layout
         scene = context.scene
