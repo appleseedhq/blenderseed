@@ -72,7 +72,7 @@ class MaterialTranslator(Translator):
     #
 
     def create_entities(self, scene):
-        self._mat_name = str(ObjectKey(self.bl_mat)) + "_mat" if not self._preview else "preview_mat"
+        self._mat_name = self.appleseed_name + "_mat" if not self._preview else "preview_mat"
         as_mat_data = self.bl_mat.appleseed
         osl_params = {'surface_shader': "{0}_surface_shader".format(self._mat_name)}
         shader_params = {'lighting_samples': as_mat_data.shader_lighting_samples} if hasattr(as_mat_data, "shader_lighting_samples") else {}
