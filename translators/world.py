@@ -135,16 +135,34 @@ class WorldTranslator(Translator):
 
     def flush_entities(self, scene):
         if self.__horizon_radiance is not None:
+            horizon_name = self.__horizon_radiance.get_name()
             scene.colors().insert(self.__horizon_radiance)
+            self.__horizon_radiance = scene.colors().get_by_name(horizon_name)
+
         if self.__zenith_radiance is not None:
+            zenith_name = self.__zenith_radiance.get_name()
             scene.colors().insert(self.__zenith_radiance)
+            self.__zenith_radiance = scene.colors().get_by_name(zenith_name)
+
         if self.__env_tex is not None:
+            env_tex_name = self.__env_tex.get_name()
             scene.textures().insert(self.__env_tex)
+            self.__env_tex = scene.textures().get_by_name(env_tex_name)
+
+            env_tex_inst_name = self.__env_tex_inst.get_name()
             scene.texture_instances().insert(self.__env_tex_inst)
+            self.__env_tex_inst = scene.texture_instances().get_by_name(env_tex_inst_name)
+
+        as_env_edf_name = self.__as_env_edf.get_name()
+        as_env_shader_name = self.__as_env_shader.get_name()
 
         scene.environment_edfs().insert(self.__as_env_edf)
         scene.environment_shaders().insert(self.__as_env_shader)
         scene.set_environment(self.__as_env)
+
+        self.__as_env_edf = scene.environment_edfs().get_by_name(as_env_edf_name)
+        self.__as_env_shader = scene.environment_shaders().get_by_name(as_env_shader_name)
+        self.__as_env = scene.get_environment()
 
     def _convert_matrix(self, m):
         rot = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(90.0))

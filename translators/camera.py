@@ -86,7 +86,9 @@ class CameraTranslator(Translator):
         self.__as_camera.set_transform_sequence(self._xform_seq)
 
         # Insert the camera into the scene.
+        cam_name = self.__as_camera.get_name()
         scene.cameras().insert(self.__as_camera)
+        self.__as_camera = scene.cameras().get_by_name(cam_name)
 
     #
     # Internal methods.
@@ -212,28 +214,27 @@ class InteractiveCameraTranslator(Translator):
         logger.debug("Flushing camera entity for camera: interactive camera")
 
         # Insert the camera into the scene.
+        cam_name = self.__as_int_camera.get_name()
         scene.cameras().insert(self.__as_int_camera)
+        self.__as_int_camera = scene.cameras().get_by_name(cam_name)
 
     def update_camera(self, context, scene):
         logger.debug("Update interactive camera")
         self.__context = context
         self.reset(self.context.scene.camera)
-        cam = scene.cameras().get_by_name(self.appleseed_name)
-        current_cam_model = cam.get_model()
+        current_cam_model = self.__as_int_camera.get_model()
 
         model, parameters = self.__get_cam_props()
 
         if model != current_cam_model:
-            scene.cameras().remove(cam)
+            scene.cameras().remove(self.__as_int_camera)
             self.__as_int_camera = asr.Camera(model, self.appleseed_name, parameters)
             self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
             scene.cameras().insert(self.__as_int_camera)
 
         else:
-            cam.set_parameters(parameters)
-            cam.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
-
-        print("Matrix %s" % self._matrix)
+            self.__as_int_camera.set_parameters(parameters)
+            self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
 
     def __get_cam_props(self):
         # todo: add view offset

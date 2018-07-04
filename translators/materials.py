@@ -50,8 +50,6 @@ class MaterialTranslator(Translator):
 
         self._has_shadergroup = False
 
-        self._shader_groupname = ""
-
         if self.bl_node_tree:
             self.__shaders = self.bl_node_tree.nodes
 
@@ -83,9 +81,8 @@ class MaterialTranslator(Translator):
         if self.bl_node_tree:
             osl_params['osl_surface'] = self.bl_node_tree.name
 
-            if self.__shader_group == None:
-                self._shader_groupname = self.bl_node_tree.name
-                self.__shader_group = asr.ShaderGroup(self._shader_groupname)
+            if self.__shader_group is None:
+                self.__shader_group = asr.ShaderGroup(self.bl_node_tree.name)
 
             self.set_shader_group_parameters(scene)
 
@@ -93,21 +90,24 @@ class MaterialTranslator(Translator):
 
     def flush_entities(self, assembly):
 
+        shader_name = self.__as_shader.get_name()
         assembly.surface_shaders().insert(self.__as_shader)
+        self.__as_shader = assembly.surface_shaders().get_by_name(shader_name)
+
+        mat_name = self.__as_mat.get_name()
         assembly.materials().insert(self.__as_mat)
+        self.__as_mat = assembly.materials().get_by_name(mat_name)
 
         # Only insert the shader group if one exists and it has not been inserted yet
-        if not self._has_shadergroup and self.__shader_group is not None:
+        if self.__shader_group is not None and not self._has_shadergroup:
+            shader_groupname = self.__shader_group.get_name()
             assembly.shader_groups().insert(self.__shader_group)
+            self.__shader_group = assembly.shader_groups().get_by_name(shader_groupname)
             self._has_shadergroup = True
 
     def update_material(self, material, assembly, scene):
-        mat = assembly.materials().get_by_name(self._mat_name)
-        surface_shader = assembly.surface_shaders().get_by_name(self._surface_name)
-        if self._has_shadergroup:
-            self.__shader_group = assembly.shader_groups().get_by_name(self._shader_groupname)
-        assembly.materials().remove(mat)
-        assembly.surface_shaders().remove(surface_shader)
+        assembly.materials().remove(self.__as_mat)
+        assembly.surface_shaders().remove(self.__as_shader)
 
         self.reset(material)
         if self.bl_node_tree:
@@ -128,7 +128,7 @@ class MaterialTranslator(Translator):
                 self.__shader_list = surface_shader.traverse_tree()
 
         if surface_shader is None:
-            logger.debug("No surface shader for %s", self._shader_groupname)
+            logger.debug("No surface shader for %s", self.__shader_group.get_name())
             return
 
         self.__shader_group.clear()

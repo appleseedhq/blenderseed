@@ -157,12 +157,16 @@ class RenderAppleseed(bpy.types.RenderEngine):
         if self._interactive_scene_translator is None:
             self.__start_interactive_render(context)
         else:
+            logger.debug("update_scene called")
             self._interactive_scene_translator.update_scene(context.scene)
 
     def view_draw(self, context):
         logger.debug("view_draw called")
-        #self._interactive_scene_translator.update_camera(context)
-        self._interactive_tile_callback.draw_pixels(0, 0, 640, 480)
+        self._renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
+        width, height = self._interactive_scene_translator.update_camera(context)
+        self._renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
+        print(width, height)
+        self._interactive_tile_callback.draw_pixels(0, 0, width, height)
 
     def __render_material_preview(self, scene):
         global _preview_renderer
@@ -218,7 +222,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self._render_thread = None
 
     def __start_interactive_render(self, context):
-        assert(self._interactive_scene_translator == None)
+        assert(self._interactive_scene_translator is None)
 
         logger.debug("Translating scene for interactive rendering")
 
@@ -226,6 +230,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self._interactive_scene_translator.translate_scene()
 
         logger.debug("Starting interactive rendering")
+
+        project = self._interactive_scene_translator.as_project
 
         self._renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
 

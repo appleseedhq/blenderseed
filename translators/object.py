@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -26,12 +25,9 @@
 # THE SOFTWARE.
 #
 
-import os
-
 import appleseed as asr
-import bpy
 
-from .translator import Translator, ObjectKey, ProjectExportMode
+from .translator import Translator
 from ..logger import get_logger
 
 logger = get_logger()
@@ -103,10 +99,12 @@ class InstanceTranslator(ObjectTranslator):
 
         assembly_instance_name = self.appleseed_name + "_ass_inst"
 
-        ass_inst = asr.AssemblyInstance(
+        self.__ass_inst = asr.AssemblyInstance(
             assembly_instance_name,
             {},
             self.__master.assembly_name)
 
-        ass_inst.set_transform_sequence(self._xform_seq)
-        assembly.assembly_instances().insert(ass_inst)
+        self.__ass_inst.set_transform_sequence(self._xform_seq)
+        ass_name = self.__ass_inst.get_name()
+        assembly.assembly_instances().insert(self.__ass_inst)
+        self.__ass_inst = assembly.assembly_instances().get_by_name(ass_name)

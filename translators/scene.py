@@ -281,7 +281,7 @@ class SceneTranslator(GroupTranslator):
 
         # Update materials.
         for mat in bpy.data.materials:
-            mat_key = str(ObjectKey(mat))
+            mat_key = ObjectKey(mat)
             # Check if base material is updated
             if mat.is_updated or mat.is_updated_data:
                 if mat_key in self._material_translators.keys():
@@ -290,7 +290,7 @@ class SceneTranslator(GroupTranslator):
             # Check if material node tree has been updated
             if mat.appleseed.osl_node_tree is not None:
                 if mat.appleseed.osl_node_tree.is_updated or mat.appleseed.osl_node_tree.is_updated_data:
-                    logger.debug("Updating material %s", mat_key)
+                    logger.debug("Updating material tree for %s", mat_key)
                     self._material_translators[mat_key].update_material(mat, self.__main_assembly, scene)
 
         # Update objects
@@ -318,6 +318,8 @@ class SceneTranslator(GroupTranslator):
         new_viewport_resolution = [width, height]
         if new_viewport_resolution != self.__viewport_resolution:
             self.__translate_frame()
+
+        return width, height
 
     def write_project(self, filename):
         '''Write the appleseed project.'''
