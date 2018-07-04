@@ -25,6 +25,7 @@
 # THE SOFTWARE.
 #
 
+import bpy
 import os
 import math
 
@@ -278,7 +279,33 @@ class SceneTranslator(GroupTranslator):
         # Set internal scene reference to current state of Blender scene
         self._bl_obj = scene
 
-        # todo: finish this......
+        # Update materials.
+        for mat in bpy.data.materials:
+            mat_key = str(ObjectKey(mat))
+            # Check if base material is updated
+            if mat.is_updated or mat.is_updated_data:
+                if mat_key in self._material_translators.keys():
+                    logger.debug("Updating material %s", mat_key)
+                    self._material_translators[mat_key].update_material(mat, self.__main_assembly, scene)
+            # Check if material node tree has been updated
+            if mat.appleseed.osl_node_tree is not None:
+                if mat.appleseed.osl_node_tree.is_updated or mat.appleseed.osl_node_tree.is_updated_data:
+                    logger.debug("Updating material %s", mat_key)
+                    self._material_translators[mat_key].update_material(mat, self.__main_assembly, scene)
+
+        # Update objects
+        for translator in self._object_translators.keys():
+            # Find blender obj
+            bl_obj = bpy.data.objects[str(translator)]
+            if bl_obj.is_updated or bl_obj.is_updated_data:
+                logger.debug("Updating object %s", translator)
+                self._object_translators[translator].update(bl_obj, self.__main_assembly)
+
+        for translator in self._lamp_translators.keys():
+            # Find blender obj
+            bl_lamp = bpy.data.objects[str(translator)]
+            if bl_lamp.is_updated or bl_lamp.is_updated_data:
+                self._lamp_translators[translator].update(bl_lamp, self.__main_assembly)
 
     def update_camera(self, context):
         self.__context = context

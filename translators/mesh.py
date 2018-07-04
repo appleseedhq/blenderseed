@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -28,16 +27,17 @@
 
 import os
 
-import appleseed as asr
 import bmesh
 import bpy
 
-from .translator import ObjectKey, ProjectExportMode
+import appleseed as asr
 from .object import ObjectTranslator
+from .translator import ObjectKey, ProjectExportMode
 from ..logger import get_logger
 from ..util import is_object_deforming
 
 logger = get_logger()
+
 
 class MeshTranslator(ObjectTranslator):
 
@@ -143,7 +143,7 @@ class MeshTranslator(ObjectTranslator):
 
         asr_obj_props = self.bl_obj.appleseed
 
-        mesh_name = self.__mesh_object.get_name()
+        self._mesh_name = self.__mesh_object.get_name()
         self.__object_instance_params = {'visibility': {'camera': asr_obj_props.camera_visible,
                                                         'light': asr_obj_props.light_visible,
                                                         'shadow': asr_obj_props.shadow_visible,
@@ -173,9 +173,9 @@ class MeshTranslator(ObjectTranslator):
                 for i, f in enumerate(self.__mesh_filenames):
                     params['filename'][str(i)] = "_geometry/" + f
 
-            self.__mesh_object = asr.MeshObject(mesh_name, params)
+            self.__mesh_object = asr.MeshObject(self._mesh_name, params)
 
-            mesh_name += ".mesh"
+            self._mesh_name += ".mesh"
 
         self._xform_seq.optimize()
 
@@ -191,15 +191,18 @@ class MeshTranslator(ObjectTranslator):
         else:
             needs_assembly = self._num_instances > 1 or self._xform_seq.size() > 1
 
+        self._inst_name = self.appleseed_name
+
         if needs_assembly:
-            logger.debug("Creating assembly for object %s, name: %s", self.appleseed_name, self.assembly_name)
+            logger.debug("Creating assembly for object %s, name: %s", self._mesh_name, self.assembly_name)
 
             ass = asr.Assembly(self.assembly_name)
 
+            logger.debug("Creating object instance for object %s, name: %s", self._mesh_name, self._inst_name)
             obj_inst = asr.ObjectInstance(
-                self.appleseed_name,
+                self._inst_name,
                 self.__object_instance_params,
-                mesh_name,
+                self._mesh_name,
                 asr.Transformd(asr.Matrix4d().identity()),
                 self.__front_materials,
                 self.__back_materials)
@@ -207,12 +210,12 @@ class MeshTranslator(ObjectTranslator):
             ass.objects().insert(self.__mesh_object)
             ass.object_instances().insert(obj_inst)
 
-            assembly_instance_name = self.assembly_name + "_inst"
+            self._assembly_instance_name = self.assembly_name + "_inst"
 
-            logger.debug("Creating assembly instance for object %s, name: %s", self.appleseed_name, assembly_instance_name)
+            logger.debug("Creating assembly instance for object %s, name: %s", self._mesh_name, self._assembly_instance_name)
 
             ass_inst = asr.AssemblyInstance(
-                assembly_instance_name,
+                self._assembly_instance_name,
                 {},
                 self.assembly_name)
             ass_inst.set_transform_sequence(self._xform_seq)
@@ -220,19 +223,48 @@ class MeshTranslator(ObjectTranslator):
             assembly.assemblies().insert(ass)
             assembly.assembly_instances().insert(ass_inst)
         else:
-            inst_name = self.appleseed_name
-            logger.debug("Creating object instance for object %s, name: %s", self.appleseed_name, inst_name)
+            logger.debug("Creating object instance for object %s, name: %s", self._mesh_name, self._inst_name)
 
             obj_inst = asr.ObjectInstance(
-                inst_name,
+                self._inst_name,
                 self.__object_instance_params,
-                mesh_name,
+                self._mesh_name,
                 self._xform_seq.get_earliest_transform(),
                 self.__front_materials,
                 self.__back_materials)
 
             assembly.objects().insert(self.__mesh_object)
             assembly.object_instances().insert(obj_inst)
+
+    def update(self, obj, assembly):
+        # asr_obj_props = obj.appleseed
+        # params = {'visibility': {'camera': asr_obj_props.camera_visible,
+        #                          'light': asr_obj_props.light_visible,
+        #                          'shadow': asr_obj_props.shadow_visible,
+        #                          'diffuse': asr_obj_props.diffuse_visible,
+        #                          'glossy': asr_obj_props.glossy_visible,
+        #                          'specular': asr_obj_props.specular_visible,
+        #                          'transparency': asr_obj_props.transparency_visible},
+        #           'medium_priority': asr_obj_props.medium_priority}
+        #
+        # if params != self.__object_instance_params:
+        #     logger.debug("Updating object instance %s", self._inst_name)
+        #
+        #     # assembly.object_instances().remove(current_obj_inst)
+        #     new_obj_inst = asr.ObjectInstance(
+        #         self._inst_name,
+        #         self.__object_instance_params,
+        #         self._mesh_name,
+        #         asr.Transformd(asr.Matrix4d().identity()),
+        #         self.__front_materials,
+        #         self.__back_materials)
+        #
+        #     assembly.object_instances().insert(new_obj_inst)
+
+        logger.debug("Updating transform for assembly %s", self._assembly_instance_name)
+        ass_inst = assembly.assembly_instances().get_by_name(self._assembly_instance_name)
+        ass_inst.transform_sequence().set_transform(0.0, self._convert_matrix(obj.matrix_world))
+
 
     #
     # Internal methods.
@@ -276,7 +308,7 @@ class MeshTranslator(ObjectTranslator):
         self.__mesh_object.reserve_triangles(len(me.polygons))
 
         for f in me.polygons:
-            assert(len(f.vertices) == 3)
+            assert (len(f.vertices) == 3)
             tri = asr.Triangle(
                 f.vertices[0],
                 f.vertices[1],
