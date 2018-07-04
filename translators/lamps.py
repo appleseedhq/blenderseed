@@ -144,6 +144,9 @@ class LampTranslator(Translator):
         if self.__radiance_mult_tex_inst is not None:
             assembly.texture_instances().insert(self.__radiance_mult_tex_inst)
 
+    def update(self, lamp, assembly):
+        pass
+
 
 class AreaLampTranslator(Translator):
 
@@ -232,6 +235,9 @@ class AreaLampTranslator(Translator):
 
         if self.__lamp_shader_group is not None:
             assembly.shader_groups().insert(self.__lamp_shader_group)
+
+    def update(self, lamp, assembly):
+        pass
 
     #
     # Internal methods.
