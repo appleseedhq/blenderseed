@@ -55,11 +55,6 @@ class PreviewRenderer(object):
 
         self._set_frame(scene)
 
-        # self._write_project()
-
-    def update_preview(self, scene):
-        pass
-
     def _create_preview_scene(self, scene):
         """This function creates the scene that is used to render material previews.  It consists of:
         A background plane
@@ -163,8 +158,17 @@ class PreviewRenderer(object):
         self.__mat_translator.create_entities(scene)
         self.__mat_translator.flush_entities(self.__main_assembly)
 
+    def update_preview(self, scene):
+        likely_material = self._get_preview_material(scene)
+        self.__mat_translator.update_material(likely_material, self.__main_assembly, scene)
+
     def _generate_material(self, scene):
         # Collect objects and their materials in a object -> [materials] dictionary.
+        likely_material = self._get_preview_material(scene)
+
+        self.__mat_translator = MaterialTranslator(likely_material, asset_handler=AssetHandler(), preview=True)
+
+    def _get_preview_material(self, scene):
         objects_materials = {}
         for obj in (obj for obj in scene.objects if obj.is_visible(scene) and not obj.hide_render):
             for mat in util.get_instance_materials(obj):
@@ -179,14 +183,11 @@ class PreviewRenderer(object):
             return
 
         # Find the materials attached to the likely preview object.
-        likely_materials = objects_materials[preview_objects[0]]
-        if not likely_materials:
+        likely_material = objects_materials[preview_objects[0]]
+        if not likely_material:
             return
 
-        self.__mat_translator = MaterialTranslator(likely_materials[0], asset_handler=AssetHandler(), preview=True)
-
-    def _write_project(self):
-        asr.ProjectFileWriter().write(self.as_project, os.path.join(tempfile.gettempdir(), "blenderseed", "preview", "preview.appleseed"))
+        return likely_material[0]
 
     def _create_config(self):
         conf_final = self.as_project.configurations()['final']

@@ -170,10 +170,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
         if not _preview_renderer:
             _preview_renderer = PreviewRenderer()
 
-        _preview_renderer.translate_preview(scene)
+            _preview_renderer.translate_preview(scene)
 
-        # else:
-        #     _preview_renderer.update_preview(scene)
+        else:
+            _preview_renderer.update_preview(scene)
 
         project = _preview_renderer.as_project
 
