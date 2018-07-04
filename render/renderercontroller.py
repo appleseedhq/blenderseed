@@ -46,8 +46,11 @@ class RendererController(asr.IRendererController):
         logger.debug("Render Finished")
 
     def get_status(self):
-        if self.__engine.test_break():
-            return asr.IRenderControllerStatus.AbortRendering
+        try:
+            if self.__engine.test_break():
+                return asr.IRenderControllerStatus.AbortRendering
+        except:
+            pass
 
         return self.__status
 

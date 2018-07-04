@@ -52,7 +52,6 @@ _preview_renderer = None
 
 
 class RenderThread(threading.Thread):
-
     def __init__(self, renderer):
         super(RenderThread, self).__init__()
         self.__renderer = renderer
@@ -69,56 +68,33 @@ class RenderAppleseed(bpy.types.RenderEngine):
     # This lock allows to serialize renders.
     render_lock = threading.Lock()
 
+    #
+    # Constructor.
+    #
+
     def __init__(self):
         logger.debug("Creating render engine")
 
         # Common
-        self._renderer_controller = RendererController(self)
-        self._render_thread = None
+        self.__renderer_controller = RendererController(self)
+        self.__render_thread = None
 
         # Interactive rendering.
-        self._interactive_scene_translator = None
-        self._interactive_tile_callback = None
+        self.__interactive_scene_translator = None
+        self.__interactive_tile_callback = None
+        self.__renderer = None
+
+    #
+    # Destructor.
+    #
 
     def __del__(self):
         logger.debug("Deleting render engine")
+        self.__stop_rendering()
 
-        # Abort rendering if a render is in progress.
-        try:
-            self._renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
-            self._render_thread.join()
-        except:
-            pass
-
-    def update(self, data, scene):
-        pass
-
-    def update_render_passes(self, scene=None, renderlayer=None):
-        asr_scene_props = scene.appleseed
-
-        if not self.is_preview:
-            self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
-            if asr_scene_props.enable_aovs:
-                if asr_scene_props.diffuse_aov:
-                    self.register_pass(scene, renderlayer, "Diffuse", 4, "RGBA", 'COLOR')
-                if asr_scene_props.direct_diffuse_aov:
-                    self.register_pass(scene, renderlayer, "Direct Diffuse", 4, "RGBA", 'COLOR')
-                if asr_scene_props.indirect_diffuse_aov:
-                    self.register_pass(scene, renderlayer, "Indirect Diffuse", 4, "RGBA", 'COLOR')
-                if asr_scene_props.glossy_aov:
-                    self.register_pass(scene, renderlayer, "Glossy", 4, "RGBA", 'COLOR')
-                if asr_scene_props.direct_glossy_aov:
-                    self.register_pass(scene, renderlayer, "Direct Glossy", 4, "RGBA", 'COLOR')
-                if asr_scene_props.indirect_glossy_aov:
-                    self.register_pass(scene, renderlayer, "Indirect Glossy", 4, "RGBA", 'COLOR')
-                if asr_scene_props.normal_aov:
-                    self.register_pass(scene, renderlayer, "Normal", 3, "RGB", 'VECTOR')
-                if asr_scene_props.uv_aov:
-                    self.register_pass(scene, renderlayer, "UV", 3, "RGB", 'VECTOR')
-                if asr_scene_props.depth_aov:
-                    self.register_pass(scene, renderlayer, "Z Depth", 1, "Z", 'VALUE')
-                if asr_scene_props.pixel_time_aov:
-                    self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
+    #
+    # RenderEngine methods.
+    #
 
     def render(self, scene):
         asr_scene_props = scene.appleseed
@@ -153,35 +129,67 @@ class RenderAppleseed(bpy.types.RenderEngine):
             else:
                 self.__render_final(scene)
 
+    def update(self, data, scene):
+        pass
+
     def view_update(self, context):
-        if self._interactive_scene_translator is None:
+        if self.__interactive_scene_translator is None:
             self.__start_interactive_render(context)
         else:
             logger.debug("update_scene called")
-            self._interactive_scene_translator.update_scene(context.scene)
+            #self.__interactive_scene_translator.update_scene(context.scene)
 
     def view_draw(self, context):
         logger.debug("view_draw called")
-        self._renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
-        width, height = self._interactive_scene_translator.update_camera(context)
-        self._renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
-        print(width, height)
-        self._interactive_tile_callback.draw_pixels(0, 0, width, height)
+        #self.__renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
+        #width, height = self.__interactive_scene_translator.update_camera(context)
+        #self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
+        #print(width, height)
+        self.__interactive_tile_callback.draw_pixels(0, 0, 640, 480)
+
+    def update_render_passes(self, scene=None, renderlayer=None):
+        asr_scene_props = scene.appleseed
+
+        if not self.is_preview:
+            self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
+            if asr_scene_props.enable_aovs:
+                if asr_scene_props.diffuse_aov:
+                    self.register_pass(scene, renderlayer, "Diffuse", 4, "RGBA", 'COLOR')
+                if asr_scene_props.direct_diffuse_aov:
+                    self.register_pass(scene, renderlayer, "Direct Diffuse", 4, "RGBA", 'COLOR')
+                if asr_scene_props.indirect_diffuse_aov:
+                    self.register_pass(scene, renderlayer, "Indirect Diffuse", 4, "RGBA", 'COLOR')
+                if asr_scene_props.glossy_aov:
+                    self.register_pass(scene, renderlayer, "Glossy", 4, "RGBA", 'COLOR')
+                if asr_scene_props.direct_glossy_aov:
+                    self.register_pass(scene, renderlayer, "Direct Glossy", 4, "RGBA", 'COLOR')
+                if asr_scene_props.indirect_glossy_aov:
+                    self.register_pass(scene, renderlayer, "Indirect Glossy", 4, "RGBA", 'COLOR')
+                if asr_scene_props.normal_aov:
+                    self.register_pass(scene, renderlayer, "Normal", 3, "RGB", 'VECTOR')
+                if asr_scene_props.uv_aov:
+                    self.register_pass(scene, renderlayer, "UV", 3, "RGB", 'VECTOR')
+                if asr_scene_props.depth_aov:
+                    self.register_pass(scene, renderlayer, "Z Depth", 1, "Z", 'VALUE')
+                if asr_scene_props.pixel_time_aov:
+                    self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
+
+    #
+    # Internal methods.
+    #
 
     def __render_material_preview(self, scene):
         global _preview_renderer
 
         if not _preview_renderer:
             _preview_renderer = PreviewRenderer()
-
             _preview_renderer.translate_preview(scene)
-
         else:
             _preview_renderer.update_preview(scene)
 
         project = _preview_renderer.as_project
 
-        self.__render(scene, project)
+        self.__start_final_render(scene, project)
 
     def __render_final(self, scene):
         """
@@ -194,53 +202,64 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         project = scene_translator.as_project
 
-        self.__render(scene, project)
+        self.__start_final_render(scene, project)
 
-    def __render(self, scene, project):
+    def __start_final_render(self, scene, project):
 
-        self._renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
+        self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
 
         tile_callback = FinalTileCallback(self, scene)
 
         renderer = asr.MasterRenderer(project,
                                       project.configurations()['final'].get_inherited_parameters(),
-                                      self._renderer_controller,
+                                      self.__renderer_controller,
                                       tile_callback)
 
-        self._render_thread = RenderThread(renderer)
+        self.__render_thread = RenderThread(renderer)
 
         # While debugging, log to the console. This should be configurable.
         log_target = asr.ConsoleLogTarget(sys.stderr)
         asr.global_logger().add_target(log_target)
 
-        self._render_thread.start()
+        self.__render_thread.start()
 
-        while self._render_thread.isAlive():
-            self._render_thread.join(0.5)  # seconds
+        while self.__render_thread.isAlive():
+            self.__render_thread.join(0.5)  # seconds
 
         asr.global_logger().remove_target(log_target)
-        self._render_thread = None
+        self.__render_thread = None
 
     def __start_interactive_render(self, context):
-        assert(self._interactive_scene_translator is None)
+        '''Start an interactive rendering session.'''
+        assert(self.__interactive_scene_translator is None)
 
         logger.debug("Translating scene for interactive rendering")
 
-        self._interactive_scene_translator = SceneTranslator.create_interactive_render_translator(context)
-        self._interactive_scene_translator.translate_scene()
+        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(context)
+        self.__interactive_scene_translator.translate_scene()
 
         logger.debug("Starting interactive rendering")
 
-        project = self._interactive_scene_translator.as_project
+        project = self.__interactive_scene_translator.as_project
+        self.__interactive_tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
 
-        self._renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
+        self.__renderer = asr.MasterRenderer(project,
+                                             project.configurations()['interactive'].get_inherited_parameters(),
+                                             self.__renderer_controller,
+                                             self.__interactive_tile_callback)
 
-        self._interactive_tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
+        self.__restart_interactive_render()
 
-        renderer = asr.MasterRenderer(project,
-                                      project.configurations()['interactive'].get_inherited_parameters(),
-                                      self._renderer_controller,
-                                      self._interactive_tile_callback)
+    def __restart_interactive_render(self):
+        '''Restart the interactive renderer.'''
+        self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
+        self.__render_thread = RenderThread(self.__renderer)
+        self.__render_thread.start()
 
-        self._render_thread = RenderThread(renderer)
-        self._render_thread.start()
+    def __stop_rendering(self):
+        '''Abort rendering if a render is in progress.'''
+        try:
+            self.__renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
+            self.__render_thread.join()
+        except:
+            pass
