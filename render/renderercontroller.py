@@ -32,33 +32,22 @@ from ..logger import get_logger
 logger = get_logger()
 
 
-class RendererController(asr.IRendererController):
-    def __init__(self, engine):
-        super(RendererController, self).__init__()
-        self.__engine = engine
-        self.__status = asr.IRenderControllerStatus.ContinueRendering
+class BaseRendererController(asr.IRendererController):
+    def __init__(self):
+        super(BaseRendererController, self).__init__()
+        self._status = asr.IRenderControllerStatus.ContinueRendering
+
+    def set_status(self, status):
+        self._status = status
 
     def on_rendering_begin(self):
-        logger.debug("Starting Render")
-        self.__engine.update_stats("appleseed Rendering: Loading scene", "Time Remaining: Unknown")
+        pass
 
     def on_rendering_success(self):
         logger.debug("Render Finished")
 
-    def get_status(self):
-        try:
-            if self.__engine.test_break():
-                return asr.IRenderControllerStatus.AbortRendering
-        except:
-            pass
-
-        return self.__status
-
-    def set_status(self, status):
-        self.__status = status
-
     def on_rendering_abort(self):
-        pass
+        logger.debug("Render Aborted")
 
     def on_frame_begin(self):
         pass
@@ -68,3 +57,25 @@ class RendererController(asr.IRendererController):
 
     def on_progress(self):
         pass
+
+class FinalRendererController(BaseRendererController):
+    def __init__(self, engine):
+        super(FinalRendererController, self).__init__()
+        self.__engine = engine
+
+    def get_status(self):
+        if self.__engine.test_break():
+            return asr.IRenderControllerStatus.AbortRendering
+
+        return self._status
+
+    def on_rendering_begin(self):
+        logger.debug("Starting Render")
+        self.__engine.update_stats("appleseed Rendering: Loading scene", "Time Remaining: Unknown")
+
+class InteractiveRendererController(BaseRendererController):
+    def __init__(self):
+        super(InteractiveRendererController, self).__init__()
+
+    def get_status(self):
+        return self._status
