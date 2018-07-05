@@ -136,16 +136,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
         if self.__interactive_scene_translator is None:
             self.__start_interactive_render(context)
         else:
-            logger.debug("update_scene called")
-            #self.__interactive_scene_translator.update_scene(context.scene)
+            # self.__interactive_scene_translator.update_scene(context.scene)
+            pass
 
     def view_draw(self, context):
-        logger.debug("view_draw called")
-        #self.__renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
-        #width, height = self.__interactive_scene_translator.update_camera(context)
-        #self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
-        #print(width, height)
-        self.__interactive_tile_callback.draw_pixels(0, 0, 640, 480)
+        width = int(context.region.width)
+        height = int(context.region.height)
+
+        self.__interactive_tile_callback.draw_pixels(0, 0, width, height)
 
     def update_render_passes(self, scene=None, renderlayer=None):
         asr_scene_props = scene.appleseed
