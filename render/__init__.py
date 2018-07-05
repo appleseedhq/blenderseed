@@ -39,7 +39,7 @@ from math import ceil
 import appleseed as asr
 import bpy
 
-from .renderercontroller import RendererController
+from .renderercontroller import FinalRendererController, InteractiveRendererController
 from .tilecallbacks import FinalTileCallback
 from .. import util
 from ..logger import get_logger
@@ -75,14 +75,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
     def __init__(self):
         logger.debug("Creating render engine")
 
-        # Common
-        self.__renderer_controller = RendererController(self)
+        # Common for all rendering modes.
+        self.__renderer = None
+        self.__renderer_controller = None
+        self.__tile_callback = None
         self.__render_thread = None
 
         # Interactive rendering.
         self.__interactive_scene_translator = None
-        self.__interactive_tile_callback = None
-        self.__renderer = None
 
     #
     # Destructor.
@@ -99,28 +99,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
     def render(self, scene):
         asr_scene_props = scene.appleseed
 
-        if not self.is_preview:
-            if asr_scene_props.enable_aovs:
-                if asr_scene_props.diffuse_aov:
-                    self.add_pass("Diffuse", 4, "RGBA")
-                if asr_scene_props.direct_diffuse_aov:
-                    self.add_pass("Direct Diffuse", 4, "RGBA")
-                if asr_scene_props.indirect_diffuse_aov:
-                    self.add_pass("Indirect Diffuse", 4, "RGBA")
-                if asr_scene_props.glossy_aov:
-                    self.add_pass("Glossy", 4, "RGBA")
-                if asr_scene_props.direct_glossy_aov:
-                    self.add_pass("Direct Glossy", 4, "RGBA")
-                if asr_scene_props.indirect_glossy_aov:
-                    self.add_pass("Indirect Glossy", 4, "RGBA")
-                if asr_scene_props.normal_aov:
-                    self.add_pass("Normal", 3, "RGB")
-                if asr_scene_props.uv_aov:
-                    self.add_pass("UV", 3, "RGB")
-                if asr_scene_props.depth_aov:
-                    self.add_pass("Z Depth", 1, "Z")
-                if asr_scene_props.pixel_time_aov:
-                    self.add_pass("Pixel Time", 1, "X")
+        if asr_scene_props.enable_aovs and not self.is_preview:
+            self.__add_render_passes(scene)
 
         with RenderAppleseed.render_lock:
             if self.is_preview:
@@ -142,8 +122,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
     def view_draw(self, context):
         width = int(context.region.width)
         height = int(context.region.height)
-
-        self.__interactive_tile_callback.draw_pixels(0, 0, width, height)
+        self.__tile_callback.draw_pixels(0, 0, width, height)
 
     def update_render_passes(self, scene=None, renderlayer=None):
         asr_scene_props = scene.appleseed
@@ -203,33 +182,53 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.__start_final_render(scene, project)
 
     def __start_final_render(self, scene, project):
+        """
+        Start a final render.
+        """
 
-        self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
+        # Preconditions.
+        assert(self.__renderer is None)
+        assert(self.__renderer_controller is None)
+        assert(self.__tile_callback is None)
+        assert(self.__render_thread is None)
 
-        tile_callback = FinalTileCallback(self, scene)
+        self.__renderer_controller = FinalRendererController(self)
 
-        renderer = asr.MasterRenderer(project,
-                                      project.configurations()['final'].get_inherited_parameters(),
-                                      self.__renderer_controller,
-                                      tile_callback)
+        self.__tile_callback = FinalTileCallback(self, scene)
 
-        self.__render_thread = RenderThread(renderer)
+        self.__renderer = asr.MasterRenderer(project,
+                                             project.configurations()['final'].get_inherited_parameters(),
+                                             self.__renderer_controller,
+                                             self.__tile_callback)
+
+        self.__render_thread = RenderThread(self.__renderer)
 
         # While debugging, log to the console. This should be configurable.
         log_target = asr.ConsoleLogTarget(sys.stderr)
         asr.global_logger().add_target(log_target)
 
+        # Start render thread and wait for it to finish.
         self.__render_thread.start()
 
         while self.__render_thread.isAlive():
             self.__render_thread.join(0.5)  # seconds
 
+        # Cleanup.
         asr.global_logger().remove_target(log_target)
-        self.__render_thread = None
+
+        self.__stop_rendering()
 
     def __start_interactive_render(self, context):
-        '''Start an interactive rendering session.'''
+        """
+        Start an interactive rendering session.
+        """
+
+        # Preconditions.
         assert(self.__interactive_scene_translator is None)
+        assert(self.__renderer is None)
+        assert(self.__renderer_controller is None)
+        assert(self.__tile_callback is None)
+        assert(self.__render_thread is None)
 
         logger.debug("Translating scene for interactive rendering")
 
@@ -239,25 +238,65 @@ class RenderAppleseed(bpy.types.RenderEngine):
         logger.debug("Starting interactive rendering")
 
         project = self.__interactive_scene_translator.as_project
-        self.__interactive_tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
+
+        self.__renderer_controller = InteractiveRendererController()
+        self.__tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
 
         self.__renderer = asr.MasterRenderer(project,
                                              project.configurations()['interactive'].get_inherited_parameters(),
                                              self.__renderer_controller,
-                                             self.__interactive_tile_callback)
+                                             self.__tile_callback)
 
         self.__restart_interactive_render()
 
     def __restart_interactive_render(self):
-        '''Restart the interactive renderer.'''
+        """
+        Restart the interactive renderer.
+        """
+
         self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
         self.__render_thread = RenderThread(self.__renderer)
         self.__render_thread.start()
 
     def __stop_rendering(self):
-        '''Abort rendering if a render is in progress.'''
+        """
+        Abort rendering if a render is in progress.
+        """
+
+        # Signal appleseed to stop rendering.
         try:
-            self.__renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
-            self.__render_thread.join()
+            if self.__render_thread:
+                self.__renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
+                self.__render_thread.join()
         except:
             pass
+
+        # Cleanup.
+        self.__render_thread = None
+        self.__renderer = None
+        self.__renderer_controller = None
+        self.__tile_callback = None
+
+    def __add_render_passes(self, scene):
+        asr_scene_props = scene.appleseed
+
+        if asr_scene_props.diffuse_aov:
+            self.add_pass("Diffuse", 4, "RGBA")
+        if asr_scene_props.direct_diffuse_aov:
+            self.add_pass("Direct Diffuse", 4, "RGBA")
+        if asr_scene_props.indirect_diffuse_aov:
+            self.add_pass("Indirect Diffuse", 4, "RGBA")
+        if asr_scene_props.glossy_aov:
+            self.add_pass("Glossy", 4, "RGBA")
+        if asr_scene_props.direct_glossy_aov:
+            self.add_pass("Direct Glossy", 4, "RGBA")
+        if asr_scene_props.indirect_glossy_aov:
+            self.add_pass("Indirect Glossy", 4, "RGBA")
+        if asr_scene_props.normal_aov:
+            self.add_pass("Normal", 3, "RGB")
+        if asr_scene_props.uv_aov:
+            self.add_pass("UV", 3, "RGB")
+        if asr_scene_props.depth_aov:
+            self.add_pass("Z Depth", 1, "Z")
+        if asr_scene_props.pixel_time_aov:
+            self.add_pass("Pixel Time", 1, "X")
