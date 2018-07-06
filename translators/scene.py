@@ -307,19 +307,31 @@ class SceneTranslator(GroupTranslator):
             if bl_lamp.is_updated or bl_lamp.is_updated_data:
                 self._lamp_translators[translator].update(bl_lamp, self.__main_assembly)
 
-    def update_camera(self, context):
+    def check_view(self, context):
+        view_update = False
+        camera_update = False
         self.__context = context
-        for x in self.__camera_translators.values():
-            x.update_camera(self.__context, self.as_scene)
 
         # Check if the frame needs to be updated
         width = int(self.__context.region.width)
         height = int(self.__context.region.height)
         new_viewport_resolution = [width, height]
         if new_viewport_resolution != self.__viewport_resolution:
-            self.__translate_frame()
+            view_update = True
 
-        return width, height
+        # Check if the camera needs to be updated
+        for x in self.__camera_translators.values():
+            camera_update = x.check_for_camera_update(self.__context)
+
+        return view_update, camera_update
+
+    def update_view(self, view_update, camera_update):
+        if camera_update:
+            for x in self.__camera_translators.values():
+                x.update_camera(self.__context, self.as_scene)
+
+        if view_update:
+            self.__translate_frame()
 
     def write_project(self, filename):
         '''Write the appleseed project.'''

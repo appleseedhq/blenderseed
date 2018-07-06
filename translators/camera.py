@@ -218,23 +218,26 @@ class InteractiveCameraTranslator(Translator):
         scene.cameras().insert(self.__as_int_camera)
         self.__as_int_camera = scene.cameras().get_by_name(cam_name)
 
+    def check_for_camera_update(self, context):
+        current_translation = self._matrix
+
+        self.__context = context
+
+        # Update matrix
+        if self.context.region_data.view_perspective == "CAMERA":
+            self._matrix = self.context.scene.camera.matrix_world
+        else:
+            self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+
+        if current_translation != self._matrix:
+            return True
+
+        return False
+
     def update_camera(self, context, scene):
         logger.debug("Update interactive camera")
-        self.__context = context
-        self.reset(self.context.scene.camera)
-        current_cam_model = self.__as_int_camera.get_model()
 
-        model, parameters = self.__get_cam_props()
-
-        if model != current_cam_model:
-            scene.cameras().remove(self.__as_int_camera)
-            self.__as_int_camera = asr.Camera(model, self.appleseed_name, parameters)
-            self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
-            scene.cameras().insert(self.__as_int_camera)
-
-        else:
-            self.__as_int_camera.set_parameters(parameters)
-            self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
+        self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
 
     def __get_cam_props(self):
         # todo: add view offset
@@ -265,14 +268,15 @@ class InteractiveCameraTranslator(Translator):
                       'aspect_ratio': aspect_ratio,
                       'film_width': sensor_width}
         elif view_cam_type == "CAMERA":
+            # Taken from Cycles viewport export code
+            zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
+            film_width, film_height = self._calc_frame_dimensions(aspect_ratio, zoom)
             self._matrix = self.bl_camera.matrix_world
+
             cam_mapping = {'PERSP': 'pinhole_camera',
                            'ORTHO': 'orthographic_camera',
                            'PANO': 'spherical_camera'}
             model = cam_mapping[self.bl_camera.data.type]
-
-            # Taken from Cycles viewport export code
-            zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
 
             if model == 'orthographic_camera':
                 sensor_width = self.bl_camera.data.ortho_scale * zoom
@@ -281,7 +285,6 @@ class InteractiveCameraTranslator(Translator):
             elif model == 'spherical_camera':
                 raise NotImplementedError("Spherical camera not supported for interactive rendering")
             else:
-                film_width, film_height = self._calc_frame_dimensions(aspect_ratio, zoom)
                 params = {'focal_length': self.bl_camera.data.lens / 1000,
                           'aspect_ratio': aspect_ratio,
                           'film_dimensions': asr.Vector2f(film_width, film_height)}
