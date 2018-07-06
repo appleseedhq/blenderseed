@@ -455,11 +455,11 @@ def main():
     parser = argparse.ArgumentParser(description="build a blenderseed package from sources")
 
     parser.add_argument("--version", help="version number of packaged file")
-    parser.add_argument("--norelease", action="store_true", help="copies appleseed binaries to blenderseed folder but does not build a release package")
+    parser.add_argument("--nozip", action="store_true", help="copies appleseed binaries to blenderseed folder but does not build a release package")
 
     args = parser.parse_args()
 
-    no_release = args.norelease
+    no_release = args.nozip
 
     package_version = args.version if args.version else "no-version"
 
