@@ -60,7 +60,7 @@ class MeshTranslator(ObjectTranslator):
         self.__front_materials = {}
         self.__back_materials = {}
 
-        self.__object_instance_params = {}
+        object_instance_params = {}
 
     #
     # Entity translation.
@@ -144,7 +144,7 @@ class MeshTranslator(ObjectTranslator):
         asr_obj_props = self.bl_obj.appleseed
 
         self._mesh_name = self.__mesh_object.get_name()
-        self.__object_instance_params = {'visibility': {'camera': asr_obj_props.camera_visible,
+        object_instance_params = {'visibility': {'camera': asr_obj_props.camera_visible,
                                                         'light': asr_obj_props.light_visible,
                                                         'shadow': asr_obj_props.shadow_visible,
                                                         'diffuse': asr_obj_props.diffuse_visible,
@@ -154,7 +154,7 @@ class MeshTranslator(ObjectTranslator):
                                          'medium_priority': asr_obj_props.medium_priority}
 
         if asr_obj_props.object_sss_set != "":
-            self.__object_instance_params['sss_set_id'] = asr_obj_props.object_sss_set
+            object_instance_params['sss_set_id'] = asr_obj_props.object_sss_set
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Replace the MeshObject by an empty one referencing
@@ -201,7 +201,7 @@ class MeshTranslator(ObjectTranslator):
             logger.debug("Creating object instance for object %s, name: %s", self._mesh_name, inst_name)
             obj_inst = asr.ObjectInstance(
                 inst_name,
-                self.__object_instance_params,
+                object_instance_params,
                 self._mesh_name,
                 asr.Transformd(asr.Matrix4d().identity()),
                 self.__front_materials,
@@ -239,7 +239,7 @@ class MeshTranslator(ObjectTranslator):
 
             obj_inst = asr.ObjectInstance(
                 inst_name,
-                self.__object_instance_params,
+                object_instance_params,
                 self._mesh_name,
                 self._xform_seq.get_earliest_transform(),
                 self.__front_materials,
@@ -253,34 +253,8 @@ class MeshTranslator(ObjectTranslator):
             assembly.object_instances().insert(obj_inst)
             self.__obj_inst = assembly.object_instances().get_by_name(obj_inst_name)
 
-    def update(self, obj, assembly):
-        asr_obj_props = obj.appleseed
-        params = {'visibility': {'camera': asr_obj_props.camera_visible,
-                                 'light': asr_obj_props.light_visible,
-                                 'shadow': asr_obj_props.shadow_visible,
-                                 'diffuse': asr_obj_props.diffuse_visible,
-                                 'glossy': asr_obj_props.glossy_visible,
-                                 'specular': asr_obj_props.specular_visible,
-                                 'transparency': asr_obj_props.transparency_visible},
-                  'medium_priority': asr_obj_props.medium_priority}
+    def update_obj(self, obj):
 
-        if params != self.__object_instance_params:
-            inst_name = self.__obj_inst.get_name()
-            logger.debug("Updating object instance %s", inst_name)
-
-            new_obj_inst = asr.ObjectInstance(
-                inst_name,
-                self.__object_instance_params,
-                self._mesh_name,
-                asr.Transformd(asr.Matrix4d().identity()),
-                self.__front_materials,
-                self.__back_materials)
-
-            self.__ass.object_instances().remove(self.__obj_inst)
-
-            self.__ass.object_instances().insert(new_obj_inst)
-
-        logger.debug("Updating transform for assembly %s", self._ass_inst.get_name())
         self.__ass_inst.transform_sequence().set_transform(0.0, self._convert_matrix(obj.matrix_world))
 
     #

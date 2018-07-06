@@ -66,7 +66,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
     bl_use_preview = True
 
     # This lock allows to serialize renders.
-    render_lock = threading.Lock()
+    # render_lock = threading.Lock()
 
     #
     # Constructor.
@@ -83,6 +83,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Interactive rendering.
         self.__interactive_scene_translator = None
+
 
     #
     # Destructor.
@@ -102,22 +103,23 @@ class RenderAppleseed(bpy.types.RenderEngine):
         if asr_scene_props.enable_aovs and not self.is_preview:
             self.__add_render_passes(scene)
 
-        with RenderAppleseed.render_lock:
-            if self.is_preview:
-                if not bpy.app.background:
-                    self.__render_material_preview(scene)
-            else:
-                self.__render_final(scene)
+        if self.is_preview:
+            if not bpy.app.background:
+                self.__render_material_preview(scene)
+        else:
+            self.__render_final(scene)
 
     def update(self, data, scene):
         pass
 
     def view_update(self, context):
+        print("view update")
         if self.__interactive_scene_translator is None:
             self.__start_interactive_render(context)
         else:
-            # self.__interactive_scene_translator.update_scene(context.scene)
-            pass
+            self.__pause_rendering()
+            self.__interactive_scene_translator.update_scene(context.scene)
+            self.__restart_interactive_render()
 
     def view_draw(self, context):
         # Check if view has changed
@@ -130,7 +132,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         width = int(context.region.width)
         height = int(context.region.height)
+
+        self.bind_display_space_shader(context.scene)
         self.__tile_callback.draw_pixels(0, 0, width, height)
+        self.unbind_display_space_shader()
 
     def update_render_passes(self, scene=None, renderlayer=None):
         asr_scene_props = scene.appleseed
@@ -261,13 +266,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
         Restart the interactive renderer.
         """
-
+        logger.debug("Start rendering")
         self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
         self.__render_thread = RenderThread(self.__renderer)
         self.__render_thread.start()
 
     def __pause_rendering(self):
         # Signal appleseed to stop rendering.
+        logger.debug("Pause rendering")
         try:
             if self.__render_thread:
                 self.__renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)

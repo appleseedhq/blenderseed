@@ -275,6 +275,7 @@ class SceneTranslator(GroupTranslator):
     # Interactive rendering update functions
     def update_scene(self, scene):
         # Set internal scene reference to current state of Blender scene
+        logger.debug("Update Scene")
         self._bl_obj = scene
 
         # Update materials.
@@ -287,9 +288,11 @@ class SceneTranslator(GroupTranslator):
                     self._material_translators[mat_key].update_material(mat, self.__main_assembly, scene)
             # Check if material node tree has been updated
             if mat.appleseed.osl_node_tree is not None:
-                if mat.appleseed.osl_node_tree.is_updated or mat.appleseed.osl_node_tree.is_updated_data:
+                if mat.appleseed.osl_node_tree.is_updated:
                     logger.debug("Updating material tree for %s", mat_key)
                     self._material_translators[mat_key].update_material(mat, self.__main_assembly, scene)
+
+        logger.debug("End update")
 
         # Update objects
         for translator in self._object_translators.keys():
@@ -297,13 +300,13 @@ class SceneTranslator(GroupTranslator):
             bl_obj = bpy.data.objects[str(translator)]
             if bl_obj.is_updated or bl_obj.is_updated_data:
                 logger.debug("Updating object %s", translator)
-                self._object_translators[translator].update(bl_obj, self.__main_assembly)
+                self._object_translators[translator].update_obj(bl_obj)
 
-        for translator in self._lamp_translators.keys():
-            # Find blender obj
-            bl_lamp = bpy.data.objects[str(translator)]
-            if bl_lamp.is_updated or bl_lamp.is_updated_data:
-                self._lamp_translators[translator].update(bl_lamp, self.__main_assembly)
+        # for translator in self._lamp_translators.keys():
+        #     # Find blender obj
+        #     bl_lamp = bpy.data.objects[str(translator)]
+        #     if bl_lamp.is_updated or bl_lamp.is_updated_data:
+        #         self._lamp_translators[translator].update_lamp(bl_lamp, self.__main_assembly)
 
     def check_view(self, context):
         view_update = False
@@ -326,7 +329,7 @@ class SceneTranslator(GroupTranslator):
     def update_view(self, view_update, camera_update):
         if camera_update:
             for x in self.__camera_translators.values():
-                x.update_camera(self.__context, self.as_scene)
+                x.update_camera(self.as_scene)
 
         if view_update:
             self.__translate_frame()
@@ -490,7 +493,6 @@ class SceneTranslator(GroupTranslator):
                                                  'samples': asr_scene_props.sampler_max_samples},
                       'pixel_renderer': asr_scene_props.pixel_sampler,
                       'lighting_engine': asr_scene_props.lighting_engine,
-                      'rendering_threads': asr_scene_props.threads if not asr_scene_props.threads_auto else -1,
                       'generic_frame_renderer': {'passes': asr_scene_props.renderer_passes,
                                                  'tile_ordering': asr_scene_props.tile_ordering},
                       'progressive_frame_renderer': {'max_samples': asr_scene_props.interactive_max_samples,
@@ -498,6 +500,12 @@ class SceneTranslator(GroupTranslator):
                       'texture_store': {'max_size': asr_scene_props.tex_cache * 1024 * 1024},
                       'light_sampler': {'algorithm': asr_scene_props.light_sampler},
                       'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}
+
+        if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
+            parameters['rendering_threads'] = -1
+        else:
+            if not asr_scene_props.threads_auto:
+                parameters['rendering_threads'] = asr_scene_props.threads
 
         if asr_scene_props.lighting_engine == 'pt':
             parameters['pt'] = {'enable_ibl': True if asr_scene_props.enable_ibl else False,

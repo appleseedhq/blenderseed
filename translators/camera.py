@@ -200,7 +200,7 @@ class InteractiveCameraTranslator(Translator):
     def context(self):
         return self.__context
 
-    def create_entities(self, scene):
+    def create_entities(self, scene=None):
         logger.debug("Creating camera entity for camera: interactive camera")
 
         model, parameters = self.__get_cam_props()
@@ -219,25 +219,44 @@ class InteractiveCameraTranslator(Translator):
         self.__as_int_camera = scene.cameras().get_by_name(cam_name)
 
     def check_for_camera_update(self, context):
-        current_translation = self._matrix
+        """
+        This function only needs to test for matrix changes and viewport lens/zoom changes.  All other camera
+        changes are captured by a scene update
+        """
 
+        # Get current translation, zoom and lens from viewport
+        current_translation = self._matrix
+        zoom = self.__zoom
+        lens = self.__lens
+
+        # Update context
         self.__context = context
 
-        # Update matrix
-        if self.context.region_data.view_perspective == "CAMERA":
-            self._matrix = self.context.scene.camera.matrix_world
-        else:
-            self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+        self.__get_cam_props()
+
+        # Check zoom
+        if zoom != self.__zoom:
+            return True
+
+        # Check lens
+        if lens != self.__lens:
+            return True
 
         if current_translation != self._matrix:
             return True
 
         return False
 
-    def update_camera(self, context, scene):
+    def update_camera(self, scene):
         logger.debug("Update interactive camera")
 
+        scene.cameras().remove(self.__as_int_camera)
+
+        self.create_entities()
+
         self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
+
+        self.flush_entities(scene)
 
     def __get_cam_props(self):
         # todo: add view offset
@@ -250,27 +269,29 @@ class InteractiveCameraTranslator(Translator):
 
         aspect_ratio = width / height
 
+        self.__lens = self.context.space_data.lens
+
+        self.__zoom = 2
+
         if view_cam_type == "ORTHO":
             model = 'orthographic_camera'
             self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
-            extent_base = self.context.space_data.region_3d.view_distance * 32.0 / self.context.space_data.lens
-            zoom = 2.0
-            sensor_width = zoom * extent_base * 1
+            extent_base = self.context.space_data.region_3d.view_distance * 32.0 / self.__lens
+            sensor_width = self.__zoom * extent_base * 1
             params = {'film_width': sensor_width,
                       'aspect_ratio': aspect_ratio}
 
         elif view_cam_type == "PERSP":
             model = 'pinhole_camera'
-            zoom = 2.0
-            sensor_width = 32 * zoom
+            sensor_width = 32 * self.__zoom
             self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
             params = {'focal_length': self.context.space_data.lens,
                       'aspect_ratio': aspect_ratio,
                       'film_width': sensor_width}
         elif view_cam_type == "CAMERA":
+            self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
             # Taken from Cycles viewport export code
-            zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
-            film_width, film_height = self._calc_frame_dimensions(aspect_ratio, zoom)
+            film_width, film_height = self._calc_frame_dimensions(aspect_ratio, self.__zoom)
             self._matrix = self.bl_camera.matrix_world
 
             cam_mapping = {'PERSP': 'pinhole_camera',
@@ -279,7 +300,7 @@ class InteractiveCameraTranslator(Translator):
             model = cam_mapping[self.bl_camera.data.type]
 
             if model == 'orthographic_camera':
-                sensor_width = self.bl_camera.data.ortho_scale * zoom
+                sensor_width = self.bl_camera.data.ortho_scale * self.__zoom
                 params = {'film_width': sensor_width,
                           'aspect_ratio': aspect_ratio}
             elif model == 'spherical_camera':
