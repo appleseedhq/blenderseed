@@ -492,6 +492,7 @@ class SceneTranslator(GroupTranslator):
                                                  'samples': asr_scene_props.sampler_max_samples},
                       'pixel_renderer': asr_scene_props.pixel_sampler,
                       'lighting_engine': asr_scene_props.lighting_engine,
+                      'rendering_threads': asr_scene_props.threads if not asr_scene_props.threads_auto else -1,
                       'generic_frame_renderer': {'passes': asr_scene_props.renderer_passes,
                                                  'tile_ordering': asr_scene_props.tile_ordering},
                       'texture_store': {'max_size': asr_scene_props.tex_cache * 1024 * 1024},
