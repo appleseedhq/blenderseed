@@ -25,12 +25,12 @@
 # THE SOFTWARE.
 #
 
-import bpy
-import os
 import math
+import os
+
+import bpy
 
 import appleseed as asr
-
 from .camera import CameraTranslator, InteractiveCameraTranslator
 from .group import GroupTranslator
 from .handlers import AssetHandler
@@ -147,8 +147,6 @@ class SceneTranslator(GroupTranslator):
         self.__group_translators = {}
 
         self.__project = None
-
-
 
     #
     # Properties.
@@ -419,7 +417,7 @@ class SceneTranslator(GroupTranslator):
         return times
 
     def __round_up_pow2(self, x):
-        assert(x >= 2)
+        assert (x >= 2)
         return 1 << (x - 1).bit_length()
 
     def __create_project(self):
@@ -495,6 +493,8 @@ class SceneTranslator(GroupTranslator):
                       'rendering_threads': asr_scene_props.threads if not asr_scene_props.threads_auto else -1,
                       'generic_frame_renderer': {'passes': asr_scene_props.renderer_passes,
                                                  'tile_ordering': asr_scene_props.tile_ordering},
+                      'progressive_frame_renderer': {'max_samples': asr_scene_props.interactive_max_samples,
+                                                     'max_fps': asr_scene_props.interactive_max_fps},
                       'texture_store': {'max_size': asr_scene_props.tex_cache * 1024 * 1024},
                       'light_sampler': {'algorithm': asr_scene_props.light_sampler},
                       'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}

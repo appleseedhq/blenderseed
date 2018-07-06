@@ -201,6 +201,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 default=64,
                                                 subtype='UNSIGNED')
 
+    interactive_max_fps = bpy.props.FloatProperty(name="interactive_max_fps",
+                                                  default=30.0)
+
+    interactive_max_samples = bpy.props.IntProperty(name="interactive_max_samples",
+                                                    default=-1)
+
     adaptive_sampler_enable_diagnostics = bpy.props.BoolProperty(name="adaptive_sampler_enable_diagnostics",
                                                                  description='',
                                                                  default=False)

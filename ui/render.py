@@ -141,6 +141,11 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         row.prop(asr_scene_props, "renderer_passes", text="Passes")
 
         box = layout.box()
+        box.label(text="Interactive Render:")
+        box.prop(asr_scene_props, "interactive_max_fps", text="FPS")
+        box.prop(asr_scene_props, "interactive_max_samples", text="Max Samples")
+
+        box = layout.box()
         box.label(text="Tile Pattern:")
         box.prop(asr_scene_props, "tile_ordering", text="")
         box.prop(asr_scene_props, "tile_size", text="Tile Size")
