@@ -322,6 +322,9 @@ class SceneTranslator(GroupTranslator):
                 logger.debug("Updating lamp %s", translator)
                 self._lamp_translators[translator].update_lamp(bl_lamp, self.__main_assembly, scene)
 
+        if self.bl_scene.is_updated or self.bl_scene.is_updated_data:
+                self.__world_translator.update_world(self.bl_scene, self.as_scene)
+
     def check_view(self, context):
         """
         Check the viewport to see if it has changed camera position or window size.

@@ -42,8 +42,15 @@ class WorldTranslator(Translator):
     #
 
     def __init__(self, scene, asset_handler):
-        self.__bl_world = scene
+        super(WorldTranslator, self).__init__(scene)
         self.__asset_handler = asset_handler
+        self.__horizon_radiance = None
+        self.__zenith_radiance = None
+        self.__env_tex = None
+        self.__env_tex_inst = None
+
+    def reset(self, scene):
+        super(WorldTranslator, self).reset(scene)
         self.__horizon_radiance = None
         self.__zenith_radiance = None
         self.__env_tex = None
@@ -62,20 +69,20 @@ class WorldTranslator(Translator):
     #
 
     def create_entities(self, scene):
-        as_sky = self.__bl_world.appleseed_sky
+        as_sky = self.bl_scene.appleseed_sky
         env_type = as_sky.env_type
         if env_type == 'sunsky':
             env_type = as_sky.sun_model
 
         if env_type == 'constant':
             self.__horizon_radiance = asr.ColorEntity('horizon_radiance_color', {'color_space': 'linear_rgb'},
-                                                      self._convert_color(self.__bl_world.world.horizon_color))
+                                                      self._convert_color(self.bl_scene.world.horizon_color))
 
         elif env_type in ('gradient', 'constant_hemisphere'):
             self.__horizon_radiance = asr.ColorEntity('horizon_radiance_color', {'color_space': 'srgb'},
-                                                      self._convert_color(self.__bl_world.world.horizon_color))
+                                                      self._convert_color(self.bl_scene.world.horizon_color))
             self.__zenith_radiance = asr.ColorEntity('zenith_radiance_color', {'color_space': 'linear_rgb'},
-                                                     self._convert_color(self.__bl_world.world.zenith_color))
+                                                     self._convert_color(self.bl_scene.world.zenith_color))
 
         if env_type in ('latlong_map', 'mirrorball_map'):
             filename = self.__asset_handler.resolve_path(as_sky.env_tex)
@@ -133,36 +140,55 @@ class WorldTranslator(Translator):
 
         self.__as_env_edf.transform_sequence().set_transform(0.0, asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
 
-    def flush_entities(self, scene):
+    def flush_entities(self, as_scene):
         if self.__horizon_radiance is not None:
             horizon_name = self.__horizon_radiance.get_name()
-            scene.colors().insert(self.__horizon_radiance)
-            self.__horizon_radiance = scene.colors().get_by_name(horizon_name)
+            as_scene.colors().insert(self.__horizon_radiance)
+            self.__horizon_radiance = as_scene.colors().get_by_name(horizon_name)
 
         if self.__zenith_radiance is not None:
             zenith_name = self.__zenith_radiance.get_name()
-            scene.colors().insert(self.__zenith_radiance)
-            self.__zenith_radiance = scene.colors().get_by_name(zenith_name)
+            as_scene.colors().insert(self.__zenith_radiance)
+            self.__zenith_radiance = as_scene.colors().get_by_name(zenith_name)
 
         if self.__env_tex is not None:
             env_tex_name = self.__env_tex.get_name()
-            scene.textures().insert(self.__env_tex)
-            self.__env_tex = scene.textures().get_by_name(env_tex_name)
+            as_scene.textures().insert(self.__env_tex)
+            self.__env_tex = as_scene.textures().get_by_name(env_tex_name)
 
             env_tex_inst_name = self.__env_tex_inst.get_name()
-            scene.texture_instances().insert(self.__env_tex_inst)
-            self.__env_tex_inst = scene.texture_instances().get_by_name(env_tex_inst_name)
+            as_scene.texture_instances().insert(self.__env_tex_inst)
+            self.__env_tex_inst = as_scene.texture_instances().get_by_name(env_tex_inst_name)
 
         as_env_edf_name = self.__as_env_edf.get_name()
+        as_scene.environment_edfs().insert(self.__as_env_edf)
+        self.__as_env_edf = as_scene.environment_edfs().get_by_name(as_env_edf_name)
+
         as_env_shader_name = self.__as_env_shader.get_name()
+        as_scene.environment_shaders().insert(self.__as_env_shader)
+        self.__as_env_shader = as_scene.environment_shaders().get_by_name(as_env_shader_name)
 
-        scene.environment_edfs().insert(self.__as_env_edf)
-        scene.environment_shaders().insert(self.__as_env_shader)
-        scene.set_environment(self.__as_env)
+        as_scene.set_environment(self.__as_env)
 
-        self.__as_env_edf = scene.environment_edfs().get_by_name(as_env_edf_name)
-        self.__as_env_shader = scene.environment_shaders().get_by_name(as_env_shader_name)
-        self.__as_env = scene.get_environment()
+    def update_world(self, scene, as_scene):
+        if self.__horizon_radiance is not None:
+            as_scene.colors().remove(self.__horizon_radiance)
+
+        if self.__zenith_radiance is not None:
+            as_scene.colors().remove(self.__zenith_radiance)
+
+        if self.__env_tex is not None:
+            as_scene.textures().remove(self.__env_tex)
+            as_scene.texture_instances().remove(self.__env_tex_inst)
+
+        as_scene.environment_shaders().remove(self.__as_env_shader)
+
+        as_scene.environment_edfs().remove(self.__as_env_edf)
+
+        self.reset(scene)
+
+        self.create_entities(scene)
+        self.flush_entities(as_scene)
 
     def _convert_matrix(self, m):
         rot = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(90.0))
