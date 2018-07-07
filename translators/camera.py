@@ -25,9 +25,10 @@
 # THE SOFTWARE.
 #
 
+import math
+
 import bpy
 import bpy_extras
-import math
 from mathutils import Matrix
 
 import appleseed as asr
@@ -305,12 +306,33 @@ class InteractiveCameraTranslator(Translator):
                            'PANO': 'spherical_camera'}
             model = cam_mapping[self.bl_camera.data.type]
 
+            if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof:
+                model = 'thinlens_camera'
+
             if model == 'orthographic_camera':
                 sensor_width = self.bl_camera.data.ortho_scale * self.__zoom
                 params = {'film_width': sensor_width,
                           'aspect_ratio': aspect_ratio}
             elif model == 'spherical_camera':
                 raise NotImplementedError("Spherical camera not supported for interactive rendering")
+            elif model == 'thinlens_camera':
+                if self.bl_camera.data.dof_object is not None:
+                    cam_target = bpy.data.objects[self.bl_camera.data.dof_object.name]
+                    focal_distance = (cam_target.location - self.bl_camera.location).magnitude
+                else:
+                    focal_distance = self.bl_camera.data.dof_distance
+                params = {'film_dimensions': asr.Vector2f(film_width, film_height),
+                          'focal_length': self.bl_camera.data.lens / 1000,
+                          'aspect_ratio': aspect_ratio,
+                          'f_stop': self.bl_camera.data.appleseed.f_number,
+                          'autofocus_enabled': False,
+                          'diaphragm_blades': self.bl_camera.data.appleseed.diaphragm_blades,
+                          'diaphragm_tilt_angle': self.bl_camera.data.appleseed.diaphragm_angle,
+                          'focal_distance': focal_distance}
+                if self.bl_camera.data.appleseed.enable_autofocus:
+                    params['autofocus_target'] = self._find_auto_focus_point(self.context.scene)
+                    params['autofocus_enabled'] = True
+
             else:
                 params = {'focal_length': self.bl_camera.data.lens / 1000,
                           'aspect_ratio': aspect_ratio,
@@ -327,3 +349,13 @@ class InteractiveCameraTranslator(Translator):
             film_width = film_height * aspect_ratio
 
         return film_width, film_height
+
+    @staticmethod
+    def _find_auto_focus_point(scene):
+        cam = scene.camera
+        co = scene.cursor_location
+        co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
+        y = 1 - co_2d.y
+        logger.debug("2D Coords:{0} {1}".format(co_2d.x, y))
+
+        return asr.Vector2f(co_2d.x, y)
