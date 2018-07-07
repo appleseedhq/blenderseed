@@ -76,7 +76,7 @@ class CameraTranslator(Translator):
 
         self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_camera.matrix_world))
 
-        self.set_params(scene)
+        self.__set_params(scene)
 
     def flush_entities(self, scene):
         self._xform_seq.optimize()
@@ -94,13 +94,13 @@ class CameraTranslator(Translator):
     # Internal methods.
     #
 
-    def set_params(self, scene):
+    def __set_params(self, scene):
         camera = self.bl_camera.data
         focal_length = camera.lens / 1000
 
         aspect_ratio = self._get_frame_aspect_ratio(scene)
 
-        film_width, film_height = self._calc_frame_dimensions(aspect_ratio)
+        film_width, film_height = self.__calc_film_dimensions(aspect_ratio)
 
         model = self.__as_camera.get_model()
 
@@ -157,7 +157,7 @@ class CameraTranslator(Translator):
     def set_transform_key(self, time, key_times):
         self._xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
-    def _calc_frame_dimensions(self, aspect_ratio):
+    def __calc_film_dimensions(self, aspect_ratio):
         if self.bl_camera.data.sensor_fit in ('AUTO', 'HORIZONTAL'):
             film_width = self.bl_camera.data.sensor_width / 1000
             film_height = film_width / aspect_ratio
@@ -191,8 +191,13 @@ class CameraTranslator(Translator):
 
 class InteractiveCameraTranslator(Translator):
 
-    def __init__(self, context):
-        super(InteractiveCameraTranslator, self).__init__(context.scene.camera)
+    def __init__(self, cam, context):
+        super(InteractiveCameraTranslator, self).__init__(cam)
+
+        self.__context = context
+
+    def reset(self, cam, context):
+        super(InteractiveCameraTranslator, self).reset(cam)
 
         self.__context = context
 
@@ -222,7 +227,7 @@ class InteractiveCameraTranslator(Translator):
         scene.cameras().insert(self.__as_int_camera)
         self.__as_int_camera = scene.cameras().get_by_name(cam_name)
 
-    def check_for_camera_update(self, context):
+    def check_for_camera_update(self, camera, context):
         """
         This function only needs to test for matrix changes and viewport lens/zoom changes.  All other camera
         changes are captured by a scene update
@@ -233,10 +238,9 @@ class InteractiveCameraTranslator(Translator):
         zoom = self.__zoom
         lens = self.__lens
 
-        # Update context
-        self.__context = context
+        self.reset(camera, context)
 
-        self.__get_cam_props()
+        model, params = self.__get_cam_props()
 
         # Check zoom
         if zoom != self.__zoom:
@@ -251,13 +255,14 @@ class InteractiveCameraTranslator(Translator):
 
         return False
 
-    def update_camera(self, scene):
+    def update_camera(self, scene, camera=None, context=None):
         logger.debug("Update interactive camera")
+        if camera is not None and context is not None:
+            self.reset(camera, context)
         scene.cameras().remove(self.__as_int_camera)
-        self.create_entities()
-        self.flush_entities(scene)
-
+        self.create_entities(scene)
         self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
+        self.flush_entities(scene)
 
     def __get_cam_props(self):
         # todo: add view offset
@@ -292,7 +297,7 @@ class InteractiveCameraTranslator(Translator):
         elif view_cam_type == "CAMERA":
             self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
             # Taken from Cycles viewport export code
-            film_width, film_height = self._calc_frame_dimensions(aspect_ratio, self.__zoom)
+            film_width, film_height = self.__calc_film_dimensions(aspect_ratio, self.__zoom)
             self._matrix = self.bl_camera.matrix_world
 
             cam_mapping = {'PERSP': 'pinhole_camera',
@@ -313,7 +318,7 @@ class InteractiveCameraTranslator(Translator):
 
         return model, params
 
-    def _calc_frame_dimensions(self, aspect_ratio, zoom):
+    def __calc_film_dimensions(self, aspect_ratio, zoom):
         if self.bl_camera.data.sensor_fit in ('AUTO', 'HORIZONTAL'):
             film_width = self.bl_camera.data.sensor_width / 1000 * zoom
             film_height = film_width / aspect_ratio

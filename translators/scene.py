@@ -325,6 +325,10 @@ class SceneTranslator(GroupTranslator):
         if self.bl_scene.is_updated or self.bl_scene.is_updated_data:
                 self.__world_translator.update_world(self.bl_scene, self.as_scene)
 
+        if self.bl_scene.camera.is_updated or self.bl_scene.camera.is_updated_data:
+            for x in self.__camera_translators.values():
+                x.update_camera(self.as_scene, self.bl_scene.camera, self.__context)
+
     def check_view(self, context):
         """
         Check the viewport to see if it has changed camera position or window size.
@@ -343,7 +347,7 @@ class SceneTranslator(GroupTranslator):
 
         # Check if the camera needs to be updated
         for x in self.__camera_translators.values():
-            camera_update = x.check_for_camera_update(self.__context)
+            camera_update = x.check_for_camera_update(self.bl_scene.camera, self.__context)
 
         return view_update, camera_update
 
@@ -396,7 +400,7 @@ class SceneTranslator(GroupTranslator):
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             self.__camera_translators[obj_key] = CameraTranslator(self.bl_scene.camera)
         else:
-            self.__camera_translators[obj_key] = InteractiveCameraTranslator(self.__context)
+            self.__camera_translators[obj_key] = InteractiveCameraTranslator(self.bl_scene.camera, self.__context)
 
         for obj in self.bl_scene.objects:
 
@@ -519,11 +523,13 @@ class SceneTranslator(GroupTranslator):
         conf_final = self.as_project.configurations()['final']
         conf_interactive = self.as_project.configurations()['interactive']
 
+        lighting_engine = asr_scene_props.lighting_engine if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER else 'pt'
+
         parameters = {'uniform_pixel_renderer': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
                                                  'force_antialiasing': True if asr_scene_props.force_aa else False,
                                                  'samples': asr_scene_props.sampler_max_samples},
                       'pixel_renderer': asr_scene_props.pixel_sampler,
-                      'lighting_engine': asr_scene_props.lighting_engine,
+                      'lighting_engine': lighting_engine,
                       'generic_frame_renderer': {'passes': asr_scene_props.renderer_passes,
                                                  'tile_ordering': asr_scene_props.tile_ordering},
                       'progressive_frame_renderer': {'max_samples': asr_scene_props.interactive_max_samples,
@@ -538,7 +544,7 @@ class SceneTranslator(GroupTranslator):
             if not asr_scene_props.threads_auto:
                 parameters['rendering_threads'] = asr_scene_props.threads
 
-        if asr_scene_props.lighting_engine == 'pt':
+        if lighting_engine == 'pt':
             parameters['pt'] = {'enable_ibl': True if asr_scene_props.enable_ibl else False,
                                 'enable_dl': True if asr_scene_props.enable_dl else False,
                                 'clamp_roughness': True,
