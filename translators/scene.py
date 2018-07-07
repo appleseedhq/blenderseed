@@ -525,14 +525,25 @@ class SceneTranslator(GroupTranslator):
 
         lighting_engine = asr_scene_props.lighting_engine if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER else 'pt'
 
+        if self.__context:
+            number_of_pixels = int(self.__context.region.width) * int(self.__context.region.height) * asr_scene_props.interactive_max_samples
+        else:
+            number_of_pixels = 0
+
+        if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
+            render_threads = -1
+        else:
+            render_threads = asr_scene_props.threads if not asr_scene_props.threads_auto else 0
+
         parameters = {'uniform_pixel_renderer': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
                                                  'force_antialiasing': True if asr_scene_props.force_aa else False,
                                                  'samples': asr_scene_props.sampler_max_samples},
                       'pixel_renderer': asr_scene_props.pixel_sampler,
                       'lighting_engine': lighting_engine,
+                      'rendering_threads': render_threads,
                       'generic_frame_renderer': {'passes': asr_scene_props.renderer_passes,
                                                  'tile_ordering': asr_scene_props.tile_ordering},
-                      'progressive_frame_renderer': {'max_samples': asr_scene_props.interactive_max_samples,
+                      'progressive_frame_renderer': {'max_samples': number_of_pixels,
                                                      'max_fps': asr_scene_props.interactive_max_fps},
                       'texture_store': {'max_size': asr_scene_props.tex_cache * 1024 * 1024},
                       'light_sampler': {'algorithm': asr_scene_props.light_sampler},
