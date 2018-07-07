@@ -90,8 +90,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
     #
 
     def __del__(self):
-        logger.debug("Deleting render engine")
+
         self.__stop_rendering()
+        logger.debug("Deleting render engine")
 
     #
     # RenderEngine methods.
@@ -135,7 +136,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
         height = int(context.region.height)
 
         self.bind_display_space_shader(context.scene)
-        logger.debug("Begin draw pixels")
         self.__tile_callback.draw_pixels(0, 0, width, height)
         self.unbind_display_space_shader()
 
