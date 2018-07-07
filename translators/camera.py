@@ -157,14 +157,6 @@ class CameraTranslator(Translator):
     def set_transform_key(self, time, key_times):
         self._xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
-    def _find_auto_focus_point(self, scene):
-        cam = scene.camera
-        co = scene.cursor_location
-        co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
-        y = 1 - co_2d.y
-        logger.debug("2D Coords:{0} {1}".format(co_2d.x, y))
-        return asr.Vector2f(co_2d.x, y)
-
     def _calc_frame_dimensions(self, aspect_ratio):
         if self.bl_camera.data.sensor_fit in ('AUTO', 'HORIZONTAL'):
             film_width = self.bl_camera.data.sensor_width / 1000
@@ -175,13 +167,25 @@ class CameraTranslator(Translator):
 
         return film_width, film_height
 
-    def _get_frame_aspect_ratio(self, scene):
+    @staticmethod
+    def _find_auto_focus_point(scene):
+        cam = scene.camera
+        co = scene.cursor_location
+        co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
+        y = 1 - co_2d.y
+        logger.debug("2D Coords:{0} {1}".format(co_2d.x, y))
+
+        return asr.Vector2f(co_2d.x, y)
+
+    @staticmethod
+    def _get_frame_aspect_ratio(scene):
         render = scene.render
         scale = render.resolution_percentage / 100.0
         width = int(render.resolution_x * scale)
         height = int(render.resolution_y * scale)
         xratio = width * render.pixel_aspect_x
         yratio = height * render.pixel_aspect_y
+
         return xratio / yratio
 
 
@@ -249,14 +253,11 @@ class InteractiveCameraTranslator(Translator):
 
     def update_camera(self, scene):
         logger.debug("Update interactive camera")
-
         scene.cameras().remove(self.__as_int_camera)
-
         self.create_entities()
+        self.flush_entities(scene)
 
         self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
-
-        self.flush_entities(scene)
 
     def __get_cam_props(self):
         # todo: add view offset

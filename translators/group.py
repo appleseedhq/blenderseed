@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -26,22 +25,19 @@
 # THE SOFTWARE.
 #
 
-from .translator import Translator, ObjectKey, ProjectExportMode
-
+import appleseed as asr
 from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
-from .object import InstanceTranslator
 from .mesh import MeshTranslator
+from .object import InstanceTranslator
+from .translator import Translator, ObjectKey
+from ..logger import get_logger
 from ..util import inscenelayer
 
-import appleseed as asr
-
-from ..logger import get_logger
 logger = get_logger()
 
 
 class GroupTranslator(Translator):
-
     #
     # Constants and settings.
     #
@@ -69,6 +65,7 @@ class GroupTranslator(Translator):
         self._material_translators = {}
 
         self._lamp_translators = {}
+        self._lamp_material_translators = {}
         self._object_translators = {}
 
         # Map from datablocks to translators for instancing.
@@ -117,8 +114,8 @@ class GroupTranslator(Translator):
         return [
             self._material_translators,
             self._lamp_translators,
-            self._object_translators
-        ]
+            self._lamp_material_translators,
+            self._object_translators]
 
     #
     # Entity translation.
@@ -177,7 +174,7 @@ class GroupTranslator(Translator):
                     lamp = obj.data
                     lamp_key = ObjectKey(lamp)
                     translator = MaterialTranslator(lamp, self.asset_handler)
-                    self._material_translators[lamp_key] = translator
+                    self._lamp_material_translators[lamp_key] = translator
 
             elif obj.type in GroupTranslator.MESH_OBJECTS:
                 mesh = obj.data
@@ -203,7 +200,7 @@ class GroupTranslator(Translator):
                     pass
 
             else:
-                pass # log here unknown object found...
+                pass  # log here unknown object found...
 
     def _do_create_entities(self, scene):
         for t in self.all_translators:

@@ -113,12 +113,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
         pass
 
     def view_update(self, context):
-        print("view update")
         if self.__interactive_scene_translator is None:
             self.__start_interactive_render(context)
         else:
             self.__pause_rendering()
-            self.__interactive_scene_translator.update_scene(context.scene)
+            logger.debug("Updating scene")
+            self.__interactive_scene_translator.update_scene(context.scene, context)
             self.__restart_interactive_render()
 
     def view_draw(self, context):
@@ -127,6 +127,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         if view_update or camera_update:
             self.__pause_rendering()
+            logger.debug("Updating view")
             self.__interactive_scene_translator.update_view(view_update, camera_update)
             self.__restart_interactive_render()
 
@@ -134,6 +135,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         height = int(context.region.height)
 
         self.bind_display_space_shader(context.scene)
+        logger.debug("Begin draw pixels")
         self.__tile_callback.draw_pixels(0, 0, width, height)
         self.unbind_display_space_shader()
 
@@ -289,6 +291,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         # Signal appleseed to stop rendering.
+        logger.debug("Abort rendering")
         try:
             if self.__render_thread:
                 self.__renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)

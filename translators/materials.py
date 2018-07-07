@@ -53,6 +53,12 @@ class MaterialTranslator(Translator):
         if self.bl_node_tree:
             self.__shaders = self.bl_node_tree.nodes
 
+    def reset(self, mat):
+        super(MaterialTranslator, self).reset(mat)
+
+        if self.bl_node_tree:
+            self.__shaders = self.bl_node_tree.nodes
+
     #
     # Properties.
     #
@@ -110,8 +116,6 @@ class MaterialTranslator(Translator):
         assembly.surface_shaders().remove(self.__as_shader)
 
         self.reset(material)
-        if self.bl_node_tree:
-            self.__shaders = self.bl_node_tree.nodes
 
         self.create_entities(scene)
         self.flush_entities(assembly)
@@ -137,38 +141,47 @@ class MaterialTranslator(Translator):
             parameters = {}
             parameter_types = shader.parameter_types
             shader_keys = dir(shader)
-            for key in parameter_types.keys():
-                if key in shader_keys:
-                    parameter_value = parameter_types[key]
-                    parameter = getattr(shader, key)
-                    if key in shader.filepaths:
-                        parameter = self.__asset_handler.resolve_path(parameter)
-                        if scene.appleseed.sub_textures is True:
-                            parameter = self.__asset_handler.substitute_texture(parameter)
 
-                    if parameter_value == "int checkbox":
-                        parameter_value = "int"
-                        parameter = int(parameter)
-                    if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
-                        parameter = " ".join(map(str, parameter))
-                    parameters[key] = parameter_value + " " + str(parameter)
+            self.__parse_parameters(parameter_types, parameters, scene, shader, shader_keys)
 
-            for socket in shader.inputs:
-                if not socket.is_linked:
-                    if socket.socket_value != "":
-                        parameter_value = parameter_types[socket.socket_osl_id]
-                        parameter = socket.get_socket_value(True)
-                        if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
-                            parameter = " ".join(map(str, parameter))
-                            if parameter_value == 'float[2]':
-                                parameter_value = 'float[]'
-                        parameters[socket.socket_osl_id] = parameter_value + " " + str(parameter)
+            self.__parse_sockets(parameter_types, parameters, shader)
 
-            self.__shader_group.add_shader("shader", shader.file_name, shader.name, parameters)
-
-            for output in shader.outputs:
-                if output.is_linked:
-                    for link in output.links:
-                        self.__shader_group.add_connection(shader.name, output.socket_osl_id, link.to_node.name, link.to_socket.socket_osl_id)
+            self.__create_shader_connections(shader)
 
         self.__shader_group.add_shader("surface", surface_shader.file_name, surface_shader.name, {})
+
+    def __parse_parameters(self, parameter_types, parameters, scene, shader, shader_keys):
+        for key in parameter_types.keys():
+            if key in shader_keys:
+                parameter_value = parameter_types[key]
+                parameter = getattr(shader, key)
+                if key in shader.filepaths:
+                    parameter = self.__asset_handler.resolve_path(parameter)
+                    if scene.appleseed.sub_textures is True:
+                        parameter = self.__asset_handler.substitute_texture(parameter)
+
+                if parameter_value == "int checkbox":
+                    parameter_value = "int"
+                    parameter = int(parameter)
+                if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
+                    parameter = " ".join(map(str, parameter))
+                parameters[key] = parameter_value + " " + str(parameter)
+
+    def __parse_sockets(self, parameter_types, parameters, shader):
+        for socket in shader.inputs:
+            if not socket.is_linked:
+                if socket.socket_value != "":
+                    parameter_value = parameter_types[socket.socket_osl_id]
+                    parameter = socket.get_socket_value(True)
+                    if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
+                        parameter = " ".join(map(str, parameter))
+                        if parameter_value == 'float[2]':
+                            parameter_value = 'float[]'
+                    parameters[socket.socket_osl_id] = parameter_value + " " + str(parameter)
+        self.__shader_group.add_shader("shader", shader.file_name, shader.name, parameters)
+
+    def __create_shader_connections(self, shader):
+        for output in shader.outputs:
+            if output.is_linked:
+                for link in output.links:
+                    self.__shader_group.add_connection(shader.name, output.socket_osl_id, link.to_node.name, link.to_socket.socket_osl_id)

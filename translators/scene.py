@@ -44,9 +44,9 @@ logger = get_logger()
 
 
 class SceneTranslator(GroupTranslator):
-    '''
+    """
     Class that translates a Blender scene to an appleseed project.
-    '''
+    """
 
     #
     # Constants and settings.
@@ -60,9 +60,9 @@ class SceneTranslator(GroupTranslator):
 
     @classmethod
     def create_project_export_translator(cls, scene, filename):
-        '''
+        """
         Create a scene translator to export the scene to an appleseed project on disk.
-        '''
+        """
 
         project_dir = os.path.dirname(filename)
 
@@ -91,9 +91,9 @@ class SceneTranslator(GroupTranslator):
 
     @classmethod
     def create_final_render_translator(cls, scene):
-        '''
+        """
         Create a scene translator to export the scene to an in memory appleseed project.
-        '''
+        """
 
         logger.debug("Creating final render scene translator")
 
@@ -108,10 +108,10 @@ class SceneTranslator(GroupTranslator):
 
     @classmethod
     def create_interactive_render_translator(cls, context):
-        '''
+        """
         Create a scene translator to export the scene to an in memory appleseed project
         optimized for quick interactive edits.
-        '''
+        """
 
         logger.debug("Creating interactive render scene translator")
 
@@ -125,11 +125,11 @@ class SceneTranslator(GroupTranslator):
             shaders_dir=None)
 
     def __init__(self, scene, export_mode, selected_only, context, geometry_dir, textures_dir, shaders_dir):
-        '''
+        """
         Constructor. Do not use it to create instances of this class.
         Use instead SceneTranslator.create_project_export_translator() or
         The other @classmethods.
-        '''
+        """
 
         asset_handler = AssetHandler()
 
@@ -158,16 +158,16 @@ class SceneTranslator(GroupTranslator):
 
     @property
     def as_project(self):
-        '''
+        """
         Return the appleseed project.
-        '''
+        """
         return self.__project
 
     @property
     def as_scene(self):
-        '''
+        """
         Return the appleseed scene.
-        '''
+        """
         return self.__project.get_scene()
 
     @property
@@ -179,9 +179,9 @@ class SceneTranslator(GroupTranslator):
     #
 
     def translate_scene(self):
-        '''
+        """
         Translate the Blender scene to an appleseed project.
-        '''
+        """
 
         logger.debug("Translating scene %s", self.bl_scene.name)
 
@@ -273,26 +273,39 @@ class SceneTranslator(GroupTranslator):
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
     # Interactive rendering update functions
-    def update_scene(self, scene):
+    def update_scene(self, scene, context):
+        """
+        Update the scene during interactive rendering.
+        Scene updates are called whenever a parameter changes.
+        """
+
         # Set internal scene reference to current state of Blender scene
-        logger.debug("Update Scene")
+        logger.debug("Start scene update")
         self._bl_obj = scene
+        self.__context = context
 
         # Update materials.
-        for mat in bpy.data.materials:
-            mat_key = ObjectKey(mat)
-            # Check if base material is updated
-            if mat.is_updated or mat.is_updated_data:
-                if mat_key in self._material_translators.keys():
-                    logger.debug("Updating material %s", mat_key)
-                    self._material_translators[mat_key].update_material(mat, self.__main_assembly, scene)
-            # Check if material node tree has been updated
-            if mat.appleseed.osl_node_tree is not None:
-                if mat.appleseed.osl_node_tree.is_updated:
-                    logger.debug("Updating material tree for %s", mat_key)
-                    self._material_translators[mat_key].update_material(mat, self.__main_assembly, scene)
+        for mat in self._material_translators.keys():
+            bl_mat = bpy.data.materials[str(mat)]
 
-        logger.debug("End update")
+            # Check if base material is updated
+            if bl_mat.is_updated or bl_mat.is_updated_data:
+                logger.debug("Updating material %s", mat)
+                self._material_translators[mat].update_material(bl_mat, self.__main_assembly, scene)
+
+            # Check if material node tree has been updated
+            if bl_mat.appleseed.osl_node_tree is not None:
+                if bl_mat.appleseed.osl_node_tree.is_updated:
+                    logger.debug("Updating material tree for %s", mat)
+                    self._material_translators[mat].update_material(bl_mat, self.__main_assembly, scene)
+
+        # Update lamp materials
+        for mat in self._lamp_material_translators.keys():
+            # Get Blender lamp
+            bl_lamp = bpy.data.lamps[str(mat)]
+            if bl_lamp.appleseed.osl_node_tree.is_updated:
+                logger.debug("Updating material tree for %s", mat)
+                self._lamp_material_translators[mat].update_material(bl_lamp, self.__main_assembly, scene)
 
         # Update objects
         for translator in self._object_translators.keys():
@@ -302,13 +315,18 @@ class SceneTranslator(GroupTranslator):
                 logger.debug("Updating object %s", translator)
                 self._object_translators[translator].update_obj(bl_obj)
 
-        # for translator in self._lamp_translators.keys():
-        #     # Find blender obj
-        #     bl_lamp = bpy.data.objects[str(translator)]
-        #     if bl_lamp.is_updated or bl_lamp.is_updated_data:
-        #         self._lamp_translators[translator].update_lamp(bl_lamp, self.__main_assembly)
+        for translator in self._lamp_translators.keys():
+            # Find blender obj
+            bl_lamp = bpy.data.objects[str(translator)]
+            if bl_lamp.is_updated or bl_lamp.is_updated_data:
+                logger.debug("Updating lamp %s", translator)
+                self._lamp_translators[translator].update_lamp(bl_lamp, self.__main_assembly, scene)
 
     def check_view(self, context):
+        """
+        Check the viewport to see if it has changed camera position or window size.
+        """
+
         view_update = False
         camera_update = False
         self.__context = context
@@ -327,6 +345,13 @@ class SceneTranslator(GroupTranslator):
         return view_update, camera_update
 
     def update_view(self, view_update, camera_update):
+        """
+        Update the viewport window during interactive rendering.  The viewport update is triggered
+        automatically following a scene update, or when the view camera/window size changes.
+        """
+
+        logger.debug("Begin view update")
+
         if camera_update:
             for x in self.__camera_translators.values():
                 x.update_camera(self.as_scene)
@@ -335,7 +360,9 @@ class SceneTranslator(GroupTranslator):
             self.__translate_frame()
 
     def write_project(self, filename):
-        '''Write the appleseed project.'''
+        """
+        Write the appleseed project out to disk.
+        """
 
         asr.ProjectFileWriter().write(
             self.as_project,
@@ -351,6 +378,7 @@ class SceneTranslator(GroupTranslator):
         Create translators for each Blender object.  These translators contain all the functions and information
         necessary to convert Blender objects, lights, cameras and materials into equivalent appleseed entities.
         """
+
         if self.bl_scene.appleseed_sky.env_type != 'none':
             self.__create_world_translator()
 

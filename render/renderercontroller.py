@@ -44,10 +44,10 @@ class BaseRendererController(asr.IRendererController):
         pass
 
     def on_rendering_success(self):
-        logger.debug("Render Finished")
+        logger.debug("Render finished")
 
     def on_rendering_abort(self):
-        logger.debug("Render Aborted")
+        pass
 
     def on_frame_begin(self):
         pass

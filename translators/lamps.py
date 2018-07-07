@@ -49,6 +49,13 @@ class LampTranslator(Translator):
         self.__radiance_mult_tex = None
         self.__radiance_mult_tex_inst = None
 
+    def reset(self, lamp):
+        super(LampTranslator, self).reset(lamp)
+        self.__radiance_tex = None
+        self.__radiance_tex_inst = None
+        self.__radiance_mult_tex = None
+        self.__radiance_mult_tex_inst = None
+
     #
     # Properties.
     #
@@ -133,19 +140,51 @@ class LampTranslator(Translator):
 
     def flush_entities(self, assembly):
 
+        radiance_name = self.__as_light_radiance.get_name()
         assembly.colors().insert(self.__as_light_radiance)
-        assembly.lights().insert(self.__as_light)
-        if self.__radiance_tex is not None:
-            assembly.textures().insert(self.__radiance_tex)
-        if self.__radiance_tex_inst is not None:
-            assembly.texture_instances().insert(self.__radiance_tex_inst)
-        if self.__radiance_mult_tex is not None:
-            assembly.textures().insert(self.__radiance_mult_tex)
-        if self.__radiance_mult_tex_inst is not None:
-            assembly.texture_instances().insert(self.__radiance_mult_tex_inst)
+        self.__as_light_radiance = assembly.colors().get_by_name(radiance_name)
 
-    def update(self, lamp, assembly):
-        pass
+        lamp_name = self.__as_light.get_name()
+        assembly.lights().insert(self.__as_light)
+        self.__as_light = assembly.lights().get_by_name(lamp_name)
+
+        if self.__radiance_tex is not None:
+            rad_tex_name = self.__radiance_tex
+            assembly.textures().insert(self.__radiance_tex)
+            self.__radiance_tex = assembly.textures().get_by_name(rad_tex_name)
+
+        if self.__radiance_tex_inst is not None:
+            rad_tex_inst_name = self.__radiance_tex_inst
+            assembly.texture_instances().insert(self.__radiance_tex_inst)
+            self.__radiance_tex_inst = assembly.texture_instances().get_by_name(rad_tex_inst_name)
+
+        if self.__radiance_mult_tex is not None:
+            rad_mult_name = self.__radiance_mult_tex
+            assembly.textures().insert(self.__radiance_mult_tex)
+            self.__radiance_mult_tex = assembly.textures().get_by_name(rad_mult_name)
+
+        if self.__radiance_mult_tex_inst is not None:
+            rad_mult_tex_inst_name = self.__radiance_mult_tex_inst
+            assembly.texture_instances().insert(self.__radiance_mult_tex_inst)
+            self.__radiance_mult_tex_inst = assembly.texture_instances().get_by_name(rad_mult_tex_inst_name)
+
+    def update_lamp(self, lamp, assembly, scene):
+
+        assembly.colors().remove(self.__as_light_radiance)
+        assembly.lights().remove(self.__as_light)
+
+        if self.__radiance_tex is not None:
+            assembly.textures().remove(self.__radiance_tex)
+        if self.__radiance_tex_inst is not None:
+            assembly.texture_instances().remove(self.__radiance_tex_inst)
+        if self.__radiance_mult_tex is not None:
+            assembly.textures().remove(self.__radiance_mult_tex)
+        if self.__radiance_mult_tex_inst is not None:
+            assembly.texture_instances().remove(self.__radiance_mult_tex_inst)
+
+        self.reset(lamp)
+        self.create_entities(scene)
+        self.flush_entities(assembly)
 
 
 class AreaLampTranslator(Translator):
@@ -158,6 +197,11 @@ class AreaLampTranslator(Translator):
         super(AreaLampTranslator, self).__init__(lamp)
         self.__export_mode = export_mode
         self.__lamp_shader_group = None
+        self.__edf_mat = None
+        self.__has_shadergroup = False
+
+    def reset(self, lamp):
+        super(AreaLampTranslator, self).reset(lamp)
         self.__edf_mat = None
 
     #
@@ -210,34 +254,56 @@ class AreaLampTranslator(Translator):
 
         # Emit basic lamp shader group
         if lamp_data.appleseed.osl_node_tree is None:
-            shader_name = self.bl_lamp.name + "_tree"
+            self.__create_material(as_lamp_data, lamp_data)
+
+    def __create_material(self, as_lamp_data, lamp_data):
+        shader_name = self.bl_lamp.name + "_tree"
+        if self.__lamp_shader_group is None:
             self.__lamp_shader_group = asr.ShaderGroup(shader_name)
-
-            lamp_params = {'in_color': "color {0}".format(" ".join(map(str, as_lamp_data.area_color))),
-                           'in_intensity': "float {0}".format(as_lamp_data.area_intensity),
-                           'in_intensity_scale': "float {0}".format(as_lamp_data.area_intensity_scale),
-                           'in_exposure': "float {0}".format(as_lamp_data.area_exposure),
-                           'in_normalize': "int {0}".format(as_lamp_data.area_normalize)}
-
-            self.__lamp_shader_group.add_shader("shader", "as_blender_areaLight", "asAreaLight", lamp_params)
-            self.__lamp_shader_group.add_shader("surface", "as_closure2surface", "asClosure2Surface", {})
-            self.__lamp_shader_group.add_connection("asAreaLight", "out_output", "asClosure2Surface", "in_input")
-
-            # Emit are lamp material and surface shader.
-            self.__edf_mat = asr.Material('osl_material', lamp_data.name + "_mat", {'osl_surface': shader_name})
+        lamp_params = {'in_color': "color {0}".format(" ".join(map(str, as_lamp_data.area_color))),
+                       'in_intensity': "float {0}".format(as_lamp_data.area_intensity),
+                       'in_intensity_scale': "float {0}".format(as_lamp_data.area_intensity_scale),
+                       'in_exposure': "float {0}".format(as_lamp_data.area_exposure),
+                       'in_normalize': "int {0}".format(as_lamp_data.area_normalize)}
+        self.__lamp_shader_group.clear()
+        self.__lamp_shader_group.add_shader("shader", "as_blender_areaLight", "asAreaLight", lamp_params)
+        self.__lamp_shader_group.add_shader("surface", "as_closure2surface", "asClosure2Surface", {})
+        self.__lamp_shader_group.add_connection("asAreaLight", "out_output", "asClosure2Surface", "in_input")
+        # Emit are lamp material and surface shader.
+        self.__edf_mat = asr.Material('osl_material', lamp_data.name + "_mat", {'osl_surface': shader_name})
 
     def flush_entities(self, assembly):
+        mesh_name = self.__as_area_mesh.get_name()
         assembly.objects().insert(self.__as_area_mesh)
+        self.__as_area_mesh = assembly.objects().get_by_name(mesh_name)
+
+        mesh_inst_name = self.__as_area_mesh_inst.get_name()
         assembly.object_instances().insert(self.__as_area_mesh_inst)
+        self.__as_area_mesh_inst = assembly.object_instances().get_by_name(mesh_inst_name)
 
         if self.__edf_mat is not None:
+            edf_name = self.__edf_mat.get_name()
             assembly.materials().insert(self.__edf_mat)
+            self.__edf_mat = assembly.materials().get_by_name(edf_name)
 
-        if self.__lamp_shader_group is not None:
+        if self.__lamp_shader_group is not None and not self.__has_shadergroup:
+            shader_group_name = self.__lamp_shader_group.get_name()
             assembly.shader_groups().insert(self.__lamp_shader_group)
+            self.__lamp_shader_group = assembly.shader_groups().get_by_name(shader_group_name)
+            self.__has_shadergroup = True
 
-    def update(self, lamp, assembly):
-        pass
+    def update_lamp(self, lamp, assembly, scene):
+        assembly.objects().remove(self.__as_area_mesh)
+
+        assembly.object_instances().remove(self.__as_area_mesh_inst)
+
+        if self.__edf_mat is not None:
+            assembly.materials().remove(self.__edf_mat)
+
+        self.reset(lamp)
+
+        self.create_entities(scene)
+        self.flush_entities(assembly)
 
     #
     # Internal methods.
