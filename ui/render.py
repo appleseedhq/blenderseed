@@ -209,6 +209,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
                     row.prop(asr_scene_props, "ibl_env_samples", text="IBL Samples")
 
             layout.prop(asr_scene_props, "enable_caustics", text="Caustics")
+            layout.prop(asr_scene_props, "enable_clamp_roughness", text="Clamp Roughness")
 
             layout.label("Bounces")
 
