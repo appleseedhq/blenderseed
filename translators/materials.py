@@ -85,10 +85,11 @@ class MaterialTranslator(Translator):
         self.__as_shader = asr.SurfaceShader("physical_surface_shader",
                                              self._surface_name, shader_params)
         if self.bl_node_tree:
-            osl_params['osl_surface'] = self.bl_node_tree.name
+            shadergroup_name = self.bl_node_tree.name if not self._preview else "preview_mat_tree"
+            osl_params['osl_surface'] = shadergroup_name
 
             if self.__shader_group is None:
-                self.__shader_group = asr.ShaderGroup(self.bl_node_tree.name)
+                self.__shader_group = asr.ShaderGroup(shadergroup_name)
 
             self.set_shader_group_parameters(scene)
 
