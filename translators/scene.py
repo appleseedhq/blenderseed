@@ -338,16 +338,18 @@ class SceneTranslator(GroupTranslator):
         camera_update = False
         self.__context = context
 
+        # Check if the camera needs to be updated
+        for x in self.__camera_translators.values():
+            camera_update = x.check_for_camera_update(self.bl_scene.camera, self.__context)
+
         # Check if the frame needs to be updated
         width = int(self.__context.region.width)
         height = int(self.__context.region.height)
         new_viewport_resolution = [width, height]
         if new_viewport_resolution != self.__viewport_resolution:
+            print("update frame")
             view_update = True
-
-        # Check if the camera needs to be updated
-        for x in self.__camera_translators.values():
-            camera_update = x.check_for_camera_update(self.bl_scene.camera, self.__context)
+            camera_update = True
 
         return view_update, camera_update
 

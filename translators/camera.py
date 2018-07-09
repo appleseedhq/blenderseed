@@ -296,9 +296,11 @@ class InteractiveCameraTranslator(Translator):
                       'aspect_ratio': aspect_ratio,
                       'film_width': sensor_width}
         elif view_cam_type == "CAMERA":
-            self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
             # Taken from Cycles viewport export code
+            self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
+
             film_width, film_height = self.__calc_film_dimensions(aspect_ratio, self.__zoom)
+
             self._matrix = self.bl_camera.matrix_world
 
             cam_mapping = {'PERSP': 'pinhole_camera',
@@ -332,7 +334,6 @@ class InteractiveCameraTranslator(Translator):
                 if self.bl_camera.data.appleseed.enable_autofocus:
                     params['autofocus_target'] = self._find_auto_focus_point(self.context.scene)
                     params['autofocus_enabled'] = True
-
             else:
                 params = {'focal_length': self.bl_camera.data.lens / 1000,
                           'aspect_ratio': aspect_ratio,
