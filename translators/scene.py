@@ -560,8 +560,8 @@ class SceneTranslator(GroupTranslator):
         if lighting_engine == 'pt':
             parameters['pt'] = {'enable_ibl': True if asr_scene_props.enable_ibl else False,
                                 'enable_dl': True if asr_scene_props.enable_dl else False,
-                                'clamp_roughness': True,
                                 'enable_caustics': True if scene.appleseed.enable_caustics else False,
+                                'clamp_roughness': True if scene.appleseed.enable_clamp_roughness else False,
                                 'record_light_paths': True if scene.appleseed.record_light_paths else False,
                                 'next_event_estimation': True,
                                 'rr_min_path_length': asr_scene_props.rr_start,

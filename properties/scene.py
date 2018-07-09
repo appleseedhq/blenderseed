@@ -262,6 +262,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                              description="Enable caustics",
                                              default=False)
 
+    enable_clamp_roughness = bpy.props.BoolProperty(name="clamp_roughness",
+                                                    default=False)
+
     enable_dl = bpy.props.BoolProperty(name="enable_dl",
                                        description="Enable direct lighting",
                                        default=True)
