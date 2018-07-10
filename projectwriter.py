@@ -2178,6 +2178,7 @@ class Writer(object):
         self.__emit_parameter("tile_size", "{0} {1}".format(scene.appleseed.tile_width, scene.appleseed.tile_height))
         self.__emit_parameter("filter", scene.appleseed.pixel_filter)
         self.__emit_parameter("filter_size", scene.appleseed.pixel_filter_size)
+        self.__emit_parameter("save_extra_aovs", scene.appleseed.sampler_enable_diagnostics)
         if scene.appleseed.enable_render_stamp:
             self.__emit_parameter("enable_render_stamp", "true")
             self.__emit_parameter("render_stamp_format", scene.appleseed.render_stamp)
@@ -2258,6 +2259,7 @@ class Writer(object):
         self.__open_element('parameters name="generic_tile_renderer"')
         self.__emit_parameter("min_samples", scene.appleseed.sampler_min_samples)
         self.__emit_parameter("max_samples", scene.appleseed.sampler_max_samples)
+        self.__emit_parameter("enable_diagnostics", scene.appleseed.sampler_enable_diagnostics)
         self.__close_element("parameters")
         self.__close_element("configuration")
 
@@ -2265,17 +2267,18 @@ class Writer(object):
 
         self.__emit_parameter("pixel_renderer", scene.appleseed.pixel_sampler)
         self.__emit_parameter("lighting_engine", scene.appleseed.lighting_engine)
-        self.__open_element('parameters name="adaptive_pixel_renderer"')
+        self.__open_element('parameters name="adaptive_tile_renderer"')
         self.__emit_parameter("min_samples", scene.appleseed.sampler_min_samples)
         self.__emit_parameter("max_samples", scene.appleseed.sampler_max_samples)
-        self.__emit_parameter("quality", scene.appleseed.adaptive_sampler_quality)
-        self.__emit_parameter("enable_diagnostics", scene.appleseed.adaptive_sampler_enable_diagnostics)
+        self.__emit_parameter("precision", scene.appleseed.tile_adaptive_sampler_precision)
+        self.__emit_parameter("enable_diagnostics", scene.appleseed.sampler_enable_diagnostics)
         self.__close_element("parameters")
 
         self.__open_element('parameters name="uniform_pixel_renderer"')
         self.__emit_parameter("decorrelate_pixels", "true" if scene.appleseed.decorrelate_pixels else "false")
         self.__emit_parameter("force_antialiasing", "true" if scene.appleseed.force_aa else "false")
         self.__emit_parameter("samples", scene.appleseed.sampler_max_samples)
+        self.__emit_parameter("enable_diagnostics", scene.appleseed.sampler_enable_diagnostics)
         self.__close_element("parameters")
 
         self.__open_element('parameters name="generic_frame_renderer"')

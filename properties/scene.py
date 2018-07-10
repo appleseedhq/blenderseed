@@ -219,16 +219,16 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 default=64,
                                                 subtype='UNSIGNED')
 
-    adaptive_sampler_enable_diagnostics = bpy.props.BoolProperty(name="adaptive_sampler_enable_diagnostics",
+    sampler_enable_diagnostics = bpy.props.BoolProperty(name="sampler_enable_diagnostics",
                                                                  description='',
                                                                  default=False)
 
-    adaptive_sampler_quality = bpy.props.FloatProperty(name="adaptive_sampler_quality",
+    tile_adaptive_sampler_precision = bpy.props.FloatProperty(name="tile_adaptive_sampler_precision",
                                                        description='',
-                                                       default=3.0,
+                                                       default=0.004,
                                                        min=0.0,
-                                                       max=20.0,
-                                                       precision=3)
+                                                       max=0.1,
+                                                       precision=4)
 
     force_aa = bpy.props.BoolProperty(name="force_aa",
                                       description="When using 1 sample/pixel and Force Anti-Aliasing is disabled, samples are placed at the center of pixels",

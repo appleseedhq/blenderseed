@@ -160,6 +160,8 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             row = layout.row(align=True)
             row.prop(asr_scene_props, "sampler_min_samples", text="Min Samples")
             row.prop(asr_scene_props, "sampler_max_samples", text="Max Samples")
+            row = layout.row(align=True)
+            row.prop(asr_scene_props, "tile_adaptive_sampler_precision", text="Precision")
         else:
             layout.prop(asr_scene_props, "sampler_max_samples", text="Samples")
             split = layout.split()
@@ -169,6 +171,7 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             split = split.split()
             row = split.row()
             row.prop(asr_scene_props, "decorrelate_pixels", text="Decorrelate Pixels")
+        layout.prop(asr_scene_props, "sampler_enable_diagnostics", text="Diagnostics AOVs")
 
 
 class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
@@ -191,10 +194,6 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         # Path tracing UI
         if asr_scene_props.lighting_engine == 'pt':
-            if asr_scene_props.pixel_sampler == 'adaptive':
-                row = layout.row()
-                row.prop(asr_scene_props, "adaptive_sampler_enable_diagnostics", text="Diagnostics")
-                row.prop(asr_scene_props, "adaptive_sampler_quality", text="Quality")
             layout.prop(asr_scene_props, "next_event_estimation", text="Next Event Estimation")
             if asr_scene_props.next_event_estimation:
                 row = layout.row()
