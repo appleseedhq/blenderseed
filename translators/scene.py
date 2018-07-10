@@ -286,7 +286,12 @@ class SceneTranslator(GroupTranslator):
 
         # Update materials.
         for mat in self._material_translators.keys():
-            bl_mat = bpy.data.materials[str(mat)]
+            # Get Blender material
+            try:
+                bl_mat = bpy.data.materials[str(mat)]
+            except:
+                logger.debug("Material not found for %s", mat)
+                continue
 
             # Check if base material is updated
             if bl_mat.is_updated or bl_mat.is_updated_data:
@@ -302,22 +307,34 @@ class SceneTranslator(GroupTranslator):
         # Update lamp materials
         for mat in self._lamp_material_translators.keys():
             # Get Blender lamp
-            bl_lamp = bpy.data.lamps[str(mat)]
+            try:
+                bl_lamp = bpy.data.lamps[str(mat)]
+            except:
+                logger.debug("Material not found for %s", mat)
+                continue
             if bl_lamp.appleseed.osl_node_tree.is_updated:
                 logger.debug("Updating material tree for %s", mat)
                 self._lamp_material_translators[mat].update_material(bl_lamp, self.__main_assembly, scene)
 
         # Update objects
         for translator in self._object_translators.keys():
-            # Find blender obj
-            bl_obj = bpy.data.objects[str(translator)]
+            # Find Blender obj
+            try:
+                bl_obj = bpy.data.objects[str(translator)]
+            except:
+                logger.debug("Object not found for %s", translator)
+                continue
             if bl_obj.is_updated or bl_obj.is_updated_data:
                 logger.debug("Updating object %s", translator)
                 self._object_translators[translator].update(bl_obj)
 
         for translator in self._lamp_translators.keys():
-            # Find blender obj
-            bl_lamp = bpy.data.objects[str(translator)]
+            # Find Blender obj
+            try:
+                bl_lamp = bpy.data.objects[str(translator)]
+            except:
+                logger.debug("Lamp not found for %s", translator)
+                continue
             if bl_lamp.is_updated or bl_lamp.is_updated_data:
                 logger.debug("Updating lamp %s", translator)
                 self._lamp_translators[translator].update_lamp(bl_lamp, self.__main_assembly, scene)
