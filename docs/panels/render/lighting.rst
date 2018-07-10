@@ -31,18 +31,9 @@ Path Tracing Engine
 	- Diffuse: Sets a maximum number of diffuse bounces a ray can make.
 	- Glossy: Sets the number of glossy bounces a ray can make.
 	- Specular: Sets the number of specular bounces a ray can make.
-	- Volume: Sets the number of bounces a ray can make inside a volume.
 	- Max Ray Intensity: Sets the maximum brightness an indirect ray can contribute to the scene.  Lowering this can remove fireflies at the expense of accurate lighting.
 - Russian Roulette Start Bounce:
 	Sets the bounce after which Russian Roulette will be used to terminate rays that are not expected to contribute much to the final image.  Lowering this can increase noise but speed up rendering.
-- Volume Distance Samples: 
-	ToDo
-- Optimize for Lights Outside Volumes
-	This can help reduce noise when light sources are not inside a volume.
-- Mesh Light Multiplier:
-	This is a global multiplier for the intensity of any mesh lights in the scene.
-- Export Mesh Lights:
-	Whether or not to export mesh lights.
 
 SPPM Engine
 -----------

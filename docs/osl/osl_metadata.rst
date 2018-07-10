@@ -10,7 +10,8 @@ When blenderseed scans an OSL shader it looks for several specific metadata tags
 		This is the name of the node.  If it is not used the name of the OSL file will be used.
 	- string classification
 		This tells blenderseed what the shader is.  Options are:
-
+			- surface
+			- shader
 			- utility
 			- texture/2d
 			- texture/3d

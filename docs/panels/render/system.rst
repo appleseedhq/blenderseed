@@ -7,7 +7,6 @@ General
 
 - Auto Threads
     Select this option to have appleseed automatically determine the number of rendering threads to use.  Unselect it to choose manually.
-    This defines how the image tiles are rendered out (or the order in which they will appear).
 - Override Shading
     Select this to replace all the shading in a scene with the selected option.  Useful for troubleshooting scene issues.
 - Texture Cache
