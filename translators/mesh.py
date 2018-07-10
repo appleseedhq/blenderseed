@@ -60,7 +60,8 @@ class MeshTranslator(ObjectTranslator):
         self.__front_materials = {}
         self.__back_materials = {}
 
-        object_instance_params = {}
+        self.__alpha_tex = None
+        self.__alpha_tex_inst = None
 
     #
     # Entity translation.
@@ -75,6 +76,21 @@ class MeshTranslator(ObjectTranslator):
         # Materials
         mesh_key = str(ObjectKey(self.bl_obj.data)) + "_obj"
         mesh_name = mesh_key
+
+        asr_obj_props = self.bl_obj.appleseed
+
+        self.__obj_params = {'alpha_map': asr_obj_props.object_alpha}
+        if self.bl_obj.appleseed.object_alpha_texture != "":
+            tex_inst_params = {'addressing_mode': asr_obj_props.object_alpha_texture_wrap_mode,
+                               'filtering_mode': 'bilinear',
+                               'alpha_mode': asr_obj_props.object_alpha_mode}
+            self.__alpha_tex = asr.Texture('disk_texture_2d', mesh_name + "_tex",
+                                           {'filename': asr_obj_props.object_alpha_texture,
+                                            'color_space': asr_obj_props.object_alpha_texture_colorspace}, [])
+            self.__alpha_tex_inst = asr.TextureInstance(mesh_name + "_tex_inst", tex_inst_params, mesh_name + "_tex",
+                                                        asr.Transformf(asr.Matrix4f.identity()))
+
+            self.__obj_params['alpha_map'] = mesh_name + "_tex_inst"
 
         material_slots = self.bl_obj.material_slots
 
@@ -115,14 +131,14 @@ class MeshTranslator(ObjectTranslator):
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Write a mesh file for the mesh key.
             logger.debug("Writing mesh file object %s, time = %s", self.bl_obj.name, time)
-            self.__mesh_object = asr.MeshObject(mesh_name, {})
+            self.__mesh_object = asr.MeshObject(mesh_name, self.__obj_params)
             self.__convert_mesh(me)
             self.__write_mesh(mesh_key)
         else:
             if self.__key_index == 0:
                 # First key, convert the mesh and reserve keys.
                 logger.debug("Converting mesh object %s", self.bl_obj.name)
-                self.__mesh_object = asr.MeshObject(mesh_name, {})
+                self.__mesh_object = asr.MeshObject(mesh_name, self.__obj_params)
                 self.__convert_mesh(me)
 
                 if self.__deforming:
@@ -145,13 +161,13 @@ class MeshTranslator(ObjectTranslator):
 
         self._mesh_name = self.__mesh_object.get_name()
         object_instance_params = {'visibility': {'camera': asr_obj_props.camera_visible,
-                                                        'light': asr_obj_props.light_visible,
-                                                        'shadow': asr_obj_props.shadow_visible,
-                                                        'diffuse': asr_obj_props.diffuse_visible,
-                                                        'glossy': asr_obj_props.glossy_visible,
-                                                        'specular': asr_obj_props.specular_visible,
-                                                        'transparency': asr_obj_props.transparency_visible},
-                                         'medium_priority': asr_obj_props.medium_priority}
+                                                 'light': asr_obj_props.light_visible,
+                                                 'shadow': asr_obj_props.shadow_visible,
+                                                 'diffuse': asr_obj_props.diffuse_visible,
+                                                 'glossy': asr_obj_props.glossy_visible,
+                                                 'specular': asr_obj_props.specular_visible,
+                                                 'transparency': asr_obj_props.transparency_visible},
+                                  'medium_priority': asr_obj_props.medium_priority}
 
         if asr_obj_props.object_sss_set != "":
             object_instance_params['sss_set_id'] = asr_obj_props.object_sss_set
@@ -234,6 +250,11 @@ class MeshTranslator(ObjectTranslator):
             assembly.assembly_instances().insert(ass_inst)
             self.__ass_inst = assembly.assembly_instances().get_by_name(ass_inst_name)
 
+            if self.__alpha_tex is not None:
+                self.__ass.textures().insert(self.__alpha_tex)
+            if self.__alpha_tex_inst is not None:
+                self.__ass.texture_instances().insert(self.__alpha_tex_inst)
+
         else:
             logger.debug("Creating object instance for object %s, name: %s", self._mesh_name, inst_name)
 
@@ -252,6 +273,11 @@ class MeshTranslator(ObjectTranslator):
             obj_inst_name = obj_inst.get_name()
             assembly.object_instances().insert(obj_inst)
             self.__obj_inst = assembly.object_instances().get_by_name(obj_inst_name)
+
+            if self.__alpha_tex is not None:
+                assembly.textures().insert(self.__alpha_tex)
+            if self.__alpha_tex_inst is not None:
+                assembly.texture_instances().insert(self.__alpha_tex_inst)
 
     def update(self, obj):
 

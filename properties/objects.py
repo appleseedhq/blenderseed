@@ -116,6 +116,13 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                                    ('wrap', "Wrap", "")],
                                                             default='wrap')
 
+    object_alpha_mode = bpy.props.EnumProperty(name="object_alpha_mode",
+                                               items=[
+                                                   ('alpha_channel', "Alpha Channel", ""),
+                                                   ('luminance', "Luminance", ""),
+                                                   ('detect', "Detect", "")],
+                                               default='detect')
+
 
 def register():
     util.safe_register_class(AppleseedObjSettings)

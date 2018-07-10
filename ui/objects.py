@@ -64,6 +64,7 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         col.prop(asr_obj, "object_alpha_texture", text="")
         col.prop(asr_obj, "object_alpha_texture_colorspace", text="Color Space")
         col.prop(asr_obj, "object_alpha_texture_wrap_mode", text="Wrap Mode")
+        col.prop(asr_obj, "object_alpha_mode", text="Alpha Mode")
 
         layout.separator()
 
