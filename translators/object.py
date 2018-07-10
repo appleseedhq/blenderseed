@@ -108,3 +108,6 @@ class InstanceTranslator(ObjectTranslator):
         ass_name = self.__ass_inst.get_name()
         assembly.assembly_instances().insert(self.__ass_inst)
         self.__ass_inst = assembly.assembly_instances().get_by_name(ass_name)
+
+    def update(self, obj):
+        self.__ass_inst.transform_sequence().set_transform(0.0, self._convert_matrix(obj.matrix_world))

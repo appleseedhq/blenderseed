@@ -313,7 +313,7 @@ class SceneTranslator(GroupTranslator):
             bl_obj = bpy.data.objects[str(translator)]
             if bl_obj.is_updated or bl_obj.is_updated_data:
                 logger.debug("Updating object %s", translator)
-                self._object_translators[translator].update_obj(bl_obj)
+                self._object_translators[translator].update(bl_obj)
 
         for translator in self._lamp_translators.keys():
             # Find blender obj

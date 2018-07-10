@@ -253,7 +253,7 @@ class MeshTranslator(ObjectTranslator):
             assembly.object_instances().insert(obj_inst)
             self.__obj_inst = assembly.object_instances().get_by_name(obj_inst_name)
 
-    def update_obj(self, obj):
+    def update(self, obj):
 
         self.__ass_inst.transform_sequence().set_transform(0.0, self._convert_matrix(obj.matrix_world))
 
