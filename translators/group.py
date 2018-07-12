@@ -29,7 +29,7 @@ import appleseed as asr
 from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
 from .mesh import MeshTranslator
-from .object import InstanceTranslator
+from .object import InstanceTranslator, DupliTranslator
 from .translator import Translator, ObjectKey
 from ..logger import get_logger
 from ..util import inscenelayer
@@ -67,6 +67,7 @@ class GroupTranslator(Translator):
         self._lamp_translators = {}
         self._lamp_material_translators = {}
         self._object_translators = {}
+        self._dupli_translators = {}
 
         # Map from datablocks to translators for instancing.
         self._datablock_to_translator = {}
@@ -112,6 +113,7 @@ class GroupTranslator(Translator):
     @property
     def all_translators(self):
         return [
+            self._dupli_translators,
             self._material_translators,
             self._lamp_translators,
             self._lamp_material_translators,
@@ -180,24 +182,23 @@ class GroupTranslator(Translator):
                 mesh = obj.data
                 mesh_key = ObjectKey(mesh)
 
-                if mesh_key in self._datablock_to_translator:
-                    logger.debug("Creating instance translator for object %s, master obj: %s", obj_key, mesh_key)
-
-                    master_translator = self._datablock_to_translator[mesh_key]
-                    self._object_translators[obj_key] = InstanceTranslator(obj, master_translator)
-                    master_translator.add_instance()
-                else:
-                    logger.debug("Creating mesh translator for object %s", obj_key)
-
-                    translator = MeshTranslator(obj, self.export_mode, self.geometry_dir)
-                    self._object_translators[obj_key] = translator
-                    self._datablock_to_translator[mesh_key] = translator
-
-                    self.__create_material_translators(obj)
-
                 if obj.is_duplicator:
-                    # todo: handle dupli - objects here...
-                    pass
+                    self._dupli_translators[obj_key] = DupliTranslator(obj, self.export_mode)
+                else:
+                    if mesh_key in self._datablock_to_translator:
+                        logger.debug("Creating instance translator for object %s, master obj: %s", obj_key, mesh_key)
+
+                        master_translator = self._datablock_to_translator[mesh_key]
+                        self._object_translators[obj_key] = InstanceTranslator(obj, master_translator)
+                        master_translator.add_instance()
+                    else:
+                        logger.debug("Creating mesh translator for object %s", obj_key)
+
+                        translator = MeshTranslator(obj, self.export_mode, self.geometry_dir)
+                        self._object_translators[obj_key] = translator
+                        self._datablock_to_translator[mesh_key] = translator
+
+                        self.__create_material_translators(obj)
 
             else:
                 pass  # log here unknown object found...
@@ -207,7 +208,7 @@ class GroupTranslator(Translator):
             for x in t.values():
                 x.create_entities(scene)
 
-    def set_transform_key(self, time, key_times):
+    def set_transform_key(self, time, key_times, scene):
         for x in self._object_translators.values():
             x.set_transform_key(time, key_times)
 
