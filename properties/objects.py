@@ -91,10 +91,6 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                            min=0.0,
                                            max=1.0)
 
-    object_sss_set = bpy.props.StringProperty(name="object_sss_set",
-                                              description="SSS set",
-                                              default="")
-
     object_alpha_use_texture = bpy.props.BoolProperty(name="object_alpha_use_texture",
                                                       description="Use a texture to influence object alpha",
                                                       default=False)
@@ -122,6 +118,21 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                    ('luminance', "Luminance", ""),
                                                    ('detect', "Detect", "")],
                                                default='detect')
+
+    object_sss_set = bpy.props.StringProperty(name="object_sss_set",
+                                              description="SSS set",
+                                              default="")
+
+    object_ray_bias_method = bpy.props.EnumProperty(name="object_ray_bias_method",
+                                                    items=[
+                                                        ('none', "No Ray Bias", ""),
+                                                        ('normal', "Shift Along Surface Normal", ""),
+                                                        ('incoming_direction', "Shift Along Incoming Direction", ""),
+                                                        ('outgoing_direction', "Shift Along Outgoing Direction", "")],
+                                                    default='none')
+
+    object_ray_bias_distance = bpy.props.FloatProperty(name="object_ray_bias_distance",
+                                                       default=0.0)
 
 
 def register():

@@ -46,25 +46,34 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         layout = self.layout
         asr_obj = context.object.appleseed
         sss_lists = context.scene.appleseed_sss_sets
-        col = layout.column()
-        col.prop(asr_obj, "camera_visible", text="Camera")
-        col.prop(asr_obj, "light_visible", text="Light")
-        col.prop(asr_obj, "shadow_visible", text="Shadow")
-        col.prop(asr_obj, "diffuse_visible", text="Diffuse")
-        col.prop(asr_obj, "glossy_visible", text="Glossy")
-        col.prop(asr_obj, "specular_visible", text="Specular")
-        col.prop(asr_obj, "transparency_visible", text="Transparency")
+
+        box = layout.box()
+        box.label(text="Ray Visibility:")
+        box.prop(asr_obj, "camera_visible", text="Camera", toggle=True)
+        box.prop(asr_obj, "light_visible", text="Light", toggle=True)
+        box.prop(asr_obj, "shadow_visible", text="Shadow", toggle=True)
+        box.prop(asr_obj, "diffuse_visible", text="Diffuse", toggle=True)
+        box.prop(asr_obj, "glossy_visible", text="Glossy", toggle=True)
+        box.prop(asr_obj, "specular_visible", text="Specular", toggle=True)
+        box.prop(asr_obj, "transparency_visible", text="Transparency", toggle=True)
 
         layout.separator()
-        row = layout.row()
+        box = layout.box()
+        box.label(text="Ray Bias:")
+        box.prop(asr_obj, "object_ray_bias_method", text="Method")
+        box.prop(asr_obj, "object_ray_bias_distance", text="Distance")
+
+        layout.separator()
+        box = layout.box()
+        box.label(text="Object Alpha:")
+        row = box.row()
         row.active = asr_obj.object_alpha_texture == ""
         row.prop(asr_obj, "object_alpha", text="Object Alpha")
 
-        col = layout.column()
-        col.prop(asr_obj, "object_alpha_texture", text="")
-        col.prop(asr_obj, "object_alpha_texture_colorspace", text="Color Space")
-        col.prop(asr_obj, "object_alpha_texture_wrap_mode", text="Wrap Mode")
-        col.prop(asr_obj, "object_alpha_mode", text="Alpha Mode")
+        box.prop(asr_obj, "object_alpha_texture", text="")
+        box.prop(asr_obj, "object_alpha_texture_colorspace", text="Color Space")
+        box.prop(asr_obj, "object_alpha_texture_wrap_mode", text="Wrap Mode")
+        box.prop(asr_obj, "object_alpha_mode", text="Alpha Mode")
 
         layout.separator()
 

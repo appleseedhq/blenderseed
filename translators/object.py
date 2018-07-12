@@ -27,7 +27,7 @@
 
 import appleseed as asr
 
-from .translator import Translator
+from .translator import Translator, ProjectExportMode, ObjectKey
 from ..logger import get_logger
 
 logger = get_logger()
@@ -111,3 +111,33 @@ class InstanceTranslator(ObjectTranslator):
 
     def update(self, obj):
         self.__ass_inst.transform_sequence().set_transform(0.0, self._convert_matrix(obj.matrix_world))
+
+
+class DupliTranslator(ObjectTranslator):
+
+    def __init__(self, obj, export_mode):
+        super(DupliTranslator, self).__init__(obj)
+
+        self.__export_mode = export_mode
+
+    @property
+    def bl_obj(self):
+        return self._bl_obj
+
+    def create_entities(self, scene):
+
+        self.__mode = 'VIEWPORT' if self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER else 'RENDER'
+
+        self.bl_obj.dupli_list_create(scene, settings=self.__mode)
+
+        for dupli in self.bl_obj.dupli_list:
+            print(dupli.object)
+            print(dupli.random_id)
+            print(dupli.type)
+            print(dupli.index)
+            print()
+
+        self.bl_obj.dupli_list_clear()
+
+    def flush_entities(self, assembly):
+        pass

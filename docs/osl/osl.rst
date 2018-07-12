@@ -9,15 +9,11 @@ What is it?
 
 How does it work with appleseed?
 --------------------------------
-	Since the beginning appleseed has had its own native shading system (henceforth the ‘built in system’, or ‘BIS’).  While this system worked well enough, it was limited to defining material surfaces and optionally assigning UV mapped textures to them.  That was it.  It couldn’t do any kind of procedural patterns, coordinate manipulation, fancy BSDF mixing, or any of the other utility functions that were needed for a production renderer.  Instead of expanding the BIS system with these features, the decision was made to integrate OSL instead, as it is fully capable of all these features and is developed and hosted by a major visual effects company.  As of the current release (0.8), the BIS system is still available in blenderseed, but it is limited to representing simple materials (although it is currently the only way to use volumetric shading).
+	Since the beginning appleseed has had its own native shading system (henceforth the ‘built in system’, or ‘BIS’).  While this system worked well enough, it was limited to defining material surfaces and optionally assigning UV mapped textures to them.  That was it.  It couldn’t do any kind of procedural patterns, coordinate manipulation, fancy BSDF mixing, or any of the other utility functions that were needed for a production renderer.  Instead of expanding the BIS system with these features, the decision was made to integrate OSL instead, as it is fully capable of all these features and is developed and hosted by a major visual effects company.  As of the current release (1.0), the BIS system is no longer exposed in blenderseed.
 
 How do I use it in blenderseed?
 -------------------------------
-	OSL is available in conjunction with the node editor in Blender.  When a material is created by default it will use the BIS system.  To use OSL, click on the ‘Add OSL Nodetree’ button at the top of the material panel.  This will create an OSL nodetree and automatically link it into the material.  This will override all the BIS settings and they will vanish from the panel, and OSL will now be used for this material.  Go into the node editor and select the OSL node tree icon from the bottom menu bar.  Be sure to also select the node tree itself for the material from the same menu.  You can add nodes to the editor using Shift+A.  You can add nodes from the different categories to build up your material, but always make sure the final node is an as_closure2surface node, as that is required to export the material properly.
-
-What if I decide I don’t want to use OSL?
------------------------------------------
-	The BIS system can still be used if desired, just delete the node tree link from the material panel.  If you later decide you want to use OSL after all (because let’s face it, you really do want to use it), you can re-link the node tree to the material.
+	OSL is available in conjunction with the node editor in Blender.  When a material is created, by default it will add an OSL node tree and link to it.  If you have an open node editor you can use the 'view nodetree' button under the material preview to switch the node view to the current material.  You can add nodes to the editor using Shift+A.  You can add nodes from the different categories to build up your material, but always make sure the final node is an as_closure2surface node, as that is required to export the material properly.
 
 Where does the OSL shading system get the nodes from?
 -----------------------------------------------------
