@@ -243,10 +243,10 @@ class SceneTranslator(GroupTranslator):
                     x.set_transform_key(time, cam_times)
 
             if time in xform_times:
-                self.set_transform_key(time, xform_times)
+                self.set_transform_key(time, xform_times, self.bl_scene)
 
                 for x in self.__group_translators.values():
-                    x.set_transform_key(time, xform_times)
+                    x.set_transform_key(time, xform_times, self.bl_scene)
 
             if time in deform_times:
                 self.set_deform_key(self.bl_scene, time, deform_times)
@@ -285,7 +285,7 @@ class SceneTranslator(GroupTranslator):
         self.__context = context
 
         # Update materials.
-        for mat in self._material_translators.keys():
+        for mat in self._material_translators:
             # Get Blender material
             try:
                 bl_mat = bpy.data.materials[str(mat)]
@@ -305,7 +305,7 @@ class SceneTranslator(GroupTranslator):
                     self._material_translators[mat].update_material(bl_mat, self.__main_assembly, scene)
 
         # Update lamp materials
-        for mat in self._lamp_material_translators.keys():
+        for mat in self._lamp_material_translators:
             # Get Blender lamp
             try:
                 bl_lamp = bpy.data.lamps[str(mat)]
@@ -317,7 +317,7 @@ class SceneTranslator(GroupTranslator):
                 self._lamp_material_translators[mat].update_material(bl_lamp, self.__main_assembly, scene)
 
         # Update objects
-        for translator in self._object_translators.keys():
+        for translator in self._object_translators:
             # Find Blender obj
             try:
                 bl_obj = bpy.data.objects[str(translator)]
@@ -328,7 +328,7 @@ class SceneTranslator(GroupTranslator):
                 logger.debug("Updating object %s", translator)
                 self._object_translators[translator].update(bl_obj)
 
-        for translator in self._lamp_translators.keys():
+        for translator in self._lamp_translators:
             # Find Blender obj
             try:
                 bl_lamp = bpy.data.objects[str(translator)]
