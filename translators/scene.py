@@ -493,7 +493,7 @@ class SceneTranslator(GroupTranslator):
         self.__project.set_scene(asr.Scene())
 
         # Add OSL shader directories to search paths.
-        tool_dir, shader_directories = get_osl_search_paths()
+        shader_directories = get_osl_search_paths()
         paths = self.__project.get_search_paths()
         paths.extend(x for x in shader_directories)
         self.__project.set_search_paths(paths)

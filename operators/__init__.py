@@ -112,7 +112,7 @@ class AppleseedConvertTextures(bpy.types.Operator):
         scene = context.scene
         textures = scene.appleseed
 
-        tool_dir, shader_dir = util.get_osl_search_paths()
+        tool_dir = util.get_appleseed_tool_dir()
 
         for tex in textures.textures:
             filename = bpy.path.abspath(tex.name)
