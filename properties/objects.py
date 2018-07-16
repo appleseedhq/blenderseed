@@ -98,13 +98,13 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                     default="",
                                                     subtype='FILE_PATH')
 
-    object_alpha_texture_colorspace = bpy.props.EnumProperty(name="Color Space",
+    object_alpha_texture_colorspace = bpy.props.EnumProperty(name="object_alpha_texture_colorspace",
                                                              description="Color space",
                                                              items=[('srgb', "sRGB", ""),
                                                                     ('linear_rgb', "Linear", "")],
                                                              default='linear_rgb')
 
-    object_alpha_texture_wrap_mode = bpy.props.EnumProperty(name="Texture Wrapping",
+    object_alpha_texture_wrap_mode = bpy.props.EnumProperty(name="object_alpha_texture_wrap_mode",
                                                             description="Texture wrapping method",
                                                             items=[('clamp', "Clamp", ""),
                                                                    ('wrap', "Wrap", "")],

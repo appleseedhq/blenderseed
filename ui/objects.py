@@ -90,7 +90,7 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         box.label(text="Object Alpha:")
         row = box.row()
         row.active = asr_obj.object_alpha_texture == ""
-        row.prop(asr_obj, "object_alpha", text="Object Alpha")
+        row.prop(asr_obj, "object_alpha", text="")
 
         box.prop(asr_obj, "object_alpha_texture", text="")
         box.prop(asr_obj, "object_alpha_texture_colorspace", text="Color Space")
