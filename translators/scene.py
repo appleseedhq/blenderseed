@@ -342,7 +342,7 @@ class SceneTranslator(GroupTranslator):
                 self._lamp_translators[translator].update_lamp(bl_lamp, self.__main_assembly, scene)
 
         if self.bl_scene.is_updated or self.bl_scene.is_updated_data:
-                self.__world_translator.update_world(self.bl_scene, self.as_scene)
+            self.__world_translator.update_world(self.bl_scene, self.as_scene)
 
         if self.bl_scene.camera.is_updated or self.bl_scene.camera.is_updated_data:
             for x in self.__camera_translators.values():
@@ -562,7 +562,7 @@ class SceneTranslator(GroupTranslator):
         if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
             render_threads = -1
         else:
-            render_threads = asr_scene_props.threads if not asr_scene_props.threads_auto else 0
+            render_threads = asr_scene_props.threads if not asr_scene_props.threads_auto else 'auto'
 
         parameters = {'uniform_pixel_renderer': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
                                                  'force_antialiasing': True if asr_scene_props.force_aa else False,
