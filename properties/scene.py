@@ -37,7 +37,7 @@ try:
 except:
     threads = 1
     max_threads = 32
-    
+
 
 class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(name="Texture",
@@ -202,7 +202,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 subtype='UNSIGNED')
 
     interactive_max_fps = bpy.props.FloatProperty(name="interactive_max_fps",
-                                                  default=30.0)
+                                                  default=10.0)
 
     interactive_max_samples = bpy.props.IntProperty(name="interactive_max_samples",
                                                     default=-1)
