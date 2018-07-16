@@ -419,7 +419,7 @@ class SceneTranslator(GroupTranslator):
         obj_key = ObjectKey(self.bl_scene.camera)
         logger.debug("Creating camera translator for active camera  %s", obj_key)
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            self.__camera_translators[obj_key] = CameraTranslator(self.bl_scene.camera)
+            self.__camera_translators[obj_key] = CameraTranslator(self.bl_scene.camera, self.asset_handler)
         else:
             self.__camera_translators[obj_key] = InteractiveCameraTranslator(self.bl_scene.camera, self.__context)
 

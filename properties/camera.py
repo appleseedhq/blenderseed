@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,6 +26,7 @@
 #
 
 import bpy
+
 from .. import util
 
 
@@ -39,7 +39,6 @@ def get_shutter_max(self, context):
 
 
 class AppleseedCameraSettings(bpy.types.PropertyGroup):
-
     camera_model = bpy.props.EnumProperty(name="camera_model",
                                           items=[('pinhole', 'Pinhole', ''),
                                                  ('thinlens', 'Thin Lens', ''),
@@ -84,6 +83,14 @@ class AppleseedCameraSettings(bpy.types.PropertyGroup):
                                              description="Image texture to define bokeh",
                                              default='',
                                              subtype='FILE_PATH')
+
+    diaphragm_map_colorspace = bpy.props.EnumProperty(name="env_tex_colorspace",
+                                                      description="Color space of input texture",
+                                                      items=[
+                                                          ('srgb', "sRGB", ""),
+                                                          ('linear_rgb', "Linear RGB", ""),
+                                                          ('ciexyz', "CIE XYZ", "")],
+                                                      default="linear_rgb")
 
 
 def register():

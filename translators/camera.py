@@ -44,9 +44,14 @@ class CameraTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, camera):
+    def __init__(self, camera, asset_handler):
         super(CameraTranslator, self).__init__(camera)
         self._xform_seq = asr.TransformSequence()
+
+        self.__cam_map = None
+        self.__cam_map_inst = None
+
+        self.__asset_handler = asset_handler
 
     #
     # Properties.
@@ -90,6 +95,15 @@ class CameraTranslator(Translator):
         cam_name = self.__as_camera.get_name()
         scene.cameras().insert(self.__as_camera)
         self.__as_camera = scene.cameras().get_by_name(cam_name)
+
+        if self.__cam_map is not None:
+            cam_map_name = self.__cam_map.get_name()
+            cam_map_inst_name = self.__cam_map_inst.get_name()
+            scene.textures().insert(self.__cam_map)
+            scene.texture_instances().insert(self.__cam_map_inst)
+
+            self.__cam_map = scene.textures().get_by_name(cam_map_name)
+            self.__cam_map_inst = scene.texture_instances().get_by_name(cam_map_inst_name)
 
     #
     # Internal methods.
@@ -137,6 +151,17 @@ class CameraTranslator(Translator):
             if camera.appleseed.enable_autofocus:
                 cam_params['autofocus_target'] = self._find_auto_focus_point(scene)
                 cam_params['autofocus_enabled'] = True
+
+            if camera.appleseed.diaphragm_map != "":
+                filename = self.__asset_handler.resolve_path(camera.appleseed.diaphragm_map)
+                self.__cam_map = asr.Texture('disk_texture_2d', 'cam_map',
+                                             {'filename': filename, 'color_space': camera.appleseed.diaphragm_map_colorspace}, [])
+                self.__cam_map_inst = asr.TextureInstance("cam_map_inst", {'addressing_mode': 'wrap',
+                                                                           'filtering_mode': 'bilinear'},
+                                                          "cam_map", asr.Transformf(asr.Matrix4f.identity()))
+
+                cam_params['diaphragm_map'] = 'cam_map_inst'
+                del cam_params['diaphragm_blades']
 
         elif model == 'spherical_camera':
             cam_params = {'shutter_open_end_time': scene.appleseed.shutter_open_end_time,

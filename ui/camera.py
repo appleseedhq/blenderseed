@@ -108,6 +108,9 @@ class AppleseedCameraDoF(bpy.types.Panel):
         layout.prop(asr_cam_props, "diaphragm_blades", text="Blades")
         layout.prop(asr_cam_props, "diaphragm_angle", text="Tilt Angle")
         layout.prop(asr_cam_props, "diaphragm_map", text="Aperture Shape")
+        row = layout.row()
+        row.enabled = asr_cam_props.diaphragm_map != ""
+        row.prop(asr_cam_props, "diaphragm_map_colorspace", text="Color Space")
 
 
 def register():
