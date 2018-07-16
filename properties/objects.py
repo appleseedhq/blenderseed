@@ -31,16 +31,14 @@ from .. import util
 
 
 class AppleseedObjSettings(bpy.types.PropertyGroup):
+    object_export = bpy.props.EnumProperty(name="object_export",
+                                             items=[('normal', "Normal", ""),
+                                                    ('archive_assembly', "Archive Assembly", "")],
+                                             default='normal')
 
-    enable_motion_blur = bpy.props.BoolProperty(name="enable_motion_blur",
-                                                description="Enable rendering of motion blur",
-                                                default=False)
-
-    motion_blur_type = bpy.props.EnumProperty(name="Motion Blur Type",
-                                              items=[('object', 'Object', 'Object motion blur'),
-                                                     ('deformation', 'Deformation', 'Deformation motion blur. Warning: this will increase export time')],
-                                              description="Type of motion blur to render",
-                                              default='object')
+    archive_path = bpy.props.StringProperty(name="archive_path",
+                                            default="",
+                                            subtype="FILE_PATH")
 
     enable_visibility_flags = bpy.props.BoolProperty(name="enable_visibility_flags",
                                                      description="Enable visibility flags for object",

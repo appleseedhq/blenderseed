@@ -269,6 +269,8 @@ class SceneTranslator(GroupTranslator):
         for x in self.__group_translators.values():
             x.flush_entities(self.__main_assembly)
 
+        self.__load_searchpaths()
+
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
@@ -460,6 +462,20 @@ class SceneTranslator(GroupTranslator):
                     logger.debug("Creating group instance translator for object %s", obj.name)
                     self._object_translators[obj_key] = InstanceTranslator(obj, self.__group_translators[group_key])
 
+    def __load_searchpaths(self):
+         # Add OSL shader directories to search paths.
+        shader_directories = get_osl_search_paths()
+        paths = self.__project.get_search_paths()
+        paths.extend(x for x in shader_directories)
+
+        # Load any search paths from translators
+        for x in self.all_translators:
+            for t in x.values():
+                if t.searchpaths != []:
+                    paths.extend(x for x in t.searchpaths if x not in paths)
+
+        self.__project.set_search_paths(paths)
+
     def __create_world_translator(self):
         logger.debug("Creating world translator")
 
@@ -491,12 +507,6 @@ class SceneTranslator(GroupTranslator):
 
         # Create the scene.
         self.__project.set_scene(asr.Scene())
-
-        # Add OSL shader directories to search paths.
-        shader_directories = get_osl_search_paths()
-        paths = self.__project.get_search_paths()
-        paths.extend(x for x in shader_directories)
-        self.__project.set_search_paths(paths)
 
         # Create the environment.
         self.__project.get_scene().set_environment(asr.Environment("environment", {}))

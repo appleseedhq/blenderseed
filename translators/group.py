@@ -29,7 +29,7 @@ import appleseed as asr
 from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
 from .mesh import MeshTranslator
-from .object import InstanceTranslator, DupliTranslator
+from .object import InstanceTranslator, DupliTranslator, ArchiveTranslator
 from .translator import Translator, ObjectKey
 from ..logger import get_logger
 from ..util import inscenelayer
@@ -184,6 +184,9 @@ class GroupTranslator(Translator):
 
                 if obj.is_duplicator:
                     self._dupli_translators[obj_key] = DupliTranslator(obj, self.export_mode)
+                elif obj.appleseed.object_export != 'normal':
+                    archive_path = obj.appleseed.archive_path
+                    self._object_translators[obj_key] = ArchiveTranslator(obj, archive_path, self._asset_handler)
                 else:
                     if mesh_key in self._datablock_to_translator:
                         logger.debug("Creating instance translator for object %s, master obj: %s", obj_key, mesh_key)

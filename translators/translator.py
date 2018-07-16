@@ -85,6 +85,7 @@ class Translator(object):
         self._bl_obj = obj
         self._obj_key = ObjectKey(obj)
         self._name = str(self._obj_key)
+        self._searchpaths = []
 
     def reset(self, obj):
         """
@@ -105,6 +106,10 @@ class Translator(object):
         """todo: document me..."""
 
         return self._name
+
+    @property
+    def searchpaths(self):
+        return self._searchpaths
 
     #
     # Entity translation.

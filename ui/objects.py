@@ -30,6 +30,28 @@ import bpy
 from .. import util
 
 
+class AppleseedExportOverridePanel(bpy.types.Panel):
+    bl_label = "Object Export"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
+
+    def draw(self, context):
+        layout = self.layout
+        asr_obj = context.object.appleseed
+
+        layout.prop(asr_obj, "object_export", text="Object Export")
+        row = layout.row()
+        row.enabled = asr_obj.object_export == 'archive_assembly'
+        row.prop(asr_obj, "archive_path", text="Archive Path")
+
+
 class AppleseedObjFlagsPanel(bpy.types.Panel):
     bl_label = "Visibility"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}

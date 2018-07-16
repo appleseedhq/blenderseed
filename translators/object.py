@@ -26,6 +26,7 @@
 #
 
 import appleseed as asr
+import os
 
 from .translator import Translator, ProjectExportMode, ObjectKey
 from ..logger import get_logger
@@ -141,3 +142,36 @@ class DupliTranslator(ObjectTranslator):
 
     def flush_entities(self, assembly):
         pass
+
+
+class ArchiveTranslator(ObjectTranslator):
+
+    def __init__(self, obj, archive_path, asset_handler):
+        super(ArchiveTranslator, self).__init__(obj)
+
+        self.__archive_path = archive_path
+
+        self.__asset_handler = asset_handler
+
+    @property
+    def bl_obj(self):
+        return self._bl_obj
+
+    def create_entities(self, scene):
+        self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_obj.matrix_world))
+
+    def flush_entities(self, assembly):
+        assembly_name = self.appleseed_name + "_ass"
+        file_path = self.__asset_handler.resolve_path(self.__archive_path)
+
+        params = {'filename': file_path}
+
+        self.__ass = asr.Assembly("archive_assembly", assembly_name, params)
+
+        ass_inst_name = self.appleseed_name + "_ass_inst"
+        self.__ass_inst = asr.AssemblyInstance(ass_inst_name, {}, assembly_name)
+        self.__ass_inst.set_transform_sequence(self._xform_seq)
+
+        assembly.assemblies().insert(self.__ass)
+        assembly.assembly_instances().insert(self.__ass_inst)
+        self._searchpaths = [os.path.dirname(file_path)]
