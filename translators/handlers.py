@@ -26,6 +26,7 @@
 #
 
 import bpy
+import os
 
 from ..util import image_extensions
 
@@ -44,7 +45,7 @@ class AssetHandler(object):
     @staticmethod
     def substitute_texture(parameter):
         if parameter.endswith(image_extensions):
-            base_filename = parameter.split('.')[0]
+            base_filename = os.path.splitext(parameter)[0]
             return "{0}.tx".format(base_filename)
 
         return parameter
