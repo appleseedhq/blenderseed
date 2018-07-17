@@ -433,6 +433,9 @@ class SceneTranslator(GroupTranslator):
             if obj.hide_render:
                 continue
 
+            if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and obj.hide:
+                continue
+
             if not inscenelayer(obj, self.bl_scene):
                 logger.debug("skipping invisible object %s", obj.name)
                 continue

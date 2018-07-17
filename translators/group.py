@@ -29,7 +29,7 @@ import appleseed as asr
 from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
 from .mesh import MeshTranslator
-from .object import InstanceTranslator, DupliTranslator, ArchiveTranslator
+from .object import ProjectExportMode, InstanceTranslator, DupliTranslator, ArchiveTranslator
 from .translator import Translator, ObjectKey
 from ..logger import get_logger
 from ..util import inscenelayer
@@ -153,6 +153,9 @@ class GroupTranslator(Translator):
                 continue
 
             if obj.hide_render:
+                continue
+
+            if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and obj.hide:
                 continue
 
             if not inscenelayer(obj, self.bl_group):
