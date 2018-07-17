@@ -290,10 +290,11 @@ class MeshTranslator(ObjectTranslator):
     #
 
     def __get_blender_mesh(self, scene, triangulate=True):
+        settings = 'RENDER' if self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER else 'PREVIEW'
         me = self.bl_obj.to_mesh(
             scene,
             apply_modifiers=True,
-            settings='RENDER',
+            settings=settings,
             calc_tessface=False)
 
         if triangulate:
