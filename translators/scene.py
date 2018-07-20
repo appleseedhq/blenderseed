@@ -466,7 +466,7 @@ class SceneTranslator(GroupTranslator):
                     self._object_translators[obj_key] = InstanceTranslator(obj, self.__group_translators[group_key])
 
     def __load_searchpaths(self):
-         # Add OSL shader directories to search paths.
+        # Add OSL shader directories to search paths.
         shader_directories = get_osl_search_paths()
         paths = self.__project.get_search_paths()
         paths.extend(x for x in shader_directories)
@@ -660,14 +660,9 @@ class SceneTranslator(GroupTranslator):
             'denoise_scales': asr_scene_props.denoise_scales,
             'mark_invalid_pixels': asr_scene_props.mark_invalid_pixels}
 
-        # if asr_scene_props.enable_render_stamp:
-        #     frame_params['enable_render_stamp'] = True
-        #     frame_params["render_stamp_format"] = asr_scene_props.render_stamp
-
-        # AOVs.
+        # AOVs
         aovs = asr.AOVContainer()
-
-        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER and asr_scene_props.enable_aovs:
             if asr_scene_props.diffuse_aov:
                 aovs.insert(asr.AOV('diffuse_aov', {}))
             if asr_scene_props.direct_diffuse_aov:
@@ -691,6 +686,34 @@ class SceneTranslator(GroupTranslator):
 
         # Create and set the frame in the project.
         frame = asr.Frame("beauty", frame_params, aovs)
+
+        if len(asr_scene_props.post_processing_stages) > 0:
+            for index, stage in enumerate(asr_scene_props.post_processing_stages):
+                if stage.model == 'render_stamp_post_processing_stage':
+                    params = {'order': index,
+                              'format_string': stage.render_stamp}
+
+                else:
+                    params = {'order': index,
+                              'color_map': stage.color_map,
+                              'auto_range': stage.auto_range,
+                              'range_min': stage.range_min,
+                              'range_max': stage.range_max,
+                              'add_legend_bar': stage.add_legend_bar,
+                              'legend_bar_ticks': stage.legend_bar_ticks}
+
+                    if stage.color_map == 'custom':
+                        params['color_map_file_path'] = stage.color_map_file_path
+
+                post_process = asr.PostProcessingStage(stage.model,
+                                                       stage.name,
+                                                       params)
+
+                frame.post_processing_stages().insert(post_process)
+
+        # color_post_process = asr.PostProcessingStage('color_map_post_processing_stage', 'color_wash',
+        #                                              {'order': 0, 'color_map': 'magma'})
+        # frame.post_processing_stages().insert(color_post_process)
 
         if self.bl_scene.render.use_border:
             min_x = int(self.bl_scene.render.border_min_x * width)

@@ -97,12 +97,6 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         box.label(text="Texture Cache")
         box.prop(asr_scene_props, "tex_cache", text="Texture Cache Size")
 
-        box = layout.box()
-        box.label(text="Render Stamp:")
-        box.prop(asr_scene_props, "enable_render_stamp", toggle=True)
-        box.prop(asr_scene_props, "render_stamp", text="")
-        box.prop(asr_scene_props, "render_stamp_patterns", text="Stamp Blocks")
-
 
 class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
@@ -285,6 +279,62 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             col.prop(asr_scene_props, "sppm_alpha", text="Alpha")
 
 
+class AppleseedPostProcessingStagesSlots(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        stage = item.name
+        if 'DEFAULT' in self.layout_type:
+            layout.label(text=stage, translate=False, icon_value=icon)
+
+
+class AppleseedPostProcessingStagesPanel(bpy.types.Panel, AppleseedRenderPanelBase):
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_label = "appleseed Post Processing"
+
+    def draw(self, context):
+        layout = self.layout
+        asr_scene_props = context.scene.appleseed
+        pp_stages = asr_scene_props.post_processing_stages
+
+        row = layout.row()
+        row.template_list("AppleseedPostProcessingStagesSlots", "", asr_scene_props,
+                          "post_processing_stages", asr_scene_props, "post_processing_stages_index",
+                          rows=1, maxrows=16, type="DEFAULT")
+
+        row = layout.row(align=True)
+        row.operator("appleseed.add_pp_stage", text="Add Stage", icon="ZOOMIN")
+        row.operator("appleseed.remove_pp_stage", text="Remove Stage", icon="ZOOMOUT")
+
+        if pp_stages:
+            current_stage = pp_stages[asr_scene_props.post_processing_stages_index]
+            layout.prop(current_stage, "model", text="Model", expand=True)
+            if current_stage.model == 'render_stamp_post_processing_stage':
+                layout.label(text="Render Stamp")
+                layout.prop(current_stage, "render_stamp", text="")
+                layout.prop_menu_enum(current_stage, "render_stamp_patterns", text="Add Stamp Data Block")
+            else:
+                layout.label(text="Color Map")
+                layout.prop(current_stage, "color_map", text="Mode")
+                row = layout.row()
+                row.enabled = current_stage.color_map == 'custom'
+                row.prop(current_stage, "color_map_file_path", text="Custom Map")
+
+                col = layout.column(align=True)
+                col.prop(current_stage, "add_legend_bar", text="Add Legends Bar", toggle=True)
+                row = col.row(align=True)
+                row.enabled = current_stage.add_legend_bar
+                row.prop(current_stage, "legend_bar_ticks", text="Ticks")
+
+                col = layout.column(align=True)
+                col.prop(current_stage, "auto_range", text="Auto Range", toggle=True)
+                row = col.row(align=True)
+                row.enabled = not current_stage.auto_range
+                row.prop(current_stage, "range_min", text="Min Range")
+                row = col.row(align=True)
+                row.enabled = not current_stage.auto_range
+                row.prop(current_stage, "range_max", text="Max Range")
+
+
 class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_label = "Motion Blur"
@@ -314,7 +364,7 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
 class AppleseedPostProcessing(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_label = "Post Processing"
+    bl_label = "Blender Post Processing"
 
     def draw(self, context):
         layout = self.layout
@@ -334,6 +384,8 @@ def register():
     util.safe_register_class(AppleseedDenoiserPanel)
     util.safe_register_class(AppleseedSamplingPanel)
     util.safe_register_class(AppleseedLightingPanel)
+    util.safe_register_class(AppleseedPostProcessingStagesSlots)
+    util.safe_register_class(AppleseedPostProcessingStagesPanel)
     util.safe_register_class(AppleseedMotionBlurPanel)
     util.safe_register_class(AppleseedPostProcessing)
 
@@ -341,6 +393,8 @@ def register():
 def unregister():
     util.safe_unregister_class(AppleseedPostProcessing)
     util.safe_unregister_class(AppleseedMotionBlurPanel)
+    util.safe_unregister_class(AppleseedPostProcessingStagesPanel)
+    util.safe_unregister_class(AppleseedPostProcessingStagesSlots)
     util.safe_unregister_class(AppleseedLightingPanel)
     util.safe_unregister_class(AppleseedSamplingPanel)
     util.safe_unregister_class(AppleseedDenoiserPanel)

@@ -224,6 +224,41 @@ class AppleseedRemoveTexture(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class AppleseedAddPostProcess(bpy.types.Operator):
+    bl_label = "Add Stage"
+    bl_description = "Add new Post Processing stage"
+    bl_idname = "appleseed.add_pp_stage"
+
+    def invoke(self, context, event):
+        collection = context.scene.appleseed.post_processing_stages
+        collection.add()
+        num = len(collection)
+        collection[num - 1].name = "Render Stamp"
+
+        return {'FINISHED'}
+
+
+class AppleseedRemovePostProcess(bpy.types.Operator):
+    bl_label = "Remove Stage"
+    bl_description = "Remove Post Processing stage"
+    bl_idname = "appleseed.remove_pp_stage"
+
+    def invoke(self, context, event):
+        scene = context.scene.appleseed
+        collection = scene.post_processing_stages
+        index = scene.post_processing_stages_index
+
+        collection.remove(index)
+        num = len(collection)
+        if index >= num:
+            index = num - 1
+        if index < 0:
+            index = 0
+            scene.post_processing_stages_index = index
+
+        return {'FINISHED'}
+
+
 class AppleseedAddSssSet(bpy.types.Operator):
     """Operator for adding SSS sets"""
 
@@ -319,6 +354,8 @@ def register():
     util.safe_register_class(AppleseedRemoveTexture)
     util.safe_register_class(AppleseedNewOSLNodeTree)
     util.safe_register_class(AppleseedNewLampOSLNodeTree)
+    util.safe_register_class(AppleseedAddPostProcess)
+    util.safe_register_class(AppleseedRemovePostProcess)
     util.safe_register_class(AppleseedAddSssSet)
     util.safe_register_class(AppleseedRemoveSssSet)
 
@@ -326,6 +363,8 @@ def register():
 def unregister():
     util.safe_unregister_class(AppleseedRemoveSssSet)
     util.safe_unregister_class(AppleseedAddSssSet)
+    util.safe_unregister_class(AppleseedRemovePostProcess)
+    util.safe_uregister_class(AppleseedAddPostProcess)
     util.safe_unregister_class(AppleseedNewLampOSLNodeTree)
     util.safe_unregister_class(AppleseedNewOSLNodeTree)
     util.safe_unregister_class(AppleseedRemoveTexture)

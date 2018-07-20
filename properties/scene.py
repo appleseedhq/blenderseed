@@ -39,12 +39,84 @@ except:
     max_threads = 32
 
 
+class AppleseedPostProcessProps(bpy.types.PropertyGroup):
+    def update_stamp(self, context):
+        self.render_stamp += self.render_stamp_patterns
+
+    def update_name(self, context):
+        mapping = {'render_stamp_post_processing_stage': 'Render Stamp',
+                   'color_map_post_processing_stage': 'Color Map'}
+        self.name = mapping[self.model]
+
+    name = bpy.props.StringProperty(name='name',
+                                    default="")
+
+    model = bpy.props.EnumProperty(name='model',
+                                   items=[
+                                       ('render_stamp_post_processing_stage', "Render Stamp", ""),
+                                       ('color_map_post_processing_stage', "Color Map", "")],
+                                   default='render_stamp_post_processing_stage',
+                                   update=update_name)
+
+    render_stamp = bpy.props.StringProperty(name="render_stamp",
+                                            description="Render stamp text",
+                                            default="appleseed {lib-version} | Time: {render-time}")
+
+    render_stamp_patterns = bpy.props.EnumProperty(name="render_stamp_patterns",
+                                                   description="Variables to insert into the render stamp",
+                                                   items=[
+                                                       ('{lib-version}', "Library Version", ""),
+                                                       ('{lib-name}', "Library Name", ""),
+                                                       ('{lib-variant}', "Library Variant", ""),
+                                                       ('{lib-config}', "Library Configuration", ""),
+                                                       ('{lib-build-date}', "Library Build Date", ""),
+                                                       ('{lib-build-time}', "Library Build Time", ""),
+                                                       ('{render-time}', "Render Time", ""),
+                                                       ('{peak-memory}', "Peak Memory", "")],
+                                                   default='{render-time}',
+                                                   update=update_stamp)
+
+    color_map = bpy.props.EnumProperty(name="color_map",
+                                       items=[('inferno', "Inferno", ""),
+                                              ('jet', "Jet", ""),
+                                              ('magma', "Magma", ""),
+                                              ('plasma', "Plasma", ""),
+                                              ('viridis', "Viridis", ""),
+                                              ('custom', "Custom", "")],
+                                       default='inferno')
+
+    auto_range = bpy.props.BoolProperty(name="auto_range",
+                                        default=True)
+
+    add_legend_bar = bpy.props.BoolProperty(name="add_legend_bar",
+                                            default=True)
+
+    legend_bar_ticks = bpy.props.IntProperty(name="legend_bar_ticks",
+                                             default=8,
+                                             min=2,
+                                             soft_max=64)
+
+    range_min = bpy.props.FloatProperty(name="range_min",
+                                        default=0.0,
+                                        soft_min=0.0,
+                                        soft_max=1.0)
+
+    range_max = bpy.props.FloatProperty(name="range_max",
+                                        default=1.0,
+                                        soft_min=0.0,
+                                        soft_max=1.0)
+
+    color_map_file_path = bpy.props.StringProperty(name="color_map_file_path",
+                                                   default="",
+                                                   subtype='FILE_PATH')
+
+
 class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(name="Texture",
+    name = bpy.props.StringProperty(name="name",
                                     default="",
                                     subtype='FILE_PATH')
 
-    input_space = bpy.props.EnumProperty(name="Input Color Space",
+    input_space = bpy.props.EnumProperty(name="input_space",
                                          description="The color space of the file.  PNG, JPG and TIFF files are usually sRGB, EXR is normally linear",
                                          items=[
                                              ('linear', "Linear", ""),
@@ -52,7 +124,7 @@ class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
                                              ('Rec709', "Rec.709", "")],
                                          default='linear')
 
-    output_depth = bpy.props.EnumProperty(name="Output Bit Depth",
+    output_depth = bpy.props.EnumProperty(name="output_depth",
                                           description="The bit depth of the output file.  Leave at default for no conversion",
                                           items=[
                                               ('default', "Default", ""),
@@ -70,10 +142,6 @@ class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
 
 
 class AppleseedRenderSettings(bpy.types.PropertyGroup):
-
-    def update_stamp(self, context):
-        self.render_stamp += self.render_stamp_patterns
-
     # Texture conversion
 
     tex_output_dir = bpy.props.StringProperty(name="tex_output_dir",
@@ -99,6 +167,16 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     textures_index = bpy.props.IntProperty(name="layer_index",
                                            description="",
                                            default=0)
+
+    # Post processing stages
+
+    post_processing_stages = bpy.props.CollectionProperty(type=AppleseedPostProcessProps,
+                                                          name="appleseed post processing",
+                                                          description="")
+
+    post_processing_stages_index = bpy.props.IntProperty(name="stage_index",
+                                                         description="",
+                                                         default=0)
 
     # Scene render settings.
 
@@ -162,24 +240,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     enable_render_stamp = bpy.props.BoolProperty(name="enable_render_stamp",
                                                  description="Enable a stamp on the output image",
                                                  default=False)
-
-    render_stamp = bpy.props.StringProperty(name="render_stamp",
-                                            description="Render stamp text",
-                                            default="appleseed {lib-version} | Time: {render-time}")
-
-    render_stamp_patterns = bpy.props.EnumProperty(name="Stamp Variables",
-                                                   description="Variables to insert into the render stamp",
-                                                   items=[
-                                                       ('{lib-version}', "Library Version", ""),
-                                                       ('{lib-name}', "Library Name", ""),
-                                                       ('{lib-variant}', "Library Variant", ""),
-                                                       ('{lib-config}', "Library Configuration", ""),
-                                                       ('{lib-build-date}', "Library Build Date", ""),
-                                                       ('{lib-build-time}', "Library Build Time", ""),
-                                                       ('{render-time}', "Render Time", ""),
-                                                       ('{peak-memory}', "Peak Memory", "")],
-                                                   default='{render-time}',
-                                                   update=update_stamp)
 
     pixel_sampler = bpy.props.EnumProperty(name="Pixel Sampler",
                                            description="Sampler",
@@ -606,6 +666,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
 
 def register():
+    util.safe_register_class(AppleseedPostProcessProps)
     util.safe_register_class(AppleseedTextureConvertProps)
     util.safe_register_class(AppleseedRenderSettings)
     bpy.types.Scene.appleseed = bpy.props.PointerProperty(type=AppleseedRenderSettings)
@@ -615,3 +676,4 @@ def unregister():
     del bpy.types.Scene.appleseed
     util.safe_unregister_class(AppleseedRenderSettings)
     util.safe_unregister_class(AppleseedTextureConvertProps)
+    util.safe_unregister_class(AppleseedPostProcessProps)
