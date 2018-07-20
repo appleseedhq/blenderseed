@@ -263,6 +263,7 @@ class InteractiveCameraTranslator(Translator):
         current_translation = self._matrix
         zoom = self.__zoom
         lens = self.__lens
+        extent_base = self.__extent_base
 
         self.reset(camera, context)
 
@@ -277,6 +278,9 @@ class InteractiveCameraTranslator(Translator):
             return True
 
         if current_translation != self._matrix:
+            return True
+
+        if extent_base != self.__extent_base:
             return True
 
         return False
@@ -305,11 +309,12 @@ class InteractiveCameraTranslator(Translator):
 
         self.__zoom = 2
 
+        self.__extent_base = self.context.space_data.region_3d.view_distance * 32.0 / self.__lens
+
         if view_cam_type == "ORTHO":
             model = 'orthographic_camera'
             self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
-            extent_base = self.context.space_data.region_3d.view_distance * 32.0 / self.__lens
-            sensor_width = self.__zoom * extent_base * 1
+            sensor_width = self.__zoom * self.__extent_base * 1
             params = {'film_width': sensor_width,
                       'aspect_ratio': aspect_ratio}
 
