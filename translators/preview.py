@@ -59,7 +59,13 @@ class PreviewRenderer(object):
         likely_material = self.__get_preview_material(scene)
         self.__mat_translator.update_material(likely_material, self.__main_assembly, scene)
 
+        as_scene = self.__project.get_scene()
+        camera = as_scene.cameras().get_by_name("preview_camera")
+        as_scene.cameras().remove(camera)
+
         self.__create_config()
+        self.__create_camera(scene)
+        self.__set_frame(scene)
 
     def __create_preview_scene(self, scene):
         """This function creates the scene that is used to render material previews.  It consists of:
