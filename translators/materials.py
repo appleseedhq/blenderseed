@@ -152,7 +152,7 @@ class MaterialTranslator(Translator):
         self.__shader_group.add_shader("surface", surface_shader.file_name, surface_shader.name, {})
 
     def __parse_parameters(self, parameter_types, parameters, scene, shader, shader_keys):
-        for key in parameter_types.keys():
+        for key in parameter_types:
             if key in shader_keys:
                 parameter_value = parameter_types[key]
                 parameter = getattr(shader, key)
@@ -161,12 +161,16 @@ class MaterialTranslator(Translator):
                     if scene.appleseed.sub_textures is True:
                         parameter = self.__asset_handler.substitute_texture(parameter)
 
-                if parameter_value == "int checkbox":
-                    parameter_value = "int"
-                    parameter = int(parameter)
-                if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
-                    parameter = " ".join(map(str, parameter))
-                parameters[key] = parameter_value + " " + str(parameter)
+                    search_path, file = self.__asset_handler.split_path(parameter)
+                    parameters[key] = parameter_value + " " + str(file)
+                    self._searchpaths.append(search_path)
+                else:
+                    if parameter_value == "int checkbox":
+                        parameter_value = "int"
+                        parameter = int(parameter)
+                    if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
+                        parameter = " ".join(map(str, parameter))
+                    parameters[key] = parameter_value + " " + str(parameter)
 
     def __parse_sockets(self, parameter_types, parameters, shader):
         for socket in shader.inputs:
