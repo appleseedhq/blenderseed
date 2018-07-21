@@ -238,9 +238,9 @@ class InteractiveCameraTranslator(Translator):
     def create_entities(self, scene=None):
         logger.debug("Creating camera entity for camera: interactive camera")
 
-        model, parameters = self.__get_cam_props()
+        self.__set_cam_props()
 
-        self.__as_int_camera = asr.Camera(model, self.appleseed_name, parameters)
+        self.__as_int_camera = asr.Camera(self.__model, self.appleseed_name, self.__params)
 
     def set_transform_key(self, time, key_times):
         self.__as_int_camera.transform_sequence().set_transform(time, self._convert_matrix(self._matrix))
@@ -267,7 +267,7 @@ class InteractiveCameraTranslator(Translator):
 
         self.reset(camera, context)
 
-        model, params = self.__get_cam_props()
+        self.__set_cam_props()
 
         # Check zoom
         if zoom != self.__zoom:
@@ -294,7 +294,7 @@ class InteractiveCameraTranslator(Translator):
         self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
         self.flush_entities(scene)
 
-    def __get_cam_props(self):
+    def __set_cam_props(self):
         # todo: add view offset
         params = {}
         model = None
@@ -369,7 +369,8 @@ class InteractiveCameraTranslator(Translator):
                           'aspect_ratio': aspect_ratio,
                           'film_dimensions': asr.Vector2f(film_width, film_height)}
 
-        return model, params
+        self.__model = model
+        self.__params = params
 
     def __calc_film_dimensions(self, aspect_ratio, zoom):
         if self.bl_camera.data.sensor_fit in ('AUTO', 'HORIZONTAL'):
