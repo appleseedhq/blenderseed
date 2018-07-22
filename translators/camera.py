@@ -111,18 +111,19 @@ class CameraTranslator(Translator):
 
     def __set_params(self, scene):
         camera = self.bl_camera.data
-        focal_length = camera.lens / 1000
 
-        aspect_ratio = self._get_frame_aspect_ratio(scene)
+        width, height = self._get_frame_aspect_ratio(scene)
 
-        film_width, film_height = self.__calc_film_dimensions(aspect_ratio)
+        aspect_ratio = width / height
+
+        fov = self._calc_fov(camera, width, height)
 
         model = self.__as_camera.get_model()
 
         if model == 'pinhole_camera':
-            cam_params = {'film_dimensions': asr.Vector2f(film_width, film_height),
-                          'focal_length': focal_length,
+            cam_params = {'film_width': self.bl_camera.data.sensor_width / 1000,
                           'aspect_ratio': aspect_ratio,
+                          'horizontal_fov': fov,
                           'near_z': camera.appleseed.near_z,
                           'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
                           'shutter_open_begin_time': scene.appleseed.shutter_open,
@@ -135,9 +136,9 @@ class CameraTranslator(Translator):
                 focal_distance = (cam_target.location - self.bl_camera.location).magnitude
             else:
                 focal_distance = camera.dof_distance
-            cam_params = {'film_dimensions': asr.Vector2f(film_width, film_height),
-                          'focal_length': focal_length,
+            cam_params = {'film_width': self.bl_camera.data.sensor_width / 1000,
                           'aspect_ratio': aspect_ratio,
+                          'horizontal_fov': fov,
                           'near_z': camera.appleseed.near_z,
                           'f_stop': camera.appleseed.f_number,
                           'autofocus_enabled': False,
@@ -183,16 +184,6 @@ class CameraTranslator(Translator):
     def set_transform_key(self, time, key_times):
         self._xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
-    def __calc_film_dimensions(self, aspect_ratio):
-        if self.bl_camera.data.sensor_fit in ('AUTO', 'HORIZONTAL'):
-            film_width = self.bl_camera.data.sensor_width / 1000
-            film_height = film_width / aspect_ratio
-        else:
-            film_height = self.bl_camera.data.sensor_height / 1000
-            film_width = film_height * aspect_ratio
-
-        return film_width, film_height
-
     @staticmethod
     def _find_auto_focus_point(scene):
         cam = scene.camera
@@ -204,6 +195,19 @@ class CameraTranslator(Translator):
         return asr.Vector2f(co_2d.x, y)
 
     @staticmethod
+    def _calc_fov(camera, width, height):
+        """
+        Calculate horizontal FOV if rendered height is greater than rendered width.
+        Thanks to NOX exporter developers for this solution.
+        """
+        camera_angle = math.degrees(camera.angle)
+        if width < height:
+            length = 18.0 / math.tan(camera.angle / 2)
+            camera_angle = 2 * math.atan(18.0 * width / height / length)
+            camera_angle = math.degrees(camera_angle)
+        return camera_angle
+
+    @staticmethod
     def _get_frame_aspect_ratio(scene):
         render = scene.render
         scale = render.resolution_percentage / 100.0
@@ -212,7 +216,7 @@ class CameraTranslator(Translator):
         xratio = width * render.pixel_aspect_x
         yratio = height * render.pixel_aspect_y
 
-        return xratio / yratio
+        return xratio, yratio
 
 
 class InteractiveCameraTranslator(Translator):
