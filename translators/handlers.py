@@ -50,11 +50,6 @@ class AssetHandler(object):
 
         return parameter
 
-    @staticmethod
-    def split_path(parameter):
-
-        return os.path.dirname(parameter), os.path.basename(parameter)
-
 
 class CopyAssetsAssetHandler(object):
 
