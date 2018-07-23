@@ -42,12 +42,13 @@ class LampTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, lamp):
+    def __init__(self, lamp, asset_handler):
         super(LampTranslator, self).__init__(lamp)
         self.__radiance_tex = None
         self.__radiance_tex_inst = None
         self.__radiance_mult_tex = None
         self.__radiance_mult_tex_inst = None
+        self.__asset_handler = asset_handler
 
     def reset(self, lamp):
         super(LampTranslator, self).reset(lamp)

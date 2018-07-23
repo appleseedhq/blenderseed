@@ -174,4 +174,4 @@ class ArchiveTranslator(ObjectTranslator):
 
         assembly.assemblies().insert(self.__ass)
         assembly.assembly_instances().insert(self.__ass_inst)
-        self._searchpaths = [os.path.dirname(file_path)]
+        self.__asset_handler.set_searchpath(os.path.dirname(file_path))

@@ -85,7 +85,6 @@ class Translator(object):
         self._bl_obj = obj
         self._obj_key = ObjectKey(obj)
         self._name = str(self._obj_key)
-        self._searchpaths = []
 
     def reset(self, obj):
         """

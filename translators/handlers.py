@@ -36,11 +36,23 @@ TEXTURE_ASSET = 1
 class AssetHandler(object):
 
     def __init__(self):
-        pass
+        self.__searchpaths = []
 
-    @staticmethod
-    def resolve_path(filename):
-        return bpy.path.abspath(filename)
+    @property
+    def searchpaths(self):
+        return self.__searchpaths
+
+    def set_searchpath(self, path):
+        self.__searchpaths.append(path)
+
+    def resolve_path(self, filename, sub_texture=False):
+        directory, file = os.path.split(bpy.path.abspath(filename))
+        self.__searchpaths.append(directory)
+        if sub_texture:
+            base_filename = os.path.splitext(file)[0]
+            return "{0}.tx".format(base_filename)
+        else:
+            return file
 
     @staticmethod
     def substitute_texture(parameter):

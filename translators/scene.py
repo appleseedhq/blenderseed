@@ -471,11 +471,8 @@ class SceneTranslator(GroupTranslator):
         paths = self.__project.get_search_paths()
         paths.extend(x for x in shader_directories)
 
-        # Load any search paths from translators
-        for x in self.all_translators:
-            for t in x.values():
-                if t.searchpaths != []:
-                    paths.extend(x for x in t.searchpaths if x not in paths)
+        # Load any search paths from asset handler
+        paths.extend(x for x in self.asset_handler.searchpaths if x not in paths)
 
         self.__project.set_search_paths(paths)
 

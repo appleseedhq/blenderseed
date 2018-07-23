@@ -174,7 +174,7 @@ class GroupTranslator(Translator):
                 if obj.data.type == 'AREA':
                     self._lamp_translators[obj_key] = AreaLampTranslator(obj, self.export_mode)
                 else:
-                    self._lamp_translators[obj_key] = LampTranslator(obj)
+                    self._lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
                 if obj.data.appleseed.osl_node_tree is not None:
                     lamp = obj.data
                     lamp_key = ObjectKey(lamp)
