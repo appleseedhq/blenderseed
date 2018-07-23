@@ -31,6 +31,8 @@ import subprocess
 from .. import util
 import os
 
+# Material operators
+
 
 class AppleseedNewMat(bpy.types.Operator):
     bl_label = "New Material"
@@ -45,6 +47,28 @@ class AppleseedNewMat(bpy.types.Operator):
     def execute(self, context):
         bpy.ops.material.new()
         bpy.ops.appleseed.add_osl_nodetree()
+        return {'FINISHED'}
+
+
+class AppleseedNewOSLNodeTree(bpy.types.Operator):
+    """
+    appleseed material node tree generator.
+    """
+
+    bl_idname = "appleseed.add_osl_nodetree"
+    bl_label = "Add appleseed OSL Material Node Tree"
+    bl_description = "Create an appleseed OSL material node tree and link it to the current material"
+
+    def execute(self, context):
+        material = context.object.active_material
+        nodetree = bpy.data.node_groups.new('%s_tree' % material.name, 'AppleseedOSLNodeTree')
+        nodetree.use_fake_user = True
+        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
+        surface.location = (0, 0)
+        disney_node = nodetree.nodes.new('AppleseedasDisneyMaterialNode')
+        disney_node.location = (-300, 0)
+        nodetree.links.new(disney_node.outputs[0], surface.inputs[0])
+        material.appleseed.osl_node_tree = nodetree
         return {'FINISHED'}
 
 
@@ -74,6 +98,28 @@ class AppleseedViewNode(bpy.types.Operator):
         return {"CANCELLED"}
 
 
+class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
+    """
+    appleseed lamp node tree generator.
+    """
+
+    bl_idname = "appleseed.add_lap_osl_nodetree"
+    bl_label = "Add appleseed OSL Material Node Tree"
+    bl_description = "Create an appleseed OSL material node tree and link it to the current lamp"
+
+    def execute(self, context):
+        lamp = context.object.data
+        nodetree = bpy.data.node_groups.new('%s_tree' % lamp.name, 'AppleseedOSLNodeTree')
+        nodetree.use_fake_user = True
+        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
+        surface.location = (0, 0)
+        area_lamp_node = nodetree.nodes.new('AppleseedasAreaLightNode')
+        area_lamp_node.location = (-300, 0)
+        nodetree.links.new(area_lamp_node.outputs[0], surface.inputs[0])
+        lamp.appleseed.osl_node_tree = nodetree
+        return {'FINISHED'}
+
+
 class AppleseedViewLampNode(bpy.types.Operator):
     bl_label = "View OSL Nodetree"
     bl_description = "View the node tree attached to this material"
@@ -98,6 +144,9 @@ class AppleseedViewLampNode(bpy.types.Operator):
 
         self.report({"ERROR"}, "Open a node editor first")
         return {"CANCELLED"}
+
+
+# Texture operators
 
 
 class AppleseedConvertTextures(bpy.types.Operator):
@@ -224,6 +273,9 @@ class AppleseedRemoveTexture(bpy.types.Operator):
         return {'FINISHED'}
 
 
+# Post processing operators
+
+
 class AppleseedAddPostProcess(bpy.types.Operator):
     bl_label = "Add Stage"
     bl_description = "Add new Post Processing stage"
@@ -257,6 +309,9 @@ class AppleseedRemovePostProcess(bpy.types.Operator):
             scene.post_processing_stages_index = index
 
         return {'FINISHED'}
+
+
+# SSS set operators
 
 
 class AppleseedAddSssSet(bpy.types.Operator):
@@ -297,50 +352,6 @@ class AppleseedRemoveSssSet(bpy.types.Operator):
             index = 0
         world.sss_sets_layer_index = index
 
-        return {'FINISHED'}
-
-
-class AppleseedNewOSLNodeTree(bpy.types.Operator):
-    """
-    appleseed material node tree generator.
-    """
-
-    bl_idname = "appleseed.add_osl_nodetree"
-    bl_label = "Add appleseed OSL Material Node Tree"
-    bl_description = "Create an appleseed OSL material node tree and link it to the current material"
-
-    def execute(self, context):
-        material = context.object.active_material
-        nodetree = bpy.data.node_groups.new('%s_tree' % material.name, 'AppleseedOSLNodeTree')
-        nodetree.use_fake_user = True
-        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
-        surface.location = (0, 0)
-        disney_node = nodetree.nodes.new('AppleseedasDisneyMaterialNode')
-        disney_node.location = (-300, 0)
-        nodetree.links.new(disney_node.outputs[0], surface.inputs[0])
-        material.appleseed.osl_node_tree = nodetree
-        return {'FINISHED'}
-
-
-class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
-    """
-    appleseed lamp node tree generator.
-    """
-
-    bl_idname = "appleseed.add_lap_osl_nodetree"
-    bl_label = "Add appleseed OSL Material Node Tree"
-    bl_description = "Create an appleseed OSL material node tree and link it to the current lamp"
-
-    def execute(self, context):
-        lamp = context.object.data
-        nodetree = bpy.data.node_groups.new('%s_tree' % lamp.name, 'AppleseedOSLNodeTree')
-        nodetree.use_fake_user = True
-        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
-        surface.location = (0, 0)
-        area_lamp_node = nodetree.nodes.new('AppleseedasAreaLightNode')
-        area_lamp_node.location = (-300, 0)
-        nodetree.links.new(area_lamp_node.outputs[0], surface.inputs[0])
-        lamp.appleseed.osl_node_tree = nodetree
         return {'FINISHED'}
 
 
