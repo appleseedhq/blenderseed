@@ -122,11 +122,12 @@ class AppleseedOSLNodeCategory(NodeCategory):
 
 
 def node_categories(osl_nodes):
-    osl_shaders = []
-    osl_textures = []
-    osl_utilities = []
-    osl_3d_textures = []
     osl_surface = []
+    osl_shaders = []
+    osl_2d_textures = []
+    osl_3d_textures = []
+    osl_color = []
+    osl_utilities = []
     osl_other = []
 
     for node in osl_nodes:
@@ -134,24 +135,28 @@ def node_categories(osl_nodes):
         node_category = node[1]
         if node_category == 'shader':
             osl_shaders.append(node_item)
-        elif node_category == 'texture':
-            osl_textures.append(node_item)
+        elif node_category == 'texture2d':
+            osl_2d_textures.append(node_item)
         elif node_category == 'utility':
             osl_utilities.append(node_item)
-        elif node_category == '3d_texture':
+        elif node_category == 'texture3d':
             osl_3d_textures.append(node_item)
         elif node_category == 'surface':
             osl_surface.append(node_item)
+        elif node_category == 'color':
+            osl_color.append(node_item)
         else:
             osl_other.append(node_item)
 
     appleseed_node_categories = [
-        AppleseedOSLNodeCategory("OSL_Surfaces", "OSL Surface", items=osl_surface),
-        AppleseedOSLNodeCategory("OSL_Shaders", "OSL Shader", items=osl_shaders),
-        AppleseedOSLNodeCategory("OSL_Textures", "OSL Texture", items=osl_textures),
-        AppleseedOSLNodeCategory("OSL_3D_Textures", "OSL 3D Texture", items=osl_3d_textures),
-        AppleseedOSLNodeCategory("OSL_Utilities", "OSL Utility", items=osl_utilities),
-        AppleseedOSLNodeCategory("OSL_other", "No Category", items=osl_other)]
+        AppleseedOSLNodeCategory("OSL_Surfaces", "Surface", items=osl_surface),
+        AppleseedOSLNodeCategory("OSL_Shaders", "Shader", items=osl_shaders),
+        AppleseedOSLNodeCategory("OSL_3D_Textures", "Texture3D", items=osl_3d_textures),
+        AppleseedOSLNodeCategory("OSL_2D_Textures", "Texture2D", items=osl_2d_textures),
+        AppleseedOSLNodeCategory("OSL_Color", "Color", items=osl_color),
+        AppleseedOSLNodeCategory("OSL_Utilities", "Utility", items=osl_utilities),
+        AppleseedOSLNodeCategory("OSL_Other", "No Category", items=osl_other)
+    ]
 
     return appleseed_node_categories
 
