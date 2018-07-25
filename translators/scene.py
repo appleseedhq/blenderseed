@@ -134,8 +134,7 @@ class SceneTranslator(GroupTranslator):
     def __init__(self, scene, export_mode, selected_only, context, asset_handler):
         """
         Constructor. Do not use it to create instances of this class.
-        Use instead SceneTranslator.create_project_export_translator() or
-        The other @classmethods.
+        Use the @classmethods instead.
         """
 
         super(SceneTranslator, self).__init__(scene, export_mode, selected_only, asset_handler)
@@ -159,6 +158,9 @@ class SceneTranslator(GroupTranslator):
 
     @property
     def bl_scene(self):
+        """
+        Return the Blender scene.
+        """
         return self._bl_obj
 
     @property
@@ -200,67 +202,20 @@ class SceneTranslator(GroupTranslator):
 
         self.__create_translators()
 
-        # Create appleseed entities.
+        # Create appleseed entities for world and camera
         if self.__world_translator:
             self.__world_translator.create_entities(self.bl_scene)
-
         for x in self.__camera_translators.values():
             x.create_entities(self.bl_scene)
 
+        # Create entities for all mesh objects and lights in scene
         self._do_create_entities(self.bl_scene)
 
+        # Create entities for any linked groups (libraries) in the scene
         for x in self.__group_translators.values():
             x.create_entities(self.bl_scene)
 
-        # Calculate xform subframes for motion blur
-        cam_times = {0.0}
-        xform_times = {0.0}
-        deform_times = {0.0}
-        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
-            if self.bl_scene.appleseed.enable_camera_blur:
-                cam_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples)
-
-            if self.bl_scene.appleseed.enable_object_blur:
-                xform_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples)
-
-            if self.bl_scene.appleseed.enable_deformation_blur:
-                deform_times = self.__get_subframes(shutter_length, self.__round_up_pow2(self.bl_scene.appleseed.deformation_blur_samples))
-
-        # Merge all subframe times
-        all_times = set()
-        all_times.update(cam_times)
-        all_times.update(xform_times)
-        all_times.update(deform_times)
-        all_times = sorted(list(all_times))
-
-        current_frame = self.bl_scene.frame_current
-
-        for time in all_times:
-            new_frame = current_frame + time
-            int_frame = math.floor(new_frame)
-            subframe = new_frame - int_frame
-
-            self.bl_scene.frame_set(int_frame, subframe)
-
-            if time in cam_times:
-                for x in self.__camera_translators.values():
-                    x.set_transform_key(time, cam_times)
-
-            if time in xform_times:
-                self.set_transform_key(time, xform_times, self.bl_scene)
-
-                for x in self.__group_translators.values():
-                    x.set_transform_key(time, xform_times, self.bl_scene)
-
-            if time in deform_times:
-                self.set_deform_key(self.bl_scene, time, deform_times)
-
-                for x in self.__group_translators.values():
-                    x.set_deform_key(self.bl_scene, time, deform_times)
-
-        if self.bl_scene.frame_current != current_frame:
-            self.bl_scene.frame_set(current_frame)
+        self.__calc_motion_subframes()
 
         # Insert appleseed entities into the project.
         if self.__world_translator:
@@ -278,6 +233,16 @@ class SceneTranslator(GroupTranslator):
 
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
+
+    def write_project(self, filename):
+        """
+        Write the appleseed project out to disk.
+        """
+
+        asr.ProjectFileWriter().write(
+            self.as_project,
+            filename,
+            asr.ProjectFileWriterOptions.OmitWritingGeometryFiles | asr.ProjectFileWriterOptions.OmitHandlingAssetFiles)
 
     # Interactive rendering update functions
     def update_scene(self, scene, context):
@@ -356,6 +321,7 @@ class SceneTranslator(GroupTranslator):
     def check_view(self, context):
         """
         Check the viewport to see if it has changed camera position or window size.
+        For whatever reason, these changes do not trigger an update request so we must check things manually.
         """
 
         view_update = False
@@ -380,7 +346,7 @@ class SceneTranslator(GroupTranslator):
     def update_view(self, view_update, camera_update):
         """
         Update the viewport window during interactive rendering.  The viewport update is triggered
-        automatically following a scene update, or when the view camera/window size changes.
+        automatically following a scene update, or when the check view function returns true on any of its checks.
         """
 
         logger.debug("Begin view update")
@@ -392,19 +358,45 @@ class SceneTranslator(GroupTranslator):
         if view_update:
             self.__translate_frame()
 
-    def write_project(self, filename):
-        """
-        Write the appleseed project out to disk.
-        """
-
-        asr.ProjectFileWriter().write(
-            self.as_project,
-            filename,
-            asr.ProjectFileWriterOptions.OmitWritingGeometryFiles | asr.ProjectFileWriterOptions.OmitHandlingAssetFiles)
-
     #
     # Internal methods.
     #
+
+    def __create_project(self):
+        """
+        Create a default empty project.
+        """
+
+        logger.debug("Creating appleseed project")
+
+        self.__project = asr.Project(self.bl_scene.name)
+
+        # Render settings.
+        self.__project.add_default_configurations()
+
+        # Create the scene.
+        self.__project.set_scene(asr.Scene())
+
+        # Create the environment.
+        self.__project.get_scene().set_environment(asr.Environment("environment", {}))
+
+        # Create the main assembly.
+        self.__project.get_scene().assemblies().insert(asr.Assembly("assembly", {}))
+        self.__main_assembly = self.__project.get_scene().assemblies()["assembly"]
+
+        # Instance the main assembly.
+        assembly_inst = asr.AssemblyInstance("assembly_inst", {}, "assembly")
+        assembly_inst.transform_sequence().set_transform(0.0, asr.Transformd(asr.Matrix4d.identity()))
+        self.__project.get_scene().assembly_instances().insert(assembly_inst)
+
+        # Create default materials.
+        self.__create_default_material()
+        self.__create_null_material()
+
+    def __create_world_translator(self):
+        logger.debug("Creating world translator")
+
+        self.__world_translator = WorldTranslator(self.bl_scene, self.asset_handler)
 
     def __create_translators(self):
         """
@@ -468,20 +460,52 @@ class SceneTranslator(GroupTranslator):
                     logger.debug("Creating group instance translator for object %s", obj.name)
                     self._object_translators[obj_key] = InstanceTranslator(obj, self.__group_translators[group_key], self.asset_handler)
 
-    def __load_searchpaths(self):
-        paths = self.__project.get_search_paths()
+    def __calc_motion_subframes(self):
+        # Calculate xform subframes for motion blur
+        cam_times = {0.0}
+        xform_times = {0.0}
+        deform_times = {0.0}
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
+            if self.bl_scene.appleseed.enable_camera_blur:
+                cam_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples)
 
-        # Load any search paths from asset handler
-        paths.extend(x for x in self.asset_handler.searchpaths if x not in paths)
+            if self.bl_scene.appleseed.enable_object_blur:
+                xform_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples)
 
-        print(paths)
+            if self.bl_scene.appleseed.enable_deformation_blur:
+                deform_times = self.__get_subframes(shutter_length, self.__round_up_pow2(self.bl_scene.appleseed.deformation_blur_samples))
+        # Merge all subframe times
+        all_times = set()
+        all_times.update(cam_times)
+        all_times.update(xform_times)
+        all_times.update(deform_times)
+        all_times = sorted(list(all_times))
+        current_frame = self.bl_scene.frame_current
+        for time in all_times:
+            new_frame = current_frame + time
+            int_frame = math.floor(new_frame)
+            subframe = new_frame - int_frame
 
-        self.__project.set_search_paths(paths)
+            self.bl_scene.frame_set(int_frame, subframe)
 
-    def __create_world_translator(self):
-        logger.debug("Creating world translator")
+            if time in cam_times:
+                for x in self.__camera_translators.values():
+                    x.set_transform_key(time, cam_times)
 
-        self.__world_translator = WorldTranslator(self.bl_scene, self.asset_handler)
+            if time in xform_times:
+                self.set_transform_key(time, xform_times, self.bl_scene)
+
+                for x in self.__group_translators.values():
+                    x.set_transform_key(time, xform_times, self.bl_scene)
+
+            if time in deform_times:
+                self.set_deform_key(self.bl_scene, time, deform_times)
+
+                for x in self.__group_translators.values():
+                    x.set_deform_key(self.bl_scene, time, deform_times)
+        if self.bl_scene.frame_current != current_frame:
+            self.bl_scene.frame_set(current_frame)
 
     def __get_subframes(self, shutter_length, samples):
         times = set()
@@ -490,41 +514,6 @@ class SceneTranslator(GroupTranslator):
             times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
 
         return times
-
-    def __round_up_pow2(self, x):
-        assert (x >= 2)
-        return 1 << (x - 1).bit_length()
-
-    def __create_project(self):
-        """
-        Create a default empty project.
-        """
-
-        logger.debug("Creating appleseed project")
-
-        self.__project = asr.Project(self.bl_scene.name)
-
-        # Render settings.
-        self.__project.add_default_configurations()
-
-        # Create the scene.
-        self.__project.set_scene(asr.Scene())
-
-        # Create the environment.
-        self.__project.get_scene().set_environment(asr.Environment("environment", {}))
-
-        # Create the main assembly.
-        self.__project.get_scene().assemblies().insert(asr.Assembly("assembly", {}))
-        self.__main_assembly = self.__project.get_scene().assemblies()["assembly"]
-
-        # Instance the main assembly.
-        assembly_inst = asr.AssemblyInstance("assembly_inst", {}, "assembly")
-        assembly_inst.transform_sequence().set_transform(0.0, asr.Transformd(asr.Matrix4d.identity()))
-        self.__project.get_scene().assembly_instances().insert(assembly_inst)
-
-        # Create default materials.
-        self.__create_default_material()
-        self.__create_null_material()
 
     def __create_default_material(self):
         logger.debug("Creating default material")
@@ -718,3 +707,18 @@ class SceneTranslator(GroupTranslator):
             frame.set_crop_window([min_x, min_y, max_x, max_y])
 
         self.__project.set_frame(frame)
+
+    def __load_searchpaths(self):
+        paths = self.__project.get_search_paths()
+
+        # Load any search paths from asset handler
+        paths.extend(x for x in self.asset_handler.searchpaths if x not in paths)
+
+        print(paths)
+
+        self.__project.set_search_paths(paths)
+
+    @staticmethod
+    def __round_up_pow2(x):
+        assert (x >= 2)
+        return 1 << (x - 1).bit_length()
