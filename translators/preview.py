@@ -73,6 +73,7 @@ class PreviewRenderer(object):
         self.__create_config()
         self.__create_camera(scene)
         self.__set_frame(scene)
+        self.__set_searchpaths()
 
     def __create_preview_scene(self, scene):
         """This function creates the scene that is used to render material previews.  It consists of:
