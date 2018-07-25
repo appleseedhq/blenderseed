@@ -49,16 +49,12 @@ class GroupTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, group, export_mode, selected_only, geometry_dir, textures_dir, shaders_dir, asset_handler):
-        super(GroupTranslator, self).__init__(group)
+    def __init__(self, group, export_mode, selected_only, asset_handler):
+        super(GroupTranslator, self).__init__(group, asset_handler)
 
         self._export_mode = export_mode
 
         self._selected_only = selected_only
-
-        self._geometry_dir = geometry_dir
-        self._textures_dir = textures_dir
-        self._shaders_dir = shaders_dir
 
         # Translators.
         self._osl_translators = {}
@@ -71,8 +67,6 @@ class GroupTranslator(Translator):
 
         # Map from datablocks to translators for instancing.
         self._datablock_to_translator = {}
-
-        self._asset_handler = asset_handler
 
     #
     # Properties.
@@ -89,22 +83,6 @@ class GroupTranslator(Translator):
     @property
     def selected_only(self):
         return self._selected_only
-
-    @property
-    def geometry_dir(self):
-        return self._geometry_dir
-
-    @property
-    def textures_dir(self):
-        return self._textures_dir
-
-    @property
-    def shaders_dir(self):
-        return self._shaders_dir
-
-    @property
-    def asset_handler(self):
-        return self._asset_handler
 
     @property
     def assembly_name(self):
@@ -172,7 +150,7 @@ class GroupTranslator(Translator):
                 logger.debug("Creating lamp translator for object %s of type %s", obj_key, obj.data.type)
 
                 if obj.data.type == 'AREA':
-                    self._lamp_translators[obj_key] = AreaLampTranslator(obj, self.export_mode)
+                    self._lamp_translators[obj_key] = AreaLampTranslator(obj, self.export_mode, self.asset_handler)
                 else:
                     self._lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
                 if obj.data.appleseed.osl_node_tree is not None:
@@ -186,7 +164,7 @@ class GroupTranslator(Translator):
                 mesh_key = ObjectKey(mesh)
 
                 if obj.is_duplicator:
-                    self._dupli_translators[obj_key] = DupliTranslator(obj, self.export_mode)
+                    self._dupli_translators[obj_key] = DupliTranslator(obj, self.export_mode, self.asset_handler)
                 elif obj.appleseed.object_export != 'normal':
                     archive_path = obj.appleseed.archive_path
                     self._object_translators[obj_key] = ArchiveTranslator(obj, archive_path, self._asset_handler)
@@ -195,12 +173,12 @@ class GroupTranslator(Translator):
                         logger.debug("Creating instance translator for object %s, master obj: %s", obj_key, mesh_key)
 
                         master_translator = self._datablock_to_translator[mesh_key]
-                        self._object_translators[obj_key] = InstanceTranslator(obj, master_translator)
+                        self._object_translators[obj_key] = InstanceTranslator(obj, master_translator, self.asset_handler)
                         master_translator.add_instance()
                     else:
                         logger.debug("Creating mesh translator for object %s", obj_key)
 
-                        translator = MeshTranslator(obj, self.export_mode, self.geometry_dir)
+                        translator = MeshTranslator(obj, self.export_mode, self.asset_handler)
                         self._object_translators[obj_key] = translator
                         self._datablock_to_translator[mesh_key] = translator
 

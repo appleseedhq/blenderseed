@@ -43,12 +43,11 @@ class LampTranslator(Translator):
     #
 
     def __init__(self, lamp, asset_handler):
-        super(LampTranslator, self).__init__(lamp)
+        super(LampTranslator, self).__init__(lamp, asset_handler)
         self.__radiance_tex = None
         self.__radiance_tex_inst = None
         self.__radiance_mult_tex = None
         self.__radiance_mult_tex_inst = None
-        self.__asset_handler = asset_handler
 
     def reset(self, lamp):
         super(LampTranslator, self).reset(lamp)
@@ -194,8 +193,8 @@ class AreaLampTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, lamp, export_mode):
-        super(AreaLampTranslator, self).__init__(lamp)
+    def __init__(self, lamp, export_mode, asset_handler):
+        super(AreaLampTranslator, self).__init__(lamp, asset_handler)
         self.__export_mode = export_mode
         self.__lamp_shader_group = None
         self.__edf_mat = None

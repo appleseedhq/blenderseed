@@ -28,6 +28,7 @@
 import appleseed as asr
 import os
 
+from .handlers import AssetType
 from .translator import Translator, ProjectExportMode, ObjectKey
 from ..logger import get_logger
 
@@ -40,8 +41,8 @@ class ObjectTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, obj):
-        super(ObjectTranslator, self).__init__(obj)
+    def __init__(self, obj, asset_handler):
+        super(ObjectTranslator, self).__init__(obj, asset_handler)
 
         self._xform_seq = asr.TransformSequence()
         self._num_instances = 1
@@ -82,8 +83,8 @@ class InstanceTranslator(ObjectTranslator):
     # Constructor.
     #
 
-    def __init__(self, obj, master_translator):
-        super(InstanceTranslator, self).__init__(obj)
+    def __init__(self, obj, master_translator, asset_handler):
+        super(InstanceTranslator, self).__init__(obj, asset_handler)
         self.__master = master_translator
 
     #
@@ -116,8 +117,8 @@ class InstanceTranslator(ObjectTranslator):
 
 class DupliTranslator(ObjectTranslator):
 
-    def __init__(self, obj, export_mode):
-        super(DupliTranslator, self).__init__(obj)
+    def __init__(self, obj, export_mode, asset_handler):
+        super(DupliTranslator, self).__init__(obj, asset_handler)
 
         self.__export_mode = export_mode
 
@@ -147,11 +148,9 @@ class DupliTranslator(ObjectTranslator):
 class ArchiveTranslator(ObjectTranslator):
 
     def __init__(self, obj, archive_path, asset_handler):
-        super(ArchiveTranslator, self).__init__(obj)
+        super(ArchiveTranslator, self).__init__(obj, asset_handler)
 
         self.__archive_path = archive_path
-
-        self.__asset_handler = asset_handler
 
     @property
     def bl_obj(self):
@@ -162,7 +161,7 @@ class ArchiveTranslator(ObjectTranslator):
 
     def flush_entities(self, assembly):
         assembly_name = self.appleseed_name + "_ass"
-        file_path = self.__asset_handler.resolve_path(self.__archive_path)
+        file_path = self.asset_handler.process_path(self.__archive_path, AssetType.ARCHIVE_ASSET)
 
         params = {'filename': file_path}
 
@@ -174,4 +173,3 @@ class ArchiveTranslator(ObjectTranslator):
 
         assembly.assemblies().insert(self.__ass)
         assembly.assembly_instances().insert(self.__ass_inst)
-        self.__asset_handler.set_searchpath(os.path.dirname(file_path))

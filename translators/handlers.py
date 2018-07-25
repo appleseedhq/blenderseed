@@ -25,12 +25,17 @@
 # THE SOFTWARE.
 #
 
-import bpy
 import os
+import shutil
+from enum import Enum
 
-from ..util import image_extensions
+import bpy
 
-TEXTURE_ASSET = 1
+
+class AssetType(Enum):
+    TEXTURE_ASSET = 1
+    SHADER_ASSET = 2
+    ARCHIVE_ASSET = 3
 
 
 class AssetHandler(object):
@@ -42,32 +47,83 @@ class AssetHandler(object):
     def searchpaths(self):
         return self.__searchpaths
 
-    def set_searchpath(self, path):
-        self.__searchpaths.append(path)
-
-    def resolve_path(self, filename, sub_texture=False):
-        directory, file = os.path.split(bpy.path.abspath(filename))
-        self.__searchpaths.append(directory)
-        if sub_texture:
+    def process_path(self, filename, asset_type, sub_texture=False):
+        file = bpy.path.abspath(filename)
+        if asset_type == AssetType.SHADER_ASSET:
+            dir_name, file_name = os.path.split(file)
+            self.__searchpaths.append(dir_name)
+            file = os.path.splitext(file_name)[0]
+        if asset_type == AssetType.TEXTURE_ASSET and sub_texture:
             base_filename = os.path.splitext(file)[0]
-            return "{0}.tx".format(base_filename)
-        else:
-            return file
+            file = "{0}.tx".format(base_filename)
+        if asset_type == AssetType.ARCHIVE_ASSET:
+            archive_dir, archive = os.path.split(file)
+            self.__searchpaths.append(archive_dir)
+            file = archive
 
-    @staticmethod
-    def substitute_texture(parameter):
-        if parameter.endswith(image_extensions):
-            base_filename = os.path.splitext(parameter)[0]
-            return "{0}.tx".format(base_filename)
+        print(file)
 
-        return parameter
+        return file
 
 
-class CopyAssetsAssetHandler(object):
+class CopyAssetsAssetHandler(AssetHandler):
 
-    def __init__(self):
-        pass
+    def __init__(self, export_dir, geometry_dir, textures_dir, shaders_dir, archives_dir):
+        super(CopyAssetsAssetHandler, self).__init__()
+        self.__export_dir = export_dir
+        self.__geometry_dir = geometry_dir
+        self.__textures_dir = textures_dir
+        self.__shaders_dir = shaders_dir
+        self.__archives_dir = archives_dir
 
-    @staticmethod
-    def resolve_path(filename):
-        raise NotImplementedError()
+    @property
+    def export_dir(self):
+        return self.__export_dir
+
+    @property
+    def geometry_dir(self):
+        return self.__geometry_dir
+
+    @property
+    def textures_dir(self):
+        return self.__textures_dir
+
+    @property
+    def shaders_dir(self):
+        return self.__shaders_dir
+
+    @property
+    def archives_dir(self):
+        return self.__archives_dir
+
+    def process_path(self, blend_path, asset_type, sub_texture=False):
+        # todo: do we copy archive assemblies?
+        original_path = bpy.path.abspath(blend_path)
+        original_dir, file_name = os.path.split(original_path)
+
+        if sub_texture:
+            base_filename = os.path.splitext(file_name)[0]
+            file_name = "{0}.tx".format(base_filename)
+
+        if asset_type == AssetType.TEXTURE_ASSET:
+            dest_dir = self.textures_dir
+        elif asset_type == AssetType.SHADER_ASSET:
+            dest_dir = self.shaders_dir
+        elif asset_type == AssetType.ARCHIVE_ASSET:
+            dest_dir = os.path.join(self.archives_dir, os.path.splitext(file_name)[0])
+
+        dest_file = os.path.join(dest_dir, file_name)
+
+        if not os.path.exists(dest_file):
+            if asset_type != AssetType.ARCHIVE_ASSET:
+                shutil.copy(os.path.join(original_dir, file_name), os.path.join(dest_dir, file_name))
+            else:
+                shutil.copytree(original_dir, dest_dir)
+
+        if asset_type == AssetType.TEXTURE_ASSET:
+            return os.path.join("_textures", file_name)
+        if asset_type == AssetType.SHADER_ASSET:
+            return os.path.join("_shaders", os.path.splitext(file_name)[0])
+        if asset_type == AssetType.ARCHIVE_ASSET:
+            self.__searchpaths.append(os.path.join("_archives", os.path.splitext(file_name)[0]))
+            return os.path.join("_archives", os.path.splitext(file_name)[0], file_name)

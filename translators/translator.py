@@ -79,12 +79,13 @@ class Translator(object):
     # Constructor.
     #
 
-    def __init__(self, obj):
+    def __init__(self, obj, asset_handler):
         """todo: document me..."""
 
         self._bl_obj = obj
         self._obj_key = ObjectKey(obj)
         self._name = str(self._obj_key)
+        self._asset_handler = asset_handler
 
     def reset(self, obj):
         """
@@ -107,8 +108,8 @@ class Translator(object):
         return self._name
 
     @property
-    def searchpaths(self):
-        return self._searchpaths
+    def asset_handler(self):
+        return self._asset_handler
 
     #
     # Entity translation.

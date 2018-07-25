@@ -28,6 +28,7 @@
 import appleseed as asr
 import bpy
 
+from .handlers import AssetType
 from .translator import Translator, ObjectKey
 from ..logger import get_logger
 
@@ -41,10 +42,9 @@ class MaterialTranslator(Translator):
     #
 
     def __init__(self, mat, asset_handler, preview=False):
-        super(MaterialTranslator, self).__init__(mat)
+        super(MaterialTranslator, self).__init__(mat, asset_handler)
 
         self._preview = preview
-        self.__asset_handler = asset_handler
 
         self.__shader_group = None
 
@@ -149,7 +149,9 @@ class MaterialTranslator(Translator):
 
             self.__create_shader_connections(shader)
 
-        self.__shader_group.add_shader("surface", surface_shader.file_name, surface_shader.name, {})
+        surface_shader_file = self.asset_handler.process_path(surface_shader.file_name, AssetType.SHADER_ASSET)
+
+        self.__shader_group.add_shader("surface", surface_shader_file, surface_shader.name, {})
 
     def __parse_parameters(self, parameter_types, parameters, scene, shader, shader_keys):
         for key in parameter_types.keys():
@@ -158,7 +160,7 @@ class MaterialTranslator(Translator):
                 parameter = getattr(shader, key)
                 if key in shader.filepaths:
                     sub_texture = scene.appleseed.sub_textures
-                    parameter = self.__asset_handler.resolve_path(parameter, sub_texture)
+                    parameter = self.asset_handler.process_path(parameter, AssetType.TEXTURE_ASSET, sub_texture)
 
                 if parameter_value == "int checkbox":
                     parameter_value = "int"
@@ -178,7 +180,9 @@ class MaterialTranslator(Translator):
                         if parameter_value == 'float[2]':
                             parameter_value = 'float[]'
                     parameters[socket.socket_osl_id] = parameter_value + " " + str(parameter)
-        self.__shader_group.add_shader("shader", shader.file_name, shader.name, parameters)
+
+        shader_file_name = self.asset_handler.process_path(shader.file_name, AssetType.SHADER_ASSET)
+        self.__shader_group.add_shader("shader", shader_file_name, shader.name, parameters)
 
     def __create_shader_connections(self, shader):
         for output in shader.outputs:

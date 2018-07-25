@@ -45,11 +45,12 @@ class MeshTranslator(ObjectTranslator):
     # Constructor.
     #
 
-    def __init__(self, obj, export_mode, geom_directory=None):
-        super(MeshTranslator, self).__init__(obj)
+    def __init__(self, obj, export_mode, asset_handler):
+        super(MeshTranslator, self).__init__(obj, asset_handler)
 
         self.__export_mode = export_mode
-        self.__geom_dir = geom_directory
+        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+            self.__geom_dir = self.asset_handler.geometry_dir
         self.__mesh_filenames = []
 
         # Motion blur

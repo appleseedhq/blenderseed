@@ -45,13 +45,11 @@ class CameraTranslator(Translator):
     #
 
     def __init__(self, camera, asset_handler):
-        super(CameraTranslator, self).__init__(camera)
+        super(CameraTranslator, self).__init__(camera, asset_handler)
         self._xform_seq = asr.TransformSequence()
 
         self.__cam_map = None
         self.__cam_map_inst = None
-
-        self.__asset_handler = asset_handler
 
     #
     # Properties.
@@ -154,7 +152,7 @@ class CameraTranslator(Translator):
                 cam_params['autofocus_enabled'] = True
 
             if camera.appleseed.diaphragm_map != "":
-                filename = self.__asset_handler.resolve_path(camera.appleseed.diaphragm_map)
+                filename = self.asset_handler.resolve_path(camera.appleseed.diaphragm_map)
                 self.__cam_map = asr.Texture('disk_texture_2d', 'cam_map',
                                              {'filename': filename, 'color_space': camera.appleseed.diaphragm_map_colorspace}, [])
                 self.__cam_map_inst = asr.TextureInstance("cam_map_inst", {'addressing_mode': 'wrap',
@@ -221,8 +219,8 @@ class CameraTranslator(Translator):
 
 class InteractiveCameraTranslator(Translator):
 
-    def __init__(self, cam, context):
-        super(InteractiveCameraTranslator, self).__init__(cam)
+    def __init__(self, cam, context, asset_handler):
+        super(InteractiveCameraTranslator, self).__init__(cam, asset_handler)
 
         self.__context = context
 

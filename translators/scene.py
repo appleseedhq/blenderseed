@@ -33,7 +33,7 @@ import bpy
 import appleseed as asr
 from .camera import CameraTranslator, InteractiveCameraTranslator
 from .group import GroupTranslator
-from .handlers import AssetHandler
+from .handlers import AssetHandler, CopyAssetsAssetHandler
 from .object import InstanceTranslator
 from .translator import ObjectKey, ProjectExportMode
 from .world import WorldTranslator
@@ -71,6 +71,7 @@ class SceneTranslator(GroupTranslator):
         geometry_dir = os.path.join(project_dir, "_geometry")
         textures_dir = os.path.join(project_dir, "_textures")
         shaders_dir = os.path.join(project_dir, "_shaders")
+        archives_dir = os.path.join(project_dir, "_archives")
 
         if not os.path.exists(geometry_dir):
             os.makedirs(geometry_dir)
@@ -78,16 +79,22 @@ class SceneTranslator(GroupTranslator):
         if not os.path.exists(textures_dir):
             os.makedirs(textures_dir)
 
+        if not os.path.exists(shaders_dir):
+            os.makedirs(shaders_dir)
+
+        if not os.path.exists(archives_dir):
+            os.makedirs(archives_dir)
+
         logger.debug("Creating project export scene translator, filename: %s", filename)
+
+        asset_handler = CopyAssetsAssetHandler(project_dir, geometry_dir, textures_dir, shaders_dir, archives_dir)
 
         return cls(
             scene,
             export_mode=ProjectExportMode.PROJECT_EXPORT,
             selected_only=scene.appleseed.export_selected,
             context=None,
-            geometry_dir=geometry_dir,
-            textures_dir=textures_dir,
-            shaders_dir=shaders_dir)
+            asset_handler=asset_handler)
 
     @classmethod
     def create_final_render_translator(cls, scene):
@@ -97,14 +104,14 @@ class SceneTranslator(GroupTranslator):
 
         logger.debug("Creating final render scene translator")
 
+        asset_handler = AssetHandler()
+
         return cls(
             scene,
             export_mode=ProjectExportMode.FINAL_RENDER,
             selected_only=False,
             context=None,
-            geometry_dir=None,
-            textures_dir=None,
-            shaders_dir=None)
+            asset_handler=asset_handler)
 
     @classmethod
     def create_interactive_render_translator(cls, context):
@@ -115,25 +122,23 @@ class SceneTranslator(GroupTranslator):
 
         logger.debug("Creating interactive render scene translator")
 
+        asset_handler = AssetHandler()
+
         return cls(
             scene=context.scene,
             export_mode=ProjectExportMode.INTERACTIVE_RENDER,
             selected_only=False,
             context=context,
-            geometry_dir=None,
-            textures_dir=None,
-            shaders_dir=None)
+            asset_handler=asset_handler)
 
-    def __init__(self, scene, export_mode, selected_only, context, geometry_dir, textures_dir, shaders_dir):
+    def __init__(self, scene, export_mode, selected_only, context, asset_handler):
         """
         Constructor. Do not use it to create instances of this class.
         Use instead SceneTranslator.create_project_export_translator() or
         The other @classmethods.
         """
 
-        asset_handler = AssetHandler()
-
-        super(SceneTranslator, self).__init__(scene, export_mode, selected_only, geometry_dir, textures_dir, shaders_dir, asset_handler)
+        super(SceneTranslator, self).__init__(scene, export_mode, selected_only, asset_handler)
 
         self.__selected_only = selected_only
 
@@ -411,17 +416,15 @@ class SceneTranslator(GroupTranslator):
             self.__create_world_translator()
 
         # Create translators for all objects in the scene.
-
         super(SceneTranslator, self)._create_translators()
 
         # Always create a translator for the active camera even if it is not visible or renderable.
-
         obj_key = ObjectKey(self.bl_scene.camera)
         logger.debug("Creating camera translator for active camera  %s", obj_key)
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             self.__camera_translators[obj_key] = CameraTranslator(self.bl_scene.camera, self.asset_handler)
         else:
-            self.__camera_translators[obj_key] = InteractiveCameraTranslator(self.bl_scene.camera, self.__context)
+            self.__camera_translators[obj_key] = InteractiveCameraTranslator(self.bl_scene.camera, self.__context, self.asset_handler)
 
         for obj in self.bl_scene.objects:
 
@@ -448,7 +451,7 @@ class SceneTranslator(GroupTranslator):
             if obj.type == 'CAMERA':
                 if not obj_key in self.__camera_translators:
                     logger.debug("Creating camera translator for camera %s", obj_key)
-                    self.__camera_translators[obj_key] = CameraTranslator(obj)
+                    self.__camera_translators[obj_key] = CameraTranslator(obj, self.asset_handler)
 
             elif obj.type == 'EMPTY':
                 if obj.is_duplicator and obj.dupli_type == 'GROUP':
@@ -459,20 +462,19 @@ class SceneTranslator(GroupTranslator):
                     # Create a translator for the group if needed.
                     if not group_key in self.__group_translators:
                         logger.debug("Creating group translator for group %s", group_key)
-                        self.__group_translators[group_key] = GroupTranslator(group, self.export_mode, False, self.geometry_dir, self.textures_dir, self.shaders_dir, self.asset_handler)
+                        self.__group_translators[group_key] = GroupTranslator(group, self.export_mode, False, self.asset_handler)
 
                     # Instance the group into the scene.
                     logger.debug("Creating group instance translator for object %s", obj.name)
-                    self._object_translators[obj_key] = InstanceTranslator(obj, self.__group_translators[group_key])
+                    self._object_translators[obj_key] = InstanceTranslator(obj, self.__group_translators[group_key], self.asset_handler)
 
     def __load_searchpaths(self):
-        # Add OSL shader directories to search paths.
-        shader_directories = get_osl_search_paths()
         paths = self.__project.get_search_paths()
-        paths.extend(x for x in shader_directories)
 
         # Load any search paths from asset handler
         paths.extend(x for x in self.asset_handler.searchpaths if x not in paths)
+
+        print(paths)
 
         self.__project.set_search_paths(paths)
 
@@ -707,10 +709,6 @@ class SceneTranslator(GroupTranslator):
                                                        params)
 
                 frame.post_processing_stages().insert(post_process)
-
-        # color_post_process = asr.PostProcessingStage('color_map_post_processing_stage', 'color_wash',
-        #                                              {'order': 0, 'color_map': 'magma'})
-        # frame.post_processing_stages().insert(color_post_process)
 
         if self.bl_scene.render.use_border:
             min_x = int(self.bl_scene.render.border_min_x * width)

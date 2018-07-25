@@ -29,6 +29,7 @@ import appleseed as asr
 import math
 import mathutils
 
+from .handlers import AssetType
 from .translator import Translator
 from ..logger import get_logger
 
@@ -42,8 +43,7 @@ class WorldTranslator(Translator):
     #
 
     def __init__(self, scene, asset_handler):
-        super(WorldTranslator, self).__init__(scene)
-        self.__asset_handler = asset_handler
+        super(WorldTranslator, self).__init__(scene, asset_handler)
         self.__horizon_radiance = None
         self.__zenith_radiance = None
         self.__env_tex = None
@@ -85,7 +85,7 @@ class WorldTranslator(Translator):
                                                      self._convert_color(self.bl_scene.world.zenith_color))
 
         if env_type in ('latlong_map', 'mirrorball_map'):
-            filename = self.__asset_handler.resolve_path(as_sky.env_tex)
+            filename = self.asset_handler.process_path(as_sky.env_tex, AssetType.TEXTURE_ASSET)
             tex_inst_params = {'addressing_mode': 'wrap',
                                'filtering_mode': 'bilinear'}
 

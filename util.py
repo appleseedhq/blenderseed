@@ -135,7 +135,7 @@ def read_osl_shaders():
                         d['name'] = shader_meta['as_blender_node_name']['value']
                     else:
                         d['name'] = q.get_shader_name()
-                    d['filename'] = file.replace(".oso", "")
+                    d['filename'] = filename
                     if 'as_blender_category' in shader_meta_keys:
                         d['category'] = shader_meta['as_blender_category']['value']
                     else:

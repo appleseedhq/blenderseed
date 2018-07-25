@@ -26,7 +26,6 @@
 #
 
 import os
-import tempfile
 
 import appleseed as asr
 
@@ -40,9 +39,15 @@ class PreviewRenderer(object):
     def __init__(self):
         self.__project = None
 
+        self.__asset_handler = AssetHandler()
+
     @property
     def as_project(self):
         return self.__project
+
+    @property
+    def asset_handler(self):
+        return self.__asset_handler
 
     def translate_preview(self, scene):
         self.__create_preview_scene(scene)
@@ -52,6 +57,8 @@ class PreviewRenderer(object):
         self.__create_material(scene)
 
         self.__create_config()
+
+        self.__set_searchpaths()
 
         self.__set_frame(scene)
 
@@ -82,12 +89,6 @@ class PreviewRenderer(object):
 
         # Create the scene.
         self.__project.set_scene(asr.Scene())
-
-        # Add OSL shader directories to search paths.
-        shader_directories = util.get_osl_search_paths()
-        paths = self.__project.get_search_paths()
-        paths.extend(x for x in shader_directories)
-        self.__project.set_search_paths(paths)
 
         preview_template_dir = self.__create_project()
 
@@ -190,7 +191,7 @@ class PreviewRenderer(object):
         # Collect objects and their materials in a object -> [materials] dictionary.
         likely_material = self.__get_preview_material(scene)
 
-        self.__mat_translator = MaterialTranslator(likely_material, asset_handler=AssetHandler(), preview=True)
+        self.__mat_translator = MaterialTranslator(likely_material, self.asset_handler, preview=True)
 
     def __get_preview_material(self, scene):
         objects_materials = {}
@@ -231,6 +232,14 @@ class PreviewRenderer(object):
 
         conf_final.set_parameters(parameters)
         conf_interactive.set_parameters(parameters)
+
+    def __set_searchpaths(self):
+        # Add OSL shader directories to search paths.
+        paths = self.__project.get_search_paths()
+
+        paths.extend(x for x in self.asset_handler.searchpaths if x not in paths)
+
+        self.__project.set_search_paths(paths)
 
     def __set_frame(self, scene):
         width, height = util.get_render_resolution(scene)
