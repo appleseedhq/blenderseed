@@ -29,9 +29,12 @@ import math
 
 import appleseed as asr
 import mathutils
+import os
 
 from .translator import Translator, ProjectExportMode
+from .handlers import AssetType
 from ..logger import get_logger
+from ..util import get_osl_search_paths
 
 logger = get_logger()
 
@@ -266,8 +269,13 @@ class AreaLampTranslator(Translator):
                        'in_exposure': "float {0}".format(as_lamp_data.area_exposure),
                        'in_normalize': "int {0}".format(as_lamp_data.area_normalize)}
         self.__lamp_shader_group.clear()
-        self.__lamp_shader_group.add_shader("shader", "as_blender_areaLight", "asAreaLight", lamp_params)
-        self.__lamp_shader_group.add_shader("surface", "as_closure2surface", "asClosure2Surface", {})
+
+        shader_dir_path = self._find_shader_dir()
+        shader_path = self.asset_handler.process_path(os.path.join(shader_dir_path, "as_blender_areaLight.oso"), AssetType.SHADER_ASSET)
+        surface_path = self.asset_handler.process_path(os.path.join(shader_dir_path, "as_closure2surface.oso"), AssetType.SHADER_ASSET)
+
+        self.__lamp_shader_group.add_shader("shader", shader_path, "asAreaLight", lamp_params)
+        self.__lamp_shader_group.add_shader("surface", surface_path, "asClosure2Surface", {})
         self.__lamp_shader_group.add_connection("asAreaLight", "out_output", "asClosure2Surface", "in_input")
         # Emit are lamp material and surface shader.
         self.__edf_mat = asr.Material('osl_material', lamp_data.name + "_mat", {'osl_surface': shader_name})
@@ -314,3 +322,10 @@ class AreaLampTranslator(Translator):
         m = m * rot
 
         return super(AreaLampTranslator, self)._convert_matrix(m)
+
+    @staticmethod
+    def _find_shader_dir():
+        for directory in get_osl_search_paths():
+            if os.path.basename(directory) in ('shaders', 'blenderseed'):
+
+                return directory
