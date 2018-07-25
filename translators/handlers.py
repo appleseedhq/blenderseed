@@ -47,6 +47,9 @@ class AssetHandler(object):
     def searchpaths(self):
         return self.__searchpaths
 
+    def set_searchpath(self, path):
+        self.__searchpaths.append(path)
+
     def process_path(self, filename, asset_type, sub_texture=False):
         file = bpy.path.abspath(filename)
         if asset_type == AssetType.SHADER_ASSET:
@@ -60,8 +63,6 @@ class AssetHandler(object):
             archive_dir, archive = os.path.split(file)
             self.__searchpaths.append(archive_dir)
             file = archive
-
-        print(file)
 
         return file
 
@@ -97,7 +98,6 @@ class CopyAssetsAssetHandler(AssetHandler):
         return self.__archives_dir
 
     def process_path(self, blend_path, asset_type, sub_texture=False):
-        # todo: do we copy archive assemblies?
         original_path = bpy.path.abspath(blend_path)
         original_dir, file_name = os.path.split(original_path)
 
