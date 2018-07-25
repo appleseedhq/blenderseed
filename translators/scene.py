@@ -461,7 +461,10 @@ class SceneTranslator(GroupTranslator):
                     self._object_translators[obj_key] = InstanceTranslator(obj, self.__group_translators[group_key], self.asset_handler)
 
     def __calc_motion_subframes(self):
-        # Calculate xform subframes for motion blur
+        """Calculates subframes for motion blur.  Each blur type can have it's own segment count, so the final list
+        created has every transform time needed.  This way we only have to move the frame set point one time, instead of the dozens
+        and dozens of times the old exporter did (yay for progress).
+        """
         cam_times = {0.0}
         xform_times = {0.0}
         deform_times = {0.0}
@@ -482,6 +485,7 @@ class SceneTranslator(GroupTranslator):
         all_times.update(deform_times)
         all_times = sorted(list(all_times))
         current_frame = self.bl_scene.frame_current
+
         for time in all_times:
             new_frame = current_frame + time
             int_frame = math.floor(new_frame)
@@ -494,16 +498,17 @@ class SceneTranslator(GroupTranslator):
                     x.set_transform_key(time, cam_times)
 
             if time in xform_times:
-                self.set_transform_key(time, xform_times, self.bl_scene)
+                self.set_transform_key(time, xform_times)
 
                 for x in self.__group_translators.values():
-                    x.set_transform_key(time, xform_times, self.bl_scene)
+                    x.set_transform_key(time, xform_times)
 
             if time in deform_times:
                 self.set_deform_key(self.bl_scene, time, deform_times)
 
                 for x in self.__group_translators.values():
                     x.set_deform_key(self.bl_scene, time, deform_times)
+
         if self.bl_scene.frame_current != current_frame:
             self.bl_scene.frame_set(current_frame)
 

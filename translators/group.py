@@ -134,6 +134,7 @@ class GroupTranslator(Translator):
                 continue
 
             if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and obj.hide:
+                logger.debug("skipping hidden object %s", obj.name)
                 continue
 
             if not inscenelayer(obj, self.bl_group):
@@ -164,8 +165,10 @@ class GroupTranslator(Translator):
                 mesh_key = ObjectKey(mesh)
 
                 if obj.is_duplicator:
+                    logger.debug("Creating dupli translator for object %s", obj_key)
                     self._dupli_translators[obj_key] = DupliTranslator(obj, self.export_mode, self.asset_handler)
                 elif obj.appleseed.object_export != 'normal':
+                    logger.debug("Creating archive translator for object %s", obj_key)
                     archive_path = obj.appleseed.archive_path
                     self._object_translators[obj_key] = ArchiveTranslator(obj, archive_path, self._asset_handler)
                 else:
@@ -192,7 +195,7 @@ class GroupTranslator(Translator):
             for x in t.values():
                 x.create_entities(scene)
 
-    def set_transform_key(self, time, key_times, scene):
+    def set_transform_key(self, time, key_times):
         for x in self._object_translators.values():
             x.set_transform_key(time, key_times)
 

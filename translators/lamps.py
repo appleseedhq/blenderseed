@@ -89,50 +89,14 @@ class LampTranslator(Translator):
                         'importance_multiplier': as_lamp_data.importance_multiplier}
 
         if self.model == 'spot_light':
-            outer_angle = math.degrees(lamp.data.spot_size)
-            inner_angle = (1.0 - lamp.data.spot_blend) * outer_angle
-            light_params['exposure_multiplier'] = as_lamp_data.exposure_multiplier
-            light_params['tilt_angle'] = as_lamp_data.tilt_angle
-            light_params['inner_angle'] = inner_angle
-            light_params['outer_angle'] = outer_angle
-            if as_lamp_data.radiance_use_tex and as_lamp_data.radiance_tex != "":
-                light_params['intensity'] = lamp.name + "_radiance_tex_inst"
-                self.__radiance_tex = asr.Texture('disk_texture_2d', lamp.name + "_radiance_tex",
-                                                  {'filename': as_lamp_data.radiance_tex,
-                                                   'color_space': as_lamp_data.radiance_tex_color_space}, [])
-                self.__radiance_tex_inst = asr.TextureInstance(lamp.name + "_radiance_tex_inst",
-                                                               {'addressing_mode': 'wrap',
-                                                                'filtering_mode': 'bilinear'},
-                                                               lamp.name + "_radiance_tex",
-                                                               asr.Transformf(asr.Matrix4f.identity()))
+            self.__create_spot_lamp(as_lamp_data, lamp, light_params)
 
-            if as_lamp_data.radiance_multiplier_use_tex and as_lamp_data.radiance_multiplier_tex != "":
-                light_params['intensity_multiplier'] = lamp.name + "_radiance_mult_tex_inst"
-                self.__radiance_mult_tex = asr.Texture('disk_texture_2d', lamp.name + "_radiance_mult_tex",
-                                                       {'filename': as_lamp_data.radiance_multiplier_tex,
-                                                        'color_space': as_lamp_data.radiance_multiplier_tex_color_space}, [])
-                self.__radiance_mult_tex_inst = asr.TextureInstance(lamp.name + "_radiance_mult_tex_inst",
-                                                                    {'addressing_mode': 'wrap',
-                                                                     'filtering_mode': 'bilinear'},
-                                                                    lamp.name + "_radiance_mult_tex",
-                                                                    asr.Transformf(asr.Matrix4f.identity()))
+        if self.model == 'sun_light':
+            self.__create_sun_lamp(as_lamp_data, light_params)
 
         if self.model == 'directional_light':
             light_params['irradiance'] = light_params.pop('intensity')
             light_params['irradiance_multiplier'] = light_params.pop('intensity_multiplier')
-        if self.model == 'sun_light':
-            del_list = ['intensity', 'exposure', 'exposure_multiplier']
-            for x in del_list:
-                try:
-                    del light_params[x]
-                except:
-                    pass
-            light_params['radiance_multiplier'] = light_params.pop('intensity_multiplier')
-            light_params['size_multiplier'] = as_lamp_data.size_multiplier
-            light_params['distance'] = as_lamp_data.distance
-            light_params['turbidity'] = as_lamp_data.turbidity
-            if as_lamp_data.use_edf:
-                light_params['environment_edf'] = 'sky_edf'
 
         self.__as_light = asr.Light(self.model, self.bl_lamp.name, light_params)
         self.__as_light.set_transform(self._convert_matrix(self.bl_lamp.matrix_world))
@@ -140,6 +104,50 @@ class LampTranslator(Translator):
         radiance = self._convert_color(as_lamp_data.radiance)
         lamp_radiance_name = "{0}_radiance".format(self.bl_lamp.name)
         self.__as_light_radiance = asr.ColorEntity(lamp_radiance_name, {'color_space': 'linear_rgb'}, radiance)
+
+    def __create_sun_lamp(self, as_lamp_data, light_params):
+        del_list = ['intensity', 'exposure', 'exposure_multiplier']
+        for x in del_list:
+            try:
+                del light_params[x]
+            except:
+                pass
+        light_params['radiance_multiplier'] = light_params.pop('intensity_multiplier')
+        light_params['size_multiplier'] = as_lamp_data.size_multiplier
+        light_params['distance'] = as_lamp_data.distance
+        light_params['turbidity'] = as_lamp_data.turbidity
+        if as_lamp_data.use_edf:
+            light_params['environment_edf'] = 'sky_edf'
+
+    def __create_spot_lamp(self, as_lamp_data, lamp, light_params):
+        outer_angle = math.degrees(lamp.data.spot_size)
+        inner_angle = (1.0 - lamp.data.spot_blend) * outer_angle
+        light_params['exposure_multiplier'] = as_lamp_data.exposure_multiplier
+        light_params['tilt_angle'] = as_lamp_data.tilt_angle
+        light_params['inner_angle'] = inner_angle
+        light_params['outer_angle'] = outer_angle
+        if as_lamp_data.radiance_use_tex and as_lamp_data.radiance_tex != "":
+            tex_path = self.asset_handler.process_path(as_lamp_data.radiance_tex, AssetType.TEXTURE_ASSET)
+            light_params['intensity'] = lamp.name + "_radiance_tex_inst"
+            self.__radiance_tex = asr.Texture('disk_texture_2d', lamp.name + "_radiance_tex",
+                                              {'filename': tex_path,
+                                               'color_space': as_lamp_data.radiance_tex_color_space}, [])
+            self.__radiance_tex_inst = asr.TextureInstance(lamp.name + "_radiance_tex_inst",
+                                                           {'addressing_mode': 'wrap',
+                                                            'filtering_mode': 'bilinear'},
+                                                           lamp.name + "_radiance_tex",
+                                                           asr.Transformf(asr.Matrix4f.identity()))
+        if as_lamp_data.radiance_multiplier_use_tex and as_lamp_data.radiance_multiplier_tex != "":
+            tex_path = self.asset_handler.process_path(as_lamp_data.radiance_multiplier_tex, AssetType.TEXTURE_ASSET)
+            light_params['intensity_multiplier'] = lamp.name + "_radiance_mult_tex_inst"
+            self.__radiance_mult_tex = asr.Texture('disk_texture_2d', lamp.name + "_radiance_mult_tex",
+                                                   {'filename': tex_path,
+                                                    'color_space': as_lamp_data.radiance_multiplier_tex_color_space}, [])
+            self.__radiance_mult_tex_inst = asr.TextureInstance(lamp.name + "_radiance_mult_tex_inst",
+                                                                {'addressing_mode': 'wrap',
+                                                                 'filtering_mode': 'bilinear'},
+                                                                lamp.name + "_radiance_mult_tex",
+                                                                asr.Transformf(asr.Matrix4f.identity()))
 
     def flush_entities(self, assembly):
 
@@ -152,22 +160,22 @@ class LampTranslator(Translator):
         self.__as_light = assembly.lights().get_by_name(lamp_name)
 
         if self.__radiance_tex is not None:
-            rad_tex_name = self.__radiance_tex
+            rad_tex_name = self.__radiance_tex.get_name()
             assembly.textures().insert(self.__radiance_tex)
             self.__radiance_tex = assembly.textures().get_by_name(rad_tex_name)
 
         if self.__radiance_tex_inst is not None:
-            rad_tex_inst_name = self.__radiance_tex_inst
+            rad_tex_inst_name = self.__radiance_tex_inst.get_name()
             assembly.texture_instances().insert(self.__radiance_tex_inst)
             self.__radiance_tex_inst = assembly.texture_instances().get_by_name(rad_tex_inst_name)
 
         if self.__radiance_mult_tex is not None:
-            rad_mult_name = self.__radiance_mult_tex
+            rad_mult_name = self.__radiance_mult_tex.get_name()
             assembly.textures().insert(self.__radiance_mult_tex)
             self.__radiance_mult_tex = assembly.textures().get_by_name(rad_mult_name)
 
         if self.__radiance_mult_tex_inst is not None:
-            rad_mult_tex_inst_name = self.__radiance_mult_tex_inst
+            rad_mult_tex_inst_name = self.__radiance_mult_tex_inst.get_name()
             assembly.texture_instances().insert(self.__radiance_mult_tex_inst)
             self.__radiance_mult_tex_inst = assembly.texture_instances().get_by_name(rad_mult_tex_inst_name)
 
