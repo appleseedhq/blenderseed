@@ -247,19 +247,38 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                   ("adaptive", "Adaptive", "Adaptive")],
                                            default="uniform")
 
-    sampler_min_samples = bpy.props.IntProperty(name="sampler_min_samples",
-                                                description="Minimum number of anti-aliasing samples",
-                                                min=1,
-                                                max=1000000,
-                                                default=16,
-                                                subtype='UNSIGNED')
+    adaptive_min_samples = bpy.props.IntProperty(name="adaptive_min_samples",
+                                                 description="The number of samples taken in between noise level evaluations",
+                                                 min=1,
+                                                 max=1000000,
+                                                 default=8,
+                                                 subtype='UNSIGNED')
 
-    sampler_max_samples = bpy.props.IntProperty(name="sampler_max_samples",
-                                                description="Maximum number of anti-aliasing samples",
-                                                min=1,
-                                                max=1000000,
-                                                default=64,
-                                                subtype='UNSIGNED')
+    adaptive_max_samples = bpy.props.IntProperty(name="adaptive_max_samples",
+                                                 description="Maximum number of samples a pixel may take",
+                                                 min=1,
+                                                 max=1000000,
+                                                 default=256,
+                                                 subtype='UNSIGNED')
+
+    adaptiveness = bpy.props.FloatProperty(name="adaptiveness",
+                                           description="Determines how many uniform samples will be taken before adaptive sampling takes over",
+                                           default=0.9,
+                                           min=0.0,
+                                           max=1.0)
+
+    noise_threshold = bpy.props.FloatProperty(name="noise_threshold",
+                                              description="The level of noise at which the sampling will end for a pixel.",
+                                              default=5.0,
+                                              min=0.0,
+                                              max=20)
+
+    samples = bpy.props.IntProperty(name="samples",
+                                    description="Maximum number of anti-aliasing samples",
+                                    min=1,
+                                    max=1000000,
+                                    default=64,
+                                    subtype='UNSIGNED')
 
     interactive_max_fps = bpy.props.FloatProperty(name="interactive_max_fps",
                                                   default=10.0)
