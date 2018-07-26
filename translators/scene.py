@@ -565,20 +565,14 @@ class SceneTranslator(GroupTranslator):
                                                  'samples': asr_scene_props.sampler_max_samples},
                       'pixel_renderer': asr_scene_props.pixel_sampler,
                       'lighting_engine': lighting_engine,
+                      'passes': asr_scene_props.renderer_passes,
                       'rendering_threads': render_threads,
-                      'generic_frame_renderer': {'passes': asr_scene_props.renderer_passes,
-                                                 'tile_ordering': asr_scene_props.tile_ordering},
+                      'generic_frame_renderer': {'tile_ordering': asr_scene_props.tile_ordering},
                       'progressive_frame_renderer': {'max_samples': number_of_pixels,
                                                      'max_fps': asr_scene_props.interactive_max_fps},
                       'texture_store': {'max_size': asr_scene_props.tex_cache * 1024 * 1024},
                       'light_sampler': {'algorithm': asr_scene_props.light_sampler},
                       'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}
-
-        if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
-            parameters['rendering_threads'] = -1
-        else:
-            if not asr_scene_props.threads_auto:
-                parameters['rendering_threads'] = asr_scene_props.threads
 
         if lighting_engine == 'pt':
             parameters['pt'] = {'enable_ibl': True if asr_scene_props.enable_ibl else False,
