@@ -162,6 +162,7 @@ class CameraTranslator(Translator):
     def __create_pinhole_camera(self, scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
         cam_params = {'aspect_ratio': aspect_ratio,
+                      'focal_length': camera.data.lens / 1000,
                       'film_dimensions': asr.Vector2f(film_width, film_height),
                       'near_z': camera.data.appleseed.near_z,
                       'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
@@ -179,6 +180,7 @@ class CameraTranslator(Translator):
         else:
             focal_distance = camera.dof_distance
         cam_params = {'aspect_ratio': aspect_ratio,
+                      'focal_length': camera.data.lens / 1000,
                       'film_dimensions': asr.Vector2f(film_width, film_height),
                       'near_z': camera.data.appleseed.near_z,
                       'f_stop': camera.data.appleseed.f_number,
