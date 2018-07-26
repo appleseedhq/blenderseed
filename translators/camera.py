@@ -114,35 +114,40 @@ class CameraTranslator(Translator):
 
         aspect_ratio = width / height
 
-        fov = self._calc_fov(camera, width, height)
+        film_width, film_height = self.__calc_film_dimensions(aspect_ratio)
 
         model = self.__as_camera.get_model()
 
         if model == 'pinhole_camera':
-            cam_params = self.__create_pinhole_camera(scene, camera, aspect_ratio, fov)
+            cam_params = self.__create_pinhole_camera(scene, aspect_ratio, film_width, film_height)
 
         elif model == 'thinlens_camera':
-            cam_params = self.__create_thin_lens_camera(scene, camera, aspect_ratio, fov)
+            cam_params = self.__create_thin_lens_camera(scene, aspect_ratio, film_width, film_height)
 
         elif model == 'spherical_camera':
             cam_params = self.__create_spherical_camera(scene)
 
         else:
-            cam_params = self.__create_ortho_camera(scene, camera, aspect_ratio)
+            cam_params = self.__create_ortho_camera(scene, aspect_ratio)
 
         self.__as_camera.set_parameters(cam_params)
 
     def set_transform_key(self, time, key_times):
         self._xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
-    def __create_ortho_camera(self, scene, camera, aspect_ratio):
-        cam_params = {'film_width': camera.ortho_scale,
-                      'aspect_ratio': aspect_ratio,
+    def __create_ortho_camera(self, scene, aspect_ratio):
+        camera = self.bl_camera.data
+        cam_params = {'aspect_ratio': aspect_ratio,
                       'near_z': camera.appleseed.near_z,
                       'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
                       'shutter_open_begin_time': scene.appleseed.shutter_open,
                       'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
                       'shutter_close_end_time': scene.appleseed.shutter_close}
+
+        if camera.sensor_fit == 'HORIZONTAL' or (camera.sensor_fit == 'AUTO' and aspect_ratio > 1):
+            cam_params['film_width'] = camera.ortho_scale
+        else:
+            cam_params['film_height'] = camera.ortho_scale
 
         return cam_params
 
@@ -154,11 +159,11 @@ class CameraTranslator(Translator):
 
         return cam_params
 
-    def __create_pinhole_camera(self, scene, camera, aspect_ratio, fov):
-        cam_params = {'film_width': self.bl_camera.data.sensor_width / 1000,
-                      'aspect_ratio': aspect_ratio,
-                      'horizontal_fov': fov,
-                      'near_z': camera.appleseed.near_z,
+    def __create_pinhole_camera(self, scene, aspect_ratio, film_width, film_height):
+        camera = self.bl_camera
+        cam_params = {'aspect_ratio': aspect_ratio,
+                      'film_dimensions': asr.Vector2f(film_width, film_height),
+                      'near_z': camera.data.appleseed.near_z,
                       'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
                       'shutter_open_begin_time': scene.appleseed.shutter_open,
                       'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
@@ -166,29 +171,29 @@ class CameraTranslator(Translator):
 
         return cam_params
 
-    def __create_thin_lens_camera(self, scene, camera, aspect_ratio, fov):
+    def __create_thin_lens_camera(self, scene, aspect_ratio, film_width, film_height):
+        camera = self.bl_camera
         if camera.dof_object is not None:
             cam_target = bpy.data.objects[camera.dof_object.name]
             focal_distance = (cam_target.location - self.bl_camera.location).magnitude
         else:
             focal_distance = camera.dof_distance
-        cam_params = {'film_width': self.bl_camera.data.sensor_width / 1000,
-                      'aspect_ratio': aspect_ratio,
-                      'horizontal_fov': fov,
-                      'near_z': camera.appleseed.near_z,
-                      'f_stop': camera.appleseed.f_number,
+        cam_params = {'aspect_ratio': aspect_ratio,
+                      'film_dimensions': asr.Vector2f(film_width, film_height),
+                      'near_z': camera.data.appleseed.near_z,
+                      'f_stop': camera.data.appleseed.f_number,
                       'autofocus_enabled': False,
-                      'diaphragm_blades': camera.appleseed.diaphragm_blades,
-                      'diaphragm_tilt_angle': camera.appleseed.diaphragm_angle,
+                      'diaphragm_blades': camera.data.appleseed.diaphragm_blades,
+                      'diaphragm_tilt_angle': camera.data.appleseed.diaphragm_angle,
                       'focal_distance': focal_distance,
                       'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
                       'shutter_open_begin_time': scene.appleseed.shutter_open,
                       'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
                       'shutter_close_end_time': scene.appleseed.shutter_close}
-        if camera.appleseed.enable_autofocus:
+        if camera.data.appleseed.enable_autofocus:
             cam_params['autofocus_target'] = self._find_auto_focus_point(scene)
             cam_params['autofocus_enabled'] = True
-        if camera.appleseed.diaphragm_map != "":
+        if camera.data.appleseed.diaphragm_map != "":
             filename = self.asset_handler.resolve_path(camera.appleseed.diaphragm_map)
             self.__cam_map = asr.Texture('disk_texture_2d', 'cam_map',
                                          {'filename': filename, 'color_space': camera.appleseed.diaphragm_map_colorspace}, [])
@@ -211,21 +216,33 @@ class CameraTranslator(Translator):
 
         return asr.Vector2f(co_2d.x, y)
 
-    @staticmethod
-    def _calc_fov(camera, width, height):
+    def __calc_film_dimensions(self, aspect_ratio):
         """
-        Calculate horizontal FOV if rendered height is greater than rendered width.
-        Thanks to NOX exporter developers for this solution.
+        Fit types:
+        Horizontal = Horizontal size manually set.  Vertical size derived from aspect ratio.
 
-        We have to do it this way because of Blender's idiotic handling of the viewing frustrum in
-        'AUTO' sensor mode.
+        Vertical = Vertical size manaually set.  Horizontal size derived from aspect ratio.
+
+        Auto = sensor_width bpy property sets the horizontal size when the aspect ratio is over 1 and
+        the vertical size when it is below 1.  Other dimension is derived from aspect ratio.
+
+        Much thanks to the Radeon ProRender plugin for clarifying this behavior
         """
-        camera_angle = math.degrees(camera.angle)
-        if width < height:
-            length = 18.0 / math.tan(camera.angle / 2)
-            camera_angle = 2 * math.atan(18.0 * width / height / length)
-            camera_angle = math.degrees(camera_angle)
-        return camera_angle
+
+        horizontal_fit = self.bl_camera.data.sensor_fit == 'HORIZONTAL' or \
+                         (self.bl_camera.data.sensor_fit == 'AUTO' and aspect_ratio > 1)
+
+        if self.bl_camera.data.sensor_fit == 'VERTICAL':
+            film_height = self.bl_camera.data.sensor_height / 1000
+            film_width = film_height * aspect_ratio
+        elif horizontal_fit:
+            film_width = self.bl_camera.data.sensor_width / 1000
+            film_height = film_width / aspect_ratio
+        else:
+            film_height = self.bl_camera.data.sensor_width / 1000
+            film_width = film_height * aspect_ratio
+
+        return film_width, film_height
 
     @staticmethod
     def _get_frame_aspect_ratio(scene):
@@ -322,17 +339,15 @@ class InteractiveCameraTranslator(Translator):
         # todo: add view offset
         params = {}
         model = None
-        view_cam_type = self.context.region_data.view_perspective
 
+        view_cam_type = self.context.region_data.view_perspective
         width = self.context.region.width
         height = self.context.region.height
 
         aspect_ratio = width / height
 
         self.__lens = self.context.space_data.lens
-
         self.__zoom = 2
-
         self.__extent_base = self.context.space_data.region_3d.view_distance * 32.0 / self.__lens
 
         if view_cam_type == "ORTHO":
@@ -348,15 +363,16 @@ class InteractiveCameraTranslator(Translator):
         self.__params = params
 
     def __create_view_camera(self, aspect_ratio):
+        # Borrowed from Cycles source code, since no sane person would figure this out on their own
+        self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
+
         film_width, film_height = self.__calc_film_dimensions(aspect_ratio, self.__zoom)
+
         self._matrix = self.bl_camera.matrix_world
         cam_mapping = {'PERSP': 'pinhole_camera',
                        'ORTHO': 'orthographic_camera',
                        'PANO': 'spherical_camera'}
         model = cam_mapping[self.bl_camera.data.type]
-
-        # Borrowed from Cycles source code, since no sane person would figure this out on their own
-        self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
 
         if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof:
             model = 'thinlens_camera'
@@ -365,6 +381,9 @@ class InteractiveCameraTranslator(Translator):
             sensor_width = self.bl_camera.data.ortho_scale * self.__zoom
             params = {'film_width': sensor_width,
                       'aspect_ratio': aspect_ratio}
+
+            if self.bl_camera.data.sensor_fit == 'VERTICAL' or (self.bl_camera.data.sensor_fit == 'AUTO' and aspect_ratio < 1):
+                params['film_height'] = params.pop('film_width')
 
         elif model == 'spherical_camera':
             raise NotImplementedError("Spherical camera not supported for interactive rendering")
@@ -396,11 +415,14 @@ class InteractiveCameraTranslator(Translator):
 
     def __create_persp_camera(self, aspect_ratio):
         model = 'pinhole_camera'
-        sensor_width = 32 * self.__zoom
+        sensor_size = 32 * self.__zoom
         self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
         params = {'focal_length': self.context.space_data.lens,
                   'aspect_ratio': aspect_ratio,
-                  'film_width': sensor_width}
+                  'film_width': sensor_size}
+
+        if aspect_ratio < 1:
+            params['film_height'] = params.pop('film_width')
         return model, params
 
     def __create_ortho_camera(self, aspect_ratio):
@@ -409,14 +431,36 @@ class InteractiveCameraTranslator(Translator):
         sensor_width = self.__zoom * self.__extent_base * 1
         params = {'film_width': sensor_width,
                   'aspect_ratio': aspect_ratio}
+
+        if aspect_ratio < 1:
+            params['film_height'] = params.pop('film_width')
+
         return model, params
 
     def __calc_film_dimensions(self, aspect_ratio, zoom):
-        if self.bl_camera.data.sensor_fit in ('AUTO', 'HORIZONTAL'):
+        """
+        Fit types:
+        Horizontal = Horizontal size manually set.  Vertical size derived from aspect ratio.
+
+        Vertical = Vertical size manaually set.  Horizontal size derived from aspect ratio.
+
+        Auto = sensor_width bpy property sets the horizontal size when the aspect ratio is over 1 and
+        the vertical size when it is below 1.  Other dimension is derived from aspect ratio.
+
+        Much thanks to the Radeon ProRender plugin for clarifying this behavior
+        """
+
+        horizontal_fit = self.bl_camera.data.sensor_fit == 'HORIZONTAL' or \
+                         (self.bl_camera.data.sensor_fit == 'AUTO' and aspect_ratio > 1)
+
+        if self.bl_camera.data.sensor_fit == 'VERTICAL':
+            film_height = self.bl_camera.data.sensor_height / 1000 * zoom
+            film_width = film_height * aspect_ratio
+        elif horizontal_fit:
             film_width = self.bl_camera.data.sensor_width / 1000 * zoom
             film_height = film_width / aspect_ratio
         else:
-            film_height = self.bl_camera.data.sensor_height / 1000 * zoom
+            film_height = self.bl_camera.data.sensor_width / 1000 * zoom
             film_width = film_height * aspect_ratio
 
         return film_width, film_height
