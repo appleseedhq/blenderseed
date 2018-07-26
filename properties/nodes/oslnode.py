@@ -150,7 +150,6 @@ def generate_node(node):
             maximum = None
             soft_minimum = None
             soft_maximum = None
-            hide_ui = False
             if 'default' in keys:
                 default = in_socket['default']
             if 'label' in keys:
@@ -178,13 +177,13 @@ def generate_node(node):
                 stype.draw_color = draw_color_float
 
                 kwargs = {'name': in_socket['name'], 'description': helper, 'default': float(default)}
-                if minimum:
+                if minimum is not None:
                     kwargs['min'] = float(minimum)
-                if maximum:
+                if maximum is not None:
                     kwargs['max'] = float(maximum)
-                if soft_minimum:
+                if soft_minimum is not None:
                     kwargs['soft_min'] = float(soft_minimum)
-                if soft_maximum:
+                if soft_maximum is not None:
                     kwargs['soft_max'] = float(soft_maximum)
 
                 stype.socket_value = bpy.props.FloatProperty(**kwargs)
@@ -214,10 +213,18 @@ def generate_node(node):
                 stype.socket_value = bpy.props.FloatVectorProperty(**kwargs)
 
             elif socket_type == 'int':
+                kwargs = {'name': in_socket['name'], 'description': helper, 'default': int(default)}
+                if minimum is not None:
+                    kwargs['min'] = int(minimum)
+                if maximum is not None:
+                    kwargs['max'] = int(maximum)
+                if soft_minimum is not None:
+                    kwargs['soft_min'] = int(soft_minimum)
+                if soft_maximum is not None:
+                    kwargs['soft_max'] = int(soft_maximum)
+
                 stype.draw_color = draw_color_float
-                stype.socket_value = bpy.props.IntProperty(name=in_socket['name'],
-                                                           description=helper,
-                                                           default=int(default))
+                stype.socket_value = bpy.props.IntProperty(**kwargs)
 
             elif socket_type == 'float[2]':
                 stype.draw_color = draw_uv_color
@@ -397,13 +404,13 @@ def generate_node(node):
             else:
                 kwargs = {'name': prop['name'], 'description': helper, 'default': int(default)
                           }
-                if minimum:
+                if minimum is not None:
                     kwargs['min'] = int(minimum)
-                if maximum:
+                if maximum is not None:
                     kwargs['max'] = int(maximum)
-                if soft_minimum:
+                if soft_minimum is not None:
                     kwargs['soft_min'] = int(soft_minimum)
-                if soft_maximum:
+                if soft_maximum is not None:
                     kwargs['soft_max'] = int(soft_maximum)
 
                 setattr(ntype, prop_name, bpy.props.IntProperty(**kwargs))
@@ -413,13 +420,13 @@ def generate_node(node):
         elif prop['type'] == 'float':
 
             kwargs = {'name': prop['name'], 'description': helper, 'default': float(default)}
-            if minimum:
+            if minimum is not None:
                 kwargs['min'] = float(minimum)
-            if maximum:
+            if maximum is not None:
                 kwargs['max'] = float(maximum)
-            if soft_minimum:
+            if soft_minimum is not None:
                 kwargs['soft_min'] = float(soft_minimum)
-            if soft_maximum:
+            if soft_maximum is not None:
                 kwargs['soft_max'] = float(soft_maximum)
 
             setattr(ntype, prop_name, bpy.props.FloatProperty(**kwargs))
