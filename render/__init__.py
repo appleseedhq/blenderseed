@@ -99,9 +99,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
     #
 
     def render(self, scene):
-        asr_scene_props = scene.appleseed
-
-        if asr_scene_props.enable_aovs and not self.is_preview:
+        if not self.is_preview:
             self.__add_render_passes(scene)
 
         if self.is_preview:
@@ -144,27 +142,26 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         if not self.is_preview:
             self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
-            if asr_scene_props.enable_aovs:
-                if asr_scene_props.diffuse_aov:
-                    self.register_pass(scene, renderlayer, "Diffuse", 4, "RGBA", 'COLOR')
-                if asr_scene_props.direct_diffuse_aov:
-                    self.register_pass(scene, renderlayer, "Direct Diffuse", 4, "RGBA", 'COLOR')
-                if asr_scene_props.indirect_diffuse_aov:
-                    self.register_pass(scene, renderlayer, "Indirect Diffuse", 4, "RGBA", 'COLOR')
-                if asr_scene_props.glossy_aov:
-                    self.register_pass(scene, renderlayer, "Glossy", 4, "RGBA", 'COLOR')
-                if asr_scene_props.direct_glossy_aov:
-                    self.register_pass(scene, renderlayer, "Direct Glossy", 4, "RGBA", 'COLOR')
-                if asr_scene_props.indirect_glossy_aov:
-                    self.register_pass(scene, renderlayer, "Indirect Glossy", 4, "RGBA", 'COLOR')
-                if asr_scene_props.normal_aov:
-                    self.register_pass(scene, renderlayer, "Normal", 3, "RGB", 'VECTOR')
-                if asr_scene_props.uv_aov:
-                    self.register_pass(scene, renderlayer, "UV", 3, "RGB", 'VECTOR')
-                if asr_scene_props.depth_aov:
-                    self.register_pass(scene, renderlayer, "Z Depth", 1, "Z", 'VALUE')
-                if asr_scene_props.pixel_time_aov:
-                    self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
+            if asr_scene_props.diffuse_aov:
+                self.register_pass(scene, renderlayer, "Diffuse", 4, "RGBA", 'COLOR')
+            if asr_scene_props.direct_diffuse_aov:
+                self.register_pass(scene, renderlayer, "Direct Diffuse", 4, "RGBA", 'COLOR')
+            if asr_scene_props.indirect_diffuse_aov:
+                self.register_pass(scene, renderlayer, "Indirect Diffuse", 4, "RGBA", 'COLOR')
+            if asr_scene_props.glossy_aov:
+                self.register_pass(scene, renderlayer, "Glossy", 4, "RGBA", 'COLOR')
+            if asr_scene_props.direct_glossy_aov:
+                self.register_pass(scene, renderlayer, "Direct Glossy", 4, "RGBA", 'COLOR')
+            if asr_scene_props.indirect_glossy_aov:
+                self.register_pass(scene, renderlayer, "Indirect Glossy", 4, "RGBA", 'COLOR')
+            if asr_scene_props.normal_aov:
+                self.register_pass(scene, renderlayer, "Normal", 3, "RGB", 'VECTOR')
+            if asr_scene_props.uv_aov:
+                self.register_pass(scene, renderlayer, "UV", 3, "RGB", 'VECTOR')
+            if asr_scene_props.depth_aov:
+                self.register_pass(scene, renderlayer, "Z Depth", 1, "Z", 'VALUE')
+            if asr_scene_props.pixel_time_aov:
+                self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
 
     #
     # Internal methods.

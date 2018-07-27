@@ -46,16 +46,9 @@ class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     bl_options = {'DEFAULT_CLOSED'}
     bl_context = "render_layer"
 
-    def draw_header(self, context):
-        header = self.layout
-        asr_scene_props = context.scene.appleseed
-        header.prop(asr_scene_props, "enable_aovs", text="")
-
     def draw(self, context):
         layout = self.layout
         asr_scene_props = context.scene.appleseed
-
-        layout.active = asr_scene_props.enable_aovs
 
         row = layout.row()
         row.prop(asr_scene_props, "diffuse_aov", text="Diffuse")

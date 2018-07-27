@@ -658,7 +658,7 @@ class SceneTranslator(GroupTranslator):
 
         # AOVs
         aovs = asr.AOVContainer()
-        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER and asr_scene_props.enable_aovs:
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             if asr_scene_props.diffuse_aov:
                 aovs.insert(asr.AOV('diffuse_aov', {}))
             if asr_scene_props.direct_diffuse_aov:
