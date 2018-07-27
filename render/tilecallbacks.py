@@ -26,10 +26,9 @@
 #
 
 import time
+from math import ceil
 
 import appleseed as asr
-
-from math import ceil
 from .. import util
 from ..logger import get_logger
 
@@ -195,6 +194,13 @@ class FinalTileCallback(asr.ITileCallback):
                        'normal': "Normal",
                        'uv': "UV",
                        'pixel_time': "Pixel Time",
-                       'depth': "Z Depth"}
+                       'depth': "Z Depth",
+                       'emission': "Emission",
+                       'albedo': "Albedo",
+                       'invalid_samples': "Invalid Samples",
+                       'pixel_sample_count': "Pixel Sample Count",
+                       'pixel_variation': "Pixel Variation",
+                       'npr_shading': "NPR Shading",
+                       'npr_contour': "NPR Contour"}
 
         return aov_mapping[aov_name]

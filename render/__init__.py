@@ -154,6 +154,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 self.register_pass(scene, renderlayer, "Direct Glossy", 4, "RGBA", 'COLOR')
             if asr_scene_props.indirect_glossy_aov:
                 self.register_pass(scene, renderlayer, "Indirect Glossy", 4, "RGBA", 'COLOR')
+            if asr_scene_props.albedo_aov:
+                self.register_pass(scene, renderlayer, "Albedo", 4, "RGBA", 'COLOR')
+            if asr_scene_props.emission_aov:
+                self.register_pass(scene, renderlayer, "Emission", 4, "RGBA", 'COLOR')
+            if asr_scene_props.npr_shading_aov:
+                self.register_pass(scene, renderlayer, "NPR Shading", 4, "RGBA", 'COLOR')
+            if asr_scene_props.npr_contour_aov:
+                self.register_pass(scene, renderlayer, "NPR Contour", 4, "RGBA", 'COLOR')
             if asr_scene_props.normal_aov:
                 self.register_pass(scene, renderlayer, "Normal", 3, "RGB", 'VECTOR')
             if asr_scene_props.uv_aov:
@@ -162,6 +170,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 self.register_pass(scene, renderlayer, "Z Depth", 1, "Z", 'VALUE')
             if asr_scene_props.pixel_time_aov:
                 self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
+            if asr_scene_props.invalid_samples_aov:
+                self.register_pass(scene, renderlayer, "Invalid Samples", 3, "RGB", "VECTOR")
+            if asr_scene_props.pixel_sample_count_aov:
+                self.register_pass(scene, renderlayer, "Pixel Sample Count", 3, "RGB", "VECTOR")
+            if asr_scene_props.pixel_variation_aov:
+                self.register_pass(scene, renderlayer, "Pixel Variation", 3, "RGB", "VECTOR")
 
     #
     # Internal methods.
@@ -325,3 +339,17 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.add_pass("Z Depth", 1, "Z")
         if asr_scene_props.pixel_time_aov:
             self.add_pass("Pixel Time", 1, "X")
+        if asr_scene_props.invalid_samples_aov:
+            self.add_pass("Invalid Samples", 3, "RGB")
+        if asr_scene_props.pixel_sample_count_aov:
+            self.add_pass("Pixel Sample Count", 3, "RGB")
+        if asr_scene_props.pixel_variation_aov:
+            self.add_pass("Pixel Variation", 3, "RGB")
+        if asr_scene_props.albedo_aov:
+            self.add_pass("Albedo", 4, "RGBA")
+        if asr_scene_props.emission_aov:
+            self.add_pass("Emission", 4, "RGBA")
+        if asr_scene_props.npr_shading_aov:
+            self.add_pass("NPR Shading", 4, "RGBA")
+        if asr_scene_props.npr_contour_aov:
+            self.add_pass("NPR Contour", 4, "RGBA")

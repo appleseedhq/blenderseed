@@ -610,8 +610,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     # AOV export
 
-    enable_aovs = bpy.props.BoolProperty(name="enable_aovs",
-                                         description="Enabled additional AOVs during rendering",
+    albedo_aov = bpy.props.BoolProperty(name="albedo_aov",
+                                         default=False)
+
+    emission_aov = bpy.props.BoolProperty(name="emission_aov",
                                          default=False)
 
     diffuse_aov = bpy.props.BoolProperty(name="diffuse_aov",
@@ -622,9 +624,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     direct_glossy_aov = bpy.props.BoolProperty(name="direct_glossy_aov",
                                                default=False)
-
-    emission_aov = bpy.props.BoolProperty(name="emission_aov",
-                                          default=False)
 
     glossy_aov = bpy.props.BoolProperty(name="glossy_aov",
                                         default=False)
@@ -646,6 +645,21 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     pixel_time_aov = bpy.props.BoolProperty(name="pixel_time_aov",
                                             default=False)
+
+    invalid_samples_aov = bpy.props.BoolProperty(name="invalid_samples_aov",
+                                                 default=False)
+
+    pixel_sample_count_aov = bpy.props.BoolProperty(name="pixel_sample_count_aov",
+                                                    default=False)
+
+    pixel_variation_aov = bpy.props.BoolProperty(name="pixel_variation_aov",
+                                                 default=False)
+
+    npr_shading_aov = bpy.props.BoolProperty(name="npr_shading_aov",
+                                             default=False)
+
+    npr_contour_aov = bpy.props.BoolProperty(name="npr_contour_aov",
+                                             default=False)
 
     # Overrides
 

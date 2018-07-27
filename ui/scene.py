@@ -40,35 +40,50 @@ class AppleseedRenderPanelBase(object):
         renderer = context.scene.render
         return renderer.engine == 'APPLESEED_RENDER'
 
+
 class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_label = "Render Passes"
-    bl_options = {'DEFAULT_CLOSED'}
     bl_context = "render_layer"
 
     def draw(self, context):
         layout = self.layout
         asr_scene_props = context.scene.appleseed
 
-        row = layout.row()
-        row.prop(asr_scene_props, "diffuse_aov", text="Diffuse")
-        row.prop(asr_scene_props, "glossy_aov", text="Glossy")
+        col = layout.column(align=True)
+        row = col.row(align=True)
+        row.prop(asr_scene_props, "diffuse_aov", text="Diffuse", toggle=True)
+        row.prop(asr_scene_props, "direct_diffuse_aov", text="Direct Diffuse", toggle=True)
+        row.prop(asr_scene_props, "indirect_diffuse_aov", text="Indirect Diffuse", toggle=True)
 
-        row = layout.row()
-        row.prop(asr_scene_props, "direct_diffuse_aov", text="Direct Diffuse")
-        row.prop(asr_scene_props, "direct_glossy_aov", text="Direct Glossy")
+        row = col.row(align=True)
+        row.prop(asr_scene_props, "glossy_aov", text="Glossy", toggle=True)
+        row.prop(asr_scene_props, "direct_glossy_aov", text="Direct Glossy", toggle=True)
+        row.prop(asr_scene_props, "indirect_glossy_aov", text="Indirect Glossy", toggle=True)
 
-        row = layout.row()
-        row.prop(asr_scene_props, "indirect_diffuse_aov", text="Indirect Diffuse")
-        row.prop(asr_scene_props, "indirect_glossy_aov", text="Indirect Glossy")
+        row = col.row(align=True)
+        row.prop(asr_scene_props, "albedo_aov", text="Albedo", toggle=True)
+        row.prop(asr_scene_props, "emission_aov", text="Emission", toggle=True)
 
-        row = layout.row()
-        row.prop(asr_scene_props, "normal_aov", text="Normals")
-        row.prop(asr_scene_props, "uv_aov", text="UV Coordinates")
+        layout.separator()
 
-        row = layout.row()
-        row.prop(asr_scene_props, "depth_aov", text="Depth")
-        row.prop(asr_scene_props, "pixel_time_aov", text="Pixel Time")
+        row = layout.row(align=True)
+        row.prop(asr_scene_props, "npr_shading_aov", text="NPR Shading", toggle=True)
+        row.prop(asr_scene_props, "npr_contour_aov", text="NPR Contour", toggle=True)
+
+        layout.separator()
+
+        col = layout.column(align=True)
+        row = col.row(align=True)
+        row.prop(asr_scene_props, "normal_aov", text="Normals", toggle=True)
+        row.prop(asr_scene_props, "uv_aov", text="UV Coordinates", toggle=True)
+        row.prop(asr_scene_props, "depth_aov", text="Depth", toggle=True)
+        row = col.row(align=True)
+        row.prop(asr_scene_props, "pixel_time_aov", text="Pixel Time", toggle=True)
+        row.prop(asr_scene_props, "pixel_variation_aov", text="Pixel Variation", toggle=True)
+        row = col.row(align=True)
+        row.prop(asr_scene_props, "pixel_sample_count_aov", text="Sample Count", toggle=True)
+        row.prop(asr_scene_props, "invalid_samples_aov", text="Invalid Samples", toggle=True)
 
 
 def register():

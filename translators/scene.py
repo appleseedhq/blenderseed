@@ -679,6 +679,20 @@ class SceneTranslator(GroupTranslator):
                 aovs.insert(asr.AOV('depth_aov', {}))
             if asr_scene_props.pixel_time_aov:
                 aovs.insert(asr.AOV('pixel_time_aov', {}))
+            if asr_scene_props.invalid_samples_aov:
+                aovs.insert(asr.AOV('invalid_samples_aov', {}))
+            if asr_scene_props.pixel_sample_count_aov:
+                aovs.insert(asr.AOV('pixel_sample_count_aov', {}))
+            if asr_scene_props.pixel_variation_aov:
+                aovs.insert(asr.AOV('pixel_variation_aov', {}))
+            if asr_scene_props.albedo_aov:
+                aovs.insert(asr.AOV('albedo_aov', {}))
+            if asr_scene_props.emission_aov:
+                aovs.insert(asr.AOV('emission_aov', {}))
+            if asr_scene_props.npr_shading_aov:
+                aovs.insert(asr.AOV('npr_shading_aov', {}))
+            if asr_scene_props.npr_contour_aov:
+                aovs.insert(asr.AOV('npr_contour_aov', {}))
 
         # Create and set the frame in the project.
         frame = asr.Frame("beauty", frame_params, aovs)
