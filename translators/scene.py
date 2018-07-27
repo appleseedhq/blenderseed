@@ -721,11 +721,19 @@ class SceneTranslator(GroupTranslator):
 
                 frame.post_processing_stages().insert(post_process)
 
-        if self.bl_scene.render.use_border:
+        if self.bl_scene.render.use_border and self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             min_x = int(self.bl_scene.render.border_min_x * width)
             max_x = int(self.bl_scene.render.border_max_x * width) - 1
             min_y = height - int(self.bl_scene.render.border_max_y * height)
             max_y = height - int(self.bl_scene.render.border_min_y * height) - 1
+            frame.set_crop_window([min_x, min_y, max_x, max_y])
+
+        elif self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and self.__context.space_data.use_render_border \
+                and self.__context.region_data.view_perspective in ('ORTHO', 'PERSP'):
+            min_x = int(self.__context.space_data.render_border_min_x * width)
+            max_x = int(self.__context.space_data.render_border_max_x * width) - 1
+            min_y = height - int(self.__context.space_data.render_border_max_y * height)
+            max_y = height - int(self.__context.space_data.render_border_min_y * height) - 1
             frame.set_crop_window([min_x, min_y, max_x, max_y])
 
         self.__project.set_frame(frame)
