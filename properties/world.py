@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,6 +26,7 @@
 #
 
 import bpy
+
 from .. import util
 
 
@@ -35,7 +35,6 @@ class AppleseedSSSSetsProps(bpy.types.PropertyGroup):
 
 
 class AppleseedSSSSets(bpy.types.PropertyGroup):
-
     sss_sets = bpy.props.CollectionProperty(type=AppleseedSSSSetsProps,
                                             name="appleseed SSS Sets",
                                             description="")
@@ -46,7 +45,6 @@ class AppleseedSSSSets(bpy.types.PropertyGroup):
 
 
 class AppleseedSkySettings(bpy.types.PropertyGroup):
-
     env_type = bpy.props.EnumProperty(name="Environment Type",
                                       items=[("constant", "Constant", "Use constant color for sky", "", 1),
                                              ("gradient", "Gradient", "Use sky color gradient", "", 2),
@@ -116,8 +114,8 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                             max=1.0)
 
     env_tex_mult = bpy.props.FloatProperty(name="env_tex_mult",
-                                            description="",
-                                            default=1)
+                                           description="",
+                                           default=1)
 
     env_tex_colorspace = bpy.props.EnumProperty(name="env_tex_colorspace",
                                                 description="Color space of input texture",
@@ -127,10 +125,8 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                     ('ciexyz', "CIE XYZ", "")],
                                                 default="linear_rgb")
 
-    env_tex = bpy.props.StringProperty(name="env_tex",
-                                       description="Texture to influence environment",
-                                       default="",
-                                       subtype='FILE_PATH')
+    env_tex = bpy.props.PointerProperty(name="env_tex",
+                                        type=bpy.types.Image)
 
     horizontal_shift = bpy.props.FloatProperty(name="horizontal_shift",
                                                description="Environment texture horizontal shift in degrees",

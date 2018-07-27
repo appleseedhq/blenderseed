@@ -77,19 +77,31 @@ class AppleseedWorldPanel(bpy.types.Panel):
             layout.prop(scene.world, "horizon_color", text="Lower Radiance")
 
         elif asr_sky_props.env_type == "mirrorball_map":
-            layout.prop(asr_sky_props, "env_tex", text="")
+            col = layout.column(align=True)
+            col.prop(asr_sky_props, "env_tex", text="")
+            col.prop(asr_sky_props, "env_tex_colorspace", text="")
+            col.operator("image.open", text="Import Image", icon="ZOOMIN")
             layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
             layout.prop(asr_sky_props, "env_exposure", text="Exposure")
             layout.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")
 
         elif asr_sky_props.env_type == "latlong_map":
-            layout.prop(asr_sky_props, "env_tex", text="Radiance")
-            layout.prop(asr_sky_props, "env_tex_colorspace", text="Color Space")
-            layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
-            layout.prop(asr_sky_props, "env_exposure", text="Exposure")
-            layout.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")
-            layout.prop(asr_sky_props, "horizontal_shift", text="Horizontal Shift")
-            layout.prop(asr_sky_props, "vertical_shift", text="Vertical Shift")
+            col = layout.column(align=True)
+            split = col.split(percentage=0.8, align=True)
+            split_col = split.column(align=True)
+            split_col.prop(asr_sky_props, "env_tex", text="")
+            split_col = split.column(align=True)
+            split_col.operator("image.open", text="", icon="ZOOMIN")
+            col.prop(asr_sky_props, "env_tex_colorspace", text="")
+            col.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
+
+            col = layout.column(align=True)
+            col.prop(asr_sky_props, "env_exposure", text="Exposure")
+            col.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")
+
+            col = layout.column(align=True)
+            col.prop(asr_sky_props, "horizontal_shift", text="Horizontal Shift")
+            col.prop(asr_sky_props, "vertical_shift", text="Vertical Shift")
 
         layout.prop(asr_sky_props, "env_alpha", text="Alpha")
 

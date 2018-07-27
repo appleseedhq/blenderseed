@@ -85,7 +85,7 @@ class WorldTranslator(Translator):
                                                      self._convert_color(self.bl_scene.world.zenith_color))
 
         if env_type in ('latlong_map', 'mirrorball_map'):
-            filename = self.asset_handler.process_path(as_sky.env_tex, AssetType.TEXTURE_ASSET)
+            filename = self.asset_handler.process_path(as_sky.env_tex.filepath, AssetType.TEXTURE_ASSET)
             tex_inst_params = {'addressing_mode': 'wrap',
                                'filtering_mode': 'bilinear'}
 
