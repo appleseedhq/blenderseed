@@ -154,13 +154,13 @@ class MaterialTranslator(Translator):
         self.__shader_group.add_shader("surface", surface_shader_file, surface_shader.name, {})
 
     def __parse_parameters(self, parameter_types, parameters, scene, shader, shader_keys):
-        for key in parameter_types.keys():
+        for key in parameter_types:
             if key in shader_keys:
                 parameter_value = parameter_types[key]
                 parameter = getattr(shader, key)
                 if key in shader.filepaths:
                     sub_texture = scene.appleseed.sub_textures
-                    parameter = self.asset_handler.process_path(parameter, AssetType.TEXTURE_ASSET, sub_texture)
+                    parameter = self.asset_handler.process_path(parameter.filepath, AssetType.TEXTURE_ASSET, sub_texture)
 
                 if parameter_value == "int checkbox":
                     parameter_value = "int"

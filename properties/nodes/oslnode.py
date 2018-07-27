@@ -173,6 +173,7 @@ def generate_node(node):
             stype.bl_label = socket_label
             stype.socket_osl_id = in_socket['name']
             socket_type = in_socket['type']
+
             if socket_type == 'float':
                 stype.draw_color = draw_color_float
 
@@ -298,9 +299,6 @@ def generate_node(node):
         else:
             pass
 
-    def draw_buttons_ext(self, context, layout):
-        pass
-
     def copy(self, node):
         pass
 
@@ -332,8 +330,37 @@ def generate_node(node):
     setattr(ntype, 'file_name', node['filename'])
 
     def draw_buttons(self, context, layout):
-        for prop in non_connected_props:
-            layout.prop(self, prop['name'], text=prop['label'])
+        for x in non_connected_props:
+            if x['name'] in self.filepaths:
+                layout.label(text="Texture")
+                split = layout.split(percentage=0.8, align=True)
+                split.prop_search(self, x['name'], bpy.data, "images", text="")
+                split = split.split(align=True)
+                split.operator("image.open", text="", icon="ZOOMIN")
+            else:
+                layout.prop(self, x['name'], text=x['label'])
+
+    def draw_buttons_ext(self, context, layout):
+        for x in non_connected_props:
+            if x['name'] in self.filepaths:
+                image_block = getattr(self, x['name'])
+                layout.label(text="Texture")
+                split = layout.split(percentage=0.8, align=True)
+                split.prop_search(self, x['name'], bpy.data, "images", text="")
+                split = split.split(align=True)
+                split.operator("image.open", text="", icon="ZOOMIN")
+                layout.label(text="Filepath")
+                split = layout.split(percentage=.15, align=True)
+                if image_block.packed_file is None:
+                    split.label(text="", icon="UGLYPACKAGE")
+                else:
+                    split.label(text="", icon='PACKAGE')
+                split = split.split(align=True)
+                split.enabled = image_block.packed_file is None
+                split.prop(image_block, "filepath", text="")
+                layout.separator()
+            else:
+                layout.prop(self, x['name'], text=x['label'])
 
     for prop in non_connected_props:
         keys = prop.keys()
@@ -364,10 +391,10 @@ def generate_node(node):
             soft_maximum = prop['softmax']
 
         if prop['type'] == 'string':
-            kwargs = {'name': prop['name'], 'description': helper}
             if widget == 'filename':
-                kwargs['subtype'] = 'FILE_PATH'
-                setattr(ntype, prop_name, bpy.props.StringProperty(**kwargs))
+                setattr(ntype, prop_name, bpy.props.PointerProperty(name=prop['name'],
+                                                                    description=helper,
+                                                                    type=bpy.types.Image))
                 filepaths.append(prop_name)
 
             elif widget in ('mapper', 'popup'):
@@ -380,7 +407,9 @@ def generate_node(node):
                                                                  items=items))
 
             else:
-                setattr(ntype, prop_name, bpy.props.StringProperty(**kwargs))
+                setattr(ntype, prop_name, bpy.props.StringProperty(name=prop['name'],
+                                                                   description=helper,
+                                                                   default=str(default)))
 
             parameter_types[prop['name']] = "string"
 
