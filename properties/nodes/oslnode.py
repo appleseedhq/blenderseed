@@ -332,11 +332,10 @@ def generate_node(node):
     def draw_buttons(self, context, layout):
         for x in non_connected_props:
             if x['name'] in self.filepaths:
-                layout.label(text="Texture")
-                split = layout.split(percentage=0.8, align=True)
-                split.prop_search(self, x['name'], bpy.data, "images", text="")
-                split = split.split(align=True)
-                split.operator("image.open", text="", icon="ZOOMIN")
+                col = layout.column(align=True)
+                col.label(text="Texture")
+                col.prop_search(self, x['name'], bpy.data, "images", text="")
+                col.operator("image.open", text="Open", icon="ZOOMIN")
             else:
                 layout.prop(self, x['name'], text=x['label'])
 
@@ -344,11 +343,10 @@ def generate_node(node):
         for x in non_connected_props:
             if x['name'] in self.filepaths:
                 image_block = getattr(self, x['name'])
-                layout.label(text="Texture")
-                split = layout.split(percentage=0.8, align=True)
-                split.prop_search(self, x['name'], bpy.data, "images", text="")
-                split = split.split(align=True)
-                split.operator("image.open", text="", icon="ZOOMIN")
+                col = layout.column(align=True)
+                col.label(text="Texture")
+                col.prop_search(self, x['name'], bpy.data, "images", text="")
+                col.operator("image.open", text="Open", icon="ZOOMIN")
                 layout.label(text="Filepath")
                 split = layout.split(percentage=.15, align=True)
                 if image_block.packed_file is None:

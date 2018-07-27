@@ -164,7 +164,7 @@ class AppleseedConvertTextures(bpy.types.Operator):
         tool_dir = util.get_appleseed_tool_dir()
 
         for tex in textures.textures:
-            filename = bpy.path.abspath(tex.name)
+            filename = bpy.path.abspath(tex.name.filepath)
             cmd = ['maketx', '--oiio --monochrome-detect -u --constant-color-detect --opaque-detect', '"{0}"'.format(filename)]
             if tex.input_space != 'linear':
                 cmd.insert(-1, '--colorconvert {0} linear --unpremult'.format(tex.input_space))
@@ -178,6 +178,9 @@ class AppleseedConvertTextures(bpy.types.Operator):
                 cmd.insert(-1, '-o "{0}"'.format(out_path))
             process = subprocess.Popen(" ".join(cmd), cwd=tool_dir, shell=True, bufsize=1)
             process.wait()
+
+            subbed_filename = "{0}.tx".format(os.path.splitext(filename)[0])
+            bpy.ops.image.open(filepath=subbed_filename)
 
         return {'FINISHED'}
 
@@ -201,28 +204,20 @@ class AppleseedRefreshTexture(bpy.types.Operator):
 
         for tree in bpy.data.node_groups:
             for node in tree.nodes:
-                for param in node.parameter_types:
-                    if node.parameter_types[param] == 'string':
-                        string = getattr(node, param)
-                        if string.endswith(util.image_extensions):
-                            if string not in scene_textures:
-                                scene_textures.append(string)
-                                if string not in existing_textures:
-                                    collection.add()
-                                    num = len(collection)
-                                    collection[num - 1].name = string
+                for param in node.filepaths:
+                    texture_block = getattr(node, param)
+                    if texture_block not in scene_textures:
+                        scene_textures.append(texture_block)
+                        if texture_block not in existing_textures:
+                            collection.add()
+                            num = len(collection)
+                            collection[num - 1].name = texture_block
 
         texture_index = len(collection) - 1
         while texture_index > -1:
             texture = collection[texture_index]
             if texture.name not in scene_textures:
                 collection.remove(texture_index)
-                if scene.appleseed.del_unused_tex:
-                    converted_texture = os.path.realpath(texture.name.split(".")[0] + '.tx')
-                    try:
-                        os.remove(converted_texture)
-                    except:
-                        self.report[{'ERROR'}, "[appleseed] {0} does not exist".format(converted_texture)]
             texture_index -= 1
 
         return {'FINISHED'}
@@ -242,8 +237,6 @@ class AppleseedAddTexture(bpy.types.Operator):
         collection = scene.appleseed.textures
 
         collection.add()
-        num = len(collection)
-        collection[num - 1].name = ""
 
         return {'FINISHED'}
 
@@ -375,7 +368,7 @@ def unregister():
     util.safe_unregister_class(AppleseedRemoveSssSet)
     util.safe_unregister_class(AppleseedAddSssSet)
     util.safe_unregister_class(AppleseedRemovePostProcess)
-    util.safe_uregister_class(AppleseedAddPostProcess)
+    util.safe_unregister_class(AppleseedAddPostProcess)
     util.safe_unregister_class(AppleseedNewLampOSLNodeTree)
     util.safe_unregister_class(AppleseedNewOSLNodeTree)
     util.safe_unregister_class(AppleseedRemoveTexture)

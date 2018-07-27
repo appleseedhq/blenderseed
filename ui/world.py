@@ -135,7 +135,7 @@ class AppleseedWorldSssSets(bpy.types.Panel):
 class AppleseedTextureConvertSlots(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        texture = item.name
+        texture = item.name.name
         if 'DEFAULT' in self.layout_type:
             layout.label(text=texture, translate=False, icon_value=icon)
 
@@ -172,7 +172,6 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
         row.operator("appleseed.refresh_textures", text="Refresh", icon='FILE_REFRESH')
         row.operator("appleseed.convert_textures", text="Convert", icon='PLAY')
 
-        layout.prop(asr_scene_props, "del_unused_tex", text="Delete Unused .tx Files", toggle=True)
         layout.prop(asr_scene_props, "sub_textures", text="Use Converted Textures", toggle=True)
         col = layout.column(align=True)
         col.prop(asr_scene_props, "tex_output_use_cust_dir", text="Use Custom Output Directory", toggle=True)
@@ -182,7 +181,7 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
 
         if textures:
             current_set = textures[asr_scene_props.textures_index]
-            layout.prop(current_set, "name", text="Texture")
+            layout.prop_search(current_set, "name", bpy.data, "images", text="Texture")
             layout.prop(current_set, "input_space", text="Color Space")
             layout.prop(current_set, "output_depth", text="Depth")
             layout.prop(current_set, "command_string", text="Command")
