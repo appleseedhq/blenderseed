@@ -723,8 +723,8 @@ class SceneTranslator(GroupTranslator):
 
         if self.bl_scene.render.use_border:
             min_x = int(self.bl_scene.render.border_min_x * width)
-            max_x = int(self.bl_scene.render.border_max_x * width)
-            min_y = height - int(self.bl_scene.render.border_max_y * height) - 1
+            max_x = int(self.bl_scene.render.border_max_x * width) - 1
+            min_y = height - int(self.bl_scene.render.border_max_y * height)
             max_y = height - int(self.bl_scene.render.border_min_y * height) - 1
             frame.set_crop_window([min_x, min_y, max_x, max_y])
 

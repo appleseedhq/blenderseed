@@ -89,11 +89,51 @@ class FinalTileCallback(asr.ITileCallback):
         pass
 
     def on_tile_end(self, frame, tile_x, tile_y):
+        """
+        Processes the tile data as it finished
+
+        :param tile_x: number of the tile on the x axis
+        :param tile_y: number of the tile on the y axis
+        """
         # logger.debug("Finished tile %s %s", tile_x, tile_y)
 
         image = frame.image()
 
-        x0, y0, take_x, take_y, skip_x, skip_y = self.__get_tile_coordinates(image, tile_x, tile_y)
+        properties = image.properties()
+
+        # These are the starting pixel locations for the tile
+        x = tile_x * properties.m_tile_width
+        y = tile_y * properties.m_tile_height
+
+        tile = image.tile(tile_x, tile_y)
+
+        # Same as tile size from render settings
+        tile_w = tile.get_width()
+        tile_h = tile.get_height()
+
+        # Ignore tiles completely outside the render window.
+        if x > self.__max_x or x + tile_w - 1 < self.__min_x:
+            logger.debug("Skipping invisible tile")
+            return True
+        if y > self.__max_y or y + tile_h - 1 < self.__min_y:
+            logger.debug("Skipping invisible tile")
+            return True
+
+        # Image-space coordinates of the intersection between the tile and the render window.
+        ix0 = max(x, self.__min_x)
+        iy0 = max(y, self.__min_y)
+        ix1 = min(x + tile_w - 1, self.__max_x)
+        iy1 = min(y + tile_h - 1, self.__max_y)
+
+        # Number of rows and columns to skip in the input tile.
+        skip_x = ix0 - x
+        skip_y = iy0 - y
+        take_x = ix1 - ix0 + 1
+        take_y = iy1 - iy0 + 1
+
+        # Window-space coordinates of the intersection between the tile and the render window.
+        x0 = ix0 - self.__min_x  # left
+        y0 = self.__max_y - iy1  # bottom
 
         # Update image.
         result = self.__engine.begin_result(x0, y0, take_x, take_y)
@@ -120,43 +160,6 @@ class FinalTileCallback(asr.ITileCallback):
         self.__rendered_tiles += 1
         self.__engine.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.__pass_number, self.__total_passes, self.__rendered_tiles, self.__total_tiles),
                           "Time Remaining: {0}".format(self.__format_seconds_to_hhmmss(remaining_seconds)))
-
-    def __get_tile_coordinates(self, image, tile_x, tile_y):
-        properties = image.properties()
-
-        x = tile_x * properties.m_tile_width
-        y = tile_y * properties.m_tile_height
-
-        tile = image.tile(tile_x, tile_y)
-
-        tile_w = tile.get_width()
-        tile_h = tile.get_height()
-
-        # Ignore tiles completely outside the render window.
-        if tile_x > self.__max_x or tile_x + tile_w - 1 < self.__min_x:
-            logger.debug("Skipping invisible tile")
-            return
-        if tile_y > self.__max_y or tile_y + tile_h - 1 < self.__min_y:
-            logger.debug("Skipping invisible tile")
-            return
-
-        # Image-space coordinates of the intersection between the tile and the render window.
-        ix0 = max(x, self.__min_x)
-        iy0 = max(y, self.__min_y)
-        ix1 = min(x + tile_w - 1, self.__max_x)
-        iy1 = min(y + tile_h - 1, self.__max_y)
-
-        # Number of rows and columns to skip in the input tile.
-        skip_x = ix0 - x
-        skip_y = iy0 - y
-        take_x = ix1 - ix0 + 1
-        take_y = iy1 - iy0 + 1
-
-        # Window-space coordinates of the intersection between the tile and the render window.
-        x0 = ix0 - self.__min_x  # left
-        y0 = self.__max_y - iy1  # bottom
-
-        return x0, y0, take_x, take_y, skip_x, skip_y
 
     def __get_pixels(self, image, tile_x, tile_y, take_x, take_y, skip_x, skip_y):
         tile = image.tile(tile_x, tile_y)
