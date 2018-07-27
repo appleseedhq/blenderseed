@@ -722,8 +722,6 @@ class SceneTranslator(GroupTranslator):
         # Load any search paths from asset handler
         paths.extend(x for x in self.asset_handler.searchpaths if x not in paths)
 
-        print(paths)
-
         self.__project.set_search_paths(paths)
 
     @staticmethod
