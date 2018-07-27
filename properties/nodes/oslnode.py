@@ -332,10 +332,11 @@ def generate_node(node):
     def draw_buttons(self, context, layout):
         for x in non_connected_props:
             if x['name'] in self.filepaths:
-                col = layout.column(align=True)
-                col.label(text="Texture")
-                col.prop_search(self, x['name'], bpy.data, "images", text="")
-                col.operator("image.open", text="Open", icon="ZOOMIN")
+                split = layout.split(percentage=0.8, align=True)
+                split_col = split.column(align=True)
+                split_col.prop(self, x['name'], text="")
+                split_col = split.column(align=True)
+                split_col.operator("image.open", text="", icon="ZOOMIN")
             else:
                 layout.prop(self, x['name'], text=x['label'])
 
@@ -344,18 +345,16 @@ def generate_node(node):
             if x['name'] in self.filepaths:
                 image_block = getattr(self, x['name'])
                 col = layout.column(align=True)
-                col.label(text="Texture")
-                col.prop_search(self, x['name'], bpy.data, "images", text="")
-                col.operator("image.open", text="Open", icon="ZOOMIN")
-                layout.label(text="Filepath")
-                split = layout.split(percentage=.15, align=True)
-                if image_block.packed_file is None:
-                    split.label(text="", icon="UGLYPACKAGE")
-                else:
-                    split.label(text="", icon='PACKAGE')
-                split = split.split(align=True)
-                split.enabled = image_block.packed_file is None
-                split.prop(image_block, "filepath", text="")
+                split = col.split(percentage=0.8, align=True)
+                split_col = split.column(align=True)
+                split_col.prop(self, x['name'], text="")
+                split_col = split.column(align=True)
+                split_col.operator("image.open", text="", icon="ZOOMIN")
+                layout.label(text="Image Path")
+                col = layout.column(align=True)
+                col.enabled = image_block.packed_file is None
+                col.prop(image_block, "filepath", text="")
+
                 layout.separator()
             else:
                 layout.prop(self, x['name'], text=x['label'])
