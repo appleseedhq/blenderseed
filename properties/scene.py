@@ -271,8 +271,8 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     samples = bpy.props.IntProperty(name="samples",
                                     description="Maximum number of anti-aliasing samples",
                                     min=1,
-                                    max=1000000,
-                                    default=64,
+                                    max=8192,
+                                    default=16,
                                     subtype='UNSIGNED')
 
     interactive_max_fps = bpy.props.FloatProperty(name="interactive_max_fps",
