@@ -187,8 +187,11 @@ class WorldTranslator(Translator):
 
         self.reset(scene)
 
-        self.create_entities(scene)
-        self.flush_entities(as_scene)
+        if self.bl_scene.appleseed_sky.env_type == 'none':
+            as_scene.set_environment(asr.Environment('environment', {}))
+        else:
+            self.create_entities(scene)
+            self.flush_entities(as_scene)
 
     def _convert_matrix(self, m):
         rot = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(90.0))
