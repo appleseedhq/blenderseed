@@ -86,16 +86,19 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         box.prop(asr_obj, "object_ray_bias_distance", text="Distance")
 
         layout.separator()
-        box = layout.box()
-        box.label(text="Object Alpha:")
-        row = box.row()
-        row.active = asr_obj.object_alpha_texture == ""
+        row = layout.row()
+        row.active = asr_obj.object_alpha_texture is None
         row.prop(asr_obj, "object_alpha", text="")
 
-        box.prop(asr_obj, "object_alpha_texture", text="")
-        box.prop(asr_obj, "object_alpha_texture_colorspace", text="Color Space")
-        box.prop(asr_obj, "object_alpha_texture_wrap_mode", text="Wrap Mode")
-        box.prop(asr_obj, "object_alpha_mode", text="Alpha Mode")
+        col = layout.column()
+        split = col.split(percentage=0.8, align=True)
+        split_col = split.column(align=True)
+        split_col.prop(asr_obj, "object_alpha_texture", text="")
+        split_col = split.column(align=True)
+        split_col.operator("image.open", text="", icon="ZOOMIN")
+        col.prop(asr_obj, "object_alpha_texture_colorspace", text="Color Space")
+        col.prop(asr_obj, "object_alpha_texture_wrap_mode", text="Wrap Mode")
+        col.prop(asr_obj, "object_alpha_mode", text="Alpha Mode")
 
         layout.separator()
 

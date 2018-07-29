@@ -93,10 +93,8 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                       description="Use a texture to influence object alpha",
                                                       default=False)
 
-    object_alpha_texture = bpy.props.StringProperty(name="object_alpha_texture",
-                                                    description="Texture to use for alpha channel",
-                                                    default="",
-                                                    subtype='FILE_PATH')
+    object_alpha_texture = bpy.props.PointerProperty(name="object_alpha_texture",
+                                                     type=bpy.types.Image)
 
     object_alpha_texture_colorspace = bpy.props.EnumProperty(name="object_alpha_texture_colorspace",
                                                              description="Color space",

@@ -31,6 +31,7 @@ import bmesh
 import bpy
 
 import appleseed as asr
+from .handlers import AssetType
 from .object import ObjectTranslator
 from .translator import ObjectKey, ProjectExportMode
 from ..logger import get_logger
@@ -110,12 +111,13 @@ class MeshTranslator(ObjectTranslator):
         asr_obj_props = self.bl_obj.appleseed
 
         self.__obj_params = {'alpha_map': asr_obj_props.object_alpha}
-        if self.bl_obj.appleseed.object_alpha_texture != "":
+        if self.bl_obj.appleseed.object_alpha_texture is not None:
+            filename = self.asset_handler.process_path(asr_obj_props.object_alpha_texture.filepath, AssetType.TEXTURE_ASSET)
             tex_inst_params = {'addressing_mode': asr_obj_props.object_alpha_texture_wrap_mode,
                                'filtering_mode': 'bilinear',
                                'alpha_mode': asr_obj_props.object_alpha_mode}
             self.__alpha_tex = asr.Texture('disk_texture_2d', mesh_name + "_tex",
-                                           {'filename': asr_obj_props.object_alpha_texture,
+                                           {'filename': filename,
                                             'color_space': asr_obj_props.object_alpha_texture_colorspace}, [])
             self.__alpha_tex_inst = asr.TextureInstance(mesh_name + "_tex_inst", tex_inst_params, mesh_name + "_tex",
                                                         asr.Transformf(asr.Matrix4f.identity()))
