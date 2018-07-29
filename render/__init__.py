@@ -242,6 +242,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Cleanup.
         asr.global_logger().remove_target(log_target)
 
+        if scene.appleseed.denoise_mode == 'write_outputs':
+            project.get_frame().write_main_image(os.path.join(scene.appleseed.denoise_output_dir, "output.exr"))
+
         self.__stop_rendering()
 
     def __start_interactive_render(self, context):
