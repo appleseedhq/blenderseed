@@ -48,26 +48,26 @@ class ObjectKey(object):
     '''
 
     def __init__(self, obj):
-        self.name = obj.name
-        self.library_name = None
+        self.__name = obj.name
+        self.__library_name = None
 
         if obj.library:
-            self.library_name = obj.library.name
+            self.__library_name = obj.library.name
 
     def __hash__(self):
-        return hash((self.name, self.library_name))
+        return hash((self.__name, self.__library_name))
 
     def __eq__(self, other):
-        return (self.name, self.library_name) == (other.name, other.library_name)
+        return (self.__name, self.__library_name) == (other.__name, other.__library_name)
 
     def __ne__(self, other):
         return not(self == other)
 
     def __str__(self):
-        if self.library_name:
-            return self.library_name + "|" + self.name
-        
-        return self.name
+        if self.__library_name:
+            return self.__library_name + "|" + self.__name
+
+        return self.__name
 
 
 class Translator(object):
@@ -84,7 +84,6 @@ class Translator(object):
 
         self._bl_obj = obj
         self._obj_key = ObjectKey(obj)
-        self._name = str(self._obj_key)
         self._asset_handler = asset_handler
 
     def reset(self, obj):
@@ -95,7 +94,6 @@ class Translator(object):
 
         self._bl_obj = obj
         self._obj_key = ObjectKey(obj)
-        self._name = str(self._obj_key)
 
     #
     # Properties.
@@ -105,7 +103,7 @@ class Translator(object):
     def appleseed_name(self):
         """todo: document me..."""
 
-        return self._name
+        return str(self._obj_key)
 
     @property
     def asset_handler(self):
@@ -154,6 +152,6 @@ class Translator(object):
 
     @staticmethod
     def _convert_color(color):
-        """todo: document me..."""
+        """Convert a Blender color to a Python list."""
 
         return [color[0], color[1], color[2]]

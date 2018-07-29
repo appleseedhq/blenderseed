@@ -28,7 +28,7 @@
 import appleseed as asr
 from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
-from .mesh import MeshTranslator
+from .mesh import MeshTranslator, MeshKey
 from .object import ProjectExportMode, InstanceTranslator, DupliTranslator, ArchiveTranslator
 from .translator import Translator, ObjectKey
 from ..logger import get_logger
@@ -161,8 +161,7 @@ class GroupTranslator(Translator):
                     self._lamp_material_translators[lamp_key] = translator
 
             elif obj.type in GroupTranslator.MESH_OBJECTS:
-                mesh = obj.data
-                mesh_key = ObjectKey(mesh)
+                mesh_key = MeshKey(obj)
 
                 if obj.is_duplicator:
                     logger.debug("Creating dupli translator for object %s", obj_key)

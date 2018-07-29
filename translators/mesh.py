@@ -39,6 +39,35 @@ from ..util import is_object_deforming
 logger = get_logger()
 
 
+class MeshKey(object):
+    '''
+    Class used to uniquely identify blender meshes.
+    '''
+
+    def __init__(self, obj):
+        mesh = obj.data
+        self.__name = mesh.name
+        self.__library_name = None
+
+        if mesh.library:
+            self.__library_name = mesh.library.name
+
+    def __hash__(self):
+        return hash((self.__name, self.__library_name))
+
+    def __eq__(self, other):
+        return (self.__name, self.__library_name) == (other.__name, other.__library_name)
+
+    def __ne__(self, other):
+        return not(self == other)
+
+    def __str__(self):
+        if self.__library_name:
+            return self.__library_name + "|" + self.__name
+
+        return self.__name
+
+
 class MeshTranslator(ObjectTranslator):
 
     #

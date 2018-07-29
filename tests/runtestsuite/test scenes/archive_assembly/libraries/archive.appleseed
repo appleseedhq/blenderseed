@@ -23,13 +23,13 @@
         <environment name="environment" model="generic_environment" />
         <assembly name="assembly">
             <shader_group name="Material_tree">
-                <shader type="shader" name="_shaders\as_texture" layer="asTexture">
+                <shader type="shader" name="as_texture" layer="asTexture">
                     <parameter name="in_alpha" value="float 1" />
                     <parameter name="in_atlas_type" value="int 0" />
                     <parameter name="in_color" value="color 0 0 0" />
                     <parameter name="in_enable_cms" value="int 0" />
                     <parameter name="in_eotf" value="int 1" />
-                    <parameter name="in_filename" value="string _textures\blkmarbl.tx" />
+                    <parameter name="in_filename" value="string _textures/blkmarbl.tx" />
                     <parameter name="in_interpolation_method" value="int 0" />
                     <parameter name="in_rgb_primaries" value="string sRGB/Rec.709" />
                     <parameter name="in_s_blur_amount" value="float 0" />
@@ -42,7 +42,7 @@
                     <parameter name="in_texture_coords_filter" value="float[] 0 0 " />
                     <parameter name="in_workingspace_rgb_primaries" value="string sRGB/Rec.709" />
                 </shader>
-                <shader type="shader" name="_shaders\as_disney_material" layer="asDisneyMaterial">
+                <shader type="shader" name="as_disney_material" layer="asDisneyMaterial">
                     <parameter name="in_anisotropy_amount" value="float 0" />
                     <parameter name="in_anisotropy_angle" value="float 0" />
                     <parameter name="in_anisotropy_vector_map" value="color 0 0 0" />
@@ -60,7 +60,7 @@
                     <parameter name="in_specular_tint" value="float 0" />
                     <parameter name="in_subsurface_amount" value="float 0" />
                 </shader>
-                <shader type="surface" name="_shaders\as_closure2surface" layer="asClosure2Surface">
+                <shader type="surface" name="as_closure2surface" layer="asClosure2Surface">
                 </shader>
                 <connect_shaders src_layer="asTexture" src_param="out_color" dst_layer="asDisneyMaterial" dst_param="in_color" />
                 <connect_shaders src_layer="asDisneyMaterial" src_param="out_outColor" dst_layer="asClosure2Surface" dst_param="in_input" />
