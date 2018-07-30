@@ -27,6 +27,10 @@
 
 import bpy
 
+from time import time
+
+from bpy.app.handlers import persistent
+
 from .. import util
 
 
@@ -35,6 +39,7 @@ class AppleseedMaterialSlots(bpy.types.Panel):
     bl_label = "Material"
     bl_region_type = 'WINDOW'
     bl_context = "material"
+
     # COMPAT_ENGINES must be defined in each subclass, external engines can add themselves here
 
     @classmethod
@@ -140,15 +145,31 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
         if material.appleseed.osl_node_tree is None:
             layout.operator('appleseed.add_osl_nodetree', text="Add appleseed Material Node", icon='NODETREE')
-        else:
-            layout.operator('appleseed.view_nodetree', text="View Nodetree")
 
         layout.prop(asr_mat, "shader_lighting_samples", text="Lighting Samples")
+
+
+INTERVAL = 1
+last_update = time()
+
+
+@persistent
+def update_tree(scene):
+    global last_update
+
+    if time() - last_update < INTERVAL:
+        return
+    last_update = time()
+
+    bpy.ops.appleseed.view_nodetree()
+
+    return
 
 
 def register():
     util.safe_register_class(AppleseedMaterialSlots)
     bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    bpy.app.handlers.scene_update_post.append(update_tree)
     util.safe_register_class(AppleseedMaterialPreview)
     util.safe_register_class(AppleseedMaterialShading)
 

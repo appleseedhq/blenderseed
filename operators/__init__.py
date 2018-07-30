@@ -45,8 +45,16 @@ class AppleseedNewMat(bpy.types.Operator):
         return obj
 
     def execute(self, context):
+        if context.object.active_material is not None and context.object.active_material.appleseed.osl_node_tree is not None:
+            dupli_node_tree = context.object.active_material.appleseed.osl_node_tree.copy()
+
         bpy.ops.material.new()
-        bpy.ops.appleseed.add_osl_nodetree()
+
+        if dupli_node_tree:
+            context.object.active_material.appleseed.osl_node_tree = dupli_node_tree
+        else:
+            bpy.ops.appleseed.add_osl_nodetree()
+
         return {'FINISHED'}
 
 
@@ -62,7 +70,6 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
     def execute(self, context):
         material = context.object.active_material
         nodetree = bpy.data.node_groups.new('%s_tree' % material.name, 'AppleseedOSLNodeTree')
-        nodetree.use_fake_user = True
         surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
         surface.location = (0, 0)
         disney_node = nodetree.nodes.new('AppleseedasDisneyMaterialNode')
@@ -94,7 +101,6 @@ class AppleseedViewNode(bpy.types.Operator):
                         space.node_tree = node_tree
                         return {"FINISHED"}
 
-        self.report({"ERROR"}, "Open a node editor first")
         return {"CANCELLED"}
 
 
