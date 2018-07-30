@@ -65,7 +65,7 @@ class FinalTileCallback(asr.ITileCallback):
         self.__total_tiles = vertical_tiles * horizontal_tiles
 
         # Compute total pixel count.
-        self.__total_passes = scene.appleseed.renderer_passes if scene.appleseed.pixel_sampler == 'uniform' else 1
+        self.__total_passes = scene.appleseed.renderer_passes
         self.__total_pixels = (self.__max_x - self.__min_x + 1) * (self.__max_y - self.__min_y + 1) * self.__total_passes
 
         self.__time_start = time.time()

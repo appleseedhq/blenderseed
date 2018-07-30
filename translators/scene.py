@@ -560,7 +560,6 @@ class SceneTranslator(GroupTranslator):
         else:
             render_threads = asr_scene_props.threads if not asr_scene_props.threads_auto else 'auto'
 
-        passes = asr_scene_props.renderer_passes if asr_scene_props.pixel_sampler != 'adaptive' else 1
         tile_renderer = 'adaptive' if asr_scene_props.pixel_sampler == 'adaptive' else 'generic'
         pixel_renderer = '' if asr_scene_props.pixel_sampler == 'adaptive' else 'uniform'
 
@@ -574,14 +573,14 @@ class SceneTranslator(GroupTranslator):
                       'pixel_renderer': pixel_renderer,
                       'lighting_engine': lighting_engine,
                       'tile_renderer': tile_renderer,
-                      'passes': passes,
+                      'passes': asr_scene_props.renderer_passes,
                       'rendering_threads': render_threads,
                       'generic_frame_renderer': {'tile_ordering': asr_scene_props.tile_ordering},
                       'progressive_frame_renderer': {'max_samples': number_of_pixels,
                                                      'max_fps': asr_scene_props.interactive_max_fps},
                       'texture_store': {'max_size': asr_scene_props.tex_cache * 1024 * 1024},
                       'light_sampler': {'algorithm': asr_scene_props.light_sampler},
-                      'shading_result_framebuffer': "permanent" if passes > 1 else "ephemeral"}
+                      'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}
 
         if lighting_engine == 'pt':
             parameters['pt'] = {'enable_ibl': True if asr_scene_props.enable_ibl else False,
