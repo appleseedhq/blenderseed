@@ -232,10 +232,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 max=16.0,
                                                 default=1.5)
 
-    enable_render_stamp = bpy.props.BoolProperty(name="enable_render_stamp",
-                                                 description="Enable a stamp on the output image",
-                                                 default=False)
-
     pixel_sampler = bpy.props.EnumProperty(name="Pixel Sampler",
                                            description="Sampler",
                                            items=[("uniform", "Uniform", "Uniform"),
@@ -243,11 +239,11 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                            default="uniform")
 
     adaptive_batch_size = bpy.props.IntProperty(name="adaptive_batch_size",
-                                                 description="The number of samples taken in between noise level evaluations",
-                                                 min=1,
-                                                 max=1000000,
-                                                 default=8,
-                                                 subtype='UNSIGNED')
+                                                description="The number of samples taken in between noise level evaluations",
+                                                min=1,
+                                                max=1000000,
+                                                default=8,
+                                                subtype='UNSIGNED')
 
     adaptive_max_samples = bpy.props.IntProperty(name="adaptive_max_samples",
                                                  description="Maximum number of samples a pixel may take",
@@ -256,11 +252,11 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                  default=256,
                                                  subtype='UNSIGNED')
 
-    adaptiveness = bpy.props.FloatProperty(name="adaptiveness",
-                                           description="Determines how many uniform samples will be taken before adaptive sampling takes over",
-                                           default=0.9,
-                                           min=0.0,
-                                           max=1.0)
+    adaptive_uniform_samples = bpy.props.IntProperty(name="adaptive_uniform_samples",
+                                                     description="Determines how many uniform samples will be taken before adaptive sampling takes over",
+                                                     default=16,
+                                                     min=1,
+                                                     max=500)
 
     noise_threshold = bpy.props.FloatProperty(name="noise_threshold",
                                               description="The level of noise at which the sampling will end for a pixel.",
@@ -280,17 +276,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     interactive_max_samples = bpy.props.IntProperty(name="interactive_max_samples",
                                                     default=-1)
-
-    adaptive_sampler_enable_diagnostics = bpy.props.BoolProperty(name="adaptive_sampler_enable_diagnostics",
-                                                                 description='',
-                                                                 default=False)
-
-    adaptive_sampler_quality = bpy.props.FloatProperty(name="adaptive_sampler_quality",
-                                                       description='',
-                                                       default=3.0,
-                                                       min=0.0,
-                                                       max=20.0,
-                                                       precision=3)
 
     force_aa = bpy.props.BoolProperty(name="force_aa",
                                       description="When using 1 sample/pixel and Force Anti-Aliasing is disabled, samples are placed at the center of pixels",
@@ -547,10 +532,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                  default=False)
 
     # Motion blur settings.
-
-    enable_motion_blur = bpy.props.BoolProperty(name="enable_motion_blur",
-                                                description="Enable rendering of motion blur",
-                                                default=False)
 
     enable_deformation_blur = bpy.props.BoolProperty(name="enable_deformation_blur",
                                                      description="Global toggle for rendering of deformation motion blur",

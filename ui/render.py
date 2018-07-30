@@ -139,7 +139,7 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             row.prop(asr_scene_props, "adaptive_max_samples", text="Max Samples")
             row = col.row(align=True)
             row.prop(asr_scene_props, "noise_threshold", text="Noise Threshold")
-            row.prop(asr_scene_props, "adaptiveness", text="Adaptiveness")
+            row.prop(asr_scene_props, "adaptive_uniform_samples", text="Uniform Samples")
         else:
             row = layout.row(align=True)
             row.prop(asr_scene_props, "samples", text="Samples")
