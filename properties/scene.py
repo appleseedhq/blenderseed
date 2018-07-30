@@ -611,10 +611,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     # AOV export
 
     albedo_aov = bpy.props.BoolProperty(name="albedo_aov",
-                                         default=False)
+                                        default=False)
 
     emission_aov = bpy.props.BoolProperty(name="emission_aov",
-                                         default=False)
+                                          default=False)
 
     diffuse_aov = bpy.props.BoolProperty(name="diffuse_aov",
                                          default=False)
@@ -636,6 +636,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     normal_aov = bpy.props.BoolProperty(name="normal_aov",
                                         default=False)
+
+    position_aov = bpy.props.BoolProperty(name="position_aov",
+                                          default=False)
 
     depth_aov = bpy.props.BoolProperty(name="depth_aov",
                                        default=False)

@@ -673,6 +673,8 @@ class SceneTranslator(GroupTranslator):
                 aovs.insert(asr.AOV('indirect_glossy_aov', {}))
             if asr_scene_props.normal_aov:
                 aovs.insert(asr.AOV('normal_aov', {}))
+            if asr_scene_props.position_aov:
+                aovs.insert(asr.AOV('position_aov', {}))
             if asr_scene_props.uv_aov:
                 aovs.insert(asr.AOV('uv_aov', {}))
             if asr_scene_props.depth_aov:

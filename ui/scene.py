@@ -76,6 +76,8 @@ class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         col = layout.column(align=True)
         row = col.row(align=True)
         row.prop(asr_scene_props, "normal_aov", text="Normals", toggle=True)
+        row.prop(asr_scene_props, "position_aov", text="Position", toggle=True)
+        row = col.row(align=True)
         row.prop(asr_scene_props, "uv_aov", text="UV Coordinates", toggle=True)
         row.prop(asr_scene_props, "depth_aov", text="Depth", toggle=True)
         row = col.row(align=True)

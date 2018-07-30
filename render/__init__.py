@@ -164,6 +164,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 self.register_pass(scene, renderlayer, "NPR Contour", 4, "RGBA", 'COLOR')
             if asr_scene_props.normal_aov:
                 self.register_pass(scene, renderlayer, "Normal", 3, "RGB", 'VECTOR')
+            if asr_scene_props.position_aov:
+                self.register_pass(scene, renderlayer, "Position", 3, "RGB", 'VECTOR')
             if asr_scene_props.uv_aov:
                 self.register_pass(scene, renderlayer, "UV", 3, "RGB", 'VECTOR')
             if asr_scene_props.depth_aov:
@@ -336,6 +338,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.add_pass("Indirect Glossy", 4, "RGBA")
         if asr_scene_props.normal_aov:
             self.add_pass("Normal", 3, "RGB")
+        if asr_scene_props.position_aov:
+            self.add_pass("Position", 3, "RGB")
         if asr_scene_props.uv_aov:
             self.add_pass("UV", 3, "RGB")
         if asr_scene_props.depth_aov:

@@ -91,9 +91,6 @@ class FinalTileCallback(asr.ITileCallback):
     def on_tile_end(self, frame, tile_x, tile_y):
         """
         Processes the tile data as it finished
-
-        :param tile_x: number of the tile on the x axis
-        :param tile_y: number of the tile on the y axis
         """
         # logger.debug("Finished tile %s %s", tile_x, tile_y)
 
@@ -195,6 +192,7 @@ class FinalTileCallback(asr.ITileCallback):
                        'direct_glossy': "Direct Glossy",
                        'indirect_glossy': "Indirect Glossy",
                        'normal': "Normal",
+                       'position': "Position",
                        'uv': "UV",
                        'pixel_time': "Pixel Time",
                        'depth': "Z Depth",
