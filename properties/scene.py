@@ -242,7 +242,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                   ("adaptive", "Adaptive", "Adaptive")],
                                            default="uniform")
 
-    adaptive_min_samples = bpy.props.IntProperty(name="adaptive_min_samples",
+    adaptive_batch_size = bpy.props.IntProperty(name="adaptive_batch_size",
                                                  description="The number of samples taken in between noise level evaluations",
                                                  min=1,
                                                  max=1000000,

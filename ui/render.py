@@ -135,7 +135,7 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         if asr_scene_props.pixel_sampler == 'adaptive':
             col = layout.column(align=True)
             row = col.row(align=True)
-            row.prop(asr_scene_props, "adaptive_min_samples", text="Block Size")
+            row.prop(asr_scene_props, "adaptive_batch_size", text="Batch Size")
             row.prop(asr_scene_props, "adaptive_max_samples", text="Max Samples")
             row = col.row(align=True)
             row.prop(asr_scene_props, "noise_threshold", text="Noise Threshold")

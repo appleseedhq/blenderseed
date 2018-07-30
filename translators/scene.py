@@ -568,7 +568,7 @@ class SceneTranslator(GroupTranslator):
                                                  'samples': asr_scene_props.samples},
                       'adaptive_tile_renderer': {'adaptiveness': asr_scene_props.adaptiveness,
                                                  'noise_threshold': asr_scene_props.noise_threshold,
-                                                 'min_samples': asr_scene_props.adaptive_min_samples,
+                                                 'batch_size': asr_scene_props.adaptive_batch_size,
                                                  'max_samples': asr_scene_props.adaptive_max_samples},
                       'pixel_renderer': pixel_renderer,
                       'lighting_engine': lighting_engine,
