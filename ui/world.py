@@ -87,11 +87,7 @@ class AppleseedWorldPanel(bpy.types.Panel):
 
         elif asr_sky_props.env_type == "latlong_map":
             col = layout.column(align=True)
-            split = col.split(percentage=0.8, align=True)
-            split_col = split.column(align=True)
-            split_col.prop(asr_sky_props, "env_tex", text="")
-            split_col = split.column(align=True)
-            split_col.operator("image.open", text="", icon="ZOOMIN")
+            col.template_ID(asr_sky_props, "env_tex", open="image.open")
             col.prop(asr_sky_props, "env_tex_colorspace", text="")
             col.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
 

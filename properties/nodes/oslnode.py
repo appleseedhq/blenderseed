@@ -332,11 +332,7 @@ def generate_node(node):
     def draw_buttons(self, context, layout):
         for x in non_connected_props:
             if x['name'] in self.filepaths:
-                split = layout.split(percentage=0.8, align=True)
-                split_col = split.column(align=True)
-                split_col.prop(self, x['name'], text="")
-                split_col = split.column(align=True)
-                split_col.operator("image.open", text="", icon="ZOOMIN")
+                layout.template_ID_preview(self, "in_filename", open="image.open")
             else:
                 layout.prop(self, x['name'], text=x['label'])
 
@@ -344,17 +340,11 @@ def generate_node(node):
         for x in non_connected_props:
             if x['name'] in self.filepaths:
                 image_block = getattr(self, x['name'])
-                col = layout.column(align=True)
-                split = col.split(percentage=0.8, align=True)
-                split_col = split.column(align=True)
-                split_col.prop(self, x['name'], text="")
-                split_col = split.column(align=True)
-                split_col.operator("image.open", text="", icon="ZOOMIN")
+                layout.template_ID_preview(self, "in_filename", open="image.open")
                 layout.label(text="Image Path")
-                col = layout.column(align=True)
+                col = layout.column()
                 col.enabled = image_block.packed_file is None
                 col.prop(image_block, "filepath", text="")
-
                 layout.separator()
             else:
                 layout.prop(self, x['name'], text=x['label'])

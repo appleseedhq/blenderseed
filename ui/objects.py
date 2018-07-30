@@ -91,11 +91,7 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         row.prop(asr_obj, "object_alpha", text="")
 
         col = layout.column()
-        split = col.split(percentage=0.8, align=True)
-        split_col = split.column(align=True)
-        split_col.prop(asr_obj, "object_alpha_texture", text="")
-        split_col = split.column(align=True)
-        split_col.operator("image.open", text="", icon="ZOOMIN")
+        col.template_ID(asr_obj, "object_alpha_texture", open="image.open")
         col.prop(asr_obj, "object_alpha_texture_colorspace", text="Color Space")
         col.prop(asr_obj, "object_alpha_texture_wrap_mode", text="Wrap Mode")
         col.prop(asr_obj, "object_alpha_mode", text="Alpha Mode")
