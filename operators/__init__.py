@@ -45,12 +45,13 @@ class AppleseedNewMat(bpy.types.Operator):
         return obj
 
     def execute(self, context):
+        dupli_node_tree = None
         if context.object.active_material is not None and context.object.active_material.appleseed.osl_node_tree is not None:
             dupli_node_tree = context.object.active_material.appleseed.osl_node_tree.copy()
 
         bpy.ops.material.new()
 
-        if dupli_node_tree:
+        if dupli_node_tree is not None:
             context.object.active_material.appleseed.osl_node_tree = dupli_node_tree
         else:
             bpy.ops.appleseed.add_osl_nodetree()
@@ -79,27 +80,37 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedViewNode(bpy.types.Operator):
+class AppleseedViewNodeTree(bpy.types.Operator):
     bl_label = "View OSL Nodetree"
     bl_description = "View the node tree attached to this material"
     bl_idname = "appleseed.view_nodetree"
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        return obj
+    # @classmethod
+    # def poll(cls, context):
+    #     obj = context.object
+    #     return obj
 
     def execute(self, context):
-        mat = context.active_object.active_material
-        node_tree = mat.appleseed.osl_node_tree
+        node_tree = None
+        ob = context.active_object
+        if ob.type == 'LAMP':
+            if ob.data.type == 'AREA':
+                lamp = ob.data.appleseed
+                node_tree = lamp.osl_node_tree
+            else:
+                return {"CANCELLED"}
+        elif ob.type == 'MESH':
+            mat = ob.active_material
+            node_tree = mat.appleseed.osl_node_tree
 
-        for area in context.screen.areas:
-            if area.type == "NODE_EDITOR":
-                for space in area.spaces:
-                    if space.type == "NODE_EDITOR":
-                        space.tree_type = node_tree.bl_idname
-                        space.node_tree = node_tree
-                        return {"FINISHED"}
+        if node_tree is not None:
+            for area in context.screen.areas:
+                if area.type == "NODE_EDITOR":
+                    for space in area.spaces:
+                        if space.type == "NODE_EDITOR":
+                            space.tree_type = node_tree.bl_idname
+                            space.node_tree = node_tree
+                            return {"FINISHED"}
 
         return {"CANCELLED"}
 
@@ -124,32 +135,6 @@ class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
         nodetree.links.new(area_lamp_node.outputs[0], surface.inputs[0])
         lamp.appleseed.osl_node_tree = nodetree
         return {'FINISHED'}
-
-
-class AppleseedViewLampNode(bpy.types.Operator):
-    bl_label = "View OSL Nodetree"
-    bl_description = "View the node tree attached to this material"
-    bl_idname = "appleseed.view_lamp_nodetree"
-
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        return obj
-
-    def execute(self, context):
-        lamp = context.active_object.data.appleseed
-        node_tree = lamp.osl_node_tree
-
-        for area in context.screen.areas:
-            if area.type == "NODE_EDITOR":
-                for space in area.spaces:
-                    if space.type == "NODE_EDITOR":
-                        space.tree_type = node_tree.bl_idname
-                        space.node_tree = node_tree
-                        return {"FINISHED"}
-
-        self.report({"ERROR"}, "Open a node editor first")
-        return {"CANCELLED"}
 
 
 # Texture operators
@@ -356,8 +341,7 @@ class AppleseedRemoveSssSet(bpy.types.Operator):
 
 def register():
     util.safe_register_class(AppleseedNewMat)
-    util.safe_register_class(AppleseedViewNode)
-    util.safe_register_class(AppleseedViewLampNode)
+    util.safe_register_class(AppleseedViewNodeTree)
     util.safe_register_class(AppleseedConvertTextures)
     util.safe_register_class(AppleseedRefreshTexture)
     util.safe_register_class(AppleseedAddTexture)
@@ -381,6 +365,5 @@ def unregister():
     util.safe_unregister_class(AppleseedAddTexture)
     util.safe_unregister_class(AppleseedRefreshTexture)
     util.safe_unregister_class(AppleseedConvertTextures)
-    util.safe_unregister_class(AppleseedViewLampNode)
-    util.safe_unregister_class(AppleseedViewNode)
+    util.safe_unregister_class(AppleseedViewNodeTree)
     util.safe_unregister_class(AppleseedNewMat)

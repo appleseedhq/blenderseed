@@ -128,8 +128,6 @@ class AppleseedLampPanel(bpy.types.Panel):
                 layout.prop(asr_lamp, "area_intensity_scale", text="Intensity Scale")
                 layout.prop(asr_lamp, "area_exposure", text="Exposure")
                 layout.prop(asr_lamp, "area_normalize", text="Normalize", toggle=True)
-            else:
-                layout.operator('appleseed.view_lamp_nodetree', text="View Nodetree")
 
 
 def register():
