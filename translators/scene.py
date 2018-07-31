@@ -553,17 +553,17 @@ class SceneTranslator(GroupTranslator):
         if self.__context:
             number_of_pixels = int(self.__context.region.width) * int(self.__context.region.height) * asr_scene_props.interactive_max_samples
         else:
-            number_of_pixels = 0
+            number_of_pixels = -1
 
         if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
-            render_threads = -1
+            render_threads = -2
         else:
             render_threads = asr_scene_props.threads if not asr_scene_props.threads_auto else 'auto'
 
         tile_renderer = 'adaptive' if asr_scene_props.pixel_sampler == 'adaptive' else 'generic'
         pixel_renderer = '' if asr_scene_props.pixel_sampler == 'adaptive' else 'uniform'
 
-        adaptiveness = asr_scene_props.adaptive_max_samples / asr_scene_props.adaptive_uniform_samples
+        adaptiveness = 1 - asr_scene_props.adaptive_uniform_samples / asr_scene_props.adaptive_max_samples
 
         parameters = {'uniform_pixel_renderer': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
                                                  'force_antialiasing': True if asr_scene_props.force_aa else False,
