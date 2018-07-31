@@ -332,16 +332,16 @@ def generate_node(node):
     def draw_buttons(self, context, layout):
         for x in non_connected_props:
             if x['name'] in self.filepaths:
-                layout.template_ID_preview(self, "in_filename", open="image.open")
+                layout.template_ID_preview(self, x['name'], open="image.open")
             else:
                 layout.prop(self, x['name'], text=x['label'])
 
     def draw_buttons_ext(self, context, layout):
         for x in non_connected_props:
             if x['name'] in self.filepaths:
-                image_block = getattr(self, x['name'])
-                layout.template_ID_preview(self, "in_filename", open="image.open")
+                layout.template_ID_preview(self, x['name'], open="image.open")
                 layout.label(text="Image Path")
+                image_block = getattr(self, x['name'])
                 col = layout.column()
                 col.enabled = image_block.packed_file is None
                 col.prop(image_block, "filepath", text="")
