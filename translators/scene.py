@@ -700,7 +700,7 @@ class SceneTranslator(GroupTranslator):
         # Create and set the frame in the project.
         frame = asr.Frame("beauty", frame_params, aovs)
 
-        if len(asr_scene_props.post_processing_stages) > 0:
+        if len(asr_scene_props.post_processing_stages) > 0 and self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             for index, stage in enumerate(asr_scene_props.post_processing_stages):
                 if stage.model == 'render_stamp_post_processing_stage':
                     params = {'order': index,
