@@ -32,6 +32,7 @@ import bpy_extras
 from mathutils import Matrix
 
 import appleseed as asr
+from .handlers import AssetType
 from .translator import Translator
 from ..logger import get_logger
 
@@ -174,11 +175,11 @@ class CameraTranslator(Translator):
 
     def __create_thin_lens_camera(self, scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
-        if camera.dof_object is not None:
-            cam_target = bpy.data.objects[camera.dof_object.name]
+        if camera.data.dof_object is not None:
+            cam_target = bpy.data.objects[camera.data.dof_object.name]
             focal_distance = (cam_target.location - self.bl_camera.location).magnitude
         else:
-            focal_distance = camera.dof_distance
+            focal_distance = camera.data.dof_distance
         cam_params = {'aspect_ratio': aspect_ratio,
                       'focal_length': camera.data.lens / 1000,
                       'film_dimensions': asr.Vector2f(film_width, film_height),
@@ -196,9 +197,9 @@ class CameraTranslator(Translator):
             cam_params['autofocus_target'] = self._find_auto_focus_point(scene)
             cam_params['autofocus_enabled'] = True
         if camera.data.appleseed.diaphragm_map != "":
-            filename = self.asset_handler.resolve_path(camera.appleseed.diaphragm_map)
+            filename = self.asset_handler.process_path(camera.data.appleseed.diaphragm_map, AssetType.TEXTURE_ASSET)
             self.__cam_map = asr.Texture('disk_texture_2d', 'cam_map',
-                                         {'filename': filename, 'color_space': camera.appleseed.diaphragm_map_colorspace}, [])
+                                         {'filename': filename, 'color_space': camera.data.appleseed.diaphragm_map_colorspace}, [])
             self.__cam_map_inst = asr.TextureInstance("cam_map_inst", {'addressing_mode': 'wrap',
                                                                        'filtering_mode': 'bilinear'},
                                                       "cam_map", asr.Transformf(asr.Matrix4f.identity()))
