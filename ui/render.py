@@ -132,8 +132,10 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         layout.prop(asr_scene_props, "pixel_sampler", text="Sampling", expand=True)
 
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "renderer_passes", text="Passes")
+
         if asr_scene_props.pixel_sampler == 'adaptive':
-            col = layout.column(align=True)
             row = col.row(align=True)
             row.prop(asr_scene_props, "adaptive_batch_size", text="Batch Size")
             row.prop(asr_scene_props, "adaptive_max_samples", text="Max Samples")
@@ -141,9 +143,7 @@ class AppleseedSamplingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             row.prop(asr_scene_props, "noise_threshold", text="Noise Threshold")
             row.prop(asr_scene_props, "adaptive_uniform_samples", text="Uniform Samples")
         else:
-            row = layout.row(align=True)
-            row.prop(asr_scene_props, "samples", text="Samples")
-            row.prop(asr_scene_props, "renderer_passes", text="Passes")
+            col.prop(asr_scene_props, "samples", text="Samples")
 
         box = layout.box()
         box.label(text="Interactive Render:")
