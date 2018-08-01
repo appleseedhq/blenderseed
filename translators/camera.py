@@ -28,13 +28,13 @@
 import math
 
 import bpy
-import bpy_extras
 from mathutils import Matrix
 
 import appleseed as asr
 from .handlers import AssetType
 from .translator import Translator
 from ..logger import get_logger
+from ..util import calc_film_dimensions, find_auto_focus_point, get_frame_aspect_ratio
 
 logger = get_logger()
 
@@ -111,11 +111,9 @@ class CameraTranslator(Translator):
     def __set_params(self, scene):
         camera = self.bl_camera.data
 
-        width, height = self._get_frame_aspect_ratio(scene)
+        aspect_ratio = get_frame_aspect_ratio(scene)
 
-        aspect_ratio = width / height
-
-        film_width, film_height = self.__calc_film_dimensions(aspect_ratio)
+        film_width, film_height = calc_film_dimensions(aspect_ratio, camera, 1)
 
         model = self.__as_camera.get_model()
 
@@ -194,7 +192,8 @@ class CameraTranslator(Translator):
                       'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
                       'shutter_close_end_time': scene.appleseed.shutter_close}
         if camera.data.appleseed.enable_autofocus:
-            cam_params['autofocus_target'] = self._find_auto_focus_point(scene)
+            x, y = find_auto_focus_point(scene)
+            cam_params['autofocus_target'] = asr.Vector2f(x, y)
             cam_params['autofocus_enabled'] = True
         if camera.data.appleseed.diaphragm_map != "":
             filename = self.asset_handler.process_path(camera.data.appleseed.diaphragm_map, AssetType.TEXTURE_ASSET)
@@ -209,65 +208,11 @@ class CameraTranslator(Translator):
 
         return cam_params
 
-    @staticmethod
-    def _find_auto_focus_point(scene):
-        cam = scene.camera
-        co = scene.cursor_location
-        co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
-        y = 1 - co_2d.y
-        logger.debug("2D Coords:{0} {1}".format(co_2d.x, y))
-
-        return asr.Vector2f(co_2d.x, y)
-
-    def __calc_film_dimensions(self, aspect_ratio):
-        """
-        Fit types:
-        Horizontal = Horizontal size manually set.  Vertical size derived from aspect ratio.
-
-        Vertical = Vertical size manaually set.  Horizontal size derived from aspect ratio.
-
-        Auto = sensor_width bpy property sets the horizontal size when the aspect ratio is over 1 and
-        the vertical size when it is below 1.  Other dimension is derived from aspect ratio.
-
-        Much thanks to the Radeon ProRender plugin for clarifying this behavior
-        """
-
-        horizontal_fit = self.bl_camera.data.sensor_fit == 'HORIZONTAL' or \
-                         (self.bl_camera.data.sensor_fit == 'AUTO' and aspect_ratio > 1)
-
-        if self.bl_camera.data.sensor_fit == 'VERTICAL':
-            film_height = self.bl_camera.data.sensor_height / 1000
-            film_width = film_height * aspect_ratio
-        elif horizontal_fit:
-            film_width = self.bl_camera.data.sensor_width / 1000
-            film_height = film_width / aspect_ratio
-        else:
-            film_height = self.bl_camera.data.sensor_width / 1000
-            film_width = film_height * aspect_ratio
-
-        return film_width, film_height
-
-    @staticmethod
-    def _get_frame_aspect_ratio(scene):
-        render = scene.render
-        scale = render.resolution_percentage / 100.0
-        width = int(render.resolution_x * scale)
-        height = int(render.resolution_y * scale)
-        xratio = width * render.pixel_aspect_x
-        yratio = height * render.pixel_aspect_y
-
-        return xratio, yratio
-
 
 class InteractiveCameraTranslator(Translator):
 
     def __init__(self, cam, context, asset_handler):
         super(InteractiveCameraTranslator, self).__init__(cam, asset_handler)
-
-        self.__context = context
-
-    def reset(self, cam, context):
-        super(InteractiveCameraTranslator, self).reset(cam)
 
         self.__context = context
 
@@ -286,7 +231,7 @@ class InteractiveCameraTranslator(Translator):
 
         self.__as_int_camera = asr.Camera(self.__model, self.appleseed_name, self.__params)
 
-    def set_transform_key(self, time, key_times):
+    def set_transform_key(self, time, key_times=None):
         self.__as_int_camera.transform_sequence().set_transform(time, self._convert_matrix(self._matrix))
 
     def flush_entities(self, scene):
@@ -312,7 +257,7 @@ class InteractiveCameraTranslator(Translator):
         lens = self.__lens
         extent_base = self.__extent_base
 
-        self.reset(camera, context)
+        self._reset(camera, context)
 
         self.__set_cam_props()
 
@@ -325,13 +270,18 @@ class InteractiveCameraTranslator(Translator):
 
         return cam_param_update, cam_translate_update
 
-    def update_camera(self, scene, camera=None, context=None):
+    def update(self, scene, camera=None, context=None):
         logger.debug("Update interactive camera")
         if camera is not None and context is not None:
-            self.reset(camera, context)
+            self._reset(camera, context)
         scene.cameras().remove(self.__as_int_camera)
         self.create_entities(scene)
         self.flush_entities(scene)
+
+    def _reset(self, cam, context):
+        super(InteractiveCameraTranslator, self)._reset(cam)
+
+        self.__context = context
 
     def __set_cam_props(self):
         # todo: add view offset
@@ -356,12 +306,12 @@ class InteractiveCameraTranslator(Translator):
             self.__model, self.__params = self.__create_persp_camera(aspect_ratio)
 
         elif view_cam_type == "CAMERA":
+            # Borrowed from Cycles source code, since no sane person would figure this out on their own
             self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
             self.__model, self.__params = self.__create_view_camera(aspect_ratio)
 
     def __create_view_camera(self, aspect_ratio):
-        # Borrowed from Cycles source code, since no sane person would figure this out on their own
-        film_width, film_height = self.__calc_film_dimensions(aspect_ratio, self.__zoom)
+        film_width, film_height = calc_film_dimensions(aspect_ratio, self.bl_camera.data, self.__zoom)
 
         self._matrix = self.bl_camera.matrix_world
         cam_mapping = {'PERSP': 'pinhole_camera',
@@ -397,9 +347,6 @@ class InteractiveCameraTranslator(Translator):
                       'diaphragm_blades': self.bl_camera.data.appleseed.diaphragm_blades,
                       'diaphragm_tilt_angle': self.bl_camera.data.appleseed.diaphragm_angle,
                       'focal_distance': focal_distance}
-            if self.bl_camera.data.appleseed.enable_autofocus:
-                params['autofocus_target'] = self._find_auto_focus_point(self.context.scene)
-                params['autofocus_enabled'] = True
 
         else:
             params = {'focal_length': self.bl_camera.data.lens / 1000,
@@ -433,40 +380,4 @@ class InteractiveCameraTranslator(Translator):
 
         return model, params
 
-    def __calc_film_dimensions(self, aspect_ratio, zoom):
-        """
-        Fit types:
-        Horizontal = Horizontal size manually set.  Vertical size derived from aspect ratio.
 
-        Vertical = Vertical size manaually set.  Horizontal size derived from aspect ratio.
-
-        Auto = sensor_width bpy property sets the horizontal size when the aspect ratio is over 1 and
-        the vertical size when it is below 1.  Other dimension is derived from aspect ratio.
-
-        Much thanks to the Radeon ProRender plugin for clarifying this behavior
-        """
-
-        horizontal_fit = self.bl_camera.data.sensor_fit == 'HORIZONTAL' or \
-                         (self.bl_camera.data.sensor_fit == 'AUTO' and aspect_ratio > 1)
-
-        if self.bl_camera.data.sensor_fit == 'VERTICAL':
-            film_height = self.bl_camera.data.sensor_height / 1000 * zoom
-            film_width = film_height * aspect_ratio
-        elif horizontal_fit:
-            film_width = self.bl_camera.data.sensor_width / 1000 * zoom
-            film_height = film_width / aspect_ratio
-        else:
-            film_height = self.bl_camera.data.sensor_width / 1000 * zoom
-            film_width = film_height * aspect_ratio
-
-        return film_width, film_height
-
-    @staticmethod
-    def _find_auto_focus_point(scene):
-        cam = scene.camera
-        co = scene.cursor_location
-        co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
-        y = 1 - co_2d.y
-        logger.debug("2D Coords:{0} {1}".format(co_2d.x, y))
-
-        return asr.Vector2f(co_2d.x, y)

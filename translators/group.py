@@ -189,11 +189,6 @@ class GroupTranslator(Translator):
             else:
                 pass  # log here unknown object found...
 
-    def _do_create_entities(self, scene):
-        for t in self.all_translators:
-            for x in t.values():
-                x.create_entities(scene)
-
     def set_transform_key(self, time, key_times):
         for x in self._object_translators.values():
             x.set_transform_key(time, key_times)
@@ -201,6 +196,11 @@ class GroupTranslator(Translator):
     def set_deform_key(self, scene, time, key_times):
         for x in self._object_translators.values():
             x.set_deform_key(scene, time, key_times)
+
+    def _do_create_entities(self, scene):
+        for t in self.all_translators:
+            for x in t.values():
+                x.create_entities(scene)
 
     def _do_flush_entities(self, assembly):
         for t in self.all_translators:

@@ -86,15 +86,6 @@ class Translator(object):
         self._obj_key = ObjectKey(obj)
         self._asset_handler = asset_handler
 
-    def reset(self, obj):
-        """
-        This exists in order to reset the basic data on the translator when doing an interactive render update.
-        This is necessary when the name of an object or material changes.
-        """
-
-        self._bl_obj = obj
-        self._obj_key = ObjectKey(obj)
-
     #
     # Properties.
     #
@@ -126,6 +117,15 @@ class Translator(object):
     #
     # Utility methods.
     #
+
+    def _reset(self, obj):
+        """
+        This exists in order to reset the basic data on the translator when doing an interactive render update.
+        This is necessary when the name of an object or material changes.
+        """
+
+        self._bl_obj = obj
+        self._obj_key = ObjectKey(obj)
 
     @staticmethod
     def _convert_matrix(m):

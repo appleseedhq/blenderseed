@@ -201,9 +201,6 @@ class SceneTranslator(GroupTranslator):
 
         self.__create_project()
 
-        self.__translate_render_settings()
-        self.__translate_frame()
-
         self.__create_translators()
 
         # Create appleseed entities for world and camera
@@ -230,6 +227,9 @@ class SceneTranslator(GroupTranslator):
 
         for x in self.__group_translators.values():
             x.flush_entities(self.__main_assembly)
+
+        self.__translate_render_settings()
+        self.__translate_frame()
 
         self.__load_searchpaths()
 
@@ -270,13 +270,13 @@ class SceneTranslator(GroupTranslator):
             # Check if base material is updated
             if bl_mat.is_updated or bl_mat.is_updated_data:
                 logger.debug("Updating material %s", mat)
-                self._material_translators[mat].update_material(bl_mat, self.__main_assembly, scene)
+                self._material_translators[mat].update(bl_mat, self.__main_assembly, scene)
 
             # Check if material node tree has been updated
             if bl_mat.appleseed.osl_node_tree is not None:
                 if bl_mat.appleseed.osl_node_tree.is_updated:
                     logger.debug("Updating material tree for %s", mat)
-                    self._material_translators[mat].update_material(bl_mat, self.__main_assembly, scene)
+                    self._material_translators[mat].update(bl_mat, self.__main_assembly, scene)
 
         # Update lamp materials
         for mat in self._lamp_material_translators:
@@ -288,7 +288,7 @@ class SceneTranslator(GroupTranslator):
                 continue
             if bl_lamp.appleseed.osl_node_tree.is_updated:
                 logger.debug("Updating material tree for %s", mat)
-                self._lamp_material_translators[mat].update_material(bl_lamp, self.__main_assembly, scene)
+                self._lamp_material_translators[mat].update(bl_lamp, self.__main_assembly, scene)
 
         # Update objects
         for translator in self._object_translators:
@@ -311,13 +311,15 @@ class SceneTranslator(GroupTranslator):
                 continue
             if bl_lamp.is_updated or bl_lamp.is_updated_data:
                 logger.debug("Updating lamp %s", translator)
-                self._lamp_translators[translator].update_lamp(bl_lamp, self.__main_assembly, scene)
+                self._lamp_translators[translator].update(bl_lamp, self.__main_assembly, scene)
 
         if self.bl_scene.is_updated or self.bl_scene.is_updated_data:
-            self.__world_translator.update_world(self.bl_scene, self.as_scene)
+            self.__world_translator.update(self.bl_scene, self.as_scene)
 
         if self.bl_scene.camera.is_updated or self.bl_scene.camera.is_updated_data:
-            self.__camera_translator.update_camera(self.as_scene, camera=self.bl_scene.camera, context=self.__context)
+            self.__camera_translator.update(self.as_scene, camera=self.bl_scene.camera, context=self.__context)
+
+        self.__camera_translator.set_transform_key(0.0)
 
     def check_view(self, context):
         """
@@ -351,7 +353,7 @@ class SceneTranslator(GroupTranslator):
         logger.debug("Begin view update")
 
         if cam_param_update:
-            self.__camera_translator.update_camera(self.as_scene)
+            self.__camera_translator.update(self.as_scene)
 
         if view_update:
             self.__translate_frame()

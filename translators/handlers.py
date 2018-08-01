@@ -41,27 +41,27 @@ class AssetType(Enum):
 class AssetHandler(object):
 
     def __init__(self):
-        self.__searchpaths = []
+        self._searchpaths = []
 
     @property
     def searchpaths(self):
-        return self.__searchpaths
+        return self._searchpaths
 
     def set_searchpath(self, path):
-        self.__searchpaths.append(path)
+        self._searchpaths.append(path)
 
     def process_path(self, filename, asset_type, sub_texture=False):
         file = bpy.path.abspath(filename)
         if asset_type == AssetType.SHADER_ASSET:
             dir_name, file_name = os.path.split(file)
-            self.__searchpaths.append(dir_name)
+            self._searchpaths.append(dir_name)
             file = os.path.splitext(file_name)[0]
         if asset_type == AssetType.TEXTURE_ASSET and sub_texture:
             base_filename = os.path.splitext(file)[0]
             file = "{0}.tx".format(base_filename)
         if asset_type == AssetType.ARCHIVE_ASSET:
             archive_dir, archive = os.path.split(file)
-            self.__searchpaths.append(archive_dir)
+            self._searchpaths.append(archive_dir)
             file = archive
 
         return file
@@ -125,5 +125,5 @@ class CopyAssetsAssetHandler(AssetHandler):
         if asset_type == AssetType.SHADER_ASSET:
             return os.path.join("_shaders", os.path.splitext(file_name)[0])
         if asset_type == AssetType.ARCHIVE_ASSET:
-            self.__searchpaths.append(os.path.join("_archives", os.path.splitext(file_name)[0]))
+            self._searchpaths.append(os.path.join("_archives", os.path.splitext(file_name)[0]))
             return os.path.join("_archives", os.path.splitext(file_name)[0], file_name)

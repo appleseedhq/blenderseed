@@ -30,6 +30,7 @@ import multiprocessing
 import os
 
 import bpy
+import bpy_extras
 import mathutils
 
 from . import bl_info
@@ -252,6 +253,54 @@ def get_render_resolution(scene):
     return width, height
 
 
+def get_frame_aspect_ratio(scene):
+    render = scene.render
+    scale = render.resolution_percentage / 100.0
+    width = int(render.resolution_x * scale)
+    height = int(render.resolution_y * scale)
+    xratio = width * render.pixel_aspect_x
+    yratio = height * render.pixel_aspect_y
+    return xratio / yratio
+
+
+def calc_film_dimensions(aspect_ratio, camera, zoom):
+    """
+    Fit types:
+    Horizontal = Horizontal size manually set.  Vertical size derived from aspect ratio.
+
+    Vertical = Vertical size manually set.  Horizontal size derived from aspect ratio.
+
+    Auto = sensor_width bpy property sets the horizontal size when the aspect ratio is over 1 and
+    the vertical size when it is below 1.  Other dimension is derived from aspect ratio.
+
+    Much thanks to the Radeon ProRender plugin for clarifying this behavior
+    """
+
+    horizontal_fit = camera.sensor_fit == 'HORIZONTAL' or \
+                     (camera.sensor_fit == 'AUTO' and aspect_ratio > 1)
+
+    if camera.sensor_fit == 'VERTICAL':
+        film_height = camera.sensor_height / 1000 * zoom
+        film_width = film_height * aspect_ratio
+    elif horizontal_fit:
+        film_width = camera.sensor_width / 1000 * zoom
+        film_height = film_width / aspect_ratio
+    else:
+        film_height = camera.sensor_width / 1000 * zoom
+        film_width = film_height * aspect_ratio
+
+    return film_width, film_height
+
+
+def find_auto_focus_point(scene):
+    cam = scene.camera
+    co = scene.cursor_location
+    co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
+    y = 1 - co_2d.y
+
+    return co_2d.x, y
+
+
 # ------------------------------------
 # Object / instance utilities.
 # ------------------------------------
@@ -285,198 +334,6 @@ def is_object_deforming(ob):
     if ob.data and hasattr(ob.data, 'shape_keys') and ob.data.shape_keys:
         return True
     return False
-
-
-# ------------------------------------
-# Particle system utilities.
-# ------------------------------------
-
-def calc_decrement(root, tip, segments):
-    return (root - tip) / (segments - 1)
-
-
-def render_emitter(ob):
-    render = False
-    for psys in ob.particle_systems:
-        if psys.settings.use_render_emitter:
-            render = True
-            break
-    return render
-
-
-def is_psys_emitter(ob):
-    emitter = False
-    for mod in ob.modifiers:
-        if mod.type == 'PARTICLE_SYSTEM' and mod.show_render:
-            psys = mod.particle_system
-            if psys.settings.render_type == 'OBJECT' and psys.settings.dupli_object is not None:
-                emitter = True
-                break
-            elif psys.settings.render_type == 'GROUP' and psys.settings.dupli_group is not None:
-                emitter = True
-                break
-    return emitter
-
-
-def has_hairsys(ob):
-    has_hair = False
-    for mod in ob.modifiers:
-        if mod.type == 'PARTICLE_SYSTEM' and mod.show_render:
-            psys = mod.particle_system
-            if psys.settings.type == 'HAIR' and psys.settings.render_type == 'PATH':
-                has_hair = True
-                break
-    return has_hair
-
-
-def get_all_psysobs():
-    """
-    Return a set of all the objects being instanced in particle systems
-    """
-    obs = set()
-    for settings in bpy.data.particles:
-        if settings.render_type == 'OBJECT' and settings.dupli_object is not None:
-            obs.add(settings.dupli_object)
-        elif settings.render_type == 'GROUP' and settings.dupli_group is not None:
-            obs.update({ob for ob in settings.dupli_group.objects})
-    return obs
-
-
-def get_psys_instances(ob, scene):
-    """
-    Return a dictionary of
-    particle: [dupli.object, [matrices]]
-    pairs. This function assumes particle systems and
-    face / verts duplication aren't being used on the same object.
-    """
-    all_duplis = {}
-    current_total = 0
-    index = 0
-    if not hasattr(ob, 'modifiers'):
-        return {}
-    if not ob_mblur_enabled(ob, scene):
-        # If no motion blur
-        ob.dupli_list_create(scene, settings='RENDER')
-    for modifier in ob.modifiers:
-        if modifier.type == 'PARTICLE_SYSTEM' and modifier.show_render:
-            psys = modifier.particle_system
-            if not psys.settings.render_type in {'OBJECT', 'GROUP'}:
-                continue
-            if psys.settings.type == 'EMITTER':
-                particles = [p for p in psys.particles if p.alive_state == 'ALIVE']
-            else:
-                particles = [p for p in psys.particles]
-            start = current_total
-            current_total += len(particles)
-
-            if not ob_mblur_enabled(ob, scene):
-                # No motion blur.
-                duplis = []
-                for dupli_index in range(start, current_total):
-                    # Store the dupli.objects for the current particle system only
-                    # ob.dupli_list is created in descending order of particle systems
-                    # So it should be reliable to match them this way.
-                    duplis.append(ob.dupli_list[dupli_index].object)
-
-                if psys.settings.type == 'EMITTER':
-                    p_duplis_pairs = list(zip(particles, duplis))  # Match the particles to the duplis
-                    dupli_dict = {p[0]: [p[1], []] for p in p_duplis_pairs}  # Create particle:[dupli.object, [matrix]] pairs
-                    for particle in dupli_dict.keys():
-                        size = particle.size
-                        loc = particle.location
-                        scale = dupli_dict[particle][0].scale * size
-                        transl = mathutils.Matrix.Translation((loc))
-                        scale = mathutils.Matrix.Scale(scale.x, 4, (1, 0, 0)) * mathutils.Matrix.Scale(scale.y, 4,
-                                                                                                       (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4,
-                                                                                                                                           (0, 0, 1))
-                        mat = transl * scale
-                        dupli_dict[particle][1].append(mat)
-                else:
-                    dupli_mat_list = [dupli.matrix.copy() for dupli in ob.dupli_list]
-                    p_duplis_pairs = list(zip(particles, duplis, dupli_mat_list))
-                    dupli_dict = {p[0]: [p[1], [p[2]]] for p in p_duplis_pairs}
-            else:
-                # Using motion blur
-                dupli_dict, index = sample_psys_mblur(ob, scene, psys, index, start, current_total)
-
-            # Add current particle system to the collection.
-            all_duplis.update(dupli_dict)
-
-    if not ob_mblur_enabled(ob, scene):
-        # If no motion blur
-        ob.dupli_list_clear()
-    return all_duplis
-
-
-def sample_psys_mblur(ob, scene, psys, index, start, current_total):
-    """
-    Return a dictionary of
-    particle: [dupli.object, [matrices]]
-    pairs
-    """
-    asr_scn = scene.appleseed
-    dupli_dict = {}
-    frame_orig = scene.frame_current
-    frame_set = scene.frame_set
-
-    frame_set(frame_orig, subframe=asr_scn.shutter_open)
-    if psys.settings.type == 'EMITTER':
-        particles = [p for p in psys.particles if p.alive_state == 'ALIVE']
-    else:
-        particles = [p for p in psys.particles]
-    if len(particles) == 0:
-        return False
-
-    if psys.settings.type == 'EMITTER':
-        # Emitter particle system.
-        ob.dupli_list_create(scene, 'RENDER')
-        duplis = [dupli.object for dupli in ob.dupli_list]
-        p_duplis_pairs = list(zip(particles, duplis))
-        dupli_dict = {p[0]: [p[1], []] for p in p_duplis_pairs}
-        new_index = index
-        for frame in {asr_scn.shutter_open, asr_scn.shutter_close}:
-            new_index = index
-            frame_set(frame_orig, subframe=frame)
-            for particle in dupli_dict.keys():
-                size = particle.size
-                transl = particle.location
-                scale = dupli_dict[particle][0].scale * size
-                transl = mathutils.Matrix.Translation((transl))
-                scale = mathutils.Matrix.Scale(scale.x, 4, (1, 0, 0)) * mathutils.Matrix.Scale(scale.y, 4,
-                                                                                               (0, 1, 0)) * mathutils.Matrix.Scale(scale.z, 4,
-                                                                                                                                   (0, 0, 1))
-                mat = transl * scale
-                dupli_dict[particle][1].append(mat)
-                new_index += 1
-        index += new_index
-    else:
-        # Hair particle system.
-        duplis = []
-        ob.dupli_list_create(scene, 'RENDER')
-        for dupli_index in range(start, current_total):
-            duplis.append(ob.dupli_list[dupli_index].object)
-        p_duplis_pairs = list(zip(particles, duplis))
-        dupli_dict = {p[0]: [p[1], []] for p in p_duplis_pairs}
-        ob.dupli_list_clear()
-        new_index = index
-        for frame in {asr_scn.shutter_open, asr_scn.shutter_close}:
-            new_index = index
-            frame_set(frame_orig, subframe=frame)
-            ob.dupli_list_create(scene, 'RENDER')
-            for particle in dupli_dict.keys():
-                mat = ob.dupli_list[new_index].matrix.copy()
-                dupli_dict[particle][1].append(mat)
-                new_index += 1
-            ob.dupli_list_clear()
-        index += new_index
-
-    # Clean up and return
-    if psys.settings.type == 'EMITTER':
-        del scale, transl, mat
-        ob.dupli_list_clear()
-    frame_set(frame_orig)
-    return dupli_dict, index
-
 
 # ------------------------------------
 # Simple timer for profiling.

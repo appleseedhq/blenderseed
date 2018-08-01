@@ -49,13 +49,6 @@ class WorldTranslator(Translator):
         self.__env_tex = None
         self.__env_tex_inst = None
 
-    def reset(self, scene):
-        super(WorldTranslator, self).reset(scene)
-        self.__horizon_radiance = None
-        self.__zenith_radiance = None
-        self.__env_tex = None
-        self.__env_tex_inst = None
-
     #
     # Properties.
     #
@@ -170,7 +163,7 @@ class WorldTranslator(Translator):
 
         as_scene.set_environment(self.__as_env)
 
-    def update_world(self, scene, as_scene):
+    def update(self, scene, as_scene):
         if self.__horizon_radiance is not None:
             as_scene.colors().remove(self.__horizon_radiance)
 
@@ -185,13 +178,20 @@ class WorldTranslator(Translator):
 
         as_scene.environment_edfs().remove(self.__as_env_edf)
 
-        self.reset(scene)
+        self._reset(scene)
 
         if self.bl_scene.appleseed_sky.env_type == 'none':
             as_scene.set_environment(asr.Environment('environment', {}))
         else:
             self.create_entities(scene)
             self.flush_entities(as_scene)
+
+    def _reset(self, scene):
+        super(WorldTranslator, self)._reset(scene)
+        self.__horizon_radiance = None
+        self.__zenith_radiance = None
+        self.__env_tex = None
+        self.__env_tex_inst = None
 
     def _convert_matrix(self, m):
         rot = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(90.0))

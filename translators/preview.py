@@ -64,7 +64,7 @@ class PreviewRenderer(object):
 
     def update_preview(self, scene):
         likely_material = self.__get_preview_material(scene)
-        self.__mat_translator.update_material(likely_material, self.__main_assembly, scene)
+        self.__mat_translator.update(likely_material, self.__main_assembly, scene)
 
         as_scene = self.__project.get_scene()
         camera = as_scene.cameras().get_by_name("preview_camera")
@@ -176,7 +176,7 @@ class PreviewRenderer(object):
         # Define the render camera
         camera = asr.Camera('pinhole_camera', "preview_camera", {"film_width": 0.032,
                                                                  "focal_length": 0.035,
-                                                                 "aspect_ratio": self.get_frame_aspect_ratio(scene)})
+                                                                 "aspect_ratio": util.get_frame_aspect_ratio(scene)})
         camera_matrix = asr.Matrix4d([1.0, 0.0, 0.0, -0.03582507744431496,
                                       0.0, -4.371138828673793e-08, -1.0, -2.135615587234497,
                                       0.0, 1.0, -4.371138828673793e-08, 0.5015512704849243,
@@ -252,13 +252,3 @@ class PreviewRenderer(object):
         frame = asr.Frame("beauty", frame_params)
 
         self.__project.set_frame(frame)
-
-    @staticmethod
-    def get_frame_aspect_ratio(scene):
-        render = scene.render
-        scale = render.resolution_percentage / 100.0
-        width = int(render.resolution_x * scale)
-        height = int(render.resolution_y * scale)
-        xratio = width * render.pixel_aspect_x
-        yratio = height * render.pixel_aspect_y
-        return xratio / yratio
