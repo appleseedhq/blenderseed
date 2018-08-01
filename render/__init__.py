@@ -25,23 +25,15 @@
 # THE SOFTWARE.
 #
 
-import array
 import os
-import shutil
-import struct
-import subprocess
 import sys
-import tempfile
 import threading
-import time
-from math import ceil
 
 import appleseed as asr
 import bpy
 
 from .renderercontroller import FinalRendererController, InteractiveRendererController
 from .tilecallbacks import FinalTileCallback
-from .. import util
 from ..logger import get_logger
 from ..translators.preview import PreviewRenderer
 from ..translators.scene import SceneTranslator
@@ -84,7 +76,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Interactive rendering.
         self.__interactive_scene_translator = None
 
-
     #
     # Destructor.
     #
@@ -122,12 +113,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
     def view_draw(self, context):
         # Check if view has changed
-        view_update, camera_update = self.__interactive_scene_translator.check_view(context)
+        view_update, cam_param_update, cam_translate_update = self.__interactive_scene_translator.check_view(context)
 
-        if view_update or camera_update:
+        if view_update or cam_param_update or cam_translate_update:
             self.__pause_rendering()
             logger.debug("Updating view")
-            self.__interactive_scene_translator.update_view(view_update, camera_update)
+            self.__interactive_scene_translator.update_view(view_update, cam_param_update)
             self.__restart_interactive_render()
 
         width = int(context.region.width)
@@ -268,9 +259,11 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         logger.debug("Starting interactive rendering")
 
+        self.__camera = self.__interactive_scene_translator.camera_translator
+
         project = self.__interactive_scene_translator.as_project
 
-        self.__renderer_controller = InteractiveRendererController()
+        self.__renderer_controller = InteractiveRendererController(self.__camera)
         self.__tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
 
         self.__renderer = asr.MasterRenderer(project,

@@ -58,6 +58,7 @@ class BaseRendererController(asr.IRendererController):
     def on_progress(self):
         pass
 
+
 class FinalRendererController(BaseRendererController):
     def __init__(self, engine):
         super(FinalRendererController, self).__init__()
@@ -73,9 +74,19 @@ class FinalRendererController(BaseRendererController):
         logger.debug("Starting Render")
         self.__engine.update_stats("appleseed Rendering: Loading scene", "Time Remaining: Unknown")
 
+
 class InteractiveRendererController(BaseRendererController):
-    def __init__(self):
+    def __init__(self, camera):
         super(InteractiveRendererController, self).__init__()
+
+        self.__camera = camera
+
+    def on_frame_begin(self):
+        if False:
+            self.__camera.set_transform_key(0.0)
+            self._status = asr.IRenderControllerStatus.ContinueRendering
+        else:
+            pass
 
     def get_status(self):
         return self._status

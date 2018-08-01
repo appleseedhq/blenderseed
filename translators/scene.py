@@ -147,7 +147,7 @@ class SceneTranslator(GroupTranslator):
 
         # Translators.
         self.__world_translator = None
-        self.__camera_translators = {}
+        self.__camera_translator = None
         self.__group_translators = {}
 
         self.__project = None
@@ -181,6 +181,10 @@ class SceneTranslator(GroupTranslator):
     def selected_only(self):
         return self.__selected_only
 
+    @property
+    def camera_translator(self):
+        return self.__camera_translator
+
     #
     # Scene Translation.
     #
@@ -205,8 +209,7 @@ class SceneTranslator(GroupTranslator):
         # Create appleseed entities for world and camera
         if self.__world_translator:
             self.__world_translator.create_entities(self.bl_scene)
-        for x in self.__camera_translators.values():
-            x.create_entities(self.bl_scene)
+        self.__camera_translator.create_entities(self.bl_scene)
 
         # Create entities for all mesh objects and lights in scene
         self._do_create_entities(self.bl_scene)
@@ -221,8 +224,7 @@ class SceneTranslator(GroupTranslator):
         if self.__world_translator:
             self.__world_translator.flush_entities(self.as_scene)
 
-        for x in self.__camera_translators.values():
-            x.flush_entities(self.as_scene)
+        self.__camera_translator.flush_entities(self.as_scene)
 
         self._do_flush_entities(self.__main_assembly)
 
@@ -315,8 +317,7 @@ class SceneTranslator(GroupTranslator):
             self.__world_translator.update_world(self.bl_scene, self.as_scene)
 
         if self.bl_scene.camera.is_updated or self.bl_scene.camera.is_updated_data:
-            for x in self.__camera_translators.values():
-                x.update_camera(self.as_scene, self.bl_scene.camera, self.__context)
+            self.__camera_translator.update_camera(self.as_scene, camera=self.bl_scene.camera, context=self.__context)
 
     def check_view(self, context):
         """
@@ -325,12 +326,10 @@ class SceneTranslator(GroupTranslator):
         """
 
         view_update = False
-        camera_update = False
         self.__context = context
 
         # Check if the camera needs to be updated
-        for x in self.__camera_translators.values():
-            camera_update = x.check_for_camera_update(self.bl_scene.camera, self.__context)
+        cam_param_update, cam_translate_update = self.__camera_translator.check_for_camera_update(self.bl_scene.camera, self.__context)
 
         # Check if the frame needs to be updated
         width = int(self.__context.region.width)
@@ -339,11 +338,11 @@ class SceneTranslator(GroupTranslator):
         if new_viewport_resolution != self.__viewport_resolution:
             print("update frame")
             view_update = True
-            camera_update = True
+            cam_param_update = True
 
-        return view_update, camera_update
+        return view_update, cam_param_update, cam_translate_update
 
-    def update_view(self, view_update, camera_update):
+    def update_view(self, view_update, cam_param_update):
         """
         Update the viewport window during interactive rendering.  The viewport update is triggered
         automatically following a scene update, or when the check view function returns true on any of its checks.
@@ -351,12 +350,13 @@ class SceneTranslator(GroupTranslator):
 
         logger.debug("Begin view update")
 
-        if camera_update:
-            for x in self.__camera_translators.values():
-                x.update_camera(self.as_scene)
+        if cam_param_update:
+            self.__camera_translator.update_camera(self.as_scene)
 
         if view_update:
             self.__translate_frame()
+
+        self.__camera_translator.set_transform_key(0.0, None)
 
     #
     # Internal methods.
@@ -414,9 +414,9 @@ class SceneTranslator(GroupTranslator):
         obj_key = ObjectKey(self.bl_scene.camera)
         logger.debug("Creating camera translator for active camera  %s", obj_key)
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            self.__camera_translators[obj_key] = CameraTranslator(self.bl_scene.camera, self.asset_handler)
+            self.__camera_translator = CameraTranslator(self.bl_scene.camera, self.asset_handler)
         else:
-            self.__camera_translators[obj_key] = InteractiveCameraTranslator(self.bl_scene.camera, self.__context, self.asset_handler)
+            self.__camera_translator = InteractiveCameraTranslator(self.bl_scene.camera, self.__context, self.asset_handler)
 
         for obj in self.bl_scene.objects:
 
@@ -440,12 +440,7 @@ class SceneTranslator(GroupTranslator):
 
             obj_key = ObjectKey(obj)
 
-            if obj.type == 'CAMERA':
-                if not obj_key in self.__camera_translators:
-                    logger.debug("Creating camera translator for camera %s", obj_key)
-                    self.__camera_translators[obj_key] = CameraTranslator(obj, self.asset_handler)
-
-            elif obj.type == 'EMPTY':
+            if obj.type == 'EMPTY':
                 if obj.is_duplicator and obj.dupli_type == 'GROUP':
                     group = obj.dupli_group
 
@@ -494,8 +489,7 @@ class SceneTranslator(GroupTranslator):
             self.bl_scene.frame_set(int_frame, subframe)
 
             if time in cam_times:
-                for x in self.__camera_translators.values():
-                    x.set_transform_key(time, cam_times)
+                self.__camera_translator.set_transform_key(time, cam_times)
 
             if time in xform_times:
                 self.set_transform_key(time, xform_times)

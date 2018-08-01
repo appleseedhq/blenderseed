@@ -303,6 +303,9 @@ class InteractiveCameraTranslator(Translator):
         changes are captured by a scene update
         """
 
+        cam_param_update = False
+        cam_translate_update = False
+
         # Get current translation, zoom and lens from viewport
         current_translation = self._matrix
         zoom = self.__zoom
@@ -314,20 +317,13 @@ class InteractiveCameraTranslator(Translator):
         self.__set_cam_props()
 
         # Check zoom
-        if zoom != self.__zoom:
-            return True
-
-        # Check lens
-        if lens != self.__lens:
-            return True
+        if zoom != self.__zoom or extent_base != self.__extent_base or lens != self.__lens:
+            cam_param_update = True
 
         if current_translation != self._matrix:
-            return True
+            cam_translate_update = True
 
-        if extent_base != self.__extent_base:
-            return True
-
-        return False
+        return cam_param_update, cam_translate_update
 
     def update_camera(self, scene, camera=None, context=None):
         logger.debug("Update interactive camera")
@@ -335,13 +331,10 @@ class InteractiveCameraTranslator(Translator):
             self.reset(camera, context)
         scene.cameras().remove(self.__as_int_camera)
         self.create_entities(scene)
-        self.__as_int_camera.transform_sequence().set_transform(0.0, self._convert_matrix(self._matrix))
         self.flush_entities(scene)
 
     def __set_cam_props(self):
         # todo: add view offset
-        params = {}
-        model = None
 
         view_cam_type = self.context.region_data.view_perspective
         width = self.context.region.width
@@ -350,25 +343,24 @@ class InteractiveCameraTranslator(Translator):
         aspect_ratio = width / height
 
         self.__lens = self.context.space_data.lens
-        self.__zoom = 2
-        self.__extent_base = self.context.space_data.region_3d.view_distance * 32.0 / self.__lens
+        self.__zoom = None
+        self.__extent_base = None
 
         if view_cam_type == "ORTHO":
-            model, params = self.__create_ortho_camera(aspect_ratio)
+            self.__zoom = 2
+            self.__extent_base = self.context.space_data.region_3d.view_distance * 32.0 / self.__lens
+            self.__model, self.__params = self.__create_ortho_camera(aspect_ratio)
 
         elif view_cam_type == "PERSP":
-            model, params = self.__create_persp_camera(aspect_ratio)
+            self.__zoom = 2
+            self.__model, self.__params = self.__create_persp_camera(aspect_ratio)
 
         elif view_cam_type == "CAMERA":
-            model, params = self.__create_view_camera(aspect_ratio)
-
-        self.__model = model
-        self.__params = params
+            self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
+            self.__model, self.__params = self.__create_view_camera(aspect_ratio)
 
     def __create_view_camera(self, aspect_ratio):
         # Borrowed from Cycles source code, since no sane person would figure this out on their own
-        self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
-
         film_width, film_height = self.__calc_film_dimensions(aspect_ratio, self.__zoom)
 
         self._matrix = self.bl_camera.matrix_world
@@ -426,6 +418,7 @@ class InteractiveCameraTranslator(Translator):
 
         if aspect_ratio < 1:
             params['film_height'] = params.pop('film_width')
+
         return model, params
 
     def __create_ortho_camera(self, aspect_ratio):
