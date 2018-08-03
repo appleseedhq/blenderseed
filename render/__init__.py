@@ -120,6 +120,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             logger.debug("Updating view")
             self.__interactive_scene_translator.update_view(view_update, cam_param_update)
             self.__restart_interactive_render()
+            self.tag_redraw()
 
         width = int(context.region.width)
         height = int(context.region.height)
