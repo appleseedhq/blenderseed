@@ -31,7 +31,6 @@ import os
 
 import bpy
 import bpy_extras
-import mathutils
 
 from . import bl_info
 from .logger import get_logger
@@ -43,7 +42,7 @@ image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd
 
 def safe_register_class(cls):
     try:
-        #logger.debug("[appleseed] Registering class {0}...".format(cls))
+        # logger.debug("[appleseed] Registering class {0}...".format(cls))
         bpy.utils.register_class(cls)
     except Exception as e:
         logger.error("[appleseed] ERROR: Failed to register class {0}: {1}".format(cls, e))
@@ -51,7 +50,7 @@ def safe_register_class(cls):
 
 def safe_unregister_class(cls):
     try:
-        #logger.debug("[appleseed] Unregistering class {0}...".format(cls))
+        # logger.debug("[appleseed] Unregistering class {0}...".format(cls))
         bpy.utils.unregister_class(cls)
     except Exception as e:
         logger.error("[appleseed] ERROR: Failed to unregister class {0}: {1}".format(cls, e))
@@ -75,8 +74,10 @@ def get_appleseed_parent_dir():
 
     return appleseed_parent_dir
 
+
 def get_appleseed_tool_dir():
     return os.path.join(get_appleseed_parent_dir(), 'bin')
+
 
 def get_osl_search_paths():
     appleseed_parent_dir = get_appleseed_parent_dir()
@@ -334,6 +335,7 @@ def is_object_deforming(ob):
     if ob.data and hasattr(ob.data, 'shape_keys') and ob.data.shape_keys:
         return True
     return False
+
 
 # ------------------------------------
 # Simple timer for profiling.

@@ -44,15 +44,15 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
         self.render_stamp += self.render_stamp_patterns
 
     def update_name(self, context):
-        mapping = {'render_stamp_post_processing_stage': 'Render Stamp',
-                   'color_map_post_processing_stage': 'Color Map',
-                   'isolines_post_processing_stage': 'Isolines'}
+        mapping = {'render_stamp_post_processing_stage': "Render Stamp",
+                   'color_map_post_processing_stage': "Color Map",
+                   'isolines_post_processing_stage': "Isolines"}
         self.name = mapping[self.model]
 
-    name = bpy.props.StringProperty(name='name',
+    name = bpy.props.StringProperty(name="name",
                                     default="")
 
-    model = bpy.props.EnumProperty(name='model',
+    model = bpy.props.EnumProperty(name="model",
                                    items=[
                                        ('render_stamp_post_processing_stage', "Render Stamp", ""),
                                        ('color_map_post_processing_stage', "Color Map", ""),
@@ -97,7 +97,7 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
                                                        ('{lib-build-time}', "Library Build Time", ""),
                                                        ('{render-time}', "Render Time", ""),
                                                        ('{peak-memory}', "Peak Memory", "")],
-                                                   default='{render-time}',
+                                                   default="{render-time}",
                                                    update=update_stamp)
 
     # Color map
@@ -241,15 +241,15 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     pixel_filter = bpy.props.EnumProperty(name="Pixel Filter",
                                           description="Pixel filter to use",
-                                          items=[("blackman-harris", "Blackman-Harris", "Blackman-Harris"),
-                                                 ("box", "Box", "Box"),
-                                                 ("catmull", "Catmull-Rom Spline", "Catmull-Rom Spline"),
-                                                 ("bspline", "Cubic B-spline", "Cubic B-spline"),
-                                                 ("gaussian", "Gaussian", "Gaussian"),
-                                                 ("lanczos", "Lanczos", "Lanczos"),
-                                                 ("mitchell", "Mitchell-Netravali", "Mitchell-Netravali"),
-                                                 ("triangle", "Triangle", "Triangle")],
-                                          default="blackman-harris")
+                                          items=[('blackman-harris', "Blackman-Harris", "Blackman-Harris"),
+                                                 ('box', "Box", "Box"),
+                                                 ('catmull', "Catmull-Rom Spline", "Catmull-Rom Spline"),
+                                                 ('bspline', "Cubic B-spline", "Cubic B-spline"),
+                                                 ('gaussian', "Gaussian", "Gaussian"),
+                                                 ('lanczos', "Lanczos", "Lanczos"),
+                                                 ('mitchell', "Mitchell-Netravali", "Mitchell-Netravali"),
+                                                 ('triangle', "Triangle", "Triangle")],
+                                          default='blackman-harris')
 
     pixel_filter_size = bpy.props.FloatProperty(name="pixel_filter_size",
                                                 description="Pixel filter size",
@@ -259,9 +259,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     pixel_sampler = bpy.props.EnumProperty(name="Pixel Sampler",
                                            description="Sampler",
-                                           items=[("uniform", "Uniform", "Uniform"),
-                                                  ("adaptive", "Adaptive", "Adaptive")],
-                                           default="uniform")
+                                           items=[('uniform', "Uniform", "Uniform"),
+                                                  ('adaptive', "Adaptive", "Adaptive")],
+                                           default='uniform')
 
     adaptive_batch_size = bpy.props.IntProperty(name="adaptive_batch_size",
                                                 description="The number of samples taken in between noise level evaluations",

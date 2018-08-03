@@ -25,14 +25,12 @@
 # THE SOFTWARE.
 #
 
-import os
-
 import bpy
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ExportHelper
-from .translators import SceneTranslator
 
 from . import util
+from .translators import SceneTranslator
 
 
 class ExportAppleseedScene(bpy.types.Operator, ExportHelper):

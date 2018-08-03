@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -29,6 +28,7 @@
 import logging
 
 __logger = None
+
 
 def get_logger():
     global __logger

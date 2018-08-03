@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,6 +26,7 @@
 #
 
 import bpy
+
 from .. import util
 
 
@@ -45,7 +45,6 @@ def refresh_preview(self, context):
 
 
 class AppleseedMatProps(bpy.types.PropertyGroup):
-
     shader_lighting_samples = bpy.props.IntProperty(name="lighting_samples",
                                                     description="",
                                                     min=1,
@@ -61,7 +60,8 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                             update=refresh_preview)
 
     # Nodes
-    osl_node_tree = bpy.props.PointerProperty(name="OSL Node Tree", type=bpy.types.NodeTree)
+    osl_node_tree = bpy.props.PointerProperty(name="OSL Node Tree",
+                                              type=bpy.types.NodeTree)
 
 
 def register():

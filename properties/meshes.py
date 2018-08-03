@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,13 +26,13 @@
 #
 
 import bpy
+
 from .. import util
 
 
 class AppleseedMeshSettings(bpy.types.PropertyGroup):
-
     export_normals = bpy.props.BoolProperty(name="export_normals",
-                                               default=True)
+                                            default=True)
 
     export_uvs = bpy.props.BoolProperty(name="export_uvs",
                                         default=True)

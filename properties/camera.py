@@ -40,9 +40,9 @@ def get_shutter_max(self, context):
 
 class AppleseedCameraSettings(bpy.types.PropertyGroup):
     camera_model = bpy.props.EnumProperty(name="camera_model",
-                                          items=[('pinhole', 'Pinhole', ''),
-                                                 ('thinlens', 'Thin Lens', ''),
-                                                 ('spherical', 'Spherical', '')],
+                                          items=[('pinhole', "Pinhole", ''),
+                                                 ('thinlens', "Thin Lens", ''),
+                                                 ('spherical', "Spherical", '')],
                                           description="Camera model",
                                           default='pinhole')
 

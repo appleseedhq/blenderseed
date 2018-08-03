@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -26,18 +25,18 @@
 # THE SOFTWARE.
 #
 
+import bl_ui.properties_data_mesh as properties_data_mesh
+
+from . import camera
+from . import lamps
+from . import materials
+from . import meshes
+from . import objects
 from . import render
 from . import scene
 from . import world
-from . import camera
-from . import objects
-from . import materials
-from . import meshes
-from . import lamps
 
 # Enable all existing panels for these contexts
-
-import bl_ui.properties_data_mesh as properties_data_mesh
 for member in dir(properties_data_mesh):
     subclass = getattr(properties_data_mesh, member)
     try:
@@ -47,6 +46,7 @@ for member in dir(properties_data_mesh):
 del properties_data_mesh
 
 import bl_ui.properties_particle as properties_particle
+
 for member in dir(properties_particle):
     subclass = getattr(properties_particle, member)
     try:
@@ -56,6 +56,7 @@ for member in dir(properties_particle):
 del properties_particle
 
 import bl_ui.properties_physics_common as properties_physics_common
+
 for member in dir(properties_physics_common):
     subclass = getattr(properties_physics_common, member)
     try:
@@ -65,6 +66,7 @@ for member in dir(properties_physics_common):
 del properties_physics_common
 
 import bl_ui.properties_physics_cloth as properties_physics_cloth
+
 for member in dir(properties_physics_cloth):
     subclass = getattr(properties_physics_cloth, member)
     try:
@@ -74,6 +76,7 @@ for member in dir(properties_physics_cloth):
 del properties_physics_cloth
 
 import bl_ui.properties_physics_dynamicpaint as properties_physics_dynamicpaint
+
 for member in dir(properties_physics_dynamicpaint):
     subclass = getattr(properties_physics_dynamicpaint, member)
     try:
@@ -83,6 +86,7 @@ for member in dir(properties_physics_dynamicpaint):
 del properties_physics_dynamicpaint
 
 import bl_ui.properties_physics_field as properties_physics_field
+
 for member in dir(properties_physics_field):
     subclass = getattr(properties_physics_field, member)
     try:
@@ -92,6 +96,7 @@ for member in dir(properties_physics_field):
 del properties_physics_field
 
 import bl_ui.properties_physics_fluid as properties_physics_fluid
+
 for member in dir(properties_physics_fluid):
     subclass = getattr(properties_physics_fluid, member)
     try:
@@ -101,6 +106,7 @@ for member in dir(properties_physics_fluid):
 del properties_physics_fluid
 
 import bl_ui.properties_physics_rigidbody as properties_physics_rigidbody
+
 for member in dir(properties_physics_rigidbody):
     subclass = getattr(properties_physics_rigidbody, member)
     try:
@@ -110,6 +116,7 @@ for member in dir(properties_physics_rigidbody):
 del properties_physics_rigidbody
 
 import bl_ui.properties_physics_rigidbody_constraint as properties_physics_rigidbody_constraint
+
 for member in dir(properties_physics_rigidbody_constraint):
     subclass = getattr(properties_physics_rigidbody_constraint, member)
     try:
@@ -119,6 +126,7 @@ for member in dir(properties_physics_rigidbody_constraint):
 del properties_physics_rigidbody_constraint
 
 import bl_ui.properties_physics_smoke as properties_physics_smoke
+
 for member in dir(properties_physics_smoke):
     subclass = getattr(properties_physics_smoke, member)
     try:
@@ -128,6 +136,7 @@ for member in dir(properties_physics_smoke):
 del properties_physics_smoke
 
 import bl_ui.properties_physics_softbody as properties_physics_softbody
+
 for member in dir(properties_physics_softbody):
     subclass = getattr(properties_physics_softbody, member)
     try:
@@ -145,13 +154,13 @@ def register():
     meshes.register()
     camera.register()
     objects.register()
-#    particles.register()
+    #    particles.register()
     lamps.register()
 
 
 def unregister():
     lamps.unregister()
-#    particles.unregister()
+    #    particles.unregister()
     objects.unregister()
     camera.unregister()
     meshes.unregister()

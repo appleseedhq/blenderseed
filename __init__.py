@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -79,8 +78,10 @@ else:
     import sys
     import platform
     from .logger import get_logger
+
     logger = get_logger()
     from . import util
+
     load_appleseed_python_paths()
     from . import properties
     from . import operators

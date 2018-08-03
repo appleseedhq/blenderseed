@@ -31,7 +31,8 @@ from .. import util
 
 
 class AppleseedSSSSetsProps(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(name="SSS Set Name", default="")
+    name = bpy.props.StringProperty(name="SSS Set Name",
+                                    default="")
 
 
 class AppleseedSSSSets(bpy.types.PropertyGroup):
@@ -57,10 +58,10 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                       default="none")
 
     sun_model = bpy.props.EnumProperty(name="Sky Model",
-                                       items=[("hosek", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
-                                              ('preetham', "Preetham", 'Preetham physical sun/sky model')],
+                                       items=[('hosek', "Hosek-Wilkie", "Hosek-Wilkie physical sun/sky model"),
+                                              ('preetham', "Preetham", "Preetham physical sun/sky model")],
                                        description="Physical sun/sky model",
-                                       default="hosek")
+                                       default='hosek')
 
     sun_theta = bpy.props.FloatProperty(name="sun_theta",
                                         description="Sun polar (vertical) angle in degrees",
@@ -123,7 +124,7 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                     ('srgb', "sRGB", ""),
                                                     ('linear_rgb', "Linear RGB", ""),
                                                     ('ciexyz', "CIE XYZ", "")],
-                                                default="linear_rgb")
+                                                default='linear_rgb')
 
     env_tex = bpy.props.PointerProperty(name="env_tex",
                                         type=bpy.types.Image)
