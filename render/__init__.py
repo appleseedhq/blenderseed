@@ -40,8 +40,6 @@ from ..translators.scene import SceneTranslator
 
 logger = get_logger()
 
-_preview_renderer = None
-
 
 class RenderThread(threading.Thread):
     def __init__(self, renderer):
@@ -57,8 +55,11 @@ class RenderAppleseed(bpy.types.RenderEngine):
     bl_label = 'appleseed'
     bl_use_preview = True
 
-    # This lock allows to serialize renders.
-    # render_lock = threading.Lock()
+    # Preview renderer (shared by all render engine instances).
+    __material_preview_renderer = None
+
+    # True if we are doing interactive rendering.
+    __interactive_session = False
 
     #
     # Constructor.
@@ -75,14 +76,22 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Interactive rendering.
         self.__interactive_scene_translator = None
+        self.__is_interactive = False
 
     #
     # Destructor.
     #
 
     def __del__(self):
-
         self.__stop_rendering()
+
+        # Sometimes __is_interactive does not exist, not sure why.
+        try:
+            if self.__is_interactive:
+                RenderAppleseed.__interactive_session = False
+        except:
+            pass
+
         logger.debug("Deleting render engine")
 
     #
@@ -90,17 +99,16 @@ class RenderAppleseed(bpy.types.RenderEngine):
     #
 
     def render(self, scene):
-        if not self.is_preview:
-            self.__add_render_passes(scene)
-
         if self.is_preview:
-            if not bpy.app.background:
+            if bpy.app.background: # Can this happen?
+                return
+
+            # Disable material previews if we are doing an interactive render.
+            if not RenderAppleseed.__interactive_session:
                 self.__render_material_preview(scene)
         else:
+            self.__add_render_passes(scene)
             self.__render_final(scene)
-
-    def update(self, data, scene):
-        pass
 
     def view_update(self, context):
         if self.__interactive_scene_translator is None:
@@ -112,7 +120,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.__restart_interactive_render()
 
     def view_draw(self, context):
-        # Check if view has changed
+        self.__draw_pixels(context)
+
+        # Check if view has changed.
         view_update, cam_param_update, cam_translate_update = self.__interactive_scene_translator.check_view(context)
 
         if view_update or cam_param_update or cam_translate_update:
@@ -120,14 +130,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
             logger.debug("Updating view")
             self.__interactive_scene_translator.update_view(view_update, cam_param_update)
             self.__restart_interactive_render()
-            self.tag_redraw()
-
-        width = int(context.region.width)
-        height = int(context.region.height)
-
-        self.bind_display_space_shader(context.scene)
-        self.__tile_callback.draw_pixels(0, 0, width, height)
-        self.unbind_display_space_shader()
 
     def update_render_passes(self, scene=None, renderlayer=None):
         asr_scene_props = scene.appleseed
@@ -176,17 +178,17 @@ class RenderAppleseed(bpy.types.RenderEngine):
     #
 
     def __render_material_preview(self, scene):
-        global _preview_renderer
+        """
+        Export and render the material preview scene.
+        """
 
-        if not _preview_renderer:
-            _preview_renderer = PreviewRenderer()
-            _preview_renderer.translate_preview(scene)
+        if not RenderAppleseed.__material_preview_renderer:
+            RenderAppleseed.__material_preview_renderer = PreviewRenderer()
+            RenderAppleseed.__material_preview_renderer.translate_preview(scene)
         else:
-            _preview_renderer.update_preview(scene)
+            RenderAppleseed.__material_preview_renderer.update_preview(scene)
 
-        project = _preview_renderer.as_project
-
-        self.__start_final_render(scene, project)
+        self.__start_final_render(scene, RenderAppleseed.__material_preview_renderer.as_project)
 
     def __render_final(self, scene):
         """
@@ -253,12 +255,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
         assert(self.__tile_callback is None)
         assert(self.__render_thread is None)
 
+        logger.debug("Starting interactive rendering")
+        self.__is_interactive = True
+        RenderAppleseed.__interactive_session = True
+
         logger.debug("Translating scene for interactive rendering")
 
         self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(context)
         self.__interactive_scene_translator.translate_scene()
-
-        logger.debug("Starting interactive rendering")
 
         self.__camera = self.__interactive_scene_translator.camera_translator
 
@@ -278,12 +282,17 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
         Restart the interactive renderer.
         """
+
         logger.debug("Start rendering")
         self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
         self.__render_thread = RenderThread(self.__renderer)
         self.__render_thread.start()
 
     def __pause_rendering(self):
+        """
+        Abort rendering if a render is in progress.
+        """
+
         # Signal appleseed to stop rendering.
         logger.debug("Pause rendering")
         try:
@@ -297,7 +306,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
     def __stop_rendering(self):
         """
-        Abort rendering if a render is in progress.
+        Abort rendering if a render is in progress and cleanup.
         """
 
         # Signal appleseed to stop rendering.
@@ -314,6 +323,18 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.__renderer = None
         self.__renderer_controller = None
         self.__tile_callback = None
+
+    def __draw_pixels(self, context):
+        """
+        Draw rendered image in Blender's viewport.
+        """
+
+        width = int(context.region.width)
+        height = int(context.region.height)
+
+        self.bind_display_space_shader(context.scene)
+        self.__tile_callback.draw_pixels(0, 0, width, height)
+        self.unbind_display_space_shader()
 
     def __add_render_passes(self, scene):
         asr_scene_props = scene.appleseed
