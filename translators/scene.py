@@ -701,7 +701,12 @@ class SceneTranslator(GroupTranslator):
                 if stage.model == 'render_stamp_post_processing_stage':
                     params = {'order': index,
                               'format_string': stage.render_stamp}
-
+                elif stage.model == 'isolines_post_processing_stage':
+                    params = {'order': index,
+                              'low_isovalue': stage.pp_low_isovalue,
+                              'high_isovalue': stage.pp_high_isovalue,
+                              'levels': stage.pp_levels,
+                              'line_thickness': stage.pp_line_thickness}
                 else:
                     params = {'order': index,
                               'color_map': stage.color_map,
