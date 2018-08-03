@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,11 +26,11 @@
 #
 
 import bpy
+
 from .. import util
 
 
 class AppleseedLampProps(bpy.types.PropertyGroup):
-
     radiance = bpy.props.FloatVectorProperty(name="radiance",
                                              description="Color of light emitted by lamp",
                                              default=(0.8, 0.8, 0.8),
@@ -45,7 +44,13 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
 
     radiance_tex = bpy.props.StringProperty(name="radiance_tex",
                                             description="Texture to influence lamp intensity",
-                                            default="")
+                                            default="",
+                                            subtype='FILE_PATH')
+
+    radiance_tex_color_space = bpy.props.EnumProperty(name="radiance_tex_color_space",
+                                                      items=[('linear_rgb', "Linear", ""),
+                                                             ('srgb', "sRGB", "")],
+                                                      default='linear_rgb')
 
     radiance_multiplier = bpy.props.FloatProperty(name="radiance_multiplier",
                                                   description="Multiplier of lamp intensity",
@@ -59,13 +64,25 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
 
     radiance_multiplier_tex = bpy.props.StringProperty(name="radiance_multiplier_tex",
                                                        description="Texture to influence intensity multiplier",
-                                                       default="")
+                                                       default="",
+                                                       subtype='FILE_PATH')
+
+    radiance_multiplier_tex_color_space = bpy.props.EnumProperty(name="radiance_multiplier_tex_color_space",
+                                                                 items=[('linear_rgb', "Linear", ""),
+                                                                        ('srgb', "sRGB", "")],
+                                                                 default='linear_rgb')
 
     exposure = bpy.props.FloatProperty(name="exposure",
                                        description="Exposure",
                                        default=0.0,
                                        min=-64.0,
                                        max=64.0)
+
+    exposure_multiplier = bpy.props.FloatProperty(name="exposure_multiplier",
+                                                  description="Spotlight exposure multiplier",
+                                                  default=1.0,
+                                                  soft_min=-64.0,
+                                                  soft_max=64.0)
 
     cast_indirect = bpy.props.BoolProperty(name="cast_indirect",
                                            description="Lamp casts indirect light",
@@ -104,6 +121,41 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                          default=0,
                                          min=-360,
                                          max=360)
+
+    # Area lamp specific parameters.
+    area_shape = bpy.props.EnumProperty(name="area_shape",
+                                        description="",
+                                        items=[('grid', "Rectangle", ""),
+                                               ('disk', "Disk", ""),
+                                               ('sphere', "Sphere", "")],
+                                        default='grid')
+
+    area_color = bpy.props.FloatVectorProperty(name="area_color",
+                                               description="Color of area lamp",
+                                               subtype='COLOR',
+                                               default=(1.0, 1.0, 1.0))
+
+    area_intensity = bpy.props.FloatProperty(name="area_intensity",
+                                             description="Intensity of area light",
+                                             default=1.0)
+
+    area_intensity_scale = bpy.props.FloatProperty(name="area_intensity_scale",
+                                                   description="Intensity of area light",
+                                                   default=1.0)
+
+    area_exposure = bpy.props.FloatProperty(name="exposure",
+                                            description="Intensity of area light",
+                                            default=1.0)
+
+    area_normalize = bpy.props.BoolProperty(name="area_normalize",
+                                            description="",
+                                            default=False)
+
+    area_visibility = bpy.props.BoolProperty(name="area_visibility",
+                                             description="",
+                                             default=True)
+
+    osl_node_tree = bpy.props.PointerProperty(name="Lamp OSL Node Tree", type=bpy.types.NodeTree)
 
 
 def register():

@@ -122,32 +122,40 @@ class AppleseedOSLNodeCategory(NodeCategory):
 
 
 def node_categories(osl_nodes):
-    osl_shaders = []
-    osl_textures = []
-    osl_utilities = []
-    osl_3d_textures = []
     osl_surface = []
+    osl_shaders = []
+    osl_2d_textures = []
+    osl_3d_textures = []
+    osl_color = []
+    osl_utilities = []
+    osl_other = []
 
     for node in osl_nodes:
         node_item = NodeItem(node[0])
         node_category = node[1]
         if node_category == 'shader':
             osl_shaders.append(node_item)
-        elif node_category == 'texture':
-            osl_textures.append(node_item)
+        elif node_category == 'texture2d':
+            osl_2d_textures.append(node_item)
         elif node_category == 'utility':
             osl_utilities.append(node_item)
-        elif node_category == '3d_texture':
+        elif node_category == 'texture3d':
             osl_3d_textures.append(node_item)
-        else:
+        elif node_category == 'surface':
             osl_surface.append(node_item)
+        elif node_category == 'color':
+            osl_color.append(node_item)
+        else:
+            osl_other.append(node_item)
 
     appleseed_node_categories = [
-        AppleseedOSLNodeCategory("OSL_Surfaces", "OSL Surface", items=osl_surface),
-        AppleseedOSLNodeCategory("OSL_Shaders", "OSL Shader", items=osl_shaders),
-        AppleseedOSLNodeCategory("OSL_Textures", "OSL Texture", items=osl_textures),
-        AppleseedOSLNodeCategory("OSL_3D_Textures", "OSL 3D Texture", items=osl_3d_textures),
-        AppleseedOSLNodeCategory("OSL_Utilities", "OSL Utility", items=osl_utilities)
+        AppleseedOSLNodeCategory("OSL_Surfaces", "Surface", items=osl_surface),
+        AppleseedOSLNodeCategory("OSL_Shaders", "Shader", items=osl_shaders),
+        AppleseedOSLNodeCategory("OSL_3D_Textures", "Texture3D", items=osl_3d_textures),
+        AppleseedOSLNodeCategory("OSL_2D_Textures", "Texture2D", items=osl_2d_textures),
+        AppleseedOSLNodeCategory("OSL_Color", "Color", items=osl_color),
+        AppleseedOSLNodeCategory("OSL_Utilities", "Utility", items=osl_utilities),
+        AppleseedOSLNodeCategory("OSL_Other", "No Category", items=osl_other)
     ]
 
     return appleseed_node_categories
@@ -195,10 +203,7 @@ def register():
     node_list = util.read_osl_shaders()
     for node in node_list:
         try:
-            if 'USE_APPLESEED_PYTHON' in os.environ:
-                node_name, node_category = oslnode.generate_node_python(node)
-            else:
-                node_name, node_category = oslnode.generate_node_oslinfo(node)
+            node_name, node_category = oslnode.generate_node(node)
             osl_node_names.append([node_name, node_category])
         except:
             pass

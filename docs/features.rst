@@ -1,29 +1,38 @@
 Features
 ========
 
+New in 1.0
+----------
+
+    * Completely redesigned export/render interface that leverages applseed's Python bindings
+    * Interactive rendering
+    * Area lamps
+    * Support for linked objects and groups
+    * appleseed now bundled directly with blenderseed (no more configuration woes)
+    * Number of motion segments for camera, obejct, and deformation blur
+
 Supported Features
 ------------------
 
-	* Pinhole, thin lens (supports physically correct depth of field), orthographic and spherical camera models
-	* Camera, transformation and deformation motion blur
-	* Export of Blender geometry
-	* OSL shading
-	* Integrated .tx texture converter
-	* Render results directly into Blender or export scene files (including animations) for later rendering
-	* AOVs
-	* BSDF materials
-	* Normal / bump mapping
-	* Alpha mapping (object and material based)
-	* Mesh lights
-	* Point, directional, and sun lights
-	* Spot lights (supports textures)
-	* Physical sun/sky
-	* Gradient, constant, mirror ball map and latitude-longitude map environment models
-	* Path tracing and SPPM lighting engines
+    * Pinhole, thin lens (supports physically correct depth of field), orthographic and spherical camera models
+    * Camera, transformation and deformation motion blur
+    * Interactive rendering
+    * Arbitrary segments for motion blur
+    * Translation of Blender geometry, including linked libraries
+    * OSL shading
+    * Integrated .tx texture converter
+    * Render results directly into Blender or export scene files (including animations) for later rendering
+    * AOVs
+    * Alpha mapping (object and material based)
+    * Point, directional, sun and area lights
+    * Spot lights (supports textures)
+    * Physical sun/sky
+    * Gradient, constant, mirror ball map and latitude-longitude map environment models
+    * Path tracing and SPPM lighting engines
 
 Planned Features
 --------------------
 
-	* Arbitrary segments for motion blur
-	* Hair export 
-	* Archive assemblies and instances
+    * Hair export
+    * Archive assemblies and instances
+    * Dynamic OSL script node

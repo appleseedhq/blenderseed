@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -26,13 +25,13 @@
 # THE SOFTWARE.
 #
 
-import bpy
-from bpy_extras.io_utils import ExportHelper
 import os
-import subprocess
-import shutil
 
-from . import projectwriter
+import bpy
+from bpy.props import BoolProperty, StringProperty
+from bpy_extras.io_utils import ExportHelper
+from .translators import SceneTranslator
+
 from . import util
 
 
@@ -43,13 +42,17 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
 
     bl_idname = "appleseed.export_scene"
     bl_label = "Export appleseed Scene"
+    bl_options = {'PRESET'}
 
     filename_ext = ".appleseed"
-    filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'})
+    filter_glob = StringProperty(default="*.appleseed", options={'HIDDEN'})
 
-    compress_export = bpy.props.BoolProperty(name="Create compressed archive",
-                                             description="Compress export (including all textures) into archive file",
-                                             default=False)
+    # Properties.
+
+    animation = BoolProperty(name="Animation", description="Write out an appleseed project for each frame", default=False)
+
+    # selected_only = BoolProperty(name="Selection Only", description="Export selected objects only", default=False)
+    # packed = BoolProperty(name="Pack Project", description="Export packed projects", default=False)
 
     @classmethod
     def poll(cls, context):
@@ -58,69 +61,59 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         export_path = util.realpath(self.filepath)
-        writer = projectwriter.Writer()
-        writer.write(context.scene, export_path)
 
-        if self.compress_export:
-            appleseed_bin_dir = util.get_appleseed_bin_dir()
-            projecttool_path = os.path.join(appleseed_bin_dir, "projecttool")
-            cmd = (projecttool_path, 'pack', export_path)
-            try:
-                process = subprocess.Popen(cmd, cwd=appleseed_bin_dir, env=os.environ.copy(), stdout=subprocess.PIPE)
-                process.wait()
-            except OSError as e:
-                self.report({'ERROR'}, "Failed to run {0} with project {1}: {2}.".format(projecttool_path, export_path, e))
-                return
-            dir_path = os.path.dirname(export_path)
-            shutil.rmtree(os.path.join(dir_path, "meshes"))
-            os.remove(export_path)
-
-        return {'FINISHED'}
-
-
-class ExportAppleseedAnimationScene(bpy.types.Operator, ExportHelper):
-    """
-    Export the scene to an appleseed project on disk.
-    """
-
-    bl_idname = "appleseed.export_anim_scene"
-    bl_label = "Export appleseed Animation Scene"
-
-    filename_ext = ".appleseed"
-    filter_glob = bpy.props.StringProperty(default="*.appleseed", options={'HIDDEN'})
-
-    @classmethod
-    def poll(cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER'
-
-    def execute(self, context):
         scene = context.scene
-        frame_start = scene.frame_start
-        frame_end = scene.frame_end
 
-        for frame in range(frame_start, frame_end + 1):
-            scene.frame_set(frame)
-            file_split = os.path.splitext(self.filepath)
-            export_path = util.realpath(os.path.join('{0}_{1}.{2}'.format(file_split[0], frame, file_split[1])))
-            writer = projectwriter.Writer()
-            writer.write(context.scene, export_path, animation=True)
+        if self.animation:
+
+            if not '#' in export_path:
+                self.report(
+                    {'ERROR'},
+                    'Exporting animation but project filename has no # frame placeholders.')
+                return {'CANCELLED'}
+
+            replacements = [
+                ('######', "%06d"),
+                ('#####', "%05d"),
+                ('####', "%04d"),
+                ('###', "%03d"),
+                ('##', "%02d"),
+                ('#', "%d")
+            ]
+
+            for i in replacements:
+                if i[0] in export_path:
+                    export_path = export_path.replace(i[0], i[1])
+                    break
+
+            frame_start = scene.frame_start
+            frame_end = scene.frame_end
+
+            for frame in range(frame_start, frame_end + 1):
+                scene.frame_set(frame)
+                proj_filename = export_path % frame
+                self.__export_project(context, proj_filename)
+
+        else:
+            self.__export_project(context, export_path)
 
         return {'FINISHED'}
+
+    def __export_project(self, context, export_path):
+        scene_translator = SceneTranslator.create_project_export_translator(context.scene, export_path)
+        scene_translator.translate_scene()
+        scene_translator.write_project(export_path)
 
 
 def menu_func_export_scene(self, context):
     self.layout.operator(ExportAppleseedScene.bl_idname, text="appleseed (.appleseed)")
-    self.layout.operator(ExportAppleseedAnimationScene.bl_idname, text="appleseed animation (.appleseed)")
 
 
 def register():
     util.safe_register_class(ExportAppleseedScene)
-    util.safe_register_class(ExportAppleseedAnimationScene)
     bpy.types.INFO_MT_file_export.append(menu_func_export_scene)
 
 
 def unregister():
     bpy.types.INFO_MT_file_export.remove(menu_func_export_scene)
-    util.safe_unregister_class(ExportAppleseedAnimationScene)
     util.safe_unregister_class(ExportAppleseedScene)

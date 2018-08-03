@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,6 +26,7 @@
 #
 
 import bpy
+
 from .. import util
 
 
@@ -35,7 +35,6 @@ class AppleseedSSSSetsProps(bpy.types.PropertyGroup):
 
 
 class AppleseedSSSSets(bpy.types.PropertyGroup):
-
     sss_sets = bpy.props.CollectionProperty(type=AppleseedSSSSetsProps,
                                             name="appleseed SSS Sets",
                                             description="")
@@ -46,22 +45,22 @@ class AppleseedSSSSets(bpy.types.PropertyGroup):
 
 
 class AppleseedSkySettings(bpy.types.PropertyGroup):
-
     env_type = bpy.props.EnumProperty(name="Environment Type",
-                                      items=[("constant", "Constant", "Use constant color for sky"),
-                                             ("gradient", "Gradient", "Use sky color gradient"),
-                                             ("latlong_map", "HDRI Environment", "Use HDRI map texture"),
-                                             ("mirrorball_map", "Mirror Ball", "Use mirror ball texture"),
-                                             ("sunsky", "Physical Sky", ""),
-                                             ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere")],
+                                      items=[("constant", "Constant", "Use constant color for sky", "", 1),
+                                             ("gradient", "Gradient", "Use sky color gradient", "", 2),
+                                             ("latlong_map", "HDRI Environment", "Use HDRI map texture", "", 3),
+                                             ("mirrorball_map", "Mirror Ball", "Use mirror ball texture", "", 4),
+                                             ("none", "None", "", "", 7),
+                                             ("sunsky", "Physical Sky", "", "", 5),
+                                             ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere", "", 6)],
                                       description="Select environment type",
-                                      default="gradient")
+                                      default="none")
 
     sun_model = bpy.props.EnumProperty(name="Sky Model",
-                                       items=[("hosek_environment_edf", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
-                                              ('preetham_environment_edf', "Preetham", 'Preetham physical sun/sky model')],
+                                       items=[("hosek", "Hosek-Wilkie", 'Hosek-Wilkie physical sun/sky model'),
+                                              ('preetham', "Preetham", 'Preetham physical sun/sky model')],
                                        description="Physical sun/sky model",
-                                       default="hosek_environment_edf")
+                                       default="hosek")
 
     sun_theta = bpy.props.FloatProperty(name="sun_theta",
                                         description="Sun polar (vertical) angle in degrees",
@@ -116,12 +115,18 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
 
     env_tex_mult = bpy.props.FloatProperty(name="env_tex_mult",
                                            description="",
-                                           default=1.0,
-                                           min=0.0)
+                                           default=1)
 
-    env_tex = bpy.props.StringProperty(name="env_tex",
-                                       description="Texture to influence environment",
-                                       default="")
+    env_tex_colorspace = bpy.props.EnumProperty(name="env_tex_colorspace",
+                                                description="Color space of input texture",
+                                                items=[
+                                                    ('srgb', "sRGB", ""),
+                                                    ('linear_rgb', "Linear RGB", ""),
+                                                    ('ciexyz', "CIE XYZ", "")],
+                                                default="linear_rgb")
+
+    env_tex = bpy.props.PointerProperty(name="env_tex",
+                                        type=bpy.types.Image)
 
     horizontal_shift = bpy.props.FloatProperty(name="horizontal_shift",
                                                description="Environment texture horizontal shift in degrees",
@@ -144,6 +149,12 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
     env_exposure = bpy.props.FloatProperty(name="env_exposure",
                                            description="Environment exposure",
                                            default=0.0)
+
+    env_exposure_multiplier = bpy.props.FloatProperty(name="env_exposure_multiplier",
+                                                      description="",
+                                                      default=1.0,
+                                                      soft_min=-64.0,
+                                                      soft_max=64.0)
 
 
 def register():

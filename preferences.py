@@ -33,14 +33,6 @@ from . import util
 class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
     bl_idname = __package__
 
-    appleseed_binary_directory = bpy.props.StringProperty(name="appleseed_binary_directory",
-                                                          description="Path to appleseed binary directory",
-                                                          subtype='DIR_PATH',
-                                                          default="")
-
-    def draw(self, context):
-        self.layout.prop(self, "appleseed_binary_directory", text="appleseed Binary Directory")
-
 
 def register():
     util.safe_register_class(AppleseedPreferencesPanel)

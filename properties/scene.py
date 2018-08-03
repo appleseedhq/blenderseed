@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -40,31 +39,91 @@ except:
     max_threads = 32
 
 
-def scene_enumerator(self, context):
-    matches = []
-    for scene in bpy.data.scenes:
-        matches.append((scene.name, scene.name, ""))
-    return matches
+class AppleseedPostProcessProps(bpy.types.PropertyGroup):
+    def update_stamp(self, context):
+        self.render_stamp += self.render_stamp_patterns
 
+    def update_name(self, context):
+        mapping = {'render_stamp_post_processing_stage': 'Render Stamp',
+                   'color_map_post_processing_stage': 'Color Map'}
+        self.name = mapping[self.model]
 
-def camera_enumerator(self, context):
-    return object_enumerator('CAMERA')
+    name = bpy.props.StringProperty(name='name',
+                                    default="")
+
+    model = bpy.props.EnumProperty(name='model',
+                                   items=[
+                                       ('render_stamp_post_processing_stage', "Render Stamp", ""),
+                                       ('color_map_post_processing_stage', "Color Map", "")],
+                                   default='render_stamp_post_processing_stage',
+                                   update=update_name)
+
+    render_stamp = bpy.props.StringProperty(name="render_stamp",
+                                            description="Render stamp text",
+                                            default="appleseed {lib-version} | Time: {render-time}")
+
+    render_stamp_patterns = bpy.props.EnumProperty(name="render_stamp_patterns",
+                                                   description="Variables to insert into the render stamp",
+                                                   items=[
+                                                       ('{lib-version}', "Library Version", ""),
+                                                       ('{lib-name}', "Library Name", ""),
+                                                       ('{lib-variant}', "Library Variant", ""),
+                                                       ('{lib-config}', "Library Configuration", ""),
+                                                       ('{lib-build-date}', "Library Build Date", ""),
+                                                       ('{lib-build-time}', "Library Build Time", ""),
+                                                       ('{render-time}', "Render Time", ""),
+                                                       ('{peak-memory}', "Peak Memory", "")],
+                                                   default='{render-time}',
+                                                   update=update_stamp)
+
+    color_map = bpy.props.EnumProperty(name="color_map",
+                                       items=[('inferno', "Inferno", ""),
+                                              ('jet', "Jet", ""),
+                                              ('magma', "Magma", ""),
+                                              ('plasma', "Plasma", ""),
+                                              ('viridis', "Viridis", ""),
+                                              ('custom', "Custom", "")],
+                                       default='inferno')
+
+    auto_range = bpy.props.BoolProperty(name="auto_range",
+                                        default=True)
+
+    add_legend_bar = bpy.props.BoolProperty(name="add_legend_bar",
+                                            default=True)
+
+    legend_bar_ticks = bpy.props.IntProperty(name="legend_bar_ticks",
+                                             default=8,
+                                             min=2,
+                                             soft_max=64)
+
+    range_min = bpy.props.FloatProperty(name="range_min",
+                                        default=0.0,
+                                        soft_min=0.0,
+                                        soft_max=1.0)
+
+    range_max = bpy.props.FloatProperty(name="range_max",
+                                        default=1.0,
+                                        soft_min=0.0,
+                                        soft_max=1.0)
+
+    color_map_file_path = bpy.props.StringProperty(name="color_map_file_path",
+                                                   default="",
+                                                   subtype='FILE_PATH')
 
 
 class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(name="Texture",
-                                    default="",
-                                    subtype='FILE_PATH')
+    name = bpy.props.PointerProperty(name="name",
+                                     type=bpy.types.Image)
 
-    input_space = bpy.props.EnumProperty(name="Input Color Space",
+    input_space = bpy.props.EnumProperty(name="input_space",
                                          description="The color space of the file.  PNG, JPG and TIFF files are usually sRGB, EXR is normally linear",
                                          items=[
-                                              ('linear', "Linear", ""),
-                                              ('sRGB', "sRGB", ""),
-                                              ('Rec709', "Rec.709", "")],
+                                             ('linear', "Linear", ""),
+                                             ('sRGB', "sRGB", ""),
+                                             ('Rec709', "Rec.709", "")],
                                          default='linear')
 
-    output_depth = bpy.props.EnumProperty(name="Output Bit Depth",
+    output_depth = bpy.props.EnumProperty(name="output_depth",
                                           description="The bit depth of the output file.  Leave at default for no conversion",
                                           items=[
                                               ('default', "Default", ""),
@@ -82,10 +141,6 @@ class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
 
 
 class AppleseedRenderSettings(bpy.types.PropertyGroup):
-
-    def update_stamp(self, context):
-        self.render_stamp += self.render_stamp_patterns
-
     # Texture conversion
 
     tex_output_dir = bpy.props.StringProperty(name="tex_output_dir",
@@ -100,10 +155,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     sub_textures = bpy.props.BoolProperty(name="sub_textures",
                                           default=False)
 
-    del_unused_tex = bpy.props.BoolProperty(name="del_unused_tex",
-                                                    description="Removes unused .tx files when the list is refreshed",
-                                                    default=True)
-
     textures = bpy.props.CollectionProperty(type=AppleseedTextureConvertProps,
                                             name="appleseed Texture",
                                             description="")
@@ -112,7 +163,27 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                            description="",
                                            default=0)
 
+    # Post processing stages
+
+    post_processing_stages = bpy.props.CollectionProperty(type=AppleseedPostProcessProps,
+                                                          name="appleseed post processing",
+                                                          description="")
+
+    post_processing_stages_index = bpy.props.IntProperty(name="stage_index",
+                                                         description="",
+                                                         default=0)
+
     # Scene render settings.
+
+    scene_export_mode = bpy.props.EnumProperty(name="scene_export_mode",
+                                               description="",
+                                               items=[
+                                                   ('render', "Render", ""),
+                                                   ('export_only', "Export Scene Files", "")],
+                                               default='render')
+
+    export_selected = bpy.props.BoolProperty(name="export_selected",
+                                             default=False)
 
     threads_auto = bpy.props.BoolProperty(name="threads_auto",
                                           description="Automatically determine the number of rendering threads",
@@ -124,20 +195,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                     min=1,
                                     max=max_threads)
 
-    generate_mesh_files = bpy.props.BoolProperty(name="Export Geometry",
-                                                 description="Write geometry to disk as .obj files",
-                                                 default=True)
-
-    export_mode = bpy.props.EnumProperty(name="Export Mode",
-                                         description="Geometry export mode",
-                                         items=[('all', "All", "Export all geometry, overwriting existing .obj files"),
-                                                ('partial', "Partial", "Only export geometry that has not been written to disk"),
-                                                ('selected', "Selected", "Only export selected geometry")],
-                                         default='all')
-
-    clean_cache = bpy.props.BoolProperty(name="clean_cache",
-                                         description="Delete external files after rendering completes",
-                                         default=False)
+    tex_cache = bpy.props.IntProperty(name="tex_cache",
+                                      description="Size of the texture cache in MB",
+                                      default=1024)
 
     export_hair = bpy.props.BoolProperty(name="export_hair",
                                          description="Export hair particle systems as renderable geometry",
@@ -149,15 +209,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 description='Avoid correlation patterns at the expense of slightly more sampling noise',
                                                 default=True)
 
-    tile_width = bpy.props.IntProperty(name="tile_width",
-                                       description="Set the width of the render tile",
-                                       default=64,
-                                       min=1)
-
-    tile_height = bpy.props.IntProperty(name="tile_height",
-                                        description="Set the height of the render tile",
-                                        default=64,
-                                        min=1)
+    tile_size = bpy.props.IntProperty(name="tile_size",
+                                      description="Set the width of the render tile",
+                                      default=64,
+                                      min=1)
 
     pixel_filter = bpy.props.EnumProperty(name="Pixel Filter",
                                           description="Pixel filter to use",
@@ -177,58 +232,50 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                 max=16.0,
                                                 default=1.5)
 
-    enable_render_stamp = bpy.props.BoolProperty(name="enable_render_stamp",
-                                                 description="Enable a stamp on the output image",
-                                                 default=False)
-
-    render_stamp = bpy.props.StringProperty(name="render_stamp",
-                                            description="Render stamp text",
-                                            default="appleseed {lib-version} | Time: {render-time}")
-
-    render_stamp_patterns = bpy.props.EnumProperty(name="Stamp Variables",
-                                                   description="Variables to insert into the render stamp",
-                                                   items=[
-                                                       ('{lib-version}', "Library Version", ""),
-                                                       ('{lib-name}', "Library Name", ""),
-                                                       ('{lib-variant}', "Library Variant", ""),
-                                                       ('{lib-config}', "Library Configuration", ""),
-                                                       ('{lib-build-date}', "Library Build Date", ""),
-                                                       ('{lib-build-time}', "Library Build Time", ""),
-                                                       ('{render-time}', "Render Time", ""),
-                                                       ('{peak-memory}', "Peak Memory", "")],
-                                                   default='{render-time}',
-                                                   update=update_stamp)
-
     pixel_sampler = bpy.props.EnumProperty(name="Pixel Sampler",
                                            description="Sampler",
                                            items=[("uniform", "Uniform", "Uniform"),
                                                   ("adaptive", "Adaptive", "Adaptive")],
                                            default="uniform")
 
-    sampler_min_samples = bpy.props.IntProperty(name="sampler_min_samples",
-                                                description="Minimum number of anti-aliasing samples",
+    adaptive_batch_size = bpy.props.IntProperty(name="adaptive_batch_size",
+                                                description="The number of samples taken in between noise level evaluations",
                                                 min=1,
                                                 max=1000000,
-                                                default=16,
+                                                default=8,
                                                 subtype='UNSIGNED')
 
-    sampler_max_samples = bpy.props.IntProperty(name="sampler_max_samples",
-                                                description="Maximum number of anti-aliasing samples",
-                                                min=1,
-                                                max=1000000,
-                                                default=64,
-                                                subtype='UNSIGNED')
+    adaptive_max_samples = bpy.props.IntProperty(name="adaptive_max_samples",
+                                                 description="Maximum number of samples a pixel may take",
+                                                 min=1,
+                                                 max=1000000,
+                                                 default=256,
+                                                 subtype='UNSIGNED')
 
-    adaptive_sampler_enable_diagnostics = bpy.props.BoolProperty(name="adaptive_sampler_enable_diagnostics",
-                                                                 description='',
-                                                                 default=False)
+    adaptive_uniform_samples = bpy.props.IntProperty(name="adaptive_uniform_samples",
+                                                     description="Determines how many uniform samples will be taken before adaptive sampling takes over",
+                                                     default=16,
+                                                     min=1,
+                                                     max=500)
 
-    adaptive_sampler_quality = bpy.props.FloatProperty(name="adaptive_sampler_quality",
-                                                       description='',
-                                                       default=3.0,
-                                                       min=0.0,
-                                                       max=20.0,
-                                                       precision=3)
+    noise_threshold = bpy.props.FloatProperty(name="noise_threshold",
+                                              description="The level of noise at which the sampling will end for a pixel.",
+                                              default=5.0,
+                                              min=0.0,
+                                              max=20)
+
+    samples = bpy.props.IntProperty(name="samples",
+                                    description="Maximum number of anti-aliasing samples",
+                                    min=1,
+                                    max=8192,
+                                    default=16,
+                                    subtype='UNSIGNED')
+
+    interactive_max_fps = bpy.props.FloatProperty(name="interactive_max_fps",
+                                                  default=10.0)
+
+    interactive_max_samples = bpy.props.IntProperty(name="interactive_max_samples",
+                                                    default=-1)
 
     force_aa = bpy.props.BoolProperty(name="force_aa",
                                       description="When using 1 sample/pixel and Force Anti-Aliasing is disabled, samples are placed at the center of pixels",
@@ -274,7 +321,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                              description="Enable caustics",
                                              default=False)
 
-    enable_clamp_roughness = bpy.props.BoolProperty(name="enable_clamp_roughness",
+    enable_clamp_roughness = bpy.props.BoolProperty(name="clamp_roughness",
                                                     default=False)
 
     enable_dl = bpy.props.BoolProperty(name="enable_dl",
@@ -438,18 +485,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                          min=0.0,
                                          max=1.0)
 
-    # Miscellaneous settings.
-
-    light_mats_radiance_multiplier = bpy.props.FloatProperty(name="light_mats_radiance_multiplier",
-                                                             description="Multiply the exitance of light-emitting materials by this factor",
-                                                             min=0.0,
-                                                             max=100.0,
-                                                             default=1.0)
-
-    export_emitting_obj_as_lights = bpy.props.BoolProperty(name="export_emitting_obj_as_lights",
-                                                           description="Export objects with light-emitting materials as mesh (area) lights",
-                                                           default=True)
-
     # Denoiser settings
 
     denoise_mode = bpy.props.EnumProperty(name="Denoise Mode",
@@ -461,9 +496,15 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                           default='off')
 
     denoise_output_dir = bpy.props.StringProperty(name="denoise_output_dir",
-                                                  description="Where the denoise files will be exported",
+                                                  description="Where the denoiser files will be exported",
                                                   default="",
                                                   subtype="DIR_PATH")
+
+    random_pixel_order = bpy.props.BoolProperty(name="random_pixel_order",
+                                                default=True)
+
+    skip_denoised = bpy.props.BoolProperty(name="skip_denoised",
+                                           default=True)
 
     prefilter_spikes = bpy.props.BoolProperty(name="prefilter_spikes",
                                               description="This filter attempts to filter pixels that show a strong 'spike' over the average of their neighbors, i.e. fireflies",
@@ -487,23 +528,34 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                            min=1,
                                            max=10)
 
+    mark_invalid_pixels = bpy.props.BoolProperty(name="mark_invalid_pixels",
+                                                 default=False)
+
     # Motion blur settings.
 
-    enable_motion_blur = bpy.props.BoolProperty(name="enable_motion_blur",
-                                                description="Enable rendering of motion blur",
-                                                default=False)
-
     enable_deformation_blur = bpy.props.BoolProperty(name="enable_deformation_blur",
-                                                     description="Global toggle for rendering of deformation motion blur. Warning: objects with deformation motion blur enabled will add to export time.",
+                                                     description="Global toggle for rendering of deformation motion blur",
                                                      default=False)
+
+    deformation_blur_samples = bpy.props.IntProperty(name="deformation_blur_samples",
+                                                     min=2,
+                                                     default=2)
 
     enable_object_blur = bpy.props.BoolProperty(name="enable_object_blur",
                                                 description="Global toggle for rendering of object motion blur",
                                                 default=False)
 
+    object_blur_samples = bpy.props.IntProperty(name="object_blur_samples",
+                                                min=2,
+                                                default=2)
+
     enable_camera_blur = bpy.props.BoolProperty(name="enable_camera_blur",
                                                 description="Enable rendering of camera motion blur",
                                                 default=False)
+
+    camera_blur_samples = bpy.props.IntProperty(name="camera_blur_samples",
+                                                min=2,
+                                                default=2)
 
     shutter_open = bpy.props.FloatProperty(name="shutter_open",
                                            description="Shutter open time (relative to start of current frame)",
@@ -513,6 +565,14 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                            step=3,
                                            precision=3)
 
+    shutter_open_end_time = bpy.props.FloatProperty(name="shutter_open_end_time",
+                                                    description="Shutter open ending time (relative to start of current frame)",
+                                                    default=0.0,
+                                                    soft_min=0.0,
+                                                    soft_max=1.0,
+                                                    step=3,
+                                                    precision=3)
+
     shutter_close = bpy.props.FloatProperty(name="shutter_close",
                                             description="Shutter close time (relative to end of current frame)",
                                             default=1.0,
@@ -521,11 +581,21 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                             step=3,
                                             precision=3)
 
+    shutter_close_begin_time = bpy.props.FloatProperty(name="shutter_close_begin_time",
+                                                       description="Shutter close begin time (relative to start of current frame)",
+                                                       default=1.0,
+                                                       soft_min=0.0,
+                                                       soft_max=1.0,
+                                                       step=3,
+                                                       precision=3)
+
     # AOV export
 
-    enable_aovs = bpy.props.BoolProperty(name="enable_aovs",
-                                         description="Enabled additional AOVs during rendering",
-                                         default=False)
+    albedo_aov = bpy.props.BoolProperty(name="albedo_aov",
+                                        default=False)
+
+    emission_aov = bpy.props.BoolProperty(name="emission_aov",
+                                          default=False)
 
     diffuse_aov = bpy.props.BoolProperty(name="diffuse_aov",
                                          default=False)
@@ -535,9 +605,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     direct_glossy_aov = bpy.props.BoolProperty(name="direct_glossy_aov",
                                                default=False)
-
-    emission_aov = bpy.props.BoolProperty(name="emission_aov",
-                                          default=False)
 
     glossy_aov = bpy.props.BoolProperty(name="glossy_aov",
                                         default=False)
@@ -551,6 +618,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     normal_aov = bpy.props.BoolProperty(name="normal_aov",
                                         default=False)
 
+    position_aov = bpy.props.BoolProperty(name="position_aov",
+                                          default=False)
+
     depth_aov = bpy.props.BoolProperty(name="depth_aov",
                                        default=False)
 
@@ -560,8 +630,55 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     pixel_time_aov = bpy.props.BoolProperty(name="pixel_time_aov",
                                             default=False)
 
+    invalid_samples_aov = bpy.props.BoolProperty(name="invalid_samples_aov",
+                                                 default=False)
+
+    pixel_sample_count_aov = bpy.props.BoolProperty(name="pixel_sample_count_aov",
+                                                    default=False)
+
+    pixel_variation_aov = bpy.props.BoolProperty(name="pixel_variation_aov",
+                                                 default=False)
+
+    npr_shading_aov = bpy.props.BoolProperty(name="npr_shading_aov",
+                                             default=False)
+
+    npr_contour_aov = bpy.props.BoolProperty(name="npr_contour_aov",
+                                             default=False)
+
+    # Overrides
+
+    shading_override = bpy.props.BoolProperty(name="shading_override",
+                                              default=False)
+
+    override_mode = bpy.props.EnumProperty(name="override_mode",
+                                           items=[
+                                               ('facing_ratio', "Facing Ratio", ""),
+                                               ('coverage', "Coverage", ""),
+                                               ('geometric_normal', "Geometric Normal", ""),
+                                               ('ambient_occlusion', "Ambient Occlusion", ""),
+                                               ('assembly_instances', "Assembly Instances", ""),
+                                               ('barycentric', "Barycentric", ""),
+                                               ('bitangent', "Bitangent", ""),
+                                               ('color', "Color", ""),
+                                               ('depth', "Depth", ""),
+                                               ('materials', "Materials", ""),
+                                               ('object_instances', "Object Instances", ""),
+                                               ('original_shading_normal', "Original Shading Normal", ""),
+                                               ('primitives', "Primitives", ""),
+                                               ('ray_spread', "Ray Spread", ""),
+                                               ('regions', "Regions", ""),
+                                               ('screen_space_wireframe', "Screen Space Wireframe", ""),
+                                               ('shading_normal', "Shading Normal", ""),
+                                               ('sides', "Sides", ""),
+                                               ('tangent', "Tangent", ""),
+                                               ('uv', "UVs", ""),
+                                               ('world_space_position', "World Space Position", ""),
+                                               ('world_space_wireframe', "World Space Wireframe", "")],
+                                           default='facing_ratio')
+
 
 def register():
+    util.safe_register_class(AppleseedPostProcessProps)
     util.safe_register_class(AppleseedTextureConvertProps)
     util.safe_register_class(AppleseedRenderSettings)
     bpy.types.Scene.appleseed = bpy.props.PointerProperty(type=AppleseedRenderSettings)
@@ -571,3 +688,4 @@ def unregister():
     del bpy.types.Scene.appleseed
     util.safe_unregister_class(AppleseedRenderSettings)
     util.safe_unregister_class(AppleseedTextureConvertProps)
+    util.safe_unregister_class(AppleseedPostProcessProps)

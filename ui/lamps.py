@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,6 +26,7 @@
 #
 
 import bpy
+
 from .. import util
 
 
@@ -62,10 +62,8 @@ class AppleseedLampPanel(bpy.types.Panel):
             col.prop(asr_lamp, "radiance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
 
             if asr_lamp.radiance_use_tex:
-                layout.prop_search(asr_lamp, "radiance_tex", lamp_data, "texture_slots", text="")
-                if asr_lamp.radiance_tex != '' and asr_lamp.radiance_use_tex:
-                    radiance_tex = bpy.data.textures[asr_lamp.radiance_tex]
-                    layout.prop(radiance_tex.image.colorspace_settings, "name", text="Color Space")
+                layout.prop(asr_lamp, "radiance_tex", text="")
+                layout.prop(asr_lamp, "radiance_tex_color_space", text="Color Space")
 
             split = layout.split(percentage=0.90)
             col = split.column()
@@ -75,16 +73,15 @@ class AppleseedLampPanel(bpy.types.Panel):
             col.prop(asr_lamp, "radiance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
 
             if asr_lamp.radiance_multiplier_use_tex:
-                layout.prop_search(asr_lamp, "radiance_multiplier_tex", lamp_data, "texture_slots", text="")
-                if asr_lamp.radiance_multiplier_tex != '' and asr_lamp.radiance_multiplier_use_tex:
-                    radiance_multiplier_tex = bpy.data.textures[asr_lamp.radiance_multiplier_tex]
-                    layout.prop(radiance_multiplier_tex.image.colorspace_settings, "name", text="Color Space")
+                layout.prop(asr_lamp, "radiance_multiplier_tex", text="")
+                layout.prop(asr_lamp, "radiance_multiplier_tex_color_space", text="Color Space")
 
             layout.prop(lamp_data, "spot_blend", text="Inner Angle")
             layout.prop(lamp_data, "spot_size", text="Outer Angle")
             layout.prop(asr_lamp, "tilt_angle", text="Tilt Angle")
             layout.prop(lamp_data, "show_cone")
             layout.prop(asr_lamp, "exposure", text="Exposure")
+            layout.prop(asr_lamp, "exposure_multiplier", text="Exposure Multiplier")
             layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
@@ -111,7 +108,26 @@ class AppleseedLampPanel(bpy.types.Panel):
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'AREA':
-            layout.label("Area lights are unsupported in blenderseed")
+            layout.prop(asr_lamp, "area_shape", text="Area Lamp Shape")
+            col = layout.column(align=True)
+            if asr_lamp.area_shape == 'grid':
+                col.prop(lamp_data, "shape", text="")
+                if lamp_data.shape == 'RECTANGLE':
+                    col.prop(lamp_data, "size", text="Size X")
+                    col.prop(lamp_data, "size_y", text="Size Y")
+                else:
+                    col.prop(lamp_data, "size", text="Size")
+            else:
+                col.prop(lamp_data, "size", text="Size")
+
+            layout.prop(asr_lamp, "area_visibility", text="Camera Visibility")
+            if not asr_lamp.osl_node_tree:
+                layout.operator('appleseed.add_lap_osl_nodetree', text="Add Node Tree")
+                layout.prop(asr_lamp, "area_color", text="Color")
+                layout.prop(asr_lamp, "area_intensity", text="Intensity")
+                layout.prop(asr_lamp, "area_intensity_scale", text="Intensity Scale")
+                layout.prop(asr_lamp, "area_exposure", text="Exposure")
+                layout.prop(asr_lamp, "area_normalize", text="Normalize", toggle=True)
 
 
 def register():

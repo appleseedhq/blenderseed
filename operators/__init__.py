@@ -28,12 +28,122 @@
 
 import bpy
 import subprocess
-from ..projectwriter import image_extensions
 from .. import util
 import os
 
+# Material operators
+
+
+class AppleseedNewMat(bpy.types.Operator):
+    bl_label = "New Material"
+    bl_description = "Add a new appleseed material"
+    bl_idname = "appleseed.new_mat"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return obj
+
+    def execute(self, context):
+        dupli_node_tree = None
+        if context.object.active_material is not None and context.object.active_material.appleseed.osl_node_tree is not None:
+            dupli_node_tree = context.object.active_material.appleseed.osl_node_tree.copy()
+
+        bpy.ops.material.new()
+
+        if dupli_node_tree is not None:
+            context.object.active_material.appleseed.osl_node_tree = dupli_node_tree
+        else:
+            bpy.ops.appleseed.add_osl_nodetree()
+
+        return {'FINISHED'}
+
+
+class AppleseedNewOSLNodeTree(bpy.types.Operator):
+    """
+    appleseed material node tree generator.
+    """
+
+    bl_idname = "appleseed.add_osl_nodetree"
+    bl_label = "Add appleseed OSL Material Node Tree"
+    bl_description = "Create an appleseed OSL material node tree and link it to the current material"
+
+    def execute(self, context):
+        material = context.object.active_material
+        nodetree = bpy.data.node_groups.new('%s_tree' % material.name, 'AppleseedOSLNodeTree')
+        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
+        surface.location = (0, 0)
+        disney_node = nodetree.nodes.new('AppleseedasDisneyMaterialNode')
+        disney_node.location = (-300, 0)
+        nodetree.links.new(disney_node.outputs[0], surface.inputs[0])
+        material.appleseed.osl_node_tree = nodetree
+        return {'FINISHED'}
+
+
+class AppleseedViewNodeTree(bpy.types.Operator):
+    bl_label = "View OSL Nodetree"
+    bl_description = "View the node tree attached to this material"
+    bl_idname = "appleseed.view_nodetree"
+
+    # @classmethod
+    # def poll(cls, context):
+    #     obj = context.object
+    #     return obj
+
+    def execute(self, context):
+        node_tree = None
+        ob = context.active_object
+        if ob.type == 'LAMP':
+            if ob.data.type == 'AREA':
+                lamp = ob.data.appleseed
+                node_tree = lamp.osl_node_tree
+            else:
+                return {"CANCELLED"}
+        elif ob.type == 'MESH':
+            mat = ob.active_material
+            node_tree = mat.appleseed.osl_node_tree
+
+        if node_tree is not None:
+            for area in context.screen.areas:
+                if area.type == "NODE_EDITOR":
+                    for space in area.spaces:
+                        if space.type == "NODE_EDITOR":
+                            space.tree_type = node_tree.bl_idname
+                            space.node_tree = node_tree
+                            return {"FINISHED"}
+
+        return {"CANCELLED"}
+
+
+class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
+    """
+    appleseed lamp node tree generator.
+    """
+
+    bl_idname = "appleseed.add_lap_osl_nodetree"
+    bl_label = "Add appleseed OSL Material Node Tree"
+    bl_description = "Create an appleseed OSL material node tree and link it to the current lamp"
+
+    def execute(self, context):
+        lamp = context.object.data
+        nodetree = bpy.data.node_groups.new('%s_tree' % lamp.name, 'AppleseedOSLNodeTree')
+        nodetree.use_fake_user = True
+        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
+        surface.location = (0, 0)
+        area_lamp_node = nodetree.nodes.new('AppleseedasAreaLightNode')
+        area_lamp_node.location = (-300, 0)
+        nodetree.links.new(area_lamp_node.outputs[0], surface.inputs[0])
+        lamp.appleseed.osl_node_tree = nodetree
+        return {'FINISHED'}
+
+
+# Texture operators
+
 
 class AppleseedConvertTextures(bpy.types.Operator):
+    """
+    Converts base textures into mipmapped .tx textures for rendering
+    """
     bl_label = "Convert Textures"
     bl_description = "Convert textures"
     bl_idname = "appleseed.convert_textures"
@@ -42,10 +152,10 @@ class AppleseedConvertTextures(bpy.types.Operator):
         scene = context.scene
         textures = scene.appleseed
 
-        tool_dir, shader_dir = util.get_osl_search_paths()
+        tool_dir = util.get_appleseed_tool_dir()
 
         for tex in textures.textures:
-            filename = bpy.path.abspath(tex.name)
+            filename = bpy.path.abspath(tex.name.filepath)
             cmd = ['maketx', '--oiio --monochrome-detect -u --constant-color-detect --opaque-detect', '"{0}"'.format(filename)]
             if tex.input_space != 'linear':
                 cmd.insert(-1, '--colorconvert {0} linear --unpremult'.format(tex.input_space))
@@ -59,6 +169,9 @@ class AppleseedConvertTextures(bpy.types.Operator):
                 cmd.insert(-1, '-o "{0}"'.format(out_path))
             process = subprocess.Popen(" ".join(cmd), cwd=tool_dir, shell=True, bufsize=1)
             process.wait()
+
+            subbed_filename = "{0}.tx".format(os.path.splitext(filename)[0])
+            bpy.ops.image.open(filepath=subbed_filename)
 
         return {'FINISHED'}
 
@@ -82,27 +195,20 @@ class AppleseedRefreshTexture(bpy.types.Operator):
 
         for tree in bpy.data.node_groups:
             for node in tree.nodes:
-                for param in node.parameter_types:
-                    if node.parameter_types[param] == 'string':
-                        string = getattr(node, param)
-                        if string.endswith(image_extensions):
-                            scene_textures.append(string)
-                            if string not in existing_textures:
-                                collection.add()
-                                num = len(collection)
-                                collection[num - 1].name = string
+                for param in node.filepaths:
+                    texture_block = getattr(node, param)
+                    if texture_block not in scene_textures:
+                        scene_textures.append(texture_block)
+                        if texture_block not in existing_textures:
+                            collection.add()
+                            num = len(collection)
+                            collection[num - 1].name = texture_block
 
         texture_index = len(collection) - 1
         while texture_index > -1:
             texture = collection[texture_index]
             if texture.name not in scene_textures:
                 collection.remove(texture_index)
-                if scene.appleseed.del_unused_tex:
-                    converted_texture = os.path.realpath(texture.name.split(".")[0] + '.tx')
-                    try:
-                        os.remove(converted_texture)
-                    except:
-                        self.report[{'ERROR'}, "[appleseed] {0} does not exist".format(converted_texture)]
             texture_index -= 1
 
         return {'FINISHED'}
@@ -122,8 +228,6 @@ class AppleseedAddTexture(bpy.types.Operator):
         collection = scene.appleseed.textures
 
         collection.add()
-        num = len(collection)
-        collection[num - 1].name = ""
 
         return {'FINISHED'}
 
@@ -151,6 +255,47 @@ class AppleseedRemoveTexture(bpy.types.Operator):
         scene.appleseed.textures_index = index
 
         return {'FINISHED'}
+
+
+# Post processing operators
+
+
+class AppleseedAddPostProcess(bpy.types.Operator):
+    bl_label = "Add Stage"
+    bl_description = "Add new Post Processing stage"
+    bl_idname = "appleseed.add_pp_stage"
+
+    def invoke(self, context, event):
+        collection = context.scene.appleseed.post_processing_stages
+        collection.add()
+        num = len(collection)
+        collection[num - 1].name = "Render Stamp"
+
+        return {'FINISHED'}
+
+
+class AppleseedRemovePostProcess(bpy.types.Operator):
+    bl_label = "Remove Stage"
+    bl_description = "Remove Post Processing stage"
+    bl_idname = "appleseed.remove_pp_stage"
+
+    def invoke(self, context, event):
+        scene = context.scene.appleseed
+        collection = scene.post_processing_stages
+        index = scene.post_processing_stages_index
+
+        collection.remove(index)
+        num = len(collection)
+        if index >= num:
+            index = num - 1
+        if index < 0:
+            index = 0
+            scene.post_processing_stages_index = index
+
+        return {'FINISHED'}
+
+
+# SSS set operators
 
 
 class AppleseedAddSssSet(bpy.types.Operator):
@@ -194,29 +339,17 @@ class AppleseedRemoveSssSet(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedNewOSLNodeTree(bpy.types.Operator):
-    """
-    appleseed material node tree generator.
-    """
-
-    bl_idname = "appleseed.add_osl_nodetree"
-    bl_label = "Add appleseed OSL Material Node Tree"
-    bl_description = "Create an appleseed OSL material node tree and link it to the current material"
-
-    def execute(self, context):
-        material = context.object.active_material
-        nodetree = bpy.data.node_groups.new('%s appleseed OSL Nodetree' % material.name, 'AppleseedOSLNodeTree')
-        nodetree.use_fake_user = True
-        material.appleseed.osl_node_tree = nodetree
-        return {'FINISHED'}
-
-
 def register():
+    util.safe_register_class(AppleseedNewMat)
+    util.safe_register_class(AppleseedViewNodeTree)
     util.safe_register_class(AppleseedConvertTextures)
     util.safe_register_class(AppleseedRefreshTexture)
     util.safe_register_class(AppleseedAddTexture)
     util.safe_register_class(AppleseedRemoveTexture)
     util.safe_register_class(AppleseedNewOSLNodeTree)
+    util.safe_register_class(AppleseedNewLampOSLNodeTree)
+    util.safe_register_class(AppleseedAddPostProcess)
+    util.safe_register_class(AppleseedRemovePostProcess)
     util.safe_register_class(AppleseedAddSssSet)
     util.safe_register_class(AppleseedRemoveSssSet)
 
@@ -224,8 +357,13 @@ def register():
 def unregister():
     util.safe_unregister_class(AppleseedRemoveSssSet)
     util.safe_unregister_class(AppleseedAddSssSet)
+    util.safe_unregister_class(AppleseedRemovePostProcess)
+    util.safe_unregister_class(AppleseedAddPostProcess)
+    util.safe_unregister_class(AppleseedNewLampOSLNodeTree)
     util.safe_unregister_class(AppleseedNewOSLNodeTree)
     util.safe_unregister_class(AppleseedRemoveTexture)
     util.safe_unregister_class(AppleseedAddTexture)
     util.safe_unregister_class(AppleseedRefreshTexture)
     util.safe_unregister_class(AppleseedConvertTextures)
+    util.safe_unregister_class(AppleseedViewNodeTree)
+    util.safe_unregister_class(AppleseedNewMat)

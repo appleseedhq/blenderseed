@@ -30,6 +30,7 @@ from . import scene
 from . import world
 from . import objects
 from . import materials
+from . import meshes
 from . import camera
 from . import nodes
 from . import particles
@@ -37,12 +38,13 @@ from . import lamps
 
 
 def register():
+    nodes.register()
     scene.register()
     world.register()
     objects.register()
     materials.register()
+    meshes.register()
     camera.register()
-    nodes.register()
     particles.register()
     lamps.register()
 
@@ -52,6 +54,7 @@ def unregister():
     particles.unregister()
     nodes.unregister()
     camera.unregister()
+    meshes.unregister()
     materials.unregister()
     objects.unregister()
     world.unregister()

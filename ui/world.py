@@ -77,15 +77,27 @@ class AppleseedWorldPanel(bpy.types.Panel):
             layout.prop(scene.world, "horizon_color", text="Lower Radiance")
 
         elif asr_sky_props.env_type == "mirrorball_map":
-            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="")
-            layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
-
-        elif asr_sky_props.env_type == "latlong_map":
-            layout.prop_search(asr_sky_props, "env_tex", scene.world, "texture_slots", text="")
+            col = layout.column(align=True)
+            col.prop(asr_sky_props, "env_tex", text="")
+            col.prop(asr_sky_props, "env_tex_colorspace", text="")
+            col.operator("image.open", text="Import Image", icon="ZOOMIN")
             layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
             layout.prop(asr_sky_props, "env_exposure", text="Exposure")
-            layout.prop(asr_sky_props, "horizontal_shift", text="Horizontal Shift")
-            layout.prop(asr_sky_props, "vertical_shift", text="Vertical Shift")
+            layout.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")
+
+        elif asr_sky_props.env_type == "latlong_map":
+            col = layout.column(align=True)
+            col.template_ID(asr_sky_props, "env_tex", open="image.open")
+            col.prop(asr_sky_props, "env_tex_colorspace", text="")
+            col.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
+
+            col = layout.column(align=True)
+            col.prop(asr_sky_props, "env_exposure", text="Exposure")
+            col.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")
+
+            col = layout.column(align=True)
+            col.prop(asr_sky_props, "horizontal_shift", text="Horizontal Shift")
+            col.prop(asr_sky_props, "vertical_shift", text="Vertical Shift")
 
         layout.prop(asr_sky_props, "env_alpha", text="Alpha")
 
@@ -128,15 +140,76 @@ class AppleseedWorldSssSets(bpy.types.Panel):
             layout.prop(current_set, "name", text="SSS Set Name")
 
 
+class AppleseedTextureConvertSlots(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        texture = item.name.name
+        if 'DEFAULT' in self.layout_type:
+            layout.label(text=texture, translate=False, icon_value=icon)
+
+
+class AppleseedTextureConverterPanel(bpy.types.Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+
+    bl_context = "world"
+    bl_label = "Texture Converter"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER'
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        asr_scene_props = scene.appleseed
+        textures = asr_scene_props.textures
+
+        row = layout.row()
+        row.template_list("AppleseedTextureConvertSlots", "", asr_scene_props,
+                          "textures", asr_scene_props, "textures_index", rows=1, maxrows=16, type="DEFAULT")
+
+        col = layout.column(align=True)
+
+        row = col.row(align=True)
+        row.operator("appleseed.add_texture", text="Add Texture", icon="ZOOMIN")
+        row.operator("appleseed.remove_texture", text="Remove Texture", icon="ZOOMOUT")
+        row = col.row(align=True)
+        row.operator("appleseed.refresh_textures", text="Refresh", icon='FILE_REFRESH')
+        row.operator("appleseed.convert_textures", text="Convert", icon='PLAY')
+
+        layout.prop(asr_scene_props, "sub_textures", text="Use Converted Textures", toggle=True)
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "tex_output_use_cust_dir", text="Use Custom Output Directory", toggle=True)
+        row = col.row()
+        row.enabled = asr_scene_props.tex_output_use_cust_dir
+        row.prop(asr_scene_props, "tex_output_dir", text="")
+
+        if textures:
+            current_set = textures[asr_scene_props.textures_index]
+            layout.prop_search(current_set, "name", bpy.data, "images", text="Texture")
+            layout.prop(current_set, "input_space", text="Color Space")
+            layout.prop(current_set, "output_depth", text="Depth")
+            layout.prop(current_set, "command_string", text="Command")
+
+
 def register():
     bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.add('APPLESEED_RENDER')
     bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
+    util.safe_register_class(AppleseedWorldPanel)
     util.safe_register_class(SSSSetsProps)
     util.safe_register_class(AppleseedWorldSssSets)
+    util.safe_register_class(AppleseedTextureConvertSlots)
+    util.safe_register_class(AppleseedTextureConverterPanel)
 
 
 def unregister():
+    util.safe_unregister_class(AppleseedTextureConverterPanel)
+    util.safe_unregister_class(AppleseedTextureConvertSlots)
     util.safe_unregister_class(AppleseedWorldSssSets)
     util.safe_unregister_class(SSSSetsProps)
+    util.safe_unregister_class(AppleseedWorldPanel)
     bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')

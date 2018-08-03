@@ -27,6 +27,7 @@
 #
 
 import bpy
+
 from .. import util
 
 
@@ -81,7 +82,7 @@ class AppleseedCameraDoF(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.active_object.type == 'CAMERA'
+        return renderer.engine == 'APPLESEED_RENDER' and context.active_object.type == 'CAMERA' and context.active_object.data.type == 'PERSP'
 
     def draw_header(self, context):
         header = self.layout
@@ -94,18 +95,22 @@ class AppleseedCameraDoF(bpy.types.Panel):
         scene = context.scene
         asr_cam_props = scene.camera.data.appleseed
 
-        layout.active = asr_cam_props.enable_dof and context.active_object.data.type == 'PERSP'
-        row = layout.row()
+        layout.active = asr_cam_props.enable_dof
+        layout.prop(asr_cam_props, "enable_autofocus", text="Enable Autofocus")
+        col = layout.column()
+        col.active = not context.active_object.data.appleseed.enable_autofocus
+        row = col.row()
         row.active = context.active_object.data.dof_object is None
         row.prop(context.active_object.data, "dof_distance", text="Focal Distance")
-        row = layout.row()
-        row.prop(asr_cam_props, "f_number", text="F-Number")
-        row = layout.row()
-        row.prop(context.active_object.data, "dof_object", text='Autofocus')
-
+        row = col.row()
+        row.prop(context.active_object.data, "dof_object", text='Focus on Object')
+        layout.prop(asr_cam_props, "f_number", text="F-Number")
         layout.prop(asr_cam_props, "diaphragm_blades", text="Blades")
         layout.prop(asr_cam_props, "diaphragm_angle", text="Tilt Angle")
         layout.prop(asr_cam_props, "diaphragm_map", text="Aperture Shape")
+        row = layout.row()
+        row.enabled = asr_cam_props.diaphragm_map != ""
+        row.prop(asr_cam_props, "diaphragm_map_colorspace", text="Color Space")
 
 
 def register():

@@ -9,9 +9,8 @@ Render Panel
 	:maxdepth: 1
 
 	render
-	render_stamp
 	denoiser
-	general
+	system
 	sampling
 	lighting
 	motion_blur
