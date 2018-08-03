@@ -45,7 +45,8 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
 
     def update_name(self, context):
         mapping = {'render_stamp_post_processing_stage': 'Render Stamp',
-                   'color_map_post_processing_stage': 'Color Map'}
+                   'color_map_post_processing_stage': 'Color Map',
+                   'isolines_post_processing_stage': 'Isolines'}
         self.name = mapping[self.model]
 
     name = bpy.props.StringProperty(name='name',
@@ -54,10 +55,33 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
     model = bpy.props.EnumProperty(name='model',
                                    items=[
                                        ('render_stamp_post_processing_stage', "Render Stamp", ""),
-                                       ('color_map_post_processing_stage', "Color Map", "")],
+                                       ('color_map_post_processing_stage', "Color Map", ""),
+                                       ('isolines_post_processing_stage', "Isolines", "")],
                                    default='render_stamp_post_processing_stage',
                                    update=update_name)
 
+    # Isolines
+    pp_low_isovalue = bpy.props.FloatProperty(name="pp_low_isovalue",
+                                              default=0.0,
+                                              soft_min=0.0,
+                                              soft_max=1.0)
+
+    pp_high_isovalue = bpy.props.FloatProperty(name="pp_high_isovalue",
+                                               default=1.0,
+                                               soft_min=0.0,
+                                               soft_max=1.0)
+
+    pp_levels = bpy.props.IntProperty(name="pp_levels",
+                                      default=8,
+                                      min=1,
+                                      soft_max=64)
+
+    pp_line_thickness = bpy.props.FloatProperty(name="pp_line_thickness",
+                                                default=1.0,
+                                                min=0.5,
+                                                soft_max=5.0)
+
+    # Render stamp
     render_stamp = bpy.props.StringProperty(name="render_stamp",
                                             description="Render stamp text",
                                             default="appleseed {lib-version} | Time: {render-time}")
@@ -76,6 +100,7 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
                                                    default='{render-time}',
                                                    update=update_stamp)
 
+    # Color map
     color_map = bpy.props.EnumProperty(name="color_map",
                                        items=[('inferno', "Inferno", ""),
                                               ('jet', "Jet", ""),
