@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -28,12 +27,13 @@
 
 import bpy
 from bpy.types import NodeSocket, Node
+
 from . import AppleseedNode, AppleseedSocket
 from ... import util
-
 from ...logger import get_logger
 
 logger = get_logger()
+
 
 class AppleseedOSLInSocket(NodeSocket, AppleseedSocket):
     """appleseed OSL base socket"""
@@ -78,7 +78,7 @@ class AppleseedOSLNode(Node, AppleseedNode):
     bl_label = "OSL Material"
     bl_icon = 'SMOOTH'
 
-    node_type = 'osl'
+    node_type = "osl"
 
     def traverse_tree(self, material_node):
         """Iterate inputs and traverse the tree backward if any inputs are connected.
@@ -88,10 +88,7 @@ class AppleseedOSLNode(Node, AppleseedNode):
         for socket in self.inputs:
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
-                if linked_node.node_type != 'osl':
-                    logger.error("{0} cannot be used with OSL nodes.  All nodes upstream of {0} will be skipped".format(linked_node.name))
-                else:
-                    linked_node.traverse_tree(material_node)
+                linked_node.traverse_tree(material_node)
         material_node.tree.append(self)
 
 
@@ -99,11 +96,10 @@ def generate_node(node):
     """
     Generates a node based on the provided node data
 
-    input format is {name, input properties, output properties, non-connectable properties, filename}
-    properties consist of [name, type, default value, min value, max value].
-    Enum properties have item list in place of min/max
+    Node data consists of a dictionary conatinin node metadata and lists of inputs and outputs
     """
 
+    # Function templates
     def draw_color_float(self, context, node):
         return 0.5, 0.5, 0.5, 1.0
 
@@ -124,6 +120,59 @@ def generate_node(node):
 
     def draw_matrix_color(self, context, node):
         return 1.0, 0.5, 1.0, 1.0
+
+    def init(self, context):
+        if socket_input_names:
+            for x in socket_input_names:
+                self.inputs.new(x[0], x[1])
+        if socket_output_names:
+            for x in socket_output_names:
+                self.outputs.new(x[0], x[1])
+        else:
+            pass
+
+    def copy(self, node):
+        pass
+
+    def free(self):
+        pass
+
+    def draw_label(self):
+        return self.bl_label
+
+    def traverse_tree(self):
+        """Iterate inputs and traverse the tree backward if any inputs are connected.
+
+        Nodes are added to a list attribute of the material output node.
+        Return the tree as a list of all the nodes.
+        """
+
+        self.tree.clear()
+        for socket in self.inputs:
+            if socket.is_linked:
+                linked_node = socket.links[0].from_node
+                linked_node.traverse_tree(self)
+        return util.filter_params(self.tree)
+
+    def draw_buttons(self, context, layout):
+        for x in non_connected_props:
+            if x['name'] in self.filepaths:
+                layout.template_ID_preview(self, x['name'], open="image.open")
+            else:
+                layout.prop(self, x['name'], text=x['label'])
+
+    def draw_buttons_ext(self, context, layout):
+        for x in non_connected_props:
+            if x['name'] in self.filepaths:
+                layout.template_ID_preview(self, x['name'], open="image.open")
+                layout.label(text="Image Path")
+                image_block = getattr(self, x['name'])
+                col = layout.column()
+                col.enabled = image_block.packed_file is None
+                col.prop(image_block, "filepath", text="")
+                layout.separator()
+            else:
+                layout.prop(self, x['name'], text=x['label'])
 
     parameter_types = {}
     filepaths = []
@@ -174,7 +223,7 @@ def generate_node(node):
             stype.socket_osl_id = in_socket['name']
             socket_type = in_socket['type']
 
-            if socket_type == 'float':
+            if socket_type == "float":
                 stype.draw_color = draw_color_float
 
                 kwargs = {'name': in_socket['name'], 'description': helper, 'default': float(default)}
@@ -189,7 +238,7 @@ def generate_node(node):
 
                 stype.socket_value = bpy.props.FloatProperty(**kwargs)
 
-            elif socket_type == 'color':
+            elif socket_type == "color":
                 stype.draw_color = draw_color_color
                 stype.socket_value = bpy.props.FloatVectorProperty(name=in_socket['name'],
                                                                    description=helper,
@@ -200,10 +249,10 @@ def generate_node(node):
                                                                    min=0.0,
                                                                    max=1.0)
 
-            elif socket_type == 'pointer':
+            elif socket_type == "pointer":
                 stype.draw_color = draw_closure_color
 
-            elif socket_type == 'vector':
+            elif socket_type == "vector":
                 stype.draw_color = draw_vector_color
                 kwargs = {'name': in_socket['name'], 'description': helper}
                 if 'default' in keys:
@@ -227,7 +276,7 @@ def generate_node(node):
                 stype.draw_color = draw_color_float
                 stype.socket_value = bpy.props.IntProperty(**kwargs)
 
-            elif socket_type == 'float[2]':
+            elif socket_type == "float[2]":
                 stype.draw_color = draw_uv_color
                 kwargs = {'name': in_socket['name'], 'description': helper, 'size': 2}
                 if in_socket['hide_ui'] is False:
@@ -237,13 +286,13 @@ def generate_node(node):
 
                     stype.socket_value = bpy.props.FloatVectorProperty(**kwargs)
 
-            elif socket_type == 'normal':
+            elif socket_type == "normal":
                 stype.draw_color = draw_vector_color
 
-            elif socket_type == 'matrix':
+            elif socket_type == "matrix":
                 stype.draw_color = draw_matrix_color
 
-            elif socket_type in ('point', 'point[4]'):
+            elif socket_type in ("point", "point[4]"):
                 stype.draw_color = draw_point_color
 
             parameter_types[in_socket['name']] = in_socket['type']
@@ -269,17 +318,17 @@ def generate_node(node):
             stype.draw_color = draw_color_float
         elif socket_type in ('color', 'color[4]'):
             stype.draw_color = draw_color_color
-        elif socket_type in ('normal'):
+        elif socket_type == 'normal':
             stype.draw_color = draw_vector_color
-        elif socket_type in ('pointer'):
+        elif socket_type == 'pointer':
             stype.draw_color = draw_closure_color
-        elif socket_type in ('vector'):
+        elif socket_type == 'vector':
             stype.draw_color = draw_vector_color
         elif socket_type == 'matrix':
             stype.draw_color = draw_matrix_color
         elif socket_type in ('point', 'point[4]'):
             stype.draw_color = draw_point_color
-        elif socket_type in ('float[2]'):
+        elif socket_type == 'float[2]':
             stype.draw_color = draw_uv_color
         else:
             pass
@@ -289,65 +338,12 @@ def generate_node(node):
         socket_output_names.append([socket_name, socket_label])
 
     # create node class
-    def init(self, context):
-        if socket_input_names:
-            for x in socket_input_names:
-                self.inputs.new(x[0], x[1])
-        if socket_output_names:
-            for x in socket_output_names:
-                self.outputs.new(x[0], x[1])
-        else:
-            pass
-
-    def copy(self, node):
-        pass
-
-    def free(self):
-        pass
-
-    def draw_label(self):
-        return self.bl_label
-
-    def traverse_tree(self):
-        """Iterate inputs and traverse the tree backward if any inputs are connected.
-
-        Nodes are added to a list attribute of the material output node.
-        Return the tree as a list of all the nodes.
-        """
-        self.tree.clear()
-        for socket in self.inputs:
-            if socket.is_linked:
-                linked_node = socket.links[0].from_node
-                linked_node.traverse_tree(self)
-        return util.filter_params(self.tree)
-
     node_name = "Appleseed{0}Node".format(name)
     node_label = "{0}".format(name)
-
     ntype = type(node_name, (AppleseedOSLNode,), {})
     ntype.bl_idname = node_name
     ntype.bl_label = node_label
     setattr(ntype, 'file_name', node['filename'])
-
-    def draw_buttons(self, context, layout):
-        for x in non_connected_props:
-            if x['name'] in self.filepaths:
-                layout.template_ID_preview(self, x['name'], open="image.open")
-            else:
-                layout.prop(self, x['name'], text=x['label'])
-
-    def draw_buttons_ext(self, context, layout):
-        for x in non_connected_props:
-            if x['name'] in self.filepaths:
-                layout.template_ID_preview(self, x['name'], open="image.open")
-                layout.label(text="Image Path")
-                image_block = getattr(self, x['name'])
-                col = layout.column()
-                col.enabled = image_block.packed_file is None
-                col.prop(image_block, "filepath", text="")
-                layout.separator()
-            else:
-                layout.prop(self, x['name'], text=x['label'])
 
     for prop in non_connected_props:
         keys = prop.keys()
@@ -377,14 +373,14 @@ def generate_node(node):
         if 'softmax' in keys:
             soft_maximum = prop['softmax']
 
-        if prop['type'] == 'string':
-            if widget == 'filename':
+        if prop['type'] == "string":
+            if widget == "filename":
                 setattr(ntype, prop_name, bpy.props.PointerProperty(name=prop['name'],
                                                                     description=helper,
                                                                     type=bpy.types.Image))
                 filepaths.append(prop_name)
 
-            elif widget in ('mapper', 'popup'):
+            elif widget in ("mapper", "popup"):
                 items = []
                 for enum_item in prop['options']:
                     items.append((enum_item, enum_item.capitalize(), ""))
@@ -400,7 +396,7 @@ def generate_node(node):
 
             parameter_types[prop['name']] = "string"
 
-        elif prop['type'] == 'int' and widget in ('mapper', 'popup'):
+        elif prop['type'] == "int" and widget in ("mapper", "popup"):
             items = []
             for enum_item in prop['options']:
                 items.append((enum_item.split(":")[1], enum_item.split(":")[0], ""))
@@ -411,7 +407,7 @@ def generate_node(node):
                                                              default=str(int(default)),
                                                              items=items))
 
-        elif prop['type'] == 'int':
+        elif prop['type'] == "int":
             if widget == 'checkBox':
                 kwargs = {'name': prop['name'], 'description': helper, 'default': bool(int(default))}
                 setattr(ntype, prop_name, bpy.props.BoolProperty(**kwargs))
@@ -433,7 +429,7 @@ def generate_node(node):
 
                 parameter_types[prop['name']] = "int"
 
-        elif prop['type'] == 'float':
+        elif prop['type'] == "float":
 
             kwargs = {'name': prop['name'], 'description': helper, 'default': float(default)}
             if minimum is not None:

@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -28,10 +27,9 @@
 
 import bpy
 import nodeitems_utils
-from nodeitems_utils import NodeItem, NodeCategory
 from bpy.types import NodeTree
-from bpy.app.handlers import persistent
-import os
+from nodeitems_utils import NodeItem, NodeCategory
+
 from ... import util
 
 
@@ -161,35 +159,6 @@ def node_categories(osl_nodes):
     return appleseed_node_categories
 
 
-@persistent
-def appleseed_scene_loaded(dummy):
-    # Load images as icons
-    icon16 = bpy.data.images.get('appleseed16')
-    icon32 = bpy.data.images.get('appleseed32')
-    if icon16 is None:
-        img = bpy.data.images.load(os.path.join(os.path.join(util.addon_dir, 'icons'), 'appleseed16.png'))
-        img.name = 'appleseed16'
-        img.use_alpha = True
-        img.user_clear()
-    # remove scene_update handler
-    elif "appleseed16" not in icon16.keys():
-        icon16["appleseed16"] = True
-        for f in bpy.app.handlers.scene_update_pre:
-            if f.__name__ == "appleseed_scene_loaded":
-                bpy.app.handlers.scene_update_pre.remove(f)
-    if icon32 is None:
-        img = bpy.data.images.load(os.path.join(os.path.join(util.addon_dir, 'icons'), 'appleseed32.png'))
-        img.name = 'appleseed32'
-        img.use_alpha = True
-        img.user_clear()  # Won't get saved into .blend files
-    # remove scene_update handler
-    elif "appleseed32" not in icon32.keys():
-        icon32["appleseed32"] = True
-        for f in bpy.app.handlers.scene_update_pre:
-            if f.__name__ == "appleseed_scene_loaded":
-                bpy.app.handlers.scene_update_pre.remove(f)
-
-
 # Load the modules after classes have been created.
 from . import oslnode
 
@@ -197,8 +166,6 @@ osl_node_names = []
 
 
 def register():
-    bpy.app.handlers.load_post.append(appleseed_scene_loaded)
-    bpy.app.handlers.scene_update_pre.append(appleseed_scene_loaded)
     util.safe_register_class(AppleseedOSLNodeTree)
     node_list = util.read_osl_shaders()
     for node in node_list:
@@ -213,4 +180,3 @@ def register():
 def unregister():
     nodeitems_utils.unregister_node_categories("APPLESEED")
     util.safe_unregister_class(AppleseedOSLNodeTree)
-    bpy.app.handlers.load_post.remove(appleseed_scene_loaded)

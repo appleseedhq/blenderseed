@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -26,10 +25,13 @@
 # THE SOFTWARE.
 #
 
-import bpy
-import subprocess
-from .. import util
 import os
+import subprocess
+
+import bpy
+
+from .. import util
+
 
 # Material operators
 

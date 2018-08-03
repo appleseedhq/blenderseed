@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
@@ -27,6 +26,7 @@
 #
 
 import bpy
+
 from . import util
 
 

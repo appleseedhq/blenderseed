@@ -25,10 +25,9 @@
 # THE SOFTWARE.
 #
 
-import bpy
-
 from time import time
 
+import bpy
 from bpy.app.handlers import persistent
 
 from .. import util
