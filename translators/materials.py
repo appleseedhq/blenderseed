@@ -188,4 +188,8 @@ class MaterialTranslator(Translator):
         for output in shader.outputs:
             if output.is_linked:
                 for link in output.links:
-                    self.__shader_group.add_connection(shader.name, output.socket_osl_id, link.to_node.name, link.to_socket.socket_osl_id)
+                    if link.to_node in self.__shader_list or link.to_node.node_type == 'osl_surface':
+                        self.__shader_group.add_connection(shader.name, output.socket_osl_id, link.to_node.name,
+                                                           link.to_socket.socket_osl_id)
+                    else:
+                        continue
