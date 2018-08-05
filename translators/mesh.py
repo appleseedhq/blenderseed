@@ -191,7 +191,7 @@ class MeshTranslator(ObjectTranslator):
 
         asr_obj_props = self.bl_obj.appleseed
 
-        self._mesh_name = self.__mesh_object.get_name()
+        mesh_name = self.__mesh_object.get_name()
         object_instance_params = {'visibility': {'camera': asr_obj_props.camera_visible,
                                                  'light': asr_obj_props.light_visible,
                                                  'shadow': asr_obj_props.shadow_visible,
@@ -223,9 +223,9 @@ class MeshTranslator(ObjectTranslator):
                 for i, f in enumerate(self.__mesh_filenames):
                     params['filename'][str(i)] = "_geometry/" + f
 
-            self.__mesh_object = asr.MeshObject(self._mesh_name, params)
+            self.__mesh_object = asr.MeshObject(mesh_name, params)
 
-            self._mesh_name += ".mesh"
+            mesh_name += ".mesh"
 
         self._xform_seq.optimize()
 
@@ -244,20 +244,19 @@ class MeshTranslator(ObjectTranslator):
         inst_name = self.appleseed_name
 
         if needs_assembly:
-            logger.debug("Creating assembly for object %s, name: %s", self._mesh_name, self.assembly_name)
+            logger.debug("Creating assembly for object %s, name: %s", mesh_name, self.assembly_name)
 
             ass = asr.Assembly(self.assembly_name)
 
-            logger.debug("Creating object instance for object %s, name: %s", self._mesh_name, inst_name)
+            logger.debug("Creating object instance for object %s, name: %s", mesh_name, inst_name)
             obj_inst = asr.ObjectInstance(
                 inst_name,
                 object_instance_params,
-                self._mesh_name,
+                mesh_name,
                 asr.Transformd(asr.Matrix4d().identity()),
                 self.__front_materials,
                 self.__back_materials)
 
-            mesh_name = self.__mesh_object.get_name()
             ass.objects().insert(self.__mesh_object)
             self.__mesh_object = ass.objects().get_by_name(mesh_name)
 
@@ -267,7 +266,7 @@ class MeshTranslator(ObjectTranslator):
 
             assembly_instance_name = self.assembly_name + "_inst"
 
-            logger.debug("Creating assembly instance for object %s, name: %s", self._mesh_name, assembly_instance_name)
+            logger.debug("Creating assembly instance for object %s, name: %s", mesh_name, assembly_instance_name)
 
             ass_inst = asr.AssemblyInstance(
                 assembly_instance_name,
@@ -290,22 +289,20 @@ class MeshTranslator(ObjectTranslator):
                 self.__ass.texture_instances().insert(self.__alpha_tex_inst)
 
         else:
-            logger.debug("Creating object instance for object %s, name: %s", self._mesh_name, inst_name)
+            logger.debug("Creating object instance for object %s, name: %s", mesh_name, inst_name)
+
+            mesh_name = self._insert_entity_with_unique_name(assembly.objects(), self.__mesh_object, mesh_name)
+            self.__mesh_object = assembly.objects().get_by_name(mesh_name)
 
             obj_inst = asr.ObjectInstance(
                 inst_name,
                 object_instance_params,
-                self._mesh_name,
+                mesh_name,
                 self._xform_seq.get_earliest_transform(),
                 self.__front_materials,
                 self.__back_materials)
 
-            mesh_name = self.__mesh_object.get_name()
-            assembly.objects().insert(self.__mesh_object)
-            self.__mesh_object = assembly.objects().get_by_name(mesh_name)
-
-            obj_inst_name = obj_inst.get_name()
-            assembly.object_instances().insert(obj_inst)
+            obj_inst_name = self._insert_entity_with_unique_name(assembly.object_instances(), obj_inst, obj_inst.get_name())
             self.__obj_inst = assembly.object_instances().get_by_name(obj_inst_name)
 
             if self.__alpha_tex is not None:
@@ -314,7 +311,6 @@ class MeshTranslator(ObjectTranslator):
                 assembly.texture_instances().insert(self.__alpha_tex_inst)
 
     def update(self, obj):
-
         self.__ass_inst.transform_sequence().set_transform(0.0, self._convert_matrix(obj.matrix_world))
 
     #

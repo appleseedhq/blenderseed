@@ -122,12 +122,7 @@ class DupliTranslator(ObjectTranslator):
 
         self.__export_mode = export_mode
 
-    @property
-    def bl_obj(self):
-        return self._bl_obj
-
     def create_entities(self, scene):
-
         self.__mode = 'VIEWPORT' if self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER else 'RENDER'
 
         self.bl_obj.dupli_list_create(scene, settings=self.__mode)
