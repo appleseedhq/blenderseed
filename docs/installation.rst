@@ -23,7 +23,7 @@ Configure
 	Select "appleseed" from the render dropdown selector.
 
 Using Development Versions of blenderseed
-	If you want access to cutting edge features, you can also download directly from the master branch (or any other visible branches).  Any downloads will have a suffix of *'-branch name'* that needs to be removed before it will work.  Be aware that new or under development features may require up to date build of appleseed itself, and this is not included with direct branch downloads.
+	If you want access to cutting edge features, you can also download directly from the master branch (or any other visible branches).  Any downloads will have a suffix of *'-branch name'* that needs to be removed before it will work.  Be aware that new or under development features may require an up to date build of appleseed itself, and this is not included with direct branch downloads.
 
 Using Development Versions of appleseed
 	While appleseed is packaged with all official releases, external versions of it may be used with blenderseed.  To do so, set the following environment variables before launching Blender (Windows only):

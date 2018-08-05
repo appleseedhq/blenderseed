@@ -6,7 +6,7 @@ OSL Metadata
 When blenderseed scans an OSL shader it looks for several specific metadata tags that can be attached to a shader or parameter.  This metadata is used to populate the node interface in Blender with buttons, sockets, labels, and the range a value can be.  While this metadata is not essential to the shader execution itself, it is essential for making the node usable.
 
 - Shader Metadata:  This metadata is used to describe the shader as a whole.
-	-  string node_name
+	- string node_name
 		This is the name of the node.  If it is not used the name of the OSL file will be used.
 	- string classification
 		This tells blenderseed what the shader is.  Options are:
