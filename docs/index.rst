@@ -10,7 +10,6 @@ Table of Contents
 
    features
    installation
-   quickstart
    reference
    about
    tutorials

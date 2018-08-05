@@ -11,5 +11,3 @@ General
     Select this to replace all the shading in a scene with the selected option.  Useful for troubleshooting scene issues.
 - Texture Cache
     Sets the size of the cache used for storing textures.  Raising this will increase memory usage but may help speed up rendering.
-- Render Stamp
-    This can be used to superimpose text on the final render.  The text can be completely customized with numerous performance statistics.
