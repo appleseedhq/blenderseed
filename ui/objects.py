@@ -86,6 +86,7 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         box.prop(asr_obj, "object_ray_bias_distance", text="Distance")
 
         layout.separator()
+        layout.label(text="Object Alpha")
         row = layout.row()
         row.active = asr_obj.object_alpha_texture is None
         row.prop(asr_obj, "object_alpha", text="")
