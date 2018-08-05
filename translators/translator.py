@@ -155,3 +155,26 @@ class Translator(object):
         """Convert a Blender color to a Python list."""
 
         return [color[0], color[1], color[2]]
+
+    @staticmethod
+    def _insert_entity_with_unique_name(container, entity, name):
+        """
+        Insert an appleseed entity into a container with an unique name.
+        Returns the new entity name.
+        """
+
+        if container.get_by_name(name) == None:
+            entity.set_name(name)
+            container.insert(entity)
+            return name
+
+        i = 2
+        fmt = name + "_%d"
+
+        while True:
+            new_name = fmt % i
+
+            if container.get_by_name(new_name) == None:
+                entity.set_name(new_name)
+                container.insert(entity)
+                return new_name
