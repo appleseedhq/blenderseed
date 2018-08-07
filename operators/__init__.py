@@ -87,10 +87,10 @@ class AppleseedViewNodeTree(bpy.types.Operator):
     bl_description = "View the node tree attached to this material"
     bl_idname = "appleseed.view_nodetree"
 
-    # @classmethod
-    # def poll(cls, context):
-    #     obj = context.object
-    #     return obj
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER'
 
     def execute(self, context):
         node_tree = None
