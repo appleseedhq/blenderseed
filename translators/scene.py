@@ -488,7 +488,7 @@ class SceneTranslator(GroupTranslator):
             int_frame = math.floor(new_frame)
             subframe = new_frame - int_frame
 
-            self.bl_scene.frame_set(int_frame, subframe)
+            self.bl_scene.frame_set(int_frame, subframe=subframe)
 
             if time in cam_times:
                 self.__camera_translator.set_transform_key(time, cam_times)
@@ -505,8 +505,7 @@ class SceneTranslator(GroupTranslator):
                 for x in self.__group_translators.values():
                     x.set_deform_key(self.bl_scene, time, deform_times)
 
-        if self.bl_scene.frame_current != current_frame:
-            self.bl_scene.frame_set(current_frame)
+        self.bl_scene.frame_set(current_frame)
 
     def __get_subframes(self, shutter_length, samples):
         times = set()
