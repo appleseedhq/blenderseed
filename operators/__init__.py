@@ -87,11 +87,6 @@ class AppleseedViewNodeTree(bpy.types.Operator):
     bl_description = "View the node tree attached to this material"
     bl_idname = "appleseed.view_nodetree"
 
-    @classmethod
-    def poll(cls, context):
-        renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER'
-
     def execute(self, context):
         node_tree = None
         ob = context.active_object
@@ -106,6 +101,8 @@ class AppleseedViewNodeTree(bpy.types.Operator):
 
             if mat:
                 node_tree = mat.appleseed.osl_node_tree
+        else:
+            return {"CANCELLED"}
 
         if node_tree is not None:
             for area in context.screen.areas:
