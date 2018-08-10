@@ -28,7 +28,7 @@
 import appleseed as asr
 from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
-from .mesh import MeshTranslator, MeshKey
+from .mesh import MeshTranslator
 from .object import ProjectExportMode, InstanceTranslator, DupliTranslator, ArchiveTranslator
 from .translator import Translator, ObjectKey
 from ..logger import get_logger
@@ -106,7 +106,7 @@ class GroupTranslator(Translator):
 
         self.__assembly = asr.Assembly(self.assembly_name)
 
-        self._create_translators()
+        self._create_translators(scene)
         self._do_create_entities(scene)
 
     def flush_entities(self, assembly):
@@ -120,7 +120,7 @@ class GroupTranslator(Translator):
     # Internal methods.
     #
 
-    def _create_translators(self):
+    def _create_translators(self, scene):
         logger.debug("Creating translators for group %s contents", self.bl_group.name)
 
         for obj in self.bl_group.objects:
@@ -161,7 +161,7 @@ class GroupTranslator(Translator):
                     self._lamp_material_translators[lamp_key] = translator
 
             elif obj.type in GroupTranslator.MESH_OBJECTS:
-                mesh_key = MeshKey(obj)
+                mesh_key = ObjectKey(obj.data)
 
                 if obj.is_duplicator:
                     logger.debug("Creating dupli translator for object %s", obj_key)
@@ -171,7 +171,9 @@ class GroupTranslator(Translator):
                     archive_path = obj.appleseed.archive_path
                     self._object_translators[obj_key] = ArchiveTranslator(obj, archive_path, self._asset_handler)
                 else:
-                    if mesh_key in self._datablock_to_translator:
+                    is_modified = obj.is_modified(scene, 'RENDER')
+
+                    if is_modified == False and mesh_key in self._datablock_to_translator:
                         logger.debug("Creating instance translator for object %s, master obj: %s", obj_key, mesh_key)
 
                         master_translator = self._datablock_to_translator[mesh_key]
@@ -182,7 +184,10 @@ class GroupTranslator(Translator):
 
                         translator = MeshTranslator(obj, self.export_mode, self.asset_handler)
                         self._object_translators[obj_key] = translator
-                        self._datablock_to_translator[mesh_key] = translator
+
+                        if not is_modified:
+                            logger.debug("Saving translator for object %s in instance map", obj_key)
+                            self._datablock_to_translator[mesh_key] = translator
 
                         self.__create_material_translators(obj)
 
