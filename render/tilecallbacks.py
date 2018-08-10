@@ -43,6 +43,7 @@ class FinalTileCallback(asr.ITileCallback):
         self.__scene = scene
 
         self.__pass_incremented = False
+        self.__render_stats = ["Starting", ""]
 
         # Compute render resolution.
         (width, height) = util.get_render_resolution(self.__scene)
@@ -75,6 +76,10 @@ class FinalTileCallback(asr.ITileCallback):
         self.__pass_number = 1
 
         self.__rendered_tiles = 0
+
+    @property
+    def render_stats(self):
+        return self.__render_stats
 
     def on_tiled_frame_begin(self, frame):
         self.__pass_incremented = False
@@ -155,8 +160,7 @@ class FinalTileCallback(asr.ITileCallback):
         seconds_per_pixel = (time.time() - self.__time_start) / self.__rendered_pixels
         remaining_seconds = (self.__total_pixels - self.__rendered_pixels) * seconds_per_pixel
         self.__rendered_tiles += 1
-        self.__engine.update_stats("appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.__pass_number, self.__total_passes, self.__rendered_tiles, self.__total_tiles),
-                          "Time Remaining: {0}".format(self.__format_seconds_to_hhmmss(remaining_seconds)))
+        self.__render_stats = ["appleseed Rendering: Pass %i of %i, Tile %i of %i" % (self.__pass_number, self.__total_passes, self.__rendered_tiles, self.__total_tiles), "Time Remaining: {0}".format(self.__format_seconds_to_hhmmss(remaining_seconds))]
 
     def __get_pixels(self, image, tile_x, tile_y, take_x, take_y, skip_x, skip_y):
         tile = image.tile(tile_x, tile_y)

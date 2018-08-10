@@ -214,9 +214,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         assert(self.__tile_callback is None)
         assert(self.__render_thread is None)
 
-        self.__renderer_controller = FinalRendererController(self)
-
         self.__tile_callback = FinalTileCallback(self, scene)
+
+        self.__renderer_controller = FinalRendererController(self, self.__tile_callback)
 
         self.__renderer = asr.MasterRenderer(project,
                                              project.configurations()['final'].get_inherited_parameters(),
