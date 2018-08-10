@@ -173,6 +173,7 @@ class Translator(object):
 
         while True:
             new_name = fmt % i
+            i += 1
 
             if container.get_by_name(new_name) == None:
                 entity.set_name(new_name)
