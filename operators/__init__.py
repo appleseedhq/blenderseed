@@ -103,7 +103,9 @@ class AppleseedViewNodeTree(bpy.types.Operator):
                 return {"CANCELLED"}
         elif ob.type == 'MESH':
             mat = ob.active_material
-            node_tree = mat.appleseed.osl_node_tree
+
+            if mat:
+                node_tree = mat.appleseed.osl_node_tree
 
         if node_tree is not None:
             for area in context.screen.areas:
