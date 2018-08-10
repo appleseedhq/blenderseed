@@ -60,14 +60,17 @@ class BaseRendererController(asr.IRendererController):
 
 
 class FinalRendererController(BaseRendererController):
-    def __init__(self, engine):
+    def __init__(self, engine, tile_callback):
         super(FinalRendererController, self).__init__()
         self.__engine = engine
+        self.__tile_callback = tile_callback
 
     def get_status(self):
         if self.__engine.test_break():
             return asr.IRenderControllerStatus.AbortRendering
 
+        render_stats = self.__tile_callback.render_stats
+        self.__engine.update_stats(render_stats[0], render_stats[1])
         return self._status
 
     def on_rendering_begin(self):
