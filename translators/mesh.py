@@ -40,35 +40,6 @@ from ..util import is_object_deforming
 logger = get_logger()
 
 
-class MeshKey(object):
-    '''
-    Class used to uniquely identify blender meshes.
-    '''
-
-    def __init__(self, obj):
-        mesh = obj.data
-        self.__name = mesh.name
-        self.__library_name = None
-
-        if mesh.library:
-            self.__library_name = mesh.library.name
-
-    def __hash__(self):
-        return hash((self.__name, self.__library_name))
-
-    def __eq__(self, other):
-        return (self.__name, self.__library_name) == (other.__name, other.__library_name)
-
-    def __ne__(self, other):
-        return not(self == other)
-
-    def __str__(self):
-        if self.__library_name:
-            return self.__library_name + "|" + self.__name
-
-        return self.__name
-
-
 class MeshTranslator(ObjectTranslator):
 
     #
@@ -225,8 +196,6 @@ class MeshTranslator(ObjectTranslator):
 
             self.__mesh_object = asr.MeshObject(mesh_name, params)
 
-            mesh_name += ".mesh"
-
         self._xform_seq.optimize()
 
         logger.debug(
@@ -236,23 +205,23 @@ class MeshTranslator(ObjectTranslator):
             self._xform_seq.size())
 
         if self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER:
-            # We always create assemblies when doing IPR to allow quick scene edits.
+            # We always create assemblies when doing IPR to allow quick xform edits.
             needs_assembly = True
         else:
+            # Only create an assembly if the object is instanced or has xform motion blur.
             needs_assembly = self._num_instances > 1 or self._xform_seq.size() > 1
-
-        inst_name = self.appleseed_name
 
         if needs_assembly:
             logger.debug("Creating assembly for object %s, name: %s", mesh_name, self.assembly_name)
 
             ass = asr.Assembly(self.assembly_name)
 
-            logger.debug("Creating object instance for object %s, name: %s", mesh_name, inst_name)
+            logger.debug("Creating object instance for object %s, name: %s", mesh_name, self.appleseed_name)
+
             obj_inst = asr.ObjectInstance(
-                inst_name,
+                self.appleseed_name,
                 object_instance_params,
-                mesh_name,
+                self.__object_instance_mesh_name(mesh_name),
                 asr.Transformd(asr.Matrix4d().identity()),
                 self.__front_materials,
                 self.__back_materials)
@@ -268,19 +237,16 @@ class MeshTranslator(ObjectTranslator):
 
             logger.debug("Creating assembly instance for object %s, name: %s", mesh_name, assembly_instance_name)
 
+            ass_name = self._insert_entity_with_unique_name(assembly.assemblies(), ass, ass.get_name())
+            self.__ass = assembly.assemblies().get_by_name(ass_name)
+
             ass_inst = asr.AssemblyInstance(
                 assembly_instance_name,
                 {},
-                self.assembly_name)
+                ass_name)
             ass_inst.set_transform_sequence(self._xform_seq)
 
-            ass_name = ass.get_name()
-            ass_inst_name = ass_inst.get_name()
-
-            assembly.assemblies().insert(ass)
-            self.__ass = assembly.assemblies().get_by_name(ass_name)
-
-            assembly.assembly_instances().insert(ass_inst)
+            ass_inst_name = self._insert_entity_with_unique_name(assembly.assembly_instances(), ass_inst, ass_inst.get_name())
             self.__ass_inst = assembly.assembly_instances().get_by_name(ass_inst_name)
 
             if self.__alpha_tex is not None:
@@ -289,15 +255,15 @@ class MeshTranslator(ObjectTranslator):
                 self.__ass.texture_instances().insert(self.__alpha_tex_inst)
 
         else:
-            logger.debug("Creating object instance for object %s, name: %s", mesh_name, inst_name)
+            logger.debug("Creating object instance for object %s, name: %s", mesh_name, self.appleseed_name)
 
             mesh_name = self._insert_entity_with_unique_name(assembly.objects(), self.__mesh_object, mesh_name)
             self.__mesh_object = assembly.objects().get_by_name(mesh_name)
 
             obj_inst = asr.ObjectInstance(
-                inst_name,
+                self.appleseed_name,
                 object_instance_params,
-                mesh_name,
+                self.__object_instance_mesh_name(mesh_name),
                 self._xform_seq.get_earliest_transform(),
                 self.__front_materials,
                 self.__back_materials)
@@ -368,7 +334,6 @@ class MeshTranslator(ObjectTranslator):
         loops = me.loops
 
         # UVs.
-
         if self.bl_obj.data.appleseed.export_uvs and len(me.uv_textures) > 0:
             uv_texture = me.uv_textures.active.data[:]
             uv_layer = me.uv_layers.active.data[:]
@@ -477,3 +442,9 @@ class MeshTranslator(ObjectTranslator):
             asr.MeshObjectWriter.write(self.__mesh_object, "mesh", mesh_abs_path)
         else:
             logger.debug("Skipping already saved mesh file for mesh %s", mesh_name)
+
+    def __object_instance_mesh_name(self, mesh_name):
+        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+            return mesh_name + ".mesh"
+
+        return mesh_name

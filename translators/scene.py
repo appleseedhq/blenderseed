@@ -410,7 +410,7 @@ class SceneTranslator(GroupTranslator):
             self.__create_world_translator()
 
         # Create translators for all objects in the scene.
-        super(SceneTranslator, self)._create_translators()
+        super(SceneTranslator, self)._create_translators(self.bl_scene)
 
         # Always create a translator for the active camera even if it is not visible or renderable.
         obj_key = ObjectKey(self.bl_scene.camera)
