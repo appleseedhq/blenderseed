@@ -118,23 +118,23 @@ class CameraTranslator(Translator):
         model = self.__as_camera.get_model()
 
         if model == 'pinhole_camera':
-            cam_params = self.__create_pinhole_camera(scene, aspect_ratio, film_width, film_height)
+            cam_params = self.__pinhole_camera_params(scene, aspect_ratio, film_width, film_height)
 
         elif model == 'thinlens_camera':
-            cam_params = self.__create_thin_lens_camera(scene, aspect_ratio, film_width, film_height)
+            cam_params = self.__thin_lens_camera_params(scene, aspect_ratio, film_width, film_height)
 
         elif model == 'spherical_camera':
-            cam_params = self.__create_spherical_camera(scene)
+            cam_params = self.__spherical_camera_params(scene)
 
         else:
-            cam_params = self.__create_ortho_camera(scene, aspect_ratio)
+            cam_params = self.__ortho_camera_params(scene, aspect_ratio)
 
         self.__as_camera.set_parameters(cam_params)
 
     def set_transform_key(self, time, key_times):
         self._xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
-    def __create_ortho_camera(self, scene, aspect_ratio):
+    def __ortho_camera_params(self, scene, aspect_ratio):
         camera = self.bl_camera.data
         cam_params = {'aspect_ratio': aspect_ratio,
                       'near_z': camera.appleseed.near_z,
@@ -150,7 +150,7 @@ class CameraTranslator(Translator):
 
         return cam_params
 
-    def __create_spherical_camera(self, scene):
+    def __spherical_camera_params(self, scene):
         cam_params = {'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
                       'shutter_open_begin_time': scene.appleseed.shutter_open,
                       'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
@@ -158,12 +158,14 @@ class CameraTranslator(Translator):
 
         return cam_params
 
-    def __create_pinhole_camera(self, scene, aspect_ratio, film_width, film_height):
+    def __pinhole_camera_params(self, scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
         cam_params = {'aspect_ratio': aspect_ratio,
                       'focal_length': camera.data.lens / 1000,
                       'film_dimensions': asr.Vector2f(film_width, film_height),
                       'near_z': camera.data.appleseed.near_z,
+                      'shift_x': camera.data.shift_x,
+                      'shift_y': camera.data.shift_y * aspect_ratio,
                       'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
                       'shutter_open_begin_time': scene.appleseed.shutter_open,
                       'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
@@ -171,30 +173,26 @@ class CameraTranslator(Translator):
 
         return cam_params
 
-    def __create_thin_lens_camera(self, scene, aspect_ratio, film_width, film_height):
+    def __thin_lens_camera_params(self, scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
         if camera.data.dof_object is not None:
             cam_target = bpy.data.objects[camera.data.dof_object.name]
             focal_distance = (cam_target.location - self.bl_camera.location).magnitude
         else:
             focal_distance = camera.data.dof_distance
-        cam_params = {'aspect_ratio': aspect_ratio,
-                      'focal_length': camera.data.lens / 1000,
-                      'film_dimensions': asr.Vector2f(film_width, film_height),
-                      'near_z': camera.data.appleseed.near_z,
-                      'f_stop': camera.data.appleseed.f_number,
-                      'autofocus_enabled': False,
-                      'diaphragm_blades': camera.data.appleseed.diaphragm_blades,
-                      'diaphragm_tilt_angle': camera.data.appleseed.diaphragm_angle,
-                      'focal_distance': focal_distance,
-                      'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
-                      'shutter_open_begin_time': scene.appleseed.shutter_open,
-                      'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
-                      'shutter_close_end_time': scene.appleseed.shutter_close}
+
+        cam_params = self.__pinhole_camera_params(scene, aspect_ratio, film_width, film_height)
+        cam_params.update({'f_stop': camera.data.appleseed.f_number,
+                           'autofocus_enabled': False,
+                           'diaphragm_blades': camera.data.appleseed.diaphragm_blades,
+                           'diaphragm_tilt_angle': camera.data.appleseed.diaphragm_angle,
+                           'focal_distance': focal_distance})
+
         if camera.data.appleseed.enable_autofocus:
             x, y = find_auto_focus_point(scene)
             cam_params['autofocus_target'] = asr.Vector2f(x, y)
             cam_params['autofocus_enabled'] = True
+
         if camera.data.appleseed.diaphragm_map != "":
             filename = self.asset_handler.process_path(camera.data.appleseed.diaphragm_map, AssetType.TEXTURE_ASSET)
             self.__cam_map = asr.Texture('disk_texture_2d', 'cam_map',
@@ -274,6 +272,7 @@ class InteractiveCameraTranslator(Translator):
         logger.debug("Update interactive camera")
         if camera is not None and context is not None:
             self._reset(camera, context)
+
         scene.cameras().remove(self.__as_int_camera)
         self.create_entities(scene)
         self.flush_entities(scene)
@@ -299,18 +298,18 @@ class InteractiveCameraTranslator(Translator):
         if view_cam_type == "ORTHO":
             self.__zoom = 2
             self.__extent_base = self.context.space_data.region_3d.view_distance * 32.0 / self.__lens
-            self.__model, self.__params = self.__create_ortho_camera(aspect_ratio)
+            self.__model, self.__params = self.__ortho_camera_params(aspect_ratio)
 
         elif view_cam_type == "PERSP":
             self.__zoom = 2
-            self.__model, self.__params = self.__create_persp_camera(aspect_ratio)
+            self.__model, self.__params = self.__persp_camera_params(aspect_ratio)
 
         elif view_cam_type == "CAMERA":
             # Borrowed from Cycles source code, since no sane person would figure this out on their own
             self.__zoom = 4 / ((math.sqrt(2) + self.context.region_data.view_camera_zoom / 50) ** 2)
-            self.__model, self.__params = self.__create_view_camera(aspect_ratio)
+            self.__model, self.__params = self.__view_camera_params(aspect_ratio)
 
-    def __create_view_camera(self, aspect_ratio):
+    def __view_camera_params(self, aspect_ratio):
         film_width, film_height = calc_film_dimensions(aspect_ratio, self.bl_camera.data, self.__zoom)
 
         self._matrix = self.bl_camera.matrix_world
@@ -355,7 +354,7 @@ class InteractiveCameraTranslator(Translator):
 
         return model, params
 
-    def __create_persp_camera(self, aspect_ratio):
+    def __persp_camera_params(self, aspect_ratio):
         model = 'pinhole_camera'
         sensor_size = 32 * self.__zoom
         self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
@@ -368,7 +367,7 @@ class InteractiveCameraTranslator(Translator):
 
         return model, params
 
-    def __create_ortho_camera(self, aspect_ratio):
+    def __ortho_camera_params(self, aspect_ratio):
         model = 'orthographic_camera'
         self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
         sensor_width = self.__zoom * self.__extent_base * 1
