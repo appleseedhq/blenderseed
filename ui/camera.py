@@ -66,9 +66,17 @@ class AppleseedCameraLens(bpy.types.Panel):
             row = col.row()
             row.prop(cam, "ortho_scale")
 
-        col = layout.column()
-        col.prop(asr_cam_props, "near_z", text="Near Clip")
-        col.prop(cam, "clip_end", text="Far Clip")
+        split = layout.split()
+
+        col = split.column(align=True)
+        col.label(text="Shift:")
+        col.prop(cam, "shift_x", text="X")
+        col.prop(cam, "shift_y", text="Y")
+
+        col = split.column(align=True)
+        col.label(text="Clipping:")
+        col.prop(asr_cam_props, "near_z", text="Start")
+        col.prop(cam, "clip_end", text="End")
 
 
 class AppleseedCameraDoF(bpy.types.Panel):
