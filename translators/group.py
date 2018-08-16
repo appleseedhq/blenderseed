@@ -130,7 +130,8 @@ class GroupTranslator(Translator):
                 logger.debug("Ignoring object %s of type %s", obj.name, obj.type)
                 continue
 
-            if obj.hide_render:
+            if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER and obj.hide_render:
+                logger.debug("skipping hidden object %s", obj.name)
                 continue
 
             if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and obj.hide:
