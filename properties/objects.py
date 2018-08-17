@@ -131,6 +131,9 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
     object_ray_bias_distance = bpy.props.FloatProperty(name="object_ray_bias_distance",
                                                        default=0.0)
 
+    use_deformation_blur = bpy.props.BoolProperty(name="use_deformation_blur",
+                                                  default=False)
+
 
 def register():
     util.safe_register_class(AppleseedObjSettings)
