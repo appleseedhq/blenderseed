@@ -213,6 +213,8 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     threads_auto = bpy.props.BoolProperty(name="threads_auto",
                                           description="Automatically determine the number of rendering threads",
                                           default=True)
+    use_embree = bpy.props.BoolProperty(name="use_embree",
+                                        default=True)
 
     threads = bpy.props.IntProperty(name="threads",
                                     description="Number of threads to use for rendering",

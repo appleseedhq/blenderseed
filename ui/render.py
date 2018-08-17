@@ -97,6 +97,11 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         box.label(text="Texture Cache")
         box.prop(asr_scene_props, "tex_cache", text="Texture Cache Size")
 
+        # Here be dragons
+        box = layout.box()
+        box.label(text="Experimental Features")
+        box.prop(asr_scene_props, "use_embree", text="Use Embree", toggle=True)
+
 
 class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
