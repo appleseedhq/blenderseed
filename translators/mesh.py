@@ -35,7 +35,6 @@ from .handlers import AssetType
 from .object import ObjectTranslator
 from .translator import ObjectKey, ProjectExportMode
 from ..logger import get_logger
-from ..util import is_object_deforming
 
 logger = get_logger()
 
@@ -56,7 +55,7 @@ class MeshTranslator(ObjectTranslator):
 
         # Motion blur
         self.__key_index = 0
-        self.__deforming = is_object_deforming(obj)
+        self.__deforming = obj.appleseed.use_deformation_blur
 
         # Materials
         self.__front_materials = {}
