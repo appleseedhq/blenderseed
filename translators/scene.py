@@ -567,6 +567,7 @@ class SceneTranslator(GroupTranslator):
                                                  'noise_threshold': asr_scene_props.noise_threshold,
                                                  'batch_size': asr_scene_props.adaptive_batch_size,
                                                  'max_samples': asr_scene_props.adaptive_max_samples},
+                      'use_embree': asr_scene_props.use_embree,
                       'pixel_renderer': pixel_renderer,
                       'lighting_engine': lighting_engine,
                       'tile_renderer': tile_renderer,
