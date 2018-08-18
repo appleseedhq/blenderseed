@@ -254,13 +254,15 @@ class InteractiveCameraTranslator(Translator):
         zoom = self.__zoom
         lens = self.__lens
         extent_base = self.__extent_base
+        shift_x = self.__shift_x
+        shift_y = self.__shift_y
 
         self._reset(camera, context)
 
         self.__set_cam_props()
 
         # Check zoom
-        if zoom != self.__zoom or extent_base != self.__extent_base or lens != self.__lens:
+        if zoom != self.__zoom or extent_base != self.__extent_base or lens != self.__lens or shift_x != self.__shift_x or shift_y != self.__shift_y:
             cam_param_update = True
 
         if current_translation != self._matrix:
@@ -294,6 +296,8 @@ class InteractiveCameraTranslator(Translator):
         self.__lens = self.context.space_data.lens
         self.__zoom = None
         self.__extent_base = None
+        self.__shift_x = None
+        self.__shift_y = None
 
         if view_cam_type == "ORTHO":
             self.__zoom = 2
@@ -311,6 +315,11 @@ class InteractiveCameraTranslator(Translator):
 
     def __view_camera_params(self, aspect_ratio):
         film_width, film_height = calc_film_dimensions(aspect_ratio, self.bl_camera.data, self.__zoom)
+
+        offset = tuple(self.context.region_data.view_camera_offset)
+
+        self.__shift_x = ((offset[0] * 2 + self.bl_camera.data.shift_x) / self.__zoom) * film_width
+        self.__shift_y = ((offset[1] * 2 + self.bl_camera.data.shift_y) / self.__zoom) * film_height
 
         self._matrix = self.bl_camera.matrix_world
         cam_mapping = {'PERSP': 'pinhole_camera',
@@ -332,25 +341,25 @@ class InteractiveCameraTranslator(Translator):
         elif model == 'spherical_camera':
             raise NotImplementedError("Spherical camera not supported for interactive rendering")
 
-        elif model == 'thinlens_camera':
+        else:
+            params = {'focal_length': self.bl_camera.data.lens / 1000,
+                      'aspect_ratio': aspect_ratio,
+                      'shift_x': self.__shift_x,
+                      'shift_y': self.__shift_y,
+                      'film_dimensions': asr.Vector2f(film_width, film_height)}
+
+        if model == 'thinlens_camera':
             if self.bl_camera.data.dof_object is not None:
                 cam_target = bpy.data.objects[self.bl_camera.data.dof_object.name]
                 focal_distance = (cam_target.location - self.bl_camera.location).magnitude
             else:
                 focal_distance = self.bl_camera.data.dof_distance
-            params = {'film_dimensions': asr.Vector2f(film_width, film_height),
-                      'focal_length': self.bl_camera.data.lens / 1000,
-                      'aspect_ratio': aspect_ratio,
-                      'f_stop': self.bl_camera.data.appleseed.f_number,
-                      'autofocus_enabled': False,
-                      'diaphragm_blades': self.bl_camera.data.appleseed.diaphragm_blades,
-                      'diaphragm_tilt_angle': self.bl_camera.data.appleseed.diaphragm_angle,
-                      'focal_distance': focal_distance}
 
-        else:
-            params = {'focal_length': self.bl_camera.data.lens / 1000,
-                      'aspect_ratio': aspect_ratio,
-                      'film_dimensions': asr.Vector2f(film_width, film_height)}
+            params.update({'f_stop': self.bl_camera.data.appleseed.f_number,
+                           'autofocus_enabled': False,
+                           'diaphragm_blades': self.bl_camera.data.appleseed.diaphragm_blades,
+                           'diaphragm_tilt_angle': self.bl_camera.data.appleseed.diaphragm_angle,
+                           'focal_distance': focal_distance})
 
         return model, params
 
