@@ -50,6 +50,18 @@ class RenderThread(threading.Thread):
         self.__renderer.render()
 
 
+class SetAppleseedLogLevel(object):
+    def __init__(self, new_level):
+        self.__new_level = new_level
+
+    def __enter__(self):
+        self.__saved_level = asr.global_logger().get_verbosity_level()
+        asr.global_logger().set_verbosity_level(self.__new_level)
+
+    def __exit__(self, type, value, traceback):
+        asr.global_logger().set_verbosity_level(self.__saved_level)
+
+
 class RenderAppleseed(bpy.types.RenderEngine):
     bl_idname = 'APPLESEED_RENDER'
     bl_label = 'appleseed'
@@ -105,7 +117,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
             # Disable material previews if we are doing an interactive render.
             if not RenderAppleseed.__interactive_session:
-                self.__render_material_preview(scene)
+                with SetAppleseedLogLevel(asr.LogMessageCategory.Error):
+                    self.__render_material_preview(scene)
         else:
             self.__add_render_passes(scene)
             self.__render_final(scene)
