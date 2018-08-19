@@ -26,6 +26,8 @@
 #
 
 import logging
+import os
+
 
 __logger = None
 
@@ -40,6 +42,16 @@ def get_logger():
         #       to decide what and how we log things.
         #       While developing, log all to the console.
         __logger.addHandler(logging.StreamHandler())
-        __logger.setLevel(logging.DEBUG)
+
+        if 'APPLESEED_LOG_LEVEL' in os.environ:
+            mapping = {'debug': logging.DEBUG,
+                       'warning': logging.WARNING,
+                       'error': logging.ERROR,
+                       'critical': logging.CRITICAL}
+
+            __logger.setLevel(mapping[os.environ['APPLESEED_LOG_LEVEL']])
+
+        else:
+            __logger.setLevel(logging.INFO)
 
     return __logger
