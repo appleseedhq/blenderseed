@@ -29,8 +29,6 @@
 import appleseed as asr
 
 from enum import Enum
-import math
-import mathutils
 
 from ..logger import get_logger
 logger = get_logger()

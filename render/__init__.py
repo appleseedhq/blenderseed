@@ -29,9 +29,9 @@ import os
 import sys
 import threading
 
-import appleseed as asr
 import bpy
 
+import appleseed as asr
 from .renderercontroller import FinalRendererController, InteractiveRendererController
 from .tilecallbacks import FinalTileCallback
 from ..logger import get_logger
@@ -51,8 +51,14 @@ class RenderThread(threading.Thread):
 
 
 class SetAppleseedLogLevel(object):
+    mapping = {'error': asr.LogMessageCategory.Error,
+               'info': asr.LogMessageCategory.Info,
+               'debug': asr.LogMessageCategory.Debug,
+               'warning': asr.LogMessageCategory.Warning,
+               'fatal': asr.LogMessageCategory.Fatal}
+
     def __init__(self, new_level):
-        self.__new_level = new_level
+        self.__new_level = self.mapping[new_level]
 
     def __enter__(self):
         self.__saved_level = asr.global_logger().get_verbosity_level()
@@ -117,11 +123,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
             # Disable material previews if we are doing an interactive render.
             if not RenderAppleseed.__interactive_session:
-                with SetAppleseedLogLevel(asr.LogMessageCategory.Error):
+                level = 'error'
+                with SetAppleseedLogLevel(level):
                     self.__render_material_preview(scene)
         else:
-            self.__add_render_passes(scene)
-            self.__render_final(scene)
+            level = scene.appleseed.log_level
+            with SetAppleseedLogLevel(level):
+                self.__add_render_passes(scene)
+                self.__render_final(scene)
 
     def view_update(self, context):
         if self.__interactive_scene_translator is None:

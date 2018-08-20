@@ -87,6 +87,12 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         layout.separator()
 
+        box = layout.box()
+        box.label(text="Render Logging")
+        box.prop(asr_scene_props, "log_level", text="")
+
+        layout.separator()
+
         col = layout.column(align=True)
         col.prop(asr_scene_props, "shading_override", text="Override Shading", toggle=True)
         row = col.row(align=True)
