@@ -132,7 +132,7 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                                        default=0.0)
 
     use_deformation_blur = bpy.props.BoolProperty(name="use_deformation_blur",
-                                                  default=False)
+                                                  default=True)
 
 
 def register():
