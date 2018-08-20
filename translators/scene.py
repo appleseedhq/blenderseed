@@ -38,7 +38,7 @@ from .object import InstanceTranslator
 from .translator import ObjectKey, ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
-from ..util import get_osl_search_paths, Timer, inscenelayer
+from ..util import Timer, inscenelayer
 
 logger = get_logger()
 

@@ -26,10 +26,15 @@
 #
 
 import logging
-import os
 
+import bpy
 
 __logger = None
+
+__mapping = {'debug': logging.DEBUG,
+             'warning': logging.WARNING,
+             'error': logging.ERROR,
+             'critical': logging.CRITICAL}
 
 
 def get_logger():
@@ -38,20 +43,14 @@ def get_logger():
     if not __logger:
         __logger = logging.getLogger(__name__)
 
-        # todo: we should maybe use an env var or a preference 
-        #       to decide what and how we log things.
-        #       While developing, log all to the console.
         __logger.addHandler(logging.StreamHandler())
 
-        if 'APPLESEED_LOG_LEVEL' in os.environ:
-            mapping = {'debug': logging.DEBUG,
-                       'warning': logging.WARNING,
-                       'error': logging.ERROR,
-                       'critical': logging.CRITICAL}
+        log_level = bpy.context.user_preferences.addons['blenderseed'].preferences.log_level
 
-            __logger.setLevel(mapping[os.environ['APPLESEED_LOG_LEVEL']])
-
-        else:
-            __logger.setLevel(logging.INFO)
+        __logger.setLevel(__mapping[log_level])
 
     return __logger
+
+
+def set_logger_level(level):
+    __logger.setLevel(__mapping[level])

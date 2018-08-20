@@ -27,16 +27,30 @@
 
 import bpy
 
-from . import util
-
 
 class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
     bl_idname = __package__
 
+    def update_logger(self, context):
+        from .logger import set_logger_level
+
+        set_logger_level(self.log_level)
+
+    log_level = bpy.props.EnumProperty(name="log_level",
+                                       items=[('debug', "Debug", ""),
+                                              ('warning', "Warning", ""),
+                                              ('error', "Error", ""),
+                                              ('critical', "Critical", "")],
+                                       default='error',
+                                       update=update_logger)
+
+    def draw(self, context):
+        self.layout.prop(self, "log_level", text="Log Level")
+
 
 def register():
-    util.safe_register_class(AppleseedPreferencesPanel)
+    bpy.utils.register_class(AppleseedPreferencesPanel)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedPreferencesPanel)
+    bpy.utils.unregister_class(AppleseedPreferencesPanel)

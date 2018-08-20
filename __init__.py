@@ -37,30 +37,6 @@ bl_info = {
     "tracker_url": "https://github.com/appleseedhq/blenderseed/issues",
     "category": "Render"}
 
-
-def find_python_path():
-    python_path = ""
-
-    if 'APPLESEED_PYTHON_PATH' in os.environ:
-        python_path = os.environ['APPLESEED_PYTHON_PATH']
-    else:
-        python_path = os.path.join(util.get_appleseed_parent_dir(), 'lib')
-
-    return python_path
-
-
-def load_appleseed_python_paths():
-    python_path = find_python_path()
-    if python_path != "":
-        sys.path.append(python_path)
-        logger.debug("[appleseed] Python path set to: {0}".format(python_path))
-
-        if platform.system() == 'Windows':
-            bin_dir = util.get_appleseed_bin_dir()
-            os.environ['PATH'] += os.pathsep + bin_dir
-            logger.debug("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
-
-
 if "bpy" in locals():
     import imp
 
@@ -68,30 +44,26 @@ if "bpy" in locals():
     imp.reload(operators)
     imp.reload(export)
     imp.reload(ui)
-    imp.reload(util)
     imp.reload(preferences)
     imp.reload(projectwriter)
 
 else:
     import bpy
-    import os
-    import sys
-    import platform
-    from .logger import get_logger
 
-    logger = get_logger()
-    from . import util
 
+def register():
+    from . import preferences
+    preferences.register()
+
+    from .path_util import load_appleseed_python_paths
     load_appleseed_python_paths()
+
     from . import properties
     from . import operators
     from . import ui
-    from . import preferences
     from . import export
-    from .render import __init__  # not superfluous
+    from .render import __init__  # This is needed
 
-def register():
-    preferences.register()
     properties.register()
     operators.register()
     export.register()
@@ -100,6 +72,11 @@ def register():
 
 
 def unregister():
+    from . import preferences
+    from . import properties
+    from . import operators
+    from . import ui
+    from . import export
     ui.unregister()
     export.unregister()
     operators.unregister()

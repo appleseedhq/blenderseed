@@ -32,6 +32,7 @@ import os
 import bpy
 import bpy_extras
 
+from .path_util import get_appleseed_bin_dir_path, get_osl_search_paths
 from . import bl_info
 from .logger import get_logger
 
@@ -42,7 +43,7 @@ image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd
 
 def safe_register_class(cls):
     try:
-        # logger.debug("[appleseed] Registering class {0}...".format(cls))
+        logger.debug("[appleseed] Registering class {0}...".format(cls))
         bpy.utils.register_class(cls)
     except Exception as e:
         logger.error("[appleseed] ERROR: Failed to register class {0}: {1}".format(cls, e))
@@ -50,52 +51,10 @@ def safe_register_class(cls):
 
 def safe_unregister_class(cls):
     try:
-        # logger.debug("[appleseed] Unregistering class {0}...".format(cls))
+        logger.debug("[appleseed] Unregistering class {0}...".format(cls))
         bpy.utils.unregister_class(cls)
     except Exception as e:
         logger.error("[appleseed] ERROR: Failed to unregister class {0}: {1}".format(cls, e))
-
-
-def get_appleseed_bin_dir():
-    if "APPLESEED_BIN_DIR" in os.environ:
-        appleseed_bin_dir = os.environ['APPLESEED_BIN_DIR']
-    else:
-        appleseed_bin_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "appleseed", "bin")
-    if appleseed_bin_dir:
-        appleseed_bin_dir = realpath(appleseed_bin_dir)
-    return appleseed_bin_dir
-
-
-def get_appleseed_parent_dir():
-    appleseed_parent_dir = get_appleseed_bin_dir()
-    while os.path.basename(appleseed_parent_dir) != 'bin':
-        appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
-    appleseed_parent_dir = os.path.dirname(appleseed_parent_dir)
-
-    return appleseed_parent_dir
-
-
-def get_appleseed_tool_dir():
-    return os.path.join(get_appleseed_parent_dir(), 'bin')
-
-
-def get_osl_search_paths():
-    appleseed_parent_dir = get_appleseed_parent_dir()
-
-    if "APPLESEED_BIN_DIR" in os.environ:
-        shader_directories = [os.path.join(appleseed_parent_dir, 'shaders', 'appleseed'), os.path.join(appleseed_parent_dir, 'shaders', 'blenderseed')]
-    else:
-        shader_directories = [os.path.join(appleseed_parent_dir, 'shaders')]
-
-    # Add environment paths.
-    if "APPLESEED_SEARCHPATH" in os.environ:
-        shader_directories.extend(os.environ["APPLESEED_SEARCHPATH"].split(os.path.pathsep))
-
-    # Remove duplicated paths.
-    tmp = set(shader_directories)
-    shader_directories = list(tmp)
-
-    return shader_directories
 
 
 def read_osl_shaders():
@@ -108,7 +67,7 @@ def read_osl_shaders():
 
     nodes = []
 
-    if not get_appleseed_bin_dir():
+    if not get_appleseed_bin_dir_path():
         logger.warning("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
         return nodes
 

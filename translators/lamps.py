@@ -34,7 +34,7 @@ import os
 from .translator import Translator, ProjectExportMode
 from .handlers import AssetType
 from ..logger import get_logger
-from ..util import get_osl_search_paths
+from ..path_util import get_osl_search_paths
 
 logger = get_logger()
 
