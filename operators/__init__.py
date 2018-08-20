@@ -30,7 +30,7 @@ import subprocess
 
 import bpy
 
-from .. import util
+from .. import path_util, util
 
 
 # Material operators
@@ -153,7 +153,7 @@ class AppleseedConvertTextures(bpy.types.Operator):
         scene = context.scene
         textures = scene.appleseed
 
-        tool_dir = util.get_appleseed_tool_dir()
+        tool_dir = path_util.get_appleseed_tool_dir()
 
         for tex in textures.textures:
             filename = bpy.path.abspath(tex.name.filepath)
