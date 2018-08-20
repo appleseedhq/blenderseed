@@ -223,6 +223,14 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                     min=1,
                                     max=max_threads)
 
+    log_level = bpy.props.EnumProperty(name="log_level",
+                                       items=[('error', "Errors", ""),
+                                              ('info', "Info", ""),
+                                              ('debug', "Debug", ""),
+                                              ('warning', "Warning", ""),
+                                              ('fatal', "Fatal", "")],
+                                       default='warning')
+
     tex_cache = bpy.props.IntProperty(name="tex_cache",
                                       description="Size of the texture cache in MB",
                                       default=1024)
