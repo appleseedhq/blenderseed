@@ -558,13 +558,11 @@ class SceneTranslator(GroupTranslator):
         tile_renderer = 'adaptive' if asr_scene_props.pixel_sampler == 'adaptive' else 'generic'
         pixel_renderer = '' if asr_scene_props.pixel_sampler == 'adaptive' else 'uniform'
 
-        adaptiveness = 1 - asr_scene_props.adaptive_uniform_samples / asr_scene_props.adaptive_max_samples
-
         parameters = {'uniform_pixel_renderer': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
                                                  'force_antialiasing': True if asr_scene_props.force_aa else False,
                                                  'samples': asr_scene_props.samples},
-                      'adaptive_tile_renderer': {'adaptiveness': adaptiveness,
-                                                 'noise_threshold': asr_scene_props.noise_threshold,
+                      'adaptive_tile_renderer': {'min_samples': asr_scene_props.adaptive_min_samples,
+                                                 'noise_threshold': asr_scene_props.adaptive_noise_threshold,
                                                  'batch_size': asr_scene_props.adaptive_batch_size,
                                                  'max_samples': asr_scene_props.adaptive_max_samples},
                       'use_embree': asr_scene_props.use_embree,
