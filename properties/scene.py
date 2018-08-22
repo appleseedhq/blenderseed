@@ -288,17 +288,17 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                  default=256,
                                                  subtype='UNSIGNED')
 
-    adaptive_uniform_samples = bpy.props.IntProperty(name="adaptive_uniform_samples",
-                                                     description="Determines how many uniform samples will be taken before adaptive sampling takes over",
-                                                     default=16,
-                                                     min=1,
-                                                     max=500)
+    adaptive_min_samples = bpy.props.IntProperty(name="adaptive_min_samples",
+                                                 description="Determines how many uniform samples will be taken before adaptive sampling takes over",
+                                                 default=16,
+                                                 min=1,
+                                                 max=500)
 
-    noise_threshold = bpy.props.FloatProperty(name="noise_threshold",
-                                              description="The level of noise at which the sampling will end for a pixel.",
-                                              default=5.0,
-                                              min=0.0,
-                                              max=20)
+    adaptive_noise_threshold = bpy.props.FloatProperty(name="adaptive_noise_threshold",
+                                                       description="The level of noise at which the sampling will end for a pixel.",
+                                                       default=1.0,
+                                                       min=0.0,
+                                                       max=20.0)
 
     samples = bpy.props.IntProperty(name="samples",
                                     description="Maximum number of anti-aliasing samples",
