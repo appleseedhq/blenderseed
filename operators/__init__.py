@@ -89,20 +89,21 @@ class AppleseedViewNodeTree(bpy.types.Operator):
 
     def execute(self, context):
         node_tree = None
-        ob = context.active_object
-        if ob.type == 'LAMP':
-            if ob.data.type == 'AREA':
-                lamp = ob.data.appleseed
-                node_tree = lamp.osl_node_tree
+        ob = context.active_object if hasattr(context, "active_object") else None
+        if ob:
+            if ob.type == 'LAMP':
+                if ob.data.type == 'AREA':
+                    lamp = ob.data.appleseed
+                    node_tree = lamp.osl_node_tree
+                else:
+                    return {"CANCELLED"}
+            elif ob.type == 'MESH':
+                mat = ob.active_material
+
+                if mat:
+                    node_tree = mat.appleseed.osl_node_tree
             else:
                 return {"CANCELLED"}
-        elif ob.type == 'MESH':
-            mat = ob.active_material
-
-            if mat:
-                node_tree = mat.appleseed.osl_node_tree
-        else:
-            return {"CANCELLED"}
 
         if node_tree is not None:
             for area in context.screen.areas:
