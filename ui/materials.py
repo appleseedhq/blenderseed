@@ -147,6 +147,36 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
         layout.prop(asr_mat, "shader_lighting_samples", text="Lighting Samples")
 
+        layout.prop(asr_mat, "mode", text="Shading Mode")
+
+        if asr_mat.mode == 'volume':
+            layout.prop(asr_mat, "volume_phase_function_model", text="Volume")
+            if asr_mat.volume_phase_function_model != 'none':
+                # Absorption
+                split = layout.split(percentage=0.40)
+                col = split.column()
+                col.label("Absorption:")
+                col = split.column()
+                col.prop(asr_mat, "volume_absorption", text="")
+
+                # Absorption Multiplier
+                col = layout.column()
+                col.prop(asr_mat, "volume_absorption_multiplier", text="Absorption Multiplier")
+
+                # Volume Scattering
+                split = layout.split(percentage=0.40)
+                col = split.column()
+                col.label("Scattering:")
+                col = split.column()
+                col.prop(asr_mat, "volume_scattering", text="")
+
+                # Scattering Multiplier
+                col = layout.column()
+                col.prop(asr_mat, "volume_scattering_multiplier", text="Scattering Multiplier")
+
+                if asr_mat.volume_phase_function_model == 'henyey':
+                    col.prop(asr_mat, "volume_average_cosine", text="Average Cosine")
+
 
 INTERVAL = 1
 last_update = time()

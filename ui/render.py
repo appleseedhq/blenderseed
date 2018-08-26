@@ -244,14 +244,14 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             row.enabled = not asr_scene_props.max_specular_bounces_unlimited
             row.prop(asr_scene_props, "max_specular_bounces", text="")
 
-            # split = layout.split(percentage=0.25, align=True)
-            # split.label(text="Volume")
-            # split = split.split(percentage=0.33)
-            # row = split.row()
-            # row.prop(asr_scene_props, "max_volume_bounces_unlimited", text="Unlimited", toggle=True)
-            # row = split.row()
-            # row.enabled = not asr_scene_props.max_volume_bounces_unlimited
-            # row.prop(asr_scene_props, "max_volume_bounces", text="")
+            split = layout.split(percentage=0.25, align=True)
+            split.label(text="Volume")
+            split = split.split(percentage=0.33)
+            row = split.row()
+            row.prop(asr_scene_props, "max_volume_bounces_unlimited", text="Unlimited", toggle=True)
+            row = split.row()
+            row.enabled = not asr_scene_props.max_volume_bounces_unlimited
+            row.prop(asr_scene_props, "max_volume_bounces", text="")
 
             layout.separator()
 
@@ -269,10 +269,10 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             layout.separator()
             layout.prop(asr_scene_props, "rr_start", text="Russian Roulette Start Bounce")
 
-            # layout.separator()
-            # col = layout.column(align=True)
-            # col.prop(asr_scene_props, "optimize_for_lights_outside_volumes", text="Optimize for Lights Outside Volumes", toggle=True)
-            # col.prop(asr_scene_props, "volume_distance_samples", text="Volume Distance Samples")
+            layout.separator()
+            col = layout.column(align=True)
+            col.prop(asr_scene_props, "optimize_for_lights_outside_volumes", text="Optimize for Lights Outside Volumes", toggle=True)
+            col.prop(asr_scene_props, "volume_distance_samples", text="Volume Distance Samples")
 
         # SPPM UI
         elif asr_scene_props.lighting_engine == 'sppm':
