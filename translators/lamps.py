@@ -242,8 +242,8 @@ class AreaLampTranslator(Translator):
 
         else:
             shape_params['radius'] = self.bl_lamp.data.size / 2
-            shape_params['resolution_u'] = 12
-            shape_params['resolution_v'] = 12
+            shape_params['resolution_u'] = 4
+            shape_params['resolution_v'] = 4
 
         mesh_name = self.bl_lamp.name + "_mesh"
 
