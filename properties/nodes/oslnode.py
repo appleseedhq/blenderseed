@@ -155,6 +155,9 @@ def generate_node(node):
         return util.filter_params(self.tree)
 
     def draw_buttons(self, context, layout):
+        if self.url_reference != '':
+            layout.operator("wm.url_open", text="Node Reference").url = self.url_reference
+        layout.separator()
         for x in non_connected_props:
             if x['name'] in self.filepaths:
                 layout.template_ID_preview(self, x['name'], open="image.open")
@@ -180,6 +183,7 @@ def generate_node(node):
     category = node['category']
     input_sockets = node['inputs']
     output_sockets = node['outputs']
+    url_reference = node['url']
     non_connected_props = []
 
     socket_input_names = []
@@ -467,6 +471,7 @@ def generate_node(node):
             parameter_types[prop['name']] = "vector"
 
     ntype.parameter_types = parameter_types
+    ntype.url_reference = url_reference
     ntype.init = init
     ntype.draw_buttons = draw_buttons
     ntype.draw_buttons_ext = draw_buttons_ext
