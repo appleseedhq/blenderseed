@@ -286,7 +286,7 @@ class SceneTranslator(GroupTranslator):
             except:
                 logger.debug("Material not found for %s", mat)
                 continue
-            if bl_lamp.appleseed.osl_node_tree.is_updated:
+            if bl_lamp.appleseed.osl_node_tree.is_updated or bl_lamp.is_updated:
                 logger.debug("Updating material tree for %s", mat)
                 self._lamp_material_translators[mat].update(bl_lamp, self.__main_assembly, scene)
 
