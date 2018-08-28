@@ -91,51 +91,51 @@ def read_osl_shaders():
                     d['inputs'] = []
                     d['outputs'] = []
                     shader_meta = q.get_metadata()
-                    shader_meta_keys = shader_meta.keys()
-                    if 'as_blender_node_name' in shader_meta_keys:
+                    if 'as_blender_node_name' in shader_meta:
                         d['name'] = shader_meta['as_blender_node_name']['value']
                     else:
                         d['name'] = q.get_shader_name()
                     d['filename'] = filename
-                    if 'as_blender_category' in shader_meta_keys:
+                    if 'URL' in shader_meta:
+                        d['url'] = shader_meta['URL']['value']
+                    else:
+                        d['url'] = ''
+                    if 'as_blender_category' in shader_meta:
                         d['category'] = shader_meta['as_blender_category']['value']
                     else:
                         d['category'] = 'other'
                     num_of_params = q.get_num_params()
                     for x in range(0, num_of_params):
-                        metadata_keys = []
                         metadata = {}
                         param = q.get_param_info(x)
-                        keys = param.keys()
-                        if 'metadata' in keys:
+                        if 'metadata' in param:
                             metadata = param['metadata']
-                        metadata_keys = metadata.keys()
                         param_data = {}
                         param_data['name'] = param['name']
                         param_data['type'] = param['type']
                         param_data['connectable'] = True
                         param_data['hide_ui'] = param['validdefault'] is False
-                        if 'default' in keys:
+                        if 'default' in param:
                             param_data['default'] = param['default']
-                        if 'label' in metadata_keys:
+                        if 'label' in metadata:
                             param_data['label'] = metadata['label']['value']
-                        if 'widget' in metadata_keys:
+                        if 'widget' in metadata:
                             param_data['widget'] = metadata['widget']['value']
                             if param_data['widget'] == 'null':
                                 param_data['hide_ui'] = True
-                        if 'min' in metadata_keys:
+                        if 'min' in metadata:
                             param_data['min'] = metadata['min']['value']
-                        if 'max' in metadata_keys:
+                        if 'max' in metadata:
                             param_data['max'] = metadata['max']['value']
-                        if 'softmin' in metadata_keys:
+                        if 'softmin' in metadata:
                             param_data['softmin'] = metadata['softmin']['value']
-                        if 'softmax' in metadata_keys:
+                        if 'softmax' in metadata:
                             param_data['softmax'] = metadata['softmax']['value']
-                        if 'help' in metadata_keys:
+                        if 'help' in metadata:
                             param_data['help'] = metadata['help']['value']
-                        if 'options' in metadata_keys:
+                        if 'options' in metadata:
                             param_data['options'] = metadata['options']['value'].split(" = ")[-1].replace("\"", "").split("|")
-                        if 'as_blender_input_socket' in metadata_keys:
+                        if 'as_blender_input_socket' in metadata:
                             param_data['connectable'] = False if metadata['as_blender_input_socket']['value'] == 0.0 else True
 
                         if param['isoutput'] is True:
