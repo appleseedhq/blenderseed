@@ -44,10 +44,9 @@ class WorldTranslator(Translator):
 
     def __init__(self, scene, asset_handler):
         super(WorldTranslator, self).__init__(scene, asset_handler)
-        self.__horizon_radiance = None
-        self.__zenith_radiance = None
         self.__env_tex = None
         self.__env_tex_inst = None
+        self.__colors = []
 
     #
     # Properties.
@@ -72,10 +71,10 @@ class WorldTranslator(Translator):
                                                       self._convert_color(self.bl_scene.world.horizon_color))
 
         elif env_type in ('gradient', 'constant_hemisphere'):
-            self.__horizon_radiance = asr.ColorEntity('horizon_radiance_color', {'color_space': 'srgb'},
-                                                      self._convert_color(self.bl_scene.world.horizon_color))
-            self.__zenith_radiance = asr.ColorEntity('zenith_radiance_color', {'color_space': 'linear_rgb'},
-                                                     self._convert_color(self.bl_scene.world.zenith_color))
+            self.__colors.append(asr.ColorEntity('horizon_radiance_color', {'color_space': 'srgb'},
+                                                      self._convert_color(self.bl_scene.world.horizon_color)))
+            self.__colors.append(asr.ColorEntity('zenith_radiance_color', {'color_space': 'linear_rgb'},
+                                                     self._convert_color(self.bl_scene.world.zenith_color)))
 
         if env_type in ('latlong_map', 'mirrorball_map'):
             filename = self.asset_handler.process_path(as_sky.env_tex.filepath, AssetType.TEXTURE_ASSET)
@@ -91,9 +90,7 @@ class WorldTranslator(Translator):
         if as_sky.env_type == 'latlong_map':
             edf_params = {'radiance': "environment_tex_inst",
                           'radiance_multiplier': as_sky.env_tex_mult,
-                          'exposure': as_sky.env_exposure,
-                          'vertical_shift': as_sky.vertical_shift,
-                          'horizontal_shift': as_sky.horizontal_shift}
+                          'exposure': as_sky.env_exposure}
 
         elif as_sky.env_type == 'mirrorball_map':
             edf_params = {'radiance': "environment_tex_inst",
@@ -134,15 +131,10 @@ class WorldTranslator(Translator):
         self.__as_env_edf.transform_sequence().set_transform(0.0, asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
 
     def flush_entities(self, as_scene):
-        if self.__horizon_radiance is not None:
-            horizon_name = self.__horizon_radiance.get_name()
-            as_scene.colors().insert(self.__horizon_radiance)
-            self.__horizon_radiance = as_scene.colors().get_by_name(horizon_name)
-
-        if self.__zenith_radiance is not None:
-            zenith_name = self.__zenith_radiance.get_name()
-            as_scene.colors().insert(self.__zenith_radiance)
-            self.__zenith_radiance = as_scene.colors().get_by_name(zenith_name)
+        for index, color in enumerate(self.__colors):
+            color_name = color.get_name()
+            as_scene.colors().insert(color)
+            self.__colors[index] = as_scene.colors().get_by_name(color_name)
 
         if self.__env_tex is not None:
             env_tex_name = self.__env_tex.get_name()
@@ -164,11 +156,9 @@ class WorldTranslator(Translator):
         as_scene.set_environment(self.__as_env)
 
     def update(self, scene, as_scene):
-        if self.__horizon_radiance is not None:
-            as_scene.colors().remove(self.__horizon_radiance)
 
-        if self.__zenith_radiance is not None:
-            as_scene.colors().remove(self.__zenith_radiance)
+        for color in self.__colors:
+            as_scene.colors().remove(color)
 
         if self.__env_tex is not None:
             as_scene.textures().remove(self.__env_tex)
@@ -188,13 +178,15 @@ class WorldTranslator(Translator):
 
     def _reset(self, scene):
         super(WorldTranslator, self)._reset(scene)
-        self.__horizon_radiance = None
-        self.__zenith_radiance = None
+        self.__colors = []
         self.__env_tex = None
         self.__env_tex_inst = None
 
     def _convert_matrix(self, m):
-        rot = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(90.0))
-        m = rot * m
+        as_sky = self.bl_scene.appleseed_sky
+        vertical_shift = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(as_sky.vertical_shift))
+        horizontal_shift = asr.Matrix4d.make_rotation(asr.Vector3d(0.0, 1.0, 0.0), math.radians(as_sky.horizontal_shift))
+        scene_rot = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(90.0))
+        m = scene_rot * vertical_shift * horizontal_shift * m
 
         return m
