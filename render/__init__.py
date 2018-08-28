@@ -51,10 +51,10 @@ class RenderThread(threading.Thread):
 
 
 class SetAppleseedLogLevel(object):
-    mapping = {'error': asr.LogMessageCategory.Error,
+    mapping = {'debug': asr.LogMessageCategory.Debug,
                'info': asr.LogMessageCategory.Info,
-               'debug': asr.LogMessageCategory.Debug,
                'warning': asr.LogMessageCategory.Warning,
+               'error': asr.LogMessageCategory.Error,
                'fatal': asr.LogMessageCategory.Fatal}
 
     def __init__(self, new_level):

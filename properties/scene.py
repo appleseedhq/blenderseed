@@ -224,9 +224,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                     max=max_threads)
 
     log_level = bpy.props.EnumProperty(name="log_level",
-                                       items=[('error', "Errors", ""),
+                                       items=[('debug', "Debug", ""),
                                               ('info', "Info", ""),
-                                              ('debug', "Debug", ""),
+                                              ('error', "Errors", ""),
                                               ('warning', "Warning", ""),
                                               ('fatal', "Fatal", "")],
                                        default='warning')
