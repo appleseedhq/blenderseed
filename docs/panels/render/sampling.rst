@@ -35,5 +35,5 @@ Sampling
 
 .. rubric:: Footnotes
 
-.. [#f1] Setting the passes higher than 1 and lowering the number of samples enables a featured called 'progressive rendering'.  The image will appear in its entirety after one pass and noise will be subsequently reduced with each addtional pass.
+.. [#f1] Setting the passes higher than 1 and lowering the number of samples enables a featured called 'progressive rendering'.  The image will appear in its entirety after one pass and noise will be subsequently reduced with each additional pass.
 .. [#f2] Progressive rendering is slower than single pass rendering, however it does have its advantages.  If you are not certain how many samples will be needed to create a clean image, you can set the samples to a low number and the passes number to a higher one.  When the image has reached an acceptable level of quality the render can be aborted.
