@@ -10,8 +10,14 @@ Denoiser
         Denoising will run after a render completes
     - Write Outputs:
         The render will write out several multilayer EXR files that can then be denoised at a later time using the denoise utility.  The render itself will not be denoised
+- Random Pixel Order:
+    TODO
+- Skip Denoised Pixels:
+    TODO
 - Prefilter Spikes:
-    This filter attempts to remove fireflies (overly bright pixels) from the image before denoising
+    This option tries to filter out overly bright pixels (firflies) before denoising
+- Mark Invalid Pixels:
+    TODO
 - Spike Threshold:
     How bright a pixel has to be compared to its neighbors to be considered a spike
 - Patch Distance:

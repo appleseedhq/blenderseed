@@ -7,6 +7,8 @@ Visibility
 
 - Visibility Flags:
     These flags determine if an object is visible to specific ray types during rendering.
+- Ray Bias:
+    This is used to offset the starting point of a ray from the surface of an object.
 - Object Alpha:
     This allows a user to determine the transparency of an object.  The parameter can also be driven by a texture map, allowing for cutout effects like leaves.
 - Double Sided Shading:
