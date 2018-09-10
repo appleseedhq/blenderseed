@@ -86,7 +86,7 @@ class CameraTranslator(Translator):
     def flush_entities(self, scene):
         self._xform_seq.optimize()
 
-        logger.debug("Creating camera entity for camera: %s, num xform keys = %s" % (self.bl_camera.name, self._xform_seq.size()))
+        logger.debug("Flushing camera entity for camera: %s, num xform keys = %s" % (self.bl_camera.name, self._xform_seq.size()))
 
         self.__as_camera.set_transform_sequence(self._xform_seq)
 
@@ -103,6 +103,9 @@ class CameraTranslator(Translator):
 
             self.__cam_map = scene.textures().get_by_name(cam_map_name)
             self.__cam_map_inst = scene.texture_instances().get_by_name(cam_map_inst_name)
+
+    def set_transform_key(self, time, key_times):
+        self._xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
     #
     # Internal methods.
@@ -130,9 +133,6 @@ class CameraTranslator(Translator):
             cam_params = self.__ortho_camera_params(scene, aspect_ratio)
 
         self.__as_camera.set_parameters(cam_params)
-
-    def set_transform_key(self, time, key_times):
-        self._xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
     def __ortho_camera_params(self, scene, aspect_ratio):
         camera = self.bl_camera.data
@@ -209,10 +209,18 @@ class CameraTranslator(Translator):
 
 class InteractiveCameraTranslator(Translator):
 
+    #
+    # Constructor.
+    #
+
     def __init__(self, cam, context, asset_handler):
         super(InteractiveCameraTranslator, self).__init__(cam, asset_handler)
 
         self.__context = context
+
+    #
+    # Properties.
+    #
 
     @property
     def bl_camera(self):
@@ -221,6 +229,10 @@ class InteractiveCameraTranslator(Translator):
     @property
     def context(self):
         return self.__context
+
+    #
+    # Entity translation.
+    #
 
     def create_entities(self, scene=None):
         logger.debug("Creating camera entity for camera: interactive camera")
@@ -239,6 +251,19 @@ class InteractiveCameraTranslator(Translator):
         cam_name = self.__as_int_camera.get_name()
         scene.cameras().insert(self.__as_int_camera)
         self.__as_int_camera = scene.cameras().get_by_name(cam_name)
+
+    def update(self, scene, camera=None, context=None):
+        logger.debug("Update interactive camera")
+        if camera is not None and context is not None:
+            self._reset(camera, context)
+
+        scene.cameras().remove(self.__as_int_camera)
+        self.create_entities(scene)
+        self.flush_entities(scene)
+
+    #
+    # Internal methods.
+    #
 
     def check_for_camera_update(self, camera, context):
         """
@@ -269,15 +294,6 @@ class InteractiveCameraTranslator(Translator):
             cam_translate_update = True
 
         return cam_param_update, cam_translate_update
-
-    def update(self, scene, camera=None, context=None):
-        logger.debug("Update interactive camera")
-        if camera is not None and context is not None:
-            self._reset(camera, context)
-
-        scene.cameras().remove(self.__as_int_camera)
-        self.create_entities(scene)
-        self.flush_entities(scene)
 
     def _reset(self, cam, context):
         super(InteractiveCameraTranslator, self)._reset(cam)

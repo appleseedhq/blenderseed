@@ -280,19 +280,19 @@ def get_instance_materials(ob):
 
 
 def is_object_deforming(ob):
-    deforming_mods = ['ARMATURE', 'MESH_SEQUENCE_CACHE', 'CAST', 'CLOTH', 'CURVE', 'DISPLACE',
+    deforming_mods = {'ARMATURE', 'MESH_SEQUENCE_CACHE', 'CAST', 'CLOTH', 'CURVE', 'DISPLACE',
                       'HOOK', 'LATTICE', 'MESH_DEFORM', 'SHRINKWRAP', 'EXPLODE',
                       'SIMPLE_DEFORM', 'SMOOTH', 'WAVE', 'SOFT_BODY',
                       'SURFACE', 'MESH_CACHE', 'FLUID_SIMULATION',
-                      'DYNAMIC_PAINT']
+                      'DYNAMIC_PAINT'}
     if ob.modifiers:
         for mod in ob.modifiers:
             if mod.type in deforming_mods:
                 return True
-            else:
-                pass
+
     if ob.data and hasattr(ob.data, 'shape_keys') and ob.data.shape_keys:
         return True
+
     return False
 
 

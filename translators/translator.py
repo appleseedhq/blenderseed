@@ -78,8 +78,6 @@ class Translator(object):
     #
 
     def __init__(self, obj, asset_handler):
-        """todo: document me..."""
-
         self._bl_obj = obj
         self._obj_key = ObjectKey(obj)
         self._asset_handler = asset_handler
@@ -90,8 +88,6 @@ class Translator(object):
 
     @property
     def appleseed_name(self):
-        """todo: document me..."""
-
         return str(self._obj_key)
 
     @property
