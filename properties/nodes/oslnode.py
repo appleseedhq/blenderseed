@@ -189,7 +189,7 @@ def generate_node(node):
     socket_input_names = []
     socket_output_names = []
 
-    # create socket classes
+    # create input socket classes
     for in_socket in input_sockets:
         keys = in_socket.keys()
         if not in_socket['connectable'] and in_socket['hide_ui']:
@@ -219,6 +219,7 @@ def generate_node(node):
                 soft_minimum = in_socket['softmin']
             if 'softmax' in keys:
                 soft_maximum = in_socket['softmax']
+
             hide_ui = in_socket['hide_ui']
 
             stype = type(socket_name, (AppleseedOSLInSocket,), {})
@@ -334,8 +335,6 @@ def generate_node(node):
             stype.draw_color = draw_point_color
         elif socket_type == 'float[2]':
             stype.draw_color = draw_uv_color
-        else:
-            pass
 
         util.safe_register_class(stype)
 
