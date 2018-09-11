@@ -86,24 +86,24 @@ class WorldTranslator(Translator):
             self.__env_tex_inst = asr.TextureInstance('environment_tex_inst', tex_inst_params, 'environment_tex',
                                                       asr.Transformf(asr.Matrix4f.identity()))
 
-        if as_sky.env_type == 'latlong_map':
+        if env_type == 'latlong_map':
             edf_params = {'radiance': "environment_tex_inst",
                           'radiance_multiplier': as_sky.env_tex_mult,
                           'exposure': as_sky.env_exposure}
 
-        elif as_sky.env_type == 'mirrorball_map':
+        elif env_type == 'mirrorball_map':
             edf_params = {'radiance': "environment_tex_inst",
                           'exposure': as_sky.env_exposure,
                           'radiance_multiplier': as_sky.env_tex_mult}
 
-        elif as_sky.env_type == 'constant':
+        elif env_type == 'constant':
             edf_params = {'radiance': 'horizon_radiance_color'}
 
-        elif as_sky.env_type == 'gradient':
+        elif env_type == 'gradient':
             edf_params = {'horizon_radiance': "horizon_radiance_color",
                           'zenith_radiance': "zenith_radiance_color"}
 
-        elif as_sky.env_type == 'constant_hemisphere':
+        elif env_type == 'constant_hemisphere':
             edf_params = {'lower_hemi_radiance': "horizon_radiance_color",
                           'upper_hemi_radiance': "zenith_radiance_color"}
 
