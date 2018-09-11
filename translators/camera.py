@@ -104,7 +104,7 @@ class CameraTranslator(Translator):
             self.__cam_map = scene.textures().get_by_name(cam_map_name)
             self.__cam_map_inst = scene.texture_instances().get_by_name(cam_map_inst_name)
 
-    def set_transform_key(self, time, key_times):
+    def set_transform_key(self, scene, time, key_times):
         self._xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
     #
@@ -241,8 +241,8 @@ class InteractiveCameraTranslator(Translator):
 
         self.__as_int_camera = asr.Camera(self.__model, self.appleseed_name, self.__params)
 
-    def set_transform_key(self, time, key_times=None):
-        self.__as_int_camera.transform_sequence().set_transform(time, self._convert_matrix(self._matrix))
+    def set_transform_key(self, scene, time, key_times):
+        self.set_transform(time)
 
     def flush_entities(self, scene):
         logger.debug("Flushing camera entity for camera: interactive camera")
@@ -265,6 +265,9 @@ class InteractiveCameraTranslator(Translator):
     # Internal methods.
     #
 
+    def set_transform(self, time):
+        self.__as_int_camera.transform_sequence().set_transform(time, self._convert_matrix(self.__matrix))
+
     def check_for_camera_update(self, camera, context):
         """
         This function only needs to test for matrix changes and viewport lens/zoom changes.  All other camera
@@ -275,7 +278,7 @@ class InteractiveCameraTranslator(Translator):
         cam_translate_update = False
 
         # Get current translation, zoom and lens from viewport
-        current_translation = self._matrix
+        current_translation = self.__matrix
         zoom = self.__zoom
         lens = self.__lens
         extent_base = self.__extent_base
@@ -290,7 +293,7 @@ class InteractiveCameraTranslator(Translator):
         if zoom != self.__zoom or extent_base != self.__extent_base or lens != self.__lens or shift_x != self.__shift_x or shift_y != self.__shift_y:
             cam_param_update = True
 
-        if current_translation != self._matrix:
+        if current_translation != self.__matrix:
             cam_translate_update = True
 
         return cam_param_update, cam_translate_update
@@ -337,7 +340,7 @@ class InteractiveCameraTranslator(Translator):
         self.__shift_x = ((offset[0] * 2 + self.bl_camera.data.shift_x) / self.__zoom) * film_width
         self.__shift_y = ((offset[1] * 2 + self.bl_camera.data.shift_y) / self.__zoom) * film_height
 
-        self._matrix = self.bl_camera.matrix_world
+        self.__matrix = self.bl_camera.matrix_world
         cam_mapping = {'PERSP': 'pinhole_camera',
                        'ORTHO': 'orthographic_camera',
                        'PANO': 'spherical_camera'}
@@ -382,7 +385,7 @@ class InteractiveCameraTranslator(Translator):
     def __persp_camera_params(self, aspect_ratio):
         model = 'pinhole_camera'
         sensor_size = 32 * self.__zoom
-        self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+        self.__matrix = Matrix(self.context.region_data.view_matrix).inverted()
         params = {'focal_length': self.context.space_data.lens,
                   'aspect_ratio': aspect_ratio,
                   'film_width': sensor_size}
@@ -394,7 +397,7 @@ class InteractiveCameraTranslator(Translator):
 
     def __ortho_camera_params(self, aspect_ratio):
         model = 'orthographic_camera'
-        self._matrix = Matrix(self.context.region_data.view_matrix).inverted()
+        self.__matrix = Matrix(self.context.region_data.view_matrix).inverted()
         sensor_width = self.__zoom * self.__extent_base * 1
         params = {'film_width': sensor_width,
                   'aspect_ratio': aspect_ratio}

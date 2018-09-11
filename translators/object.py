@@ -70,12 +70,17 @@ class ObjectTranslator(Translator):
     # Entity translation.
     #
 
-    def set_transform_key(self, time, key_times):
+    def set_transform_key(self, scene, time, key_times):
         self._xform_seq.set_transform(time, self._convert_matrix(self.bl_obj.matrix_world))
+
+    def set_transform(self, time, matrix):
+        self._xform_seq.set_transform(time, self._convert_matrix(matrix))
 
     def set_deform_key(self, scene, time, key_times):
         pass
 
+    def update(self, obj):
+        self.update_transform(0.0, obj.matrix_world)
 
 class InstanceTranslator(ObjectTranslator):
 
@@ -92,64 +97,49 @@ class InstanceTranslator(ObjectTranslator):
     #
 
     def create_entities(self, scene):
-        self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_obj.matrix_world))
+        pass
 
     def flush_entities(self, assembly):
         logger.debug("Creating assembly instance for object %s", self.appleseed_name)
 
-        self._xform_seq.optimize()
-
         assembly_instance_name = self.appleseed_name + "_ass_inst"
+        self.__ass_inst = asr.AssemblyInstance(assembly_instance_name, {}, self.__master.assembly_name)
 
-        self.__ass_inst = asr.AssemblyInstance(
-            assembly_instance_name,
-            {},
-            self.__master.assembly_name)
-
+        self._xform_seq.optimize()
         self.__ass_inst.set_transform_sequence(self._xform_seq)
-        ass_name = self.__ass_inst.get_name()
-        assembly.assembly_instances().insert(self.__ass_inst)
-        self.__ass_inst = assembly.assembly_instances().get_by_name(ass_name)
 
-    def update(self, obj):
-        self.__ass_inst.transform_sequence().set_transform(0.0, self._convert_matrix(obj.matrix_world))
+        assembly_instance_name = self._insert_entity_with_unique_name(
+            assembly.assembly_instances(),
+            self.__ass_inst,
+            self.__ass_inst.get_name())
 
+        self.__ass_inst = assembly.assembly_instances().get_by_name(assembly_instance_name)
 
-class DupliTranslator(ObjectTranslator):
-
-    def __init__(self, obj, export_mode, asset_handler):
-        super(DupliTranslator, self).__init__(obj, asset_handler)
-
-        self.__export_mode = export_mode
-
-    def create_entities(self, scene):
-        self.__mode = 'VIEWPORT' if self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER else 'RENDER'
-
-        self.bl_obj.dupli_list_create(scene, settings=self.__mode)
-
-        for dupli in self.bl_obj.dupli_list:
-            print(dupli.object)
-            print(dupli.random_id)
-            print(dupli.type)
-            print(dupli.index)
-            print()
-
-        self.bl_obj.dupli_list_clear()
-
-    def flush_entities(self, assembly):
-        pass
-
+    def update_transform(self, time, matrix):
+        self.__ass_inst.transform_sequence().set_transform(time, self._convert_matrix(matrix))
 
 class ArchiveTranslator(ObjectTranslator):
+
+    #
+    # Constructor.
+    #
 
     def __init__(self, obj, archive_path, asset_handler):
         super(ArchiveTranslator, self).__init__(obj, asset_handler)
 
         self.__archive_path = archive_path
 
+    #
+    # Properties.
+    #
+
     @property
     def bl_obj(self):
         return self._bl_obj
+
+    #
+    # Entity translation.
+    #
 
     def create_entities(self, scene):
         self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_obj.matrix_world))
@@ -169,5 +159,5 @@ class ArchiveTranslator(ObjectTranslator):
         assembly.assemblies().insert(self.__ass)
         assembly.assembly_instances().insert(self.__ass_inst)
 
-    def update(self, obj):
-        self.__ass_inst.transform_sequence().set_transform(0.0, self._convert_matrix(obj.matrix_world))
+    def update_transform(self, time, matrix):
+        self.__ass_inst.transform_sequence().set_transform(time, self._convert_matrix(matrix))

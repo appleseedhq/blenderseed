@@ -86,7 +86,7 @@ class InteractiveRendererController(BaseRendererController):
 
     def on_frame_begin(self):
         if False:
-            self.__camera.set_transform_key(0.0)
+            self.__camera.set_transform(0.0)
             self._status = asr.IRenderControllerStatus.ContinueRendering
         else:
             pass
