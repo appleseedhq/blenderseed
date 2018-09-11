@@ -292,26 +292,35 @@ class SceneTranslator(GroupTranslator):
 
         # Update objects
         for translator in self._object_translators:
-            # Find Blender obj
             try:
                 bl_obj = bpy.data.objects[str(translator)]
+
+                if bl_obj.is_updated or bl_obj.is_updated_data:
+                    logger.debug("Updating object %s", translator)
+                    self._object_translators[translator].update(bl_obj)
             except:
                 logger.debug("Object not found for %s", translator)
-                continue
-            if bl_obj.is_updated or bl_obj.is_updated_data:
-                logger.debug("Updating object %s", translator)
-                self._object_translators[translator].update(bl_obj)
+
+        for translator in self._dupli_translators:
+            try:
+                bl_obj = bpy.data.objects[str(translator)]
+
+                if bl_obj.is_updated or bl_obj.is_updated_data:
+                    logger.debug("Updating dupli object %s", translator)
+
+                    self._dupli_translators[translator].update(bl_obj, self.bl_scene)
+            except Exception as e:
+                logger.debug("Dupli object not found for %s, exception: %s", translator, e)
 
         for translator in self._lamp_translators:
-            # Find Blender obj
             try:
                 bl_lamp = bpy.data.objects[str(translator)]
+
+                if bl_lamp.is_updated or bl_lamp.is_updated_data:
+                    logger.debug("Updating lamp %s", translator)
+                    self._lamp_translators[translator].update(bl_lamp, self.__main_assembly, scene)
             except:
                 logger.debug("Lamp not found for %s", translator)
-                continue
-            if bl_lamp.is_updated or bl_lamp.is_updated_data:
-                logger.debug("Updating lamp %s", translator)
-                self._lamp_translators[translator].update(bl_lamp, self.__main_assembly, scene)
 
         if self.bl_scene.is_updated or self.bl_scene.is_updated_data:
             self.__world_translator.update(self.bl_scene, self.as_scene)
@@ -319,7 +328,7 @@ class SceneTranslator(GroupTranslator):
         if self.bl_scene.camera.is_updated or self.bl_scene.camera.is_updated_data:
             self.__camera_translator.update(self.as_scene, camera=self.bl_scene.camera, context=self.__context)
 
-        self.__camera_translator.set_transform_key(0.0)
+        self.__camera_translator.set_transform(0.0)
 
     def check_view(self, context):
         """
@@ -338,7 +347,6 @@ class SceneTranslator(GroupTranslator):
         height = int(self.__context.region.height)
         new_viewport_resolution = [width, height]
         if new_viewport_resolution != self.__viewport_resolution:
-            print("update frame")
             view_update = True
             cam_param_update = True
 
@@ -358,7 +366,7 @@ class SceneTranslator(GroupTranslator):
         if view_update:
             self.__translate_frame()
 
-        self.__camera_translator.set_transform_key(0.0, None)
+        self.__camera_translator.set_transform(0.0)
 
     #
     # Internal methods.
@@ -465,8 +473,10 @@ class SceneTranslator(GroupTranslator):
         cam_times = {0.0}
         xform_times = {0.0}
         deform_times = {0.0}
+
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
+
             if self.bl_scene.appleseed.enable_camera_blur:
                 cam_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples)
 
@@ -475,6 +485,7 @@ class SceneTranslator(GroupTranslator):
 
             if self.bl_scene.appleseed.enable_deformation_blur:
                 deform_times = self.__get_subframes(shutter_length, self.__round_up_pow2(self.bl_scene.appleseed.deformation_blur_samples))
+
         # Merge all subframe times
         all_times = set()
         all_times.update(cam_times)
@@ -491,13 +502,13 @@ class SceneTranslator(GroupTranslator):
             self.bl_scene.frame_set(int_frame, subframe=subframe)
 
             if time in cam_times:
-                self.__camera_translator.set_transform_key(time, cam_times)
+                self.__camera_translator.set_transform_key(self.bl_scene, time, cam_times)
 
             if time in xform_times:
-                self.set_transform_key(time, xform_times)
+                self.set_transform_key(self.bl_scene, time, xform_times)
 
                 for x in self.__group_translators.values():
-                    x.set_transform_key(time, xform_times)
+                    x.set_transform_key(self.bl_scene, time, xform_times)
 
             if time in deform_times:
                 self.set_deform_key(self.bl_scene, time, deform_times)
@@ -508,9 +519,12 @@ class SceneTranslator(GroupTranslator):
         self.bl_scene.frame_set(current_frame)
 
     def __get_subframes(self, shutter_length, samples):
+        assert(samples > 1)
+
         times = set()
-        segment_size = shutter_length / samples
-        for seg in range(1, samples + 1):
+        segment_size = shutter_length / (samples - 1)
+
+        for seg in range(0, samples):
             times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
 
         return times

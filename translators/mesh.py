@@ -52,6 +52,7 @@ class MeshTranslator(ObjectTranslator):
         self.__export_mode = export_mode
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             self.__geom_dir = self.asset_handler.geometry_dir
+
         self.__mesh_filenames = []
 
         # Motion blur
@@ -71,9 +72,6 @@ class MeshTranslator(ObjectTranslator):
 
     def create_entities(self, scene):
         logger.debug("Creating mesh entities for object %s", self.bl_obj.name)
-
-        # Copy the transform.
-        self._xform_seq.set_transform(0.0, self._convert_matrix(self.bl_obj.matrix_world))
 
         # Materials
         mesh_key = str(ObjectKey(self.bl_obj.data)) + "_obj"
@@ -276,8 +274,8 @@ class MeshTranslator(ObjectTranslator):
             if self.__alpha_tex_inst is not None:
                 assembly.texture_instances().insert(self.__alpha_tex_inst)
 
-    def update(self, obj):
-        self.__ass_inst.transform_sequence().set_transform(0.0, self._convert_matrix(obj.matrix_world))
+    def update_transform(self, time, matrix):
+        self.__ass_inst.transform_sequence().set_transform(time, self._convert_matrix(matrix))
 
     #
     # Internal methods.

@@ -26,10 +26,11 @@
 #
 
 import appleseed as asr
+from .dupli import DupliTranslator
 from .lamps import LampTranslator, AreaLampTranslator
 from .materials import MaterialTranslator
 from .mesh import MeshTranslator
-from .object import ProjectExportMode, InstanceTranslator, DupliTranslator, ArchiveTranslator
+from .object import ProjectExportMode, InstanceTranslator, ArchiveTranslator
 from .translator import Translator, ObjectKey
 from ..logger import get_logger
 from ..util import inscenelayer
@@ -38,6 +39,7 @@ logger = get_logger()
 
 
 class GroupTranslator(Translator):
+
     #
     # Constants and settings.
     #
@@ -116,6 +118,20 @@ class GroupTranslator(Translator):
 
         assembly.assemblies().insert(self.__assembly)
 
+    def set_transform_key(self, scene, time, key_times):
+        for x in self._object_translators.values():
+            x.set_transform_key(scene, time, key_times)
+
+        for x in self._dupli_translators.values():
+            x.set_transform_key(scene, time, key_times)
+
+    def set_deform_key(self, scene, time, key_times):
+        for x in self._object_translators.values():
+            x.set_deform_key(scene, time, key_times)
+
+        for x in self._dupli_translators.values():
+            x.set_deform_key(scene, time, key_times)
+
     #
     # Internal methods.
     #
@@ -161,12 +177,20 @@ class GroupTranslator(Translator):
                     translator = MaterialTranslator(lamp, self.asset_handler)
                     self._lamp_material_translators[lamp_key] = translator
 
+            elif self.__is_dupli_source(obj):
+                self.__create_material_translators(obj)
+
+                # Sources of duplicated objects are not shown in renders.
+                logger.debug("Skipping dupli-source object %s", obj_key)
+                continue
+
             elif obj.type in GroupTranslator.MESH_OBJECTS:
                 mesh_key = ObjectKey(obj.data)
 
                 if obj.is_duplicator:
                     logger.debug("Creating dupli translator for object %s", obj_key)
                     self._dupli_translators[obj_key] = DupliTranslator(obj, self.export_mode, self.asset_handler)
+
                 elif obj.appleseed.object_export != 'normal':
                     logger.debug("Creating archive translator for object %s", obj_key)
                     archive_path = obj.appleseed.archive_path
@@ -195,14 +219,6 @@ class GroupTranslator(Translator):
             else:
                 pass  # log here unknown object found...
 
-    def set_transform_key(self, time, key_times):
-        for x in self._object_translators.values():
-            x.set_transform_key(time, key_times)
-
-    def set_deform_key(self, scene, time, key_times):
-        for x in self._object_translators.values():
-            x.set_deform_key(scene, time, key_times)
-
     def _do_create_entities(self, scene):
         for t in self.all_translators:
             for x in t.values():
@@ -222,3 +238,15 @@ class GroupTranslator(Translator):
                 logger.debug("Creating material translator for material %s", mat_key)
                 translator = MaterialTranslator(mat, self.asset_handler)
                 self._material_translators[mat_key] = translator
+
+    def __is_dupli_source(self, obj):
+        '''
+        Return True if any parent of the object is a duplicator.
+        '''
+        o = obj.parent
+
+        while o != None:
+            if o.is_duplicator:
+                return True
+
+            o = o.parent
