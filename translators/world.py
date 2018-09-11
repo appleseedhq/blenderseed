@@ -117,8 +117,6 @@ class WorldTranslator(Translator):
                           'luminance_gamma': as_sky.luminance_gamma,
                           'saturation_multiplier': as_sky.saturation_multiplier,
                           'horizon_shift': as_sky.horizon_shift}
-        if as_sky.sun_model == 'preetham':
-            del edf_params['ground_albedo']
 
         self.__as_env_edf = asr.EnvironmentEDF(env_type + "_environment_edf", "sky_edf", edf_params)
 
