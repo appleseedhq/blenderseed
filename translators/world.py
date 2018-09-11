@@ -25,10 +25,9 @@
 # THE SOFTWARE.
 #
 
-import appleseed as asr
 import math
-import mathutils
 
+import appleseed as asr
 from .handlers import AssetType
 from .translator import Translator
 from ..logger import get_logger
@@ -67,14 +66,14 @@ class WorldTranslator(Translator):
             env_type = as_sky.sun_model
 
         if env_type == 'constant':
-            self.__horizon_radiance = asr.ColorEntity('horizon_radiance_color', {'color_space': 'linear_rgb'},
-                                                      self._convert_color(self.bl_scene.world.horizon_color))
+            self.__colors.append(asr.ColorEntity('horizon_radiance_color', {'color_space': 'linear_rgb'},
+                                                 self._convert_color(self.bl_scene.world.horizon_color)))
 
         elif env_type in ('gradient', 'constant_hemisphere'):
             self.__colors.append(asr.ColorEntity('horizon_radiance_color', {'color_space': 'srgb'},
-                                                      self._convert_color(self.bl_scene.world.horizon_color)))
+                                                 self._convert_color(self.bl_scene.world.horizon_color)))
             self.__colors.append(asr.ColorEntity('zenith_radiance_color', {'color_space': 'linear_rgb'},
-                                                     self._convert_color(self.bl_scene.world.zenith_color)))
+                                                 self._convert_color(self.bl_scene.world.zenith_color)))
 
         if env_type in ('latlong_map', 'mirrorball_map'):
             filename = self.asset_handler.process_path(as_sky.env_tex.filepath, AssetType.TEXTURE_ASSET)
