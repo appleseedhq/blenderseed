@@ -176,13 +176,13 @@ class DupliTranslator(Translator):
 
     def __set_instance_transforms(self, obj, scene, time):
         with DupliListBuilder(obj, scene, self.__settings):
-            for i, dupli in enumerate(obj.dupli_list):
-                self.__object_translators[i].set_transform(time, dupli.matrix)
+            for i, mesh in enumerate(self.__object_translators):
+                mesh.set_transform(time, obj.dupli_list[i].matrix)
 
     def __update_instance_transforms(self, obj, scene, time):
         with DupliListBuilder(obj, scene, self.__settings):
-            for i, dupli in enumerate(obj.dupli_list):
-                self.__object_translators[i].update_transform(time, dupli.matrix)
+            for i, mesh in enumerate(self.__object_translators):
+                mesh.update_transform(time, obj.dupli_list[i].matrix)
 
     def __clear_dupli_instances(self):
         self.__ass.clear()
