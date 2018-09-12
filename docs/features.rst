@@ -1,7 +1,7 @@
 Features
 ========
 
-New in 2.0
+New in 1.0
 ----------
 
     * Completely redesigned export/render interface using applseed's Python bindings
