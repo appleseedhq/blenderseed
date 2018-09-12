@@ -498,9 +498,6 @@ def main():
     if args.tool_path is None:
         args.tool_path = os.path.join(script_directory, DEFAULT_TOOL_FILEPATH)
 
-    if args.directory is None:
-        args.directory = os.path.join(script_directory, 'test scenes')
-
     appleseed_args = BLENDER_BASE_ARGS
     if args.args:
         appleseed_args += " {0}".format(" ".join(args.args))
