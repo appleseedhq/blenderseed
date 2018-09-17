@@ -121,9 +121,9 @@ class CopyAssetsAssetHandler(AssetHandler):
                 shutil.copytree(original_dir, dest_dir)
 
         if asset_type == AssetType.TEXTURE_ASSET:
-            return os.path.join("_textures", file_name)
+            return "_textures/" + file_name
         if asset_type == AssetType.SHADER_ASSET:
-            return os.path.join("_shaders", os.path.splitext(file_name)[0])
+            return "_shaders/" + os.path.splitext(file_name)[0]
         if asset_type == AssetType.ARCHIVE_ASSET:
-            self._searchpaths.append(os.path.join("_archives", os.path.splitext(file_name)[0]))
-            return os.path.join("_archives", os.path.splitext(file_name)[0], file_name)
+            self._searchpaths.append("_archives/" + os.path.splitext(file_name)[0])
+            return "_archives/" + os.path.splitext(file_name)[0] + "/" + file_name
