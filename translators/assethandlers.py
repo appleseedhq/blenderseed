@@ -120,6 +120,7 @@ class CopyAssetsAssetHandler(AssetHandler):
             else:
                 shutil.copytree(original_dir, dest_dir)
 
+        # filepaths are being formatted for platform independent rendering
         if asset_type == AssetType.TEXTURE_ASSET:
             return "_textures/" + file_name
         if asset_type == AssetType.SHADER_ASSET:

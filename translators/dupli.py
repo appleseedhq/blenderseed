@@ -31,7 +31,7 @@ import bpy
 from mathutils import Matrix
 
 import appleseed as asr
-from .handlers import AssetType
+from .assethandlers import AssetType
 from .mesh import MeshTranslator
 from .object import InstanceTranslator, ObjectKey
 from .translator import Translator, ProjectExportMode

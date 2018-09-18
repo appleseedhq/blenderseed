@@ -31,7 +31,7 @@ import bmesh
 import bpy
 
 import appleseed as asr
-from .handlers import AssetType
+from .assethandlers import AssetType
 from .object import ObjectTranslator
 from .translator import ObjectKey, ProjectExportMode
 from ..logger import get_logger

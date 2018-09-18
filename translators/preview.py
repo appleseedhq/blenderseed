@@ -29,7 +29,7 @@ import os
 
 import appleseed as asr
 
-from .handlers import AssetHandler
+from .assethandlers import AssetHandler
 from .materials import MaterialTranslator
 from .. import util
 

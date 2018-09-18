@@ -31,7 +31,7 @@ import bpy
 from mathutils import Matrix
 
 import appleseed as asr
-from .handlers import AssetType
+from .assethandlers import AssetType
 from .translator import Translator
 from ..logger import get_logger
 from ..util import calc_film_dimensions, find_auto_focus_point, get_frame_aspect_ratio

@@ -28,7 +28,7 @@
 import appleseed as asr
 import os
 
-from .handlers import AssetType
+from .assethandlers import AssetType
 from .translator import Translator, ProjectExportMode, ObjectKey
 from ..logger import get_logger
 
