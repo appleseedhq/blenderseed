@@ -262,16 +262,13 @@ def render_project_file(args, project_filepath, output_filepath, log_filepath):
         # Base command line.
         command = '"{0}" -b "{1}" -o "{2}" -x 1 -f 1'.format(args.tool_path, project_filepath, output_filepath)
 
-        # Built-in additional arguments.
-        # command += " " + BLENDER_BASE_ARGS
-
         # Additional arguments passed on runtestsuite.py's command line.
         if args.args:
             command += " {0}".format(" ".join(args.args))
 
         log_file.write("Command line:\n    {0}\n\n".format(command))
 
-        # Invoke appleseed.
+        # Invoke Blender.
         start_time = datetime.datetime.now()
         result = subprocess.call(command, stderr=log_file, shell=True)
         end_time = datetime.datetime.now()
@@ -489,7 +486,7 @@ def main():
     parser.add_argument("-s", "--skip-rendering", action='store_true', dest="skip_rendering",
                         help="skip actual rendering, only generate the HTML report")
     parser.add_argument("-p", "--parameter", dest="args", metavar="ARG", nargs="*",
-                        help="forward additional arguments to appleseed")
+                        help="forward additional arguments to Blender")
     parser.add_argument("directory", nargs='?', default=".", help="directory to scan")
     args = parser.parse_args()
 
@@ -498,13 +495,13 @@ def main():
     if args.tool_path is None:
         args.tool_path = os.path.join(script_directory, DEFAULT_TOOL_FILEPATH)
 
-    appleseed_args = BLENDER_BASE_ARGS
+    blender_args = BLENDER_BASE_ARGS
     if args.args:
-        appleseed_args += " {0}".format(" ".join(args.args))
+        blender_args += " {0}".format(" ".join(args.args))
 
     print("Configuration:")
     print("  Binary        : {0}".format(args.tool_path))
-    print("  Arguments     : {0}".format(appleseed_args))
+    print("  Arguments     : {0}".format(blender_args))
     print()
 
     start_time = datetime.datetime.now()
