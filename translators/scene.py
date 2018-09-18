@@ -33,7 +33,7 @@ import bpy
 import appleseed as asr
 from .camera import CameraTranslator, InteractiveCameraTranslator
 from .group import GroupTranslator
-from .handlers import AssetHandler, CopyAssetsAssetHandler
+from .assethandlers import AssetHandler, CopyAssetsAssetHandler
 from .object import InstanceTranslator
 from .translator import ObjectKey, ProjectExportMode
 from .world import WorldTranslator
