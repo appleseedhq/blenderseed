@@ -519,7 +519,7 @@ class SceneTranslator(GroupTranslator):
         self.bl_scene.frame_set(current_frame)
 
     def __get_subframes(self, shutter_length, samples):
-        assert(samples > 1)
+        assert samples > 1
 
         times = set()
         segment_size = shutter_length / (samples - 1)
