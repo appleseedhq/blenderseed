@@ -334,14 +334,6 @@ class AppleseedPostProcessingStagesPanel(bpy.types.Panel, AppleseedRenderPanelBa
                 layout.label(text="Render Stamp")
                 layout.prop(current_stage, "render_stamp", text="")
                 layout.prop_menu_enum(current_stage, "render_stamp_patterns", text="Add Stamp Data Block")
-            elif current_stage.model == 'isolines_post_processing_stage':
-                layout.label(text="Isolines")
-                col = layout.column(align=True)
-                row = col.row(align=True)
-                row.prop(current_stage, "pp_low_isovalue", text="Low Value")
-                row.prop(current_stage, "pp_high_isovalue", text="High Value")
-                col.prop(current_stage, "pp_levels", text="Levels")
-                col.prop(current_stage, "pp_line_thickness", text="Line Thickness")
             else:
                 layout.label(text="Color Map")
                 layout.prop(current_stage, "color_map", text="Mode")
@@ -363,6 +355,10 @@ class AppleseedPostProcessingStagesPanel(bpy.types.Panel, AppleseedRenderPanelBa
                 row = col.row(align=True)
                 row.enabled = not current_stage.auto_range
                 row.prop(current_stage, "range_max", text="Max Range")
+
+                col = layout.column(align=True)
+                col.prop(current_stage, "render_isolines", text="Render Isolines", toggle=True)
+                col.prop(current_stage, "line_thickness", text="Line Thickness")
 
 
 class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):

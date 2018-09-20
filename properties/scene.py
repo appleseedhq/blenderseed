@@ -55,31 +55,9 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
     model = bpy.props.EnumProperty(name="model",
                                    items=[
                                        ('render_stamp_post_processing_stage', "Render Stamp", ""),
-                                       ('color_map_post_processing_stage', "Color Map", ""),
-                                       ('isolines_post_processing_stage', "Isolines", "")],
+                                       ('color_map_post_processing_stage', "Color Map", "")],
                                    default='render_stamp_post_processing_stage',
                                    update=update_name)
-
-    # Isolines
-    pp_low_isovalue = bpy.props.FloatProperty(name="pp_low_isovalue",
-                                              default=0.0,
-                                              soft_min=0.0,
-                                              soft_max=1.0)
-
-    pp_high_isovalue = bpy.props.FloatProperty(name="pp_high_isovalue",
-                                               default=1.0,
-                                               soft_min=0.0,
-                                               soft_max=1.0)
-
-    pp_levels = bpy.props.IntProperty(name="pp_levels",
-                                      default=8,
-                                      min=1,
-                                      soft_max=64)
-
-    pp_line_thickness = bpy.props.FloatProperty(name="pp_line_thickness",
-                                                default=1.0,
-                                                min=0.5,
-                                                soft_max=5.0)
 
     # Render stamp
     render_stamp = bpy.props.StringProperty(name="render_stamp",
@@ -134,6 +112,14 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
     color_map_file_path = bpy.props.StringProperty(name="color_map_file_path",
                                                    default="",
                                                    subtype='FILE_PATH')
+
+    render_isolines = bpy.props.BoolProperty(name="render_isolines",
+                                             default=False)
+
+    line_thickness = bpy.props.FloatProperty(name="line_thickness",
+                                             default=1.0,
+                                             min=0.5,
+                                             soft_max=5.0)
 
 
 class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
