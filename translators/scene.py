@@ -713,12 +713,6 @@ class SceneTranslator(GroupTranslator):
                 if stage.model == 'render_stamp_post_processing_stage':
                     params = {'order': index,
                               'format_string': stage.render_stamp}
-                elif stage.model == 'isolines_post_processing_stage':
-                    params = {'order': index,
-                              'low_isovalue': stage.pp_low_isovalue,
-                              'high_isovalue': stage.pp_high_isovalue,
-                              'levels': stage.pp_levels,
-                              'line_thickness': stage.pp_line_thickness}
                 else:
                     params = {'order': index,
                               'color_map': stage.color_map,
@@ -726,7 +720,9 @@ class SceneTranslator(GroupTranslator):
                               'range_min': stage.range_min,
                               'range_max': stage.range_max,
                               'add_legend_bar': stage.add_legend_bar,
-                              'legend_bar_ticks': stage.legend_bar_ticks}
+                              'legend_bar_ticks': stage.legend_bar_ticks,
+                              'render_isolines': stage.render_isolines,
+                              'line_thickness': stage.line_thickness}
 
                     if stage.color_map == 'custom':
                         params['color_map_file_path'] = stage.color_map_file_path
