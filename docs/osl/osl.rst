@@ -5,11 +5,11 @@ Open Shading Language
 
 What is it?
 -----------
-	Open Shading Language (OSL) is a small, customized computer language intended specifically for writing shaders in a physically plausible rendering engine.  While it was originally designed at Sony Pictures Imageworks for their Arnold renderer it has since been integrated into appleseed and several other renderer engines (such as Renderman and Cycles).
+	Open Shading Language (OSL) is a small, customized computer language intended specifically for writing shaders in a physically plausible rendering engine.  While it was originally designed at Sony Pictures Imageworks for their Arnold renderer, it has since been integrated into appleseed and several other renderer engines (such as Renderman and Cycles).
 
 How does it work with appleseed?
 --------------------------------
-	Since the beginning appleseed has had its own native shading system (henceforth the ‘internal' system).  While this system works well enough, it was limited to defining material surfaces and optionally assigning UV mapped textures to them.  That was it.  It couldn’t do any kind of procedural patterns, coordinate manipulation, fancy BSDF mixing, or any of the other utility functions that were needed for a production renderer.  Instead of expanding the BIS system with these features, the decision was made to integrate OSL instead, as it is fully capable of all these features and is developed and hosted by a major visual effects company.  As of the current release (2.0), the internal shading system is no longer exposed in blenderseed.
+	Since the beginning appleseed has had its own native shading system (henceforth the ‘internal' system).  While this system works well enough, it was limited to defining material surfaces and optionally assigning UV mapped textures to them.  That was it.  It couldn’t do any kind of procedural patterns, coordinate manipulation, fancy BSDF mixing, or any of the other utility functions that were needed for a production renderer.  Instead of expanding the BIS system with these features, the decision was made to integrate OSL instead, as it is fully capable of all these features and is developed and hosted by a major visual effects company.  As of the current release (1.0), the internal shading system is no longer exposed in blenderseed, with the exception of the volumetric shader (as this is not yet supported by OSL).
 
 How do I use it in blenderseed?
 -------------------------------
@@ -17,7 +17,7 @@ How do I use it in blenderseed?
 
 Where does the OSL shading system get the nodes from?
 -----------------------------------------------------
-	The OSL shaders are found in the “shaders” directory of the appleseed folder.  When blenderseed starts up it scans this directory and builds the nodes dynamically based on the parameters contained inside the .oso files.  When the scene is rendered the output file will point to those shaders and describe the connections between them.  The shaders themselves are not copied or moved unless the scene is exported.  In this case the shaders are copied to the export directory.
+	The OSL shaders are found in the “shaders” directory of the appleseed folder.  When blenderseed starts up, it scans this directory and builds the nodes dynamically based on the parameters contained inside the .oso files.  When the scene is rendered the output file will point to those shaders and describe the connections between them.  The shaders themselves are not copied or moved unless the scene is exported.  In this case the shaders are copied to the export directory.
 
 Textures with OSL
 -----------------
@@ -29,7 +29,7 @@ How do I convert textures?
 
 Can I use OSL shaders from third parties?
 -----------------------------------------
-    Yes, with a few exceptions.  OSL shaders transfer their results to the host renderer BSDF's by using an items called a 'closure'.  While OSL suggests a limited set of 'default' closures, many renderers either don't implement them or add their own.  OSL shaders that use closures may or may not work with a different renderer.  If the OSL shader is being used for pattern generation or processing, it will usually work just fine with another renderer.  The only drawback is that third party shaders may not have the metadata that blenderseed uses to construct its node UI.
+    Yes, with a few exceptions.  OSL shaders transfer their results to the host renderer BSDF's by using an item called a 'closure'.  While OSL suggests a limited set of generic closures, many renderers don't implement all of them and many add their own closures to the list.  OSL shaders that use closure calls may or may not work with a different renderer.  If the OSL shader is being used for pattern generation or processing, it will usually work just fine with another renderer.  The only drawback is that third party shaders may not have the metadata that blenderseed uses to construct its node UI.
 
 Can I write my own shaders?
 ---------------------------
