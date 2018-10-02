@@ -11,15 +11,14 @@ Panels
    panels/world/world_panel
    panels/object/object_panel
    panels/material/material_panel
-   panels/node_editor
 
 OSL
 ---
 .. toctree::
-	:maxdepth: 2
+    :maxdepth: 2
 
-	osl/osl
-	osl/osl_metadata
+    osl/osl
+    osl/osl_metadata
 
 Shaders
 -------
