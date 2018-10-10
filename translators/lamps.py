@@ -283,7 +283,7 @@ class AreaLampTranslator(Translator):
             self.__lamp_shader_group = assembly.shader_groups().get_by_name(shader_group_name)
             self.__has_shadergroup = True
 
-    def update_lamp(self, lamp, assembly, scene):
+    def update(self, lamp, assembly, scene):
         assembly.objects().remove(self.__as_area_mesh)
 
         assembly.object_instances().remove(self.__as_area_mesh_inst)
