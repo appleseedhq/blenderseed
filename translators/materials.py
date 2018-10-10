@@ -81,20 +81,7 @@ class MaterialTranslator(Translator):
         self.__as_shader = asr.SurfaceShader("physical_surface_shader",
                                              surface_name, shader_params)
 
-        if as_mat_data.mode == 'surface':
-            mat_params = {'surface_shader': "{0}_surface_shader".format(mat_name)}
-            if self.bl_node_tree:
-                shadergroup_name = self.bl_node_tree.name if not self.__preview else "preview_mat_tree"
-                mat_params['osl_surface'] = shadergroup_name
-
-                if self.__shader_group is None:
-                    self.__shader_group = asr.ShaderGroup(shadergroup_name)
-
-                self.__set_shader_group_parameters(scene)
-
-            self.__as_mat = asr.Material('osl_material', mat_name, mat_params)
-
-        else:
+        if hasattr(as_mat_data, "mode") and as_mat_data.mode == 'volume':
             vol_name = mat_name + "_volume"
 
             self.__colors.append(asr.ColorEntity(vol_name + "_absorption_color", {'color_space': 'linear_rgb'},
@@ -115,6 +102,20 @@ class MaterialTranslator(Translator):
                           'volume': vol_name}
 
             self.__as_mat = asr.Material('generic_material', mat_name, mat_params)
+
+        else:
+            mat_params = {'surface_shader': "{0}_surface_shader".format(mat_name)}
+            if self.bl_node_tree:
+                shadergroup_name = self.bl_node_tree.name if not self.__preview else "preview_mat_tree"
+                mat_params['osl_surface'] = shadergroup_name
+
+                if self.__shader_group is None:
+                    self.__shader_group = asr.ShaderGroup(shadergroup_name)
+
+                self.__set_shader_group_parameters(scene)
+
+            self.__as_mat = asr.Material('osl_material', mat_name, mat_params)
+
 
     def flush_entities(self, assembly):
 
