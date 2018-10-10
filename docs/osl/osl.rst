@@ -5,7 +5,7 @@ Open Shading Language
 
 What is it?
 -----------
-	Open Shading Language (OSL) is a small, customized computer language intended specifically for writing shaders in a physically plausible rendering engine.  While it was originally designed at Sony Pictures Imageworks for their Arnold renderer, it has since been integrated into appleseed and several other renderer engines (such as Renderman and Cycles).
+	Open Shading Language (OSL) is a small, customized computer language intended specifically for writing shaders in a physically plausible rendering engine.  While it was originally designed at Sony Pictures Imageworks for their Arnold renderer, it has since been integrated into appleseed and several other renderer engines (such as RenderMan and Cycles).
 
 How does it work with appleseed?
 --------------------------------
