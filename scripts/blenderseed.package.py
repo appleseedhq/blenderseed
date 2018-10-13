@@ -355,7 +355,7 @@ class LinuxPackageBuilder(PackageBuilder):
 
     def copy_dependencies(self):
         # Create the lib directory.
-        lib_dir = os.path.join(self.settings.package_temp_dir, "lib")
+        lib_dir = os.path.join(self.settings.root_dir, "appleseed", "lib")
         safe_make_directory(lib_dir)
 
         # Copy appleseed libraries.
@@ -365,13 +365,13 @@ class LinuxPackageBuilder(PackageBuilder):
 
         # Get shared libs needed by binaries.
         all_libs = set()
-        for bin in glob.glob(os.path.join(self.settings.package_temp_dir, "bin", "*")):
+        for bin in glob.glob(os.path.join(self.settings.root_dir, "appleseed", "bin", "*")):
             libs = self.__get_dependencies_for_file(bin)
             all_libs = all_libs.union(libs)
 
         # Get shared libs needed by appleseed.python.
         libs = self.__get_dependencies_for_file(
-            os.path.join(self.settings.package_temp_dir, "scripts", "appleseed", "_appleseedpython.so"))
+            os.path.join(self.settings.root_dir, "appleseed", "lib", "appleseed", "_appleseedpython3.so"))
         all_libs = all_libs.union(libs)
 
         # Get shared libs needed by libraries.
@@ -387,15 +387,15 @@ class LinuxPackageBuilder(PackageBuilder):
             shutil.copy(lib, lib_dir)
 
     def post_process_package(self):
-        for bin in glob.glob(os.path.join(self.settings.package_temp_dir, "bin", "*")):
+        for bin in glob.glob(os.path.join(self.settings.root_dir, "appleseed", "bin", "*")):
             self.run("chrpath -r \$ORIGIN/../lib " + bin)
 
-        # for lib in glob.glob(os.path.join(self.settings.package_temp_dir, "lib", "*")):
-        #     self.run("chrpath -d " + lib)
+        for lib in glob.glob(os.path.join(self.settings.root_dir, "appleseed", "lib", "*.so")):
+             self.run("chrpath -d " + lib)
 
-        appleseed_python_dir = os.path.join(self.settings.package_temp_dir, "scripts", "appleseed")
+        appleseed_python_dir = os.path.join(self.settings.root_dir, "appleseed", "lib", "appleseed")
         for py_cpp_module in glob.glob(os.path.join(appleseed_python_dir, "*.so")):
-            self.run("chrpath -r \$ORIGIN/../../lib " + py_cpp_module)
+            self.run("chrpath -r \$ORIGIN/../ " + py_cpp_module)
 
     def __is_system_lib(self, lib):
         for prefix in self.SYSTEM_LIBS_PREFIXES:
