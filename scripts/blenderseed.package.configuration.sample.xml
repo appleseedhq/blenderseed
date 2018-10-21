@@ -4,30 +4,39 @@
          Example values: win64, linux64, mac64, etc. -->
     <platform>win64</platform>
 
-    <!-- The path to the appleseed source package that files will be copied from. -->
-    <appleseed_source_path>C:\appleseed\archives\releases\appleseed</appleseed_source_path>
+    <!-- The path to the appleseed release files will be copied from.
+         This path is stored in the $APPLESEED environment variable by the packaging script. -->
+    <appleseed_release_path>C:\appleseed</appleseed_release_path>
 
-    <!-- The path to appleseed binaries. -->
+    <!-- The path to appleseed binaries.
+         Environment variables can be used and will be expanded. -->
     <appleseed_bin_path>$APPLESEED/bin</appleseed_bin_path>
 
-    <!-- The path to appleseed libraries. -->
+    <!-- The path to appleseed libraries.
+         Environment variables can be used and will be expanded. -->
     <appleseed_lib_path>$APPLESEED/lib</appleseed_lib_path>
 
-    <!-- The path to appleseed shaders. -->
+    <!-- The path to appleseed shaders.
+         Environment variables can be used and will be expanded. -->
     <appleseed_shaders_path>$APPLESEED/shaders</appleseed_shaders_path>
 
-    <!-- The path to appleseed schemas. -->
+    <!-- The path to appleseed schemas.
+         Environment variables can be used and will be expanded. -->
     <appleseed_schemas_path>$APPLESEED/schemas</appleseed_schemas_path>
 
-    <!-- The path to appleseed settings. -->
+    <!-- The path to appleseed settings.
+         Environment variables can be used and will be expanded. -->
     <appleseed_settings_path>$APPLESEED/settings</appleseed_settings_path>
 
-    <!-- The path to appleseed.python. -->
+    <!-- The path to appleseed.python.
+         Environment variables can be used and will be expanded. -->
     <appleseed_python_path>$APPLESEED/lib/python2.7</appleseed_python_path>
 
-    <!-- The path to the maketx binary. -->
+    <!-- The path to the maketx binary.
+         Environment variables can be used and will be expanded. -->
     <maketx_path>$APPLESEED/bin/maketx</maketx_path>
 
-    <!-- The directory inside which the archive file will be created. -->
-    <output_dir>C:\appleseed\archives\blenderseed</output_dir>
+    <!-- The directory inside which the final archive file will be created.
+         Environment variables can be used and will be expanded. -->
+    <output_dir>C:\blenderseed\archives\releases</output_dir>
 </configuration>
