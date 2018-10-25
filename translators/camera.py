@@ -343,10 +343,10 @@ class InteractiveCameraTranslator(Translator):
         self.__matrix = self.bl_camera.matrix_world
         cam_mapping = {'PERSP': 'pinhole_camera',
                        'ORTHO': 'orthographic_camera',
-                       'PANO': 'spherical_camera'}
+                       'PANO': 'pinhole_camera'}
         model = cam_mapping[self.bl_camera.data.type]
 
-        if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof:
+        if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof and self.bl_camera.data.type != 'PANO':
             model = 'thinlens_camera'
 
         if model == 'orthographic_camera':
