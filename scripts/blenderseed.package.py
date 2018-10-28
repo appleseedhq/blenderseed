@@ -31,9 +31,11 @@ from __future__ import print_function
 from distutils import archive_util, dir_util
 from xml.etree.ElementTree import ElementTree
 import argparse
+import colorama
 import glob
 import os
 import platform
+import re
 import shutil
 import stat
 import subprocess
@@ -55,16 +57,29 @@ SETTINGS_FILENAME = "blenderseed.package.configuration.xml"
 # Utility functions.
 #--------------------------------------------------------------------------------------------------
 
+GREEN_CHECKMARK = u"{0}\u2713{1}".format(colorama.Style.BRIGHT + colorama.Fore.GREEN, colorama.Style.RESET_ALL)
+RED_CROSSMARK = u"{0}\u2717{1}".format(colorama.Style.BRIGHT + colorama.Fore.RED, colorama.Style.RESET_ALL)
+
+
+def trace(message):
+    # encode('utf-8') is required to support output redirection to files or pipes.
+    print(u"  {0}{1}{2}".format(colorama.Style.DIM + colorama.Fore.WHITE, message, colorama.Style.RESET_ALL).encode('utf-8'))
+
+
 def info(message):
-    print("  " + message)
+    print(u"  {0}".format(message).encode('utf-8'))
 
 
 def progress(message):
-    print("  " + message + "...")
+    print(u"  {0}...".format(message).encode('utf-8'))
+
+
+def warning(message):
+    print(u"  {0}Warning: {1}.{2}".format(colorama.Style.BRIGHT + colorama.Fore.MAGENTA, message, colorama.Style.RESET_ALL).encode('utf-8'))
 
 
 def fatal(message):
-    print("Fatal: " + message + ". Aborting.")
+    print(u"{0}Fatal: {1}. Aborting.{2}".format(colorama.Style.BRIGHT + colorama.Fore.RED, message, colorama.Style.RESET_ALL).encode('utf-8'))
     if sys.exc_info()[0]:
         print(traceback.format_exc())
     sys.exit(1)
@@ -123,12 +138,6 @@ def pushd(path):
     return old_path
 
 
-def run_subprocess(cmdline):
-    p = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = p.communicate()
-    return p.returncode, out, err
-
-
 def copy_glob(input_pattern, output_path):
     for input_file in glob.glob(input_pattern):
         shutil.copy(input_file, output_path)
@@ -152,7 +161,19 @@ class Settings:
             fatal("Failed to load configuration file '" + SETTINGS_FILENAME + "'")
         self.__load_values(tree)
 
-        self.print_summary()
+    def print_summary(self):
+        print("")
+        print("  Platform:                        " + self.platform)
+        print("  Path to appleseed release:       " + self.appleseed_release_path)
+        print("  Path to appleseed binaries:      " + self.appleseed_bin_path)
+        print("  Path to appleseed libraries:     " + self.appleseed_lib_path)
+        print("  Path to appleseed shaders:       " + self.appleseed_shaders_path)
+        print("  Path to appleseed schemas:       " + self.appleseed_schemas_path)
+        print("  Path to appleseed settings:      " + self.appleseed_settings_path)
+        print("  Path to appleseed.python:        " + self.appleseed_python_path)
+        print("  Path to maketx:                  " + self.maketx_path)
+        print("  Output directory:                " + self.output_dir)
+        print("")
 
     def __load_values(self, tree):
         self.platform = self.__get_required(tree, "platform")
@@ -175,20 +196,6 @@ class Settings:
             fatal("Missing value \"{0}\" in configuration file".format(key))
         return value
 
-    def print_summary(self):
-        print("")
-        print("  Platform:                        " + self.platform)
-        print("  Path to appleseed release:       " + self.appleseed_release_path)
-        print("  Path to appleseed binaries:      " + self.appleseed_bin_path)
-        print("  Path to appleseed libraries:     " + self.appleseed_lib_path)
-        print("  Path to appleseed shaders:       " + self.appleseed_shaders_path)
-        print("  Path to appleseed schemas:       " + self.appleseed_schemas_path)
-        print("  Path to appleseed settings:      " + self.appleseed_settings_path)
-        print("  Path to appleseed.python:        " + self.appleseed_python_path)
-        print("  Path to maketx:                  " + self.maketx_path)
-        print("  Output directory:                " + self.output_dir)
-        print("")
-
 
 #--------------------------------------------------------------------------------------------------
 # Base package builder.
@@ -209,6 +216,7 @@ class PackageBuilder(object):
         print("The package was successfully built.")
 
     def orchestrate(self):
+        self.remove_leftovers()
         self.copy_appleseed_python()
         self.copy_binaries()
         self.copy_dependencies()
@@ -219,54 +227,58 @@ class PackageBuilder(object):
         self.post_process_package()
 
         if not self.no_release:
-            self.remove_leftovers()
             self.deploy_blenderseed_to_stage()
             self.clean_stage()
             self.build_final_zip_file()
             self.remove_stage()
 
+    def remove_leftovers(self):
+        progress("Removing leftovers from previous invocations")
+        safe_delete_directory(os.path.join(self.settings.root_dir, "appleseed"))
+        safe_delete_directory("blenderseed")
+
     def copy_appleseed_python(self):
         progress("Copying appleseed.python to root directory")
+
+        # Create destination directory.
         lib_dir = os.path.join(self.settings.root_dir, "appleseed", "lib")
         safe_make_directory(lib_dir)
+
+        # Copy appleseed.python.
         dir_util.copy_tree(self.settings.appleseed_python_path, lib_dir)
 
-    def remove_pyc_files(self):
-        progress("Removing pyc files from root directory")
-        for root, dirs, files in os.walk(os.path.join(self.settings.root_dir, "appleseed", "lib")):
-            for f in files:
-                if f.endswith(".pyc"):
-                    safe_delete_file(os.path.join(root, f))
+        # Remove _appleseedpython.so (Python 2) since blenderseed only needs _appleseedpython3.so (Python 3).
+        # TODO: implement properly.
+        safe_delete_file(os.path.join(lib_dir, "appleseed", "_appleseedpython.so"))
+        safe_delete_file(os.path.join(lib_dir, "appleseed", "_appleseedpython.pyd"))
 
     def copy_binaries(self):
         progress("Copying binaries to root directory")
+
+        # Create destination directory.
         bin_dir = os.path.join(self.settings.root_dir, "appleseed", "bin")
         safe_make_directory(bin_dir)
 
+        # Copy appleseed binaries.
         for bin in [exe("appleseed.cli")]:
             shutil.copy(os.path.join(self.settings.appleseed_bin_path, bin), bin_dir)
 
+        # Copy maketx.
         shutil.copy(exe(self.settings.maketx_path), bin_dir)
 
     def copy_schemas(self):
         progress("Copying schemas to root directory")
+
         dir_util.copy_tree(self.settings.appleseed_schemas_path, os.path.join(self.settings.root_dir, "appleseed", "schemas"))
         safe_delete_file(os.path.join(self.settings.root_dir, "appleseed", "schemas", ".gitignore"))
 
-    def download_settings_files(self):
-        progress("Downloading settings files to root directory")
-        settings_dir = os.path.join(self.settings.root_dir, "appleseed", "settings")
-        safe_make_directory(settings_dir)
-
-        for file in ["appleseed.cli.xml"]:
-            urllib.urlretrieve(
-                "https://raw.githubusercontent.com/appleseedhq/appleseed/master/sandbox/settings/{0}".format(file),
-                os.path.join(settings_dir, file))
-
     def copy_shaders(self):
         progress("Copying shaders to root directory")
+
+        # Create destination directory.
         shaders_dir = os.path.join(self.settings.root_dir, "appleseed", "shaders")
         safe_make_directory(shaders_dir)
+
         self.__do_copy_shaders(os.path.join(self.settings.appleseed_shaders_path, "appleseed"), shaders_dir)
         self.__do_copy_shaders(os.path.join(self.settings.appleseed_shaders_path, "blenderseed"), shaders_dir)
 
@@ -276,9 +288,24 @@ class PackageBuilder(object):
                 if f.endswith(".oso"):
                     shutil.copy(os.path.join(root, f), target_dir)
 
-    def remove_leftovers(self):
-        progress("Removing leftovers from previous invocations")
-        safe_delete_directory("blenderseed")
+    def download_settings_files(self):
+        progress("Downloading settings files to root directory")
+
+        # Create destination directory.
+        settings_dir = os.path.join(self.settings.root_dir, "appleseed", "settings")
+        safe_make_directory(settings_dir)
+
+        for file in ["appleseed.cli.xml"]:
+            urllib.urlretrieve(
+                "https://raw.githubusercontent.com/appleseedhq/appleseed/master/sandbox/settings/{0}".format(file),
+                os.path.join(settings_dir, file))
+
+    def remove_pyc_files(self):
+        progress("Removing pyc files from root directory")
+        for root, dirs, files in os.walk(os.path.join(self.settings.root_dir, "appleseed", "lib")):
+            for f in files:
+                if f.endswith(".pyc"):
+                    safe_delete_file(os.path.join(root, f))
 
     def deploy_blenderseed_to_stage(self):
         progress("Deploying blenderseed to staging directory")
@@ -289,7 +316,7 @@ class PackageBuilder(object):
 
         safe_delete_directory_recursively("blenderseed", "__pycache__")
 
-        for subdirectory in [".git", ".idea", "docs", "scripts", "tests"]:
+        for subdirectory in [".git", ".idea", "archives", "docs", "scripts", "tests"]:
             safe_delete_directory(os.path.join("blenderseed", subdirectory))
 
         for file in [".gitignore", "README.md"]:
@@ -298,15 +325,242 @@ class PackageBuilder(object):
     def build_final_zip_file(self):
         progress("Building final zip file from staging directory")
         package_name = "blenderseed-{0}-{1}".format(self.package_version, self.settings.platform)
-        archive_util.make_zipfile(os.path.join(self.settings.output_dir, package_name), "blenderseed")
+        package_path = os.path.join(self.settings.output_dir, package_name)
+        archive_util.make_zipfile(package_path, "blenderseed")
+        info("Package path: {0}".format(package_path + ".zip"))
 
     def remove_stage(self):
         progress("Deleting staging directory")
         safe_delete_directory("blenderseed")
 
     def run(self, cmdline):
-        info("Running command line: {0}".format(cmdline))
+        trace("Running command line: {0}".format(cmdline))
         os.system(cmdline)
+
+    def run_subprocess(self, cmdline):
+        p = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        return p.returncode, out, err
+
+
+#--------------------------------------------------------------------------------------------------
+# Windows package builder.
+#--------------------------------------------------------------------------------------------------
+
+class WindowsPackageBuilder(PackageBuilder):
+
+    def copy_dependencies(self):
+        progress("Windows-specific: Copying dependencies")
+        bin_dir = self.settings.appleseed_bin_path
+
+        for dll in ["appleseed.dll", "appleseed.shared.dll"]:
+            shutil.copy(os.path.join(bin_dir, dll), os.path.join(self.settings.root_dir, "appleseed", "bin"))
+
+    def post_process_package(self):
+        pass
+
+
+#--------------------------------------------------------------------------------------------------
+# Mac package builder.
+#--------------------------------------------------------------------------------------------------
+
+class MacPackageBuilder(PackageBuilder):
+
+    SYSTEM_LIBS_PREFIXES = [
+        "/System/Library/",
+        "/usr/lib/libcurl",
+        "/usr/lib/libc++",
+        "/usr/lib/libbz2",
+        "/usr/lib/libSystem",
+        #"/usr/lib/libz",
+        "/usr/lib/libncurses",
+        "/usr/lib/libobjc.A.dylib"
+    ]
+
+    def copy_dependencies(self):
+        progress("Mac-specific: Copying dependencies")
+
+        # Create destination directory.
+        lib_dir = os.path.join(self.settings.root_dir, "appleseed", "lib")
+        safe_make_directory(lib_dir)
+
+        # Copy appleseed libraries.
+        for lib in ["libappleseed.dylib", "libappleseed.shared.dylib"]:
+            shutil.copy(os.path.join(self.settings.appleseed_lib_path, lib), lib_dir)
+
+        # Get shared libs needed by binaries.
+        all_libs = set()
+        for bin in glob.glob(os.path.join(self.settings.root_dir, "appleseed", "bin", "*")):
+            libs = self.__get_dependencies_for_file(bin)
+            all_libs = all_libs.union(libs)
+
+        # Get shared libs needed by appleseed.python.
+        appleseedpython_libs = self.__get_dependencies_for_file(
+            os.path.join(self.settings.root_dir, "appleseed", "lib", "appleseed", "_appleseedpython3.so"))
+        all_libs = all_libs.union(appleseedpython_libs)
+
+        # Get shared libs needed by libraries.
+        # TODO: we're not computing the full transitive closure here!
+        lib_libs = set()
+        for lib in all_libs:
+            libs = self.__get_dependencies_for_file(lib)
+            lib_libs = lib_libs.union(libs)
+        all_libs = all_libs.union(lib_libs)
+
+        if True:
+            # Print dependencies.
+            trace("    Dependencies:")
+            for lib in all_libs:
+                trace("      {0}".format(lib))
+
+        # Copy needed libs to lib directory.
+        for lib in all_libs:
+            if True:
+                trace("  Copying {0} to {1}...".format(lib, lib_dir))
+            shutil.copy(lib, lib_dir)
+
+    def post_process_package(self):
+        progress("Mac-specific: Post-processing package")
+        self.__fixup_binaries()
+
+    def __fixup_binaries(self):
+        progress("Mac-specific: Fixing up binaries")
+        self.set_libraries_ids()
+        self.__change_library_paths_in_libraries()
+        self.__change_library_paths_in_executables()
+
+    def set_libraries_ids(self):
+        lib_dir = os.path.join(self.settings.root_dir, "appleseed", "lib")
+        for dirpath, dirnames, filenames in os.walk(lib_dir):
+            for filename in filenames:
+                ext = os.path.splitext(filename)[1]
+                if ext == ".dylib" or ext == ".so":
+                    lib_path = os.path.join(dirpath, filename)
+                    self.__set_library_id(lib_path, filename)
+
+    def __change_library_paths_in_libraries(self):
+        lib_dir = os.path.join(self.settings.root_dir, "appleseed", "lib")
+        for dirpath, dirnames, filenames in os.walk(lib_dir):
+            for filename in filenames:
+                ext = os.path.splitext(filename)[1]
+                if ext == ".dylib" or ext == ".so":
+                    lib_path = os.path.join(dirpath, filename)
+                    self.__change_library_paths_in_binary(lib_path)
+
+    def __change_library_paths_in_executables(self):
+        bin_dir = os.path.join(self.settings.root_dir, "appleseed", "bin")
+        for dirpath, dirnames, filenames in os.walk(bin_dir):
+            for filename in filenames:
+                ext = os.path.splitext(filename)[1]
+                if ext != ".py" and ext != ".conf":
+                    exe_path = os.path.join(dirpath, filename)
+                    self.__change_library_paths_in_binary(exe_path)
+
+    # Can be used on executables and dynamic libraries.
+    def __change_library_paths_in_binary(self, bin_path):
+        progress("Patching {0}".format(bin_path))
+        bin_dir = os.path.dirname(bin_path)
+        lib_dir = os.path.join(self.settings.root_dir, "appleseed", "lib")
+        path_to_appleseed_lib = os.path.relpath(lib_dir, bin_dir)
+        # fix_paths set to False because we must retrieve the unmodified dependency in order to replace it by the correct one.
+        for lib_path in self.__get_dependencies_for_file(bin_path, fix_paths=False):
+            lib_name = os.path.basename(lib_path)
+            if path_to_appleseed_lib == ".":
+                self.__change_library_path(bin_path, lib_path, "@loader_path/{0}".format(lib_name))
+            else:
+                self.__change_library_path(bin_path, lib_path, "@loader_path/{0}/{1}".format(path_to_appleseed_lib, lib_name))
+
+    def __set_library_id(self, target, name):
+        self.run('install_name_tool -id "{0}" {1}'.format(name, target))
+
+    def __change_library_path(self, target, old, new):
+        self.run('install_name_tool -change "{0}" "{1}" {2}'.format(old, new, target))
+
+    def __get_dependencies_for_file(self, filepath, fix_paths=True):
+        filename = os.path.basename(filepath)
+
+        loader_path = os.path.dirname(filepath)
+        rpath = "/usr/local/lib/"  # TODO: a great simplification
+
+        if True:
+            trace("Gathering dependencies for file")
+            trace("    {0}".format(filepath))
+            trace("with @loader_path set to")
+            trace("    {0}".format(loader_path))
+            trace("and @rpath hardcoded to")
+            trace("    {0}".format(rpath))
+
+        returncode, out, err = self.run_subprocess(["otool", "-L", filepath])
+        if returncode != 0:
+            fatal("Failed to invoke otool(1) to get dependencies for {0}: {1}".format(filepath, err))
+
+        libs = set()
+
+        for line in out.split("\n")[1:]:    # skip the first line
+            line = line.strip()
+
+            # Ignore empty lines.
+            if len(line) == 0:
+                continue
+
+            # Parse the line.
+            m = re.match(r"(.*) \(compatibility version .*, current version .*\)", line)
+            if not m:
+                fatal("Failed to parse line from otool(1) output: " + line)
+            lib = m.group(1)
+
+            # Ignore self-references (why do these happen?).
+            if lib == filename:
+                continue
+
+            # Ignore system libs.
+            if self.__is_system_lib(lib):
+                continue
+
+            # Ignore Qt frameworks.
+            if re.search(r"Qt.*\.framework", lib):
+                continue
+
+            if fix_paths:
+                # Handle libs relative to @loader_path.
+                lib = lib.replace("@loader_path", loader_path)
+
+                # Handle libs relative to @rpath.
+                lib = lib.replace("@rpath", rpath)
+
+                # Try to handle other relative libs.
+                if not os.path.isabs(lib):
+                    # TODO: generalize to a collection of user-specified search paths.
+                    candidate = os.path.join(loader_path, lib)
+                    if not os.path.exists(candidate):
+                        candidate = os.path.join("/usr/local/lib/", lib)
+                    if os.path.exists(candidate):
+                        info("Resolved relative dependency {0} as {1}".format(lib, candidate))
+                        lib = candidate
+
+            libs.add(lib)
+
+        if True:
+            trace("Dependencies for file {0}:".format(filepath))
+            for lib in libs:
+                if os.path.isfile(lib):
+                    trace(u"    {0} {1}".format(GREEN_CHECKMARK, lib))
+                else:
+                    trace(u"    {0} {1}".format(RED_CROSSMARK, lib))
+
+        # Don't check for missing dependencies if we didn't attempt to fix them.
+        if fix_paths:
+            for lib in libs:
+                if not os.path.isfile(lib):
+                    fatal("Dependency {0} could not be found on disk".format(lib))
+
+        return libs
+
+    def __is_system_lib(self, lib):
+        for prefix in self.SYSTEM_LIBS_PREFIXES:
+            if lib.startswith(prefix):
+                return True
+        return False
 
 
 #--------------------------------------------------------------------------------------------------
@@ -351,13 +605,12 @@ class LinuxPackageBuilder(PackageBuilder):
     def copy_dependencies(self):
         progress("Linux-specific: Copying dependencies")
 
-        # Create the lib directory.
+        # Create destination directory.
         lib_dir = os.path.join(self.settings.root_dir, "appleseed", "lib")
         safe_make_directory(lib_dir)
 
         # Copy appleseed libraries.
-        libraries_to_copy = ["libappleseed.so", "libappleseed.shared.so"]
-        for lib in libraries_to_copy:
+        for lib in ["libappleseed.so", "libappleseed.shared.so"]:
             shutil.copy(os.path.join(self.settings.appleseed_lib_path, lib), lib_dir)
 
         # Get shared libs needed by binaries.
@@ -367,16 +620,15 @@ class LinuxPackageBuilder(PackageBuilder):
             all_libs = all_libs.union(libs)
 
         # Get shared libs needed by appleseed.python.
-        libs = self.__get_dependencies_for_file(
+        appleseedpython_libs = self.__get_dependencies_for_file(
             os.path.join(self.settings.root_dir, "appleseed", "lib", "appleseed", "_appleseedpython3.so"))
-        all_libs = all_libs.union(libs)
+        all_libs = all_libs.union(appleseedpython_libs)
 
         # Get shared libs needed by libraries.
         lib_libs = set()
         for lib in all_libs:
             libs = self.__get_dependencies_for_file(lib)
             lib_libs = lib_libs.union(libs)
-
         all_libs = all_libs.union(lib_libs)
 
         # Copy all shared libraries.
@@ -402,10 +654,10 @@ class LinuxPackageBuilder(PackageBuilder):
                 return True
         return False
 
-    def __get_dependencies_for_file(self, filename):
-        returncode, out, err = run_subprocess(["ldd", filename])
+    def __get_dependencies_for_file(self, filepath):
+        returncode, out, err = self.run_subprocess(["ldd", filepath])
         if returncode != 0:
-            fatal("Failed to invoke ldd(1) to get dependencies for {0}: {1}".format(filename, err))
+            fatal("Failed to invoke ldd(1) to get dependencies for {0}: {1}".format(filepath, err))
 
         libs = set()
 
@@ -430,27 +682,12 @@ class LinuxPackageBuilder(PackageBuilder):
 
 
 #--------------------------------------------------------------------------------------------------
-# Windows package builder.
-#--------------------------------------------------------------------------------------------------
-
-class WindowsPackageBuilder(PackageBuilder):
-
-    def copy_dependencies(self):
-        progress("Windows-specific: Copying dependencies")
-        bin_dir = self.settings.appleseed_bin_path
-
-        for dll in ["appleseed.dll", "appleseed.shared.dll"]:
-            shutil.copy(os.path.join(bin_dir, dll), os.path.join(self.settings.root_dir, "appleseed", "bin"))
-
-    def post_process_package(self):
-        pass
-
-
-#--------------------------------------------------------------------------------------------------
 # Entry point.
 #--------------------------------------------------------------------------------------------------
 
 def main():
+    colorama.init()
+
     parser = argparse.ArgumentParser(description="build a blenderseed package from sources")
 
     parser.add_argument("--version", help="version number of packaged file")
@@ -459,7 +696,6 @@ def main():
     args = parser.parse_args()
 
     no_release = args.nozip
-
     package_version = args.version if args.version else "no-version"
 
     print("blenderseed.package version " + VERSION)
@@ -467,9 +703,12 @@ def main():
 
     settings = Settings()
     settings.load()
+    settings.print_summary()
 
     if os.name == "nt":
         package_builder = WindowsPackageBuilder(settings, package_version, no_release)
+    elif os.name == "posix" and platform.mac_ver()[0] != "":
+        package_builder = MacPackageBuilder(settings, package_version, no_release)
     elif os.name == "posix" and platform.mac_ver()[0] == "":
         package_builder = LinuxPackageBuilder(settings, package_version, no_release)
     else:
