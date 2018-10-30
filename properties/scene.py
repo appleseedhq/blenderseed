@@ -674,6 +674,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     override_mode = bpy.props.EnumProperty(name="override_mode",
                                            items=[
+                                               ('albedo', "Albedo", ""),
                                                ('facing_ratio', "Facing Ratio", ""),
                                                ('coverage', "Coverage", ""),
                                                ('geometric_normal', "Geometric Normal", ""),
