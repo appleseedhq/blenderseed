@@ -478,13 +478,13 @@ class SceneTranslator(GroupTranslator):
             shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
 
             if self.bl_scene.appleseed.enable_camera_blur:
-                cam_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples)
+                self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples, cam_times)
 
             if self.bl_scene.appleseed.enable_object_blur:
-                xform_times = self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples)
+                self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples, xform_times)
 
             if self.bl_scene.appleseed.enable_deformation_blur:
-                deform_times = self.__get_subframes(shutter_length, self.__round_up_pow2(self.bl_scene.appleseed.deformation_blur_samples))
+                self.__get_subframes(shutter_length, self.__round_up_pow2(self.bl_scene.appleseed.deformation_blur_samples), deform_times)
 
         # Merge all subframe times
         all_times = set()
@@ -518,16 +518,13 @@ class SceneTranslator(GroupTranslator):
 
         self.bl_scene.frame_set(current_frame)
 
-    def __get_subframes(self, shutter_length, samples):
+    def __get_subframes(self, shutter_length, samples, times):
         assert samples > 1
 
-        times = set()
         segment_size = shutter_length / (samples - 1)
 
         for seg in range(0, samples):
             times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
-
-        return times
 
     def __create_default_material(self):
         logger.debug("Creating default material")
