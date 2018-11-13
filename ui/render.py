@@ -107,6 +107,8 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         box = layout.box()
         box.label(text="Experimental Features")
         box.prop(asr_scene_props, "use_embree", text="Use Embree", toggle=True)
+        box.prop(asr_scene_props, "use_cpp_export", text="Use C++ Mesh Export", toggle=True)
+        box.prop(asr_scene_props, "skip_triangulation", text="Skip Mesh Triangulation")
 
 
 class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
