@@ -199,9 +199,19 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     threads_auto = bpy.props.BoolProperty(name="threads_auto",
                                           description="Automatically determine the number of rendering threads",
                                           default=True)
-    
+
     use_embree = bpy.props.BoolProperty(name="use_embree",
+                                        description="Use the Intel Embree library for raytracing",
                                         default=False)
+
+    use_cpp_export = bpy.props.BoolProperty(name="use_cpp_export",
+                                            description="Use C++ for mesh export.  EXPERIMENTAL",
+                                            default=False)
+
+    skip_triangulation = bpy.props.BoolProperty(name="skip_triangulation",
+                                                description="Use this option to save on export time if your meshes are already triangulated.\n"
+                                                            "WARNING: Turning this off will cause severe artifacts if you do not triangulate your meshes first!",
+                                                default=False)
 
     threads = bpy.props.IntProperty(name="threads",
                                     description="Number of threads to use for rendering",

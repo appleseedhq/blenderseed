@@ -418,7 +418,7 @@ class SceneTranslator(GroupTranslator):
             self.__create_world_translator()
 
         # Create translators for all objects in the scene.
-        super(SceneTranslator, self)._create_translators(self.bl_scene)
+        super(SceneTranslator, self)._create_translators(self.bl_scene, self.bl_scene.appleseed.use_cpp_export, self.bl_scene.appleseed.skip_triangulation)
 
         # Always create a translator for the active camera even if it is not visible or renderable.
         if self.bl_scene.camera:
