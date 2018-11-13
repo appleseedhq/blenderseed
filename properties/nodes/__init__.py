@@ -41,6 +41,25 @@ class AppleseedOSLNodeTree(NodeTree):
     bl_icon = 'MATERIAL'
 
     @classmethod
+    def get_from_context(cls, context):
+        """
+        Switches the displayed node tree when user selects object/material
+        """
+        obj = context.active_object
+
+        if obj and obj.type not in {"LAMP", "CAMERA"}:
+            mat = obj.active_material
+
+            if mat:
+                # ID pointer
+                node_tree = mat.appleseed.osl_node_tree
+
+                if node_tree:
+                    return node_tree, mat, mat
+
+        return None, None, None
+
+    @classmethod
     def poll(cls, context):
         renderer = context.scene.render.engine
         return renderer == 'APPLESEED_RENDER'
