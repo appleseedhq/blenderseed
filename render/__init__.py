@@ -73,9 +73,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
     bl_label = 'appleseed'
     bl_use_preview = True
 
-    # Preview renderer (shared by all render engine instances).
-    __material_preview_renderer = None
-
     # True if we are doing interactive rendering.
     __interactive_session = False
 
@@ -204,13 +201,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Export and render the material preview scene.
         """
 
-        if not RenderAppleseed.__material_preview_renderer:
-            RenderAppleseed.__material_preview_renderer = PreviewRenderer()
-            RenderAppleseed.__material_preview_renderer.translate_preview(scene)
-        else:
-            RenderAppleseed.__material_preview_renderer.update_preview(scene)
+        material_preview_renderer = PreviewRenderer()
+        material_preview_renderer.translate_preview(scene)
 
-        self.__start_final_render(scene, RenderAppleseed.__material_preview_renderer.as_project)
+        self.__start_final_render(scene, material_preview_renderer.as_project)
 
     def __render_final(self, scene):
         """
@@ -221,9 +215,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.update_stats("appleseed Rendering: Translating scene", "")
         scene_translator.translate_scene()
 
-        project = scene_translator.as_project
-
-        self.__start_final_render(scene, project)
+        self.__start_final_render(scene, scene_translator.as_project)
 
     def __start_final_render(self, scene, project):
         """
