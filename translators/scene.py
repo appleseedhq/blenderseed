@@ -421,12 +421,17 @@ class SceneTranslator(GroupTranslator):
         super(SceneTranslator, self)._create_translators(self.bl_scene)
 
         # Always create a translator for the active camera even if it is not visible or renderable.
-        obj_key = ObjectKey(self.bl_scene.camera)
-        logger.debug("Creating camera translator for active camera  %s", obj_key)
-        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            self.__camera_translator = CameraTranslator(self.bl_scene.camera, self.asset_handler)
+        if self.bl_scene.camera:
+            obj_key = ObjectKey(self.bl_scene.camera)
+            logger.debug("Creating camera translator for active camera  %s", obj_key)
+            if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+                self.__camera_translator = CameraTranslator(self.bl_scene.camera, self.asset_handler)
+            else:
+                self.__camera_translator = InteractiveCameraTranslator(self.bl_scene.camera, self.__context, self.asset_handler)
         else:
-            self.__camera_translator = InteractiveCameraTranslator(self.bl_scene.camera, self.__context, self.asset_handler)
+            # Create dummy camera for interactive mode
+            if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
+                self.__camera_translator = InteractiveCameraTranslator(None, self.__context, self.asset_handler)
 
         for obj in self.bl_scene.objects:
 
@@ -637,6 +642,8 @@ class SceneTranslator(GroupTranslator):
 
         logger.debug("Translating frame")
 
+        camera_name = self.bl_scene.camera.name if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER else "interactive_camera"
+
         asr_scene_props = self.bl_scene.appleseed
         scale = self.bl_scene.render.resolution_percentage / 100.0
         if self.__context:
@@ -649,7 +656,7 @@ class SceneTranslator(GroupTranslator):
 
         frame_params = {
             'resolution': asr.Vector2i(width, height),
-            'camera': self.bl_scene.camera.name,
+            'camera': camera_name,
             'tile_size': asr.Vector2i(asr_scene_props.tile_size, asr_scene_props.tile_size),
             'filter': asr_scene_props.pixel_filter,
             'filter_size': asr_scene_props.pixel_filter_size,
