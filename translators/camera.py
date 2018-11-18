@@ -239,7 +239,7 @@ class InteractiveCameraTranslator(Translator):
 
         self.__set_cam_props()
 
-        self.__as_int_camera = asr.Camera(self.__model, self.appleseed_name, self.__params)
+        self.__as_int_camera = asr.Camera(self.__model, "interactive_camera", self.__params)
 
     def set_transform_key(self, scene, time, key_times):
         self.set_transform(time)
