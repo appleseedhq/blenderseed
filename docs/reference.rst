@@ -20,6 +20,13 @@ OSL
     osl/osl
     osl/osl_metadata
 
+General Tips
+------------
+.. toctree::
+    :maxdepth: 2
+
+    general/path_tracing
+
 Shaders
 -------
 - :ref:`Shader Reference <appleseed_maya:label_shaders>`
