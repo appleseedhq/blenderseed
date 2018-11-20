@@ -65,7 +65,7 @@ class DupliTranslator(Translator):
     # Constructor.
     #
 
-    def __init__(self, dupli, export_mode, asset_handler, use_cpp_export, skip_triangulation):
+    def __init__(self, dupli, export_mode, asset_handler):
         super(DupliTranslator, self).__init__(dupli, asset_handler)
 
         self.__export_mode = export_mode
@@ -73,9 +73,6 @@ class DupliTranslator(Translator):
 
         self.__object_translators = []
         self.__datablock_to_translator = {}
-
-        self.__use_cpp_export = use_cpp_export
-        self.__skip_triangulation = skip_triangulation
 
     #
     # Properties.
@@ -163,9 +160,7 @@ class DupliTranslator(Translator):
 
                         translator = MeshTranslator(dupli.object,
                                                     self.__export_mode,
-                                                    self.asset_handler,
-                                                    self.__use_cpp_export,
-                                                    self.__skip_triangulation)
+                                                    self.asset_handler)
 
                         self.__object_translators.append(translator)
 
