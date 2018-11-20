@@ -108,7 +108,7 @@ class GroupTranslator(Translator):
 
         self.__assembly = asr.Assembly(self.assembly_name)
 
-        self._create_translators(scene, use_cpp_export=False, skip_triangulation=False)
+        self._create_translators(scene)
         self._do_create_entities(scene)
 
     def flush_entities(self, assembly):
@@ -136,7 +136,7 @@ class GroupTranslator(Translator):
     # Internal methods.
     #
 
-    def _create_translators(self, scene, use_cpp_export, skip_triangulation):
+    def _create_translators(self, scene):
         logger.debug("Creating translators for group %s contents", self.bl_group.name)
 
         for obj in self.bl_group.objects:
@@ -189,7 +189,7 @@ class GroupTranslator(Translator):
 
                 if obj.is_duplicator:
                     logger.debug("Creating dupli translator for object %s", obj_key)
-                    self._dupli_translators[obj_key] = DupliTranslator(obj, self.export_mode, self.asset_handler, use_cpp_export, skip_triangulation)
+                    self._dupli_translators[obj_key] = DupliTranslator(obj, self.export_mode, self.asset_handler)
 
                 elif obj.appleseed.object_export != 'normal':
                     logger.debug("Creating archive translator for object %s", obj_key)
@@ -207,7 +207,7 @@ class GroupTranslator(Translator):
                     else:
                         logger.debug("Creating mesh translator for object %s", obj_key)
 
-                        translator = MeshTranslator(obj, self.export_mode, self.asset_handler, use_cpp_export, skip_triangulation)
+                        translator = MeshTranslator(obj, self.export_mode, self.asset_handler)
                         self._object_translators[obj_key] = translator
 
                         if not is_modified:
