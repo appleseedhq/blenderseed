@@ -298,10 +298,6 @@ class MeshTranslator(ObjectTranslator):
         return me
 
     def __convert_mesh(self, me):
-        do_uvs = self.bl_obj.data.appleseed.export_uvs
-
-        uv_layer_pointer = 0
-
         material_slots = self.bl_obj.material_slots
 
         self.__mesh_object.reserve_material_slots(len(material_slots))
@@ -325,7 +321,11 @@ class MeshTranslator(ObjectTranslator):
         vertices_length = len(me.vertices)
         tessface_length = len(me.tessfaces)
 
-        if do_uvs and len(me.uv_textures) > 0:
+        do_uvs = False
+        uv_layer_pointer = 0
+
+        if self.bl_obj.data.appleseed.export_uvs and len(me.uv_textures) > 0:
+            do_uvs = True
             uv_textures = me.tessface_uv_textures
 
             for uv in uv_textures:
