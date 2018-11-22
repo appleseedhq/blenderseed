@@ -177,7 +177,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     # Post processing stages
 
     post_processing_stages = bpy.props.CollectionProperty(type=AppleseedPostProcessProps,
-                                                          name="appleseed post processing",
+                                                          name="appleseed post-processing",
                                                           description="")
 
     post_processing_stages_index = bpy.props.IntProperty(name="stage_index",

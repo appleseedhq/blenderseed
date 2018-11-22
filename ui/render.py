@@ -311,7 +311,7 @@ class AppleseedPostProcessingStagesSlots(bpy.types.UIList):
 
 class AppleseedPostProcessingStagesPanel(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
-    bl_label = "appleseed Post Processing"
+    bl_label = "appleseed Post-Processing"
 
     def draw(self, context):
         layout = self.layout
@@ -388,7 +388,7 @@ class AppleseedMotionBlurPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         row.prop(asr_scene_props, "deformation_blur_samples", text="Samples")
 
 
-class AppleseedPostProcessing(bpy.types.Panel, AppleseedRenderPanelBase):
+class AppleseedBlenderPostProcessing(bpy.types.Panel, AppleseedRenderPanelBase):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_label = "Blender Post Processing"
 
@@ -413,11 +413,11 @@ def register():
     util.safe_register_class(AppleseedPostProcessingStagesSlots)
     util.safe_register_class(AppleseedPostProcessingStagesPanel)
     util.safe_register_class(AppleseedMotionBlurPanel)
-    util.safe_register_class(AppleseedPostProcessing)
+    util.safe_register_class(AppleseedBlenderPostProcessing)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedPostProcessing)
+    util.safe_unregister_class(AppleseedBlenderPostProcessing)
     util.safe_unregister_class(AppleseedMotionBlurPanel)
     util.safe_unregister_class(AppleseedPostProcessingStagesPanel)
     util.safe_unregister_class(AppleseedPostProcessingStagesSlots)
