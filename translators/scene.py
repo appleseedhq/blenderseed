@@ -70,8 +70,6 @@ class SceneTranslator(GroupTranslator):
 
         geometry_dir = os.path.join(project_dir, "_geometry")
         textures_dir = os.path.join(project_dir, "_textures")
-        shaders_dir = os.path.join(project_dir, "_shaders")
-        archives_dir = os.path.join(project_dir, "_archives")
 
         if not os.path.exists(geometry_dir):
             os.makedirs(geometry_dir)
@@ -79,15 +77,9 @@ class SceneTranslator(GroupTranslator):
         if not os.path.exists(textures_dir):
             os.makedirs(textures_dir)
 
-        if not os.path.exists(shaders_dir):
-            os.makedirs(shaders_dir)
-
-        if not os.path.exists(archives_dir):
-            os.makedirs(archives_dir)
-
         logger.debug("Creating project export scene translator, filename: %s", filename)
 
-        asset_handler = CopyAssetsAssetHandler(project_dir, geometry_dir, textures_dir, shaders_dir, archives_dir)
+        asset_handler = CopyAssetsAssetHandler(project_dir, geometry_dir, textures_dir)
 
         return cls(
             scene,
