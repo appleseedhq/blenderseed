@@ -38,36 +38,35 @@ bl_info = {
     "category": "Render"}
 
 if "bpy" in locals():
-    import imp
+    import importlib
 
-    imp.reload(properties)
-    imp.reload(operators)
-    imp.reload(export)
-    imp.reload(ui)
-    imp.reload(preferences)
-    imp.reload(projectwriter)
+    importlib.reload(properties)
+    importlib.reload(operators)
+    importlib.reload(export)
+    importlib.reload(ui)
 
 else:
     import bpy
 
 
 def register():
+    from .utils import path_util
+    path_util.load_appleseed_python_paths()
+
     from . import preferences
     preferences.register()
-
-    from .path_util import load_appleseed_python_paths
-    load_appleseed_python_paths()
 
     from . import properties
     from . import operators
     from . import ui
     from . import export
-    from .render import __init__  # This is needed
+    from . import render  # This is needed
 
     properties.register()
     operators.register()
     export.register()
     ui.register()
+    render.register()
     bpy.utils.register_module(__name__)
 
 
@@ -77,6 +76,8 @@ def unregister():
     from . import operators
     from . import ui
     from . import export
+    from . import render
+    render.unregister()
     ui.unregister()
     export.unregister()
     operators.unregister()
