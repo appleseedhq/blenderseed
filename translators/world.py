@@ -60,7 +60,7 @@ class WorldTranslator(Translator):
     #
 
     def create_entities(self, scene):
-        as_sky = self.bl_scene.appleseed_sky
+        as_sky = self.bl_scene.world.appleseed_sky
         env_type = as_sky.env_type
         if env_type == 'sunsky':
             env_type = as_sky.sun_model
@@ -76,7 +76,12 @@ class WorldTranslator(Translator):
                                                  self._convert_color(self.bl_scene.world.zenith_color)))
 
         if env_type in ('latlong_map', 'mirrorball_map'):
-            filename = self.asset_handler.process_path(as_sky.env_tex.filepath, AssetType.TEXTURE_ASSET)
+            try:
+                filename = self.asset_handler.process_path(as_sky.env_tex.filepath, AssetType.TEXTURE_ASSET)
+            except:
+                logger.warning("No Texture Selected!")
+                filename = ""
+                
             tex_inst_params = {'addressing_mode': 'wrap',
                                'filtering_mode': 'bilinear'}
 
@@ -167,7 +172,7 @@ class WorldTranslator(Translator):
 
         self._reset(scene)
 
-        if self.bl_scene.appleseed_sky.env_type == 'none':
+        if self.bl_scene.world.appleseed_sky.env_type == 'none':
             as_scene.set_environment(asr.Environment('environment', {}))
         else:
             self.create_entities(scene)
@@ -180,7 +185,7 @@ class WorldTranslator(Translator):
         self.__env_tex_inst = None
 
     def _convert_matrix(self, m):
-        as_sky = self.bl_scene.appleseed_sky
+        as_sky = self.bl_scene.world.appleseed_sky
         vertical_shift = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(as_sky.vertical_shift))
         horizontal_shift = asr.Matrix4d.make_rotation(asr.Vector3d(0.0, 1.0, 0.0), math.radians(as_sky.horizontal_shift))
         scene_rot = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(90.0))

@@ -322,7 +322,7 @@ class SceneTranslator(GroupTranslator):
             except:
                 logger.debug("Lamp not found for %s", translator)
 
-        if self.bl_scene.is_updated or self.bl_scene.is_updated_data:
+        if self.bl_scene.world.is_updated or self.bl_scene.world.is_updated_data:
             self.__world_translator.update(self.bl_scene, self.as_scene)
 
         if self.bl_scene.camera.is_updated or self.bl_scene.camera.is_updated_data:
@@ -414,7 +414,7 @@ class SceneTranslator(GroupTranslator):
         necessary to convert Blender objects, lights, cameras and materials into equivalent appleseed entities.
         """
 
-        if self.bl_scene.appleseed_sky.env_type != 'none':
+        if self.bl_scene.world.appleseed_sky.env_type != 'none':
             self.__create_world_translator()
 
         # Create translators for all objects in the scene.
