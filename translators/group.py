@@ -33,7 +33,7 @@ from .mesh import MeshTranslator
 from .object import ProjectExportMode, InstanceTranslator, ArchiveTranslator
 from .translator import Translator, ObjectKey
 from ..logger import get_logger
-from ..util import inscenelayer
+from ..utils.util import inscenelayer
 
 logger = get_logger()
 

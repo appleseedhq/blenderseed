@@ -34,7 +34,7 @@ import appleseed as asr
 from .assethandlers import AssetType
 from .translator import Translator
 from ..logger import get_logger
-from ..util import calc_film_dimensions, find_auto_focus_point, get_frame_aspect_ratio
+from ..utils.util import calc_film_dimensions, find_autofocus_point, get_frame_aspect_ratio
 
 logger = get_logger()
 
@@ -189,7 +189,7 @@ class CameraTranslator(Translator):
                            'focal_distance': focal_distance})
 
         if camera.data.appleseed.enable_autofocus:
-            x, y = find_auto_focus_point(scene)
+            x, y = find_autofocus_point(scene)
             cam_params['autofocus_target'] = asr.Vector2f(x, y)
             cam_params['autofocus_enabled'] = True
 

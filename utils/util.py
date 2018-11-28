@@ -32,9 +32,8 @@ import os
 import bpy
 import bpy_extras
 
-from .path_util import get_appleseed_bin_dir_path, get_osl_search_paths
-from . import bl_info
-from .logger import get_logger
+from . import path_util
+from ..logger import get_logger
 
 logger = get_logger()
 
@@ -67,11 +66,11 @@ def read_osl_shaders():
 
     nodes = []
 
-    if not get_appleseed_bin_dir_path():
+    if not path_util.get_appleseed_bin_dir_path():
         logger.warning("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
         return nodes
 
-    shader_directories = get_osl_search_paths()
+    shader_directories = path_util.get_osl_search_paths()
 
     import appleseed as asr
 
@@ -160,8 +159,6 @@ sep = os.sep
 for addon_path in bpy.utils.script_paths("addons"):
     if "blenderseed" in os.listdir(addon_path):
         addon_dir = os.path.join(addon_path, "blenderseed")
-
-version = "{0}.{1}.{2}".format(bl_info['version'][0], bl_info['version'][1], bl_info['version'][2])
 
 thread_count = multiprocessing.cpu_count()
 
@@ -252,7 +249,7 @@ def calc_film_dimensions(aspect_ratio, camera, zoom):
     return film_width, film_height
 
 
-def find_auto_focus_point(scene):
+def find_autofocus_point(scene):
     cam = scene.camera
     co = scene.cursor_location
     co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)

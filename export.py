@@ -29,7 +29,7 @@ import bpy
 from bpy.props import BoolProperty, StringProperty
 from bpy_extras.io_utils import ExportHelper
 
-from . import util
+from .utils import util
 from .translators import SceneTranslator
 
 

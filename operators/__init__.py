@@ -30,7 +30,7 @@ import subprocess
 
 import bpy
 
-from .. import path_util, util
+from ..utils import util, path_util
 
 
 # Material operators

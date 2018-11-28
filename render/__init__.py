@@ -37,6 +37,7 @@ from .tilecallbacks import FinalTileCallback
 from ..logger import get_logger
 from ..translators.preview import PreviewRenderer
 from ..translators.scene import SceneTranslator
+from ..utils.util import safe_register_class, safe_unregister_class
 
 logger = get_logger()
 
@@ -389,3 +390,11 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.add_pass("NPR Shading", 4, "RGBA")
         if asr_scene_props.npr_contour_aov:
             self.add_pass("NPR Contour", 4, "RGBA")
+
+
+def register():
+    safe_register_class(RenderAppleseed)
+
+
+def unregister():
+    safe_unregister_class(RenderAppleseed)

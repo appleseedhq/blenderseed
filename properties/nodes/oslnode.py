@@ -29,7 +29,7 @@ import bpy
 from bpy.types import NodeSocket, Node
 
 from . import AppleseedNode, AppleseedSocket
-from ... import util
+from ...utils import util
 from ...logger import get_logger
 
 logger = get_logger()
