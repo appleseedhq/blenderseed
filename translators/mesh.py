@@ -35,7 +35,7 @@ from .assethandlers import AssetType
 from .object import ObjectTranslator
 from .translator import ObjectKey, ProjectExportMode
 from ..logger import get_logger
-from ..util import is_object_deforming
+from ..utils.util import is_object_deforming
 
 logger = get_logger()
 

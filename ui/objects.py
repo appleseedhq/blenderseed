@@ -27,7 +27,7 @@
 
 import bpy
 
-from .. import util
+from ..utils import util
 
 
 class AppleseedExportOverridePanel(bpy.types.Panel):

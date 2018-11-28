@@ -28,7 +28,7 @@
 
 import bpy
 
-from .. import util
+from ..utils import util
 
 
 class AppleseedWorldPanel(bpy.types.Panel):

@@ -25,11 +25,10 @@
 # THE SOFTWARE.
 #
 
+import bpy
 import multiprocessing
 
-import bpy
-
-from .. import util
+from ..utils import util
 
 try:
     threads = multiprocessing.cpu_count()

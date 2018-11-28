@@ -27,7 +27,7 @@
 
 import bpy
 
-from .. import util
+from ..utils import util
 
 
 def get_shutter_min(self, context):

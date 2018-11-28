@@ -25,12 +25,9 @@
 # THE SOFTWARE.
 #
 
-from time import time
-
 import bpy
-from bpy.app.handlers import persistent
 
-from .. import util
+from ..utils import util
 
 
 class AppleseedMaterialSlots(bpy.types.Panel):

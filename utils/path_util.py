@@ -29,11 +29,6 @@ import os
 import platform
 import sys
 
-from .logger import get_logger
-
-
-logger = get_logger()
-
 
 def find_python_path():
 
@@ -49,19 +44,19 @@ def load_appleseed_python_paths():
     python_path = find_python_path()
     if python_path != "":
         sys.path.append(python_path)
-        logger.debug("[appleseed] Python path set to: {0}".format(python_path))
+        print("[appleseed] Python path set to: {0}".format(python_path))
 
         if platform.system() == 'Windows':
             bin_dir = get_appleseed_bin_dir_path()
             os.environ['PATH'] += os.pathsep + bin_dir
-            logger.debug("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
+            print("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
 
 
 def get_appleseed_bin_dir_path():
     if "APPLESEED_BIN_DIR" in os.environ:
         appleseed_bin_dir = os.environ['APPLESEED_BIN_DIR']
     else:
-        appleseed_bin_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "appleseed", "bin")
+        appleseed_bin_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "appleseed", "bin")
     if appleseed_bin_dir:
         appleseed_bin_dir = os.path.realpath(appleseed_bin_dir)
     return appleseed_bin_dir

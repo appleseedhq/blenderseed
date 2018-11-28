@@ -26,11 +26,10 @@
 #
 
 import bpy
-import nodeitems_utils
 from bpy.types import NodeTree
-from nodeitems_utils import NodeItem, NodeCategory
+from nodeitems_utils import NodeItem, NodeCategory, register_node_categories, unregister_node_categories
 
-from ... import util
+from ...utils import util
 
 
 class AppleseedOSLNodeTree(NodeTree):
@@ -193,9 +192,9 @@ def register():
             osl_node_names.append([node_name, node_category])
         except:
             pass
-    nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
+    register_node_categories("APPLESEED", node_categories(osl_node_names))
 
 
 def unregister():
-    nodeitems_utils.unregister_node_categories("APPLESEED")
+    unregister_node_categories("APPLESEED")
     util.safe_unregister_class(AppleseedOSLNodeTree)

@@ -31,7 +31,7 @@ import appleseed as asr
 
 from .assethandlers import AssetHandler
 from .materials import MaterialTranslator
-from .. import util
+from ..utils import util
 
 
 class PreviewRenderer(object):
