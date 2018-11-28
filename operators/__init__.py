@@ -54,6 +54,7 @@ class AppleseedNewMat(bpy.types.Operator):
         bpy.ops.material.new()
 
         if dupli_node_tree is not None:
+            dupli_node_tree.name = context.object.active_material.name + "_tree"
             context.object.active_material.appleseed.osl_node_tree = dupli_node_tree
         else:
             bpy.ops.appleseed.add_osl_nodetree()
