@@ -483,6 +483,10 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                min=0,
                                                max=100)
 
+    sppm_pt_max_ray_intensity = bpy.props.FloatProperty(name="sppm_pt_max_ray_intensity",
+                                                        default=1.0,
+                                                        min=0.0)
+
     sppm_pt_rr_start = bpy.props.IntProperty(name="sppm_pt_rr_start",
                                              description="Consider pruning low contribution paths starting with this bounce",
                                              default=6,

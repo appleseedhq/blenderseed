@@ -295,6 +295,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
             col = layout.column(align=True)
             col.prop(asr_scene_props, "sppm_pt_max_length", text="Max Bounces")
+            col.prop(asr_scene_props, "sppm_pt_max_ray_intensity", text="Max Ray Intensity")
             col.prop(asr_scene_props, "sppm_pt_rr_start", text="Russian Roulette Start Bounce")
             col.prop(asr_scene_props, "sppm_initial_radius", text="Initial Radius")
             col.prop(asr_scene_props, "sppm_max_per_estimate", text="Max Photons")
