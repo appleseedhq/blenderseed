@@ -45,7 +45,18 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
                                        update=update_logger)
 
     def draw(self, context):
-        self.layout.prop(self, "log_level", text="Log Level")
+        layout = self.layout
+        layout.prop(self, "log_level", text="Log Level")
+        layout.separator()
+        layout.label(text="appleseed Library Versions:")
+        import appleseed as asr
+        box = layout.box()
+        box.label(text=asr.get_synthetic_version_string())
+
+        lib_info = asr.get_third_parties_versions()
+        for key in lib_info:
+            box = layout.box()
+            box.label(text="%s: %s" % (key, lib_info [key]))
 
 
 def register():
