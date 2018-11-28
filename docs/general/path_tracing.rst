@@ -9,7 +9,7 @@ i.e. how do all these crazy parameters fit together?
 What is Path Tracing, and why should I care?
     Path tracing is one of the dominant (if not *the* dominant) rendering technique in use today, and the images it produces can be almost indistinguishable from reality.  It does this by using raytracing to accurately trace the path a beam of light takes as it bounces, reflects and refracts its way to the camera lens.  While computationally expensive, path tracing has the advantage of naturally capturing the way light moves through a scene.  Effects like global illumination (illumination created by light reflecting off objects) occur naturally with path tracing.  With older methods such as REYES, these effects were laborious to create.
 
-Path Tracing explained in thirty seconds……
+Path Tracing explained in thirty seconds...
     Path tracing works by taking a pixel from the output image frame and sending a virtual ray from the camera, through that pixel, and out into the scene.  The ray will bounce off objects until it runs out of energy, hits a light source, or reaches a preset number of reflections (bounces).  When that happens, the ray is traced back to the camera through all the objects it has hit and the final ‘color’ of that pixel sample is determined.
 
 What are you skipping?
