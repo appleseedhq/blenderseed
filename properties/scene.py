@@ -682,7 +682,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                ('assembly_instances', "Assembly Instances", ""),
                                                ('barycentric', "Barycentric", ""),
                                                ('bitangent', "Bitangent", ""),
-                                               ('color', "Color", ""),
                                                ('depth', "Depth", ""),
                                                ('materials', "Materials", ""),
                                                ('object_instances', "Object Instances", ""),
