@@ -48,7 +48,7 @@ class AppleseedWorldPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        asr_sky_props = scene.appleseed_sky
+        asr_sky_props = scene.world.appleseed_sky
 
         layout.prop(asr_sky_props, "env_type", text="Type")
 

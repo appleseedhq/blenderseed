@@ -162,11 +162,11 @@ def register():
     util.safe_register_class(AppleseedSSSSets)
     util.safe_register_class(AppleseedSkySettings)
     bpy.types.Scene.appleseed_sss_sets = bpy.props.PointerProperty(type=AppleseedSSSSets)
-    bpy.types.Scene.appleseed_sky = bpy.props.PointerProperty(type=AppleseedSkySettings)
+    bpy.types.World.appleseed_sky = bpy.props.PointerProperty(type=AppleseedSkySettings)
 
 
 def unregister():
-    del bpy.types.Scene.appleseed_sky
+    del bpy.types.World.appleseed_sky
     del bpy.types.Scene.appleseed_sss_sets
     util.safe_unregister_class(AppleseedSkySettings)
     util.safe_unregister_class(AppleseedSSSSets)
