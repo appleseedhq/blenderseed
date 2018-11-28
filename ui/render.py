@@ -93,12 +93,6 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         layout.separator()
 
-        col = layout.column(align=True)
-        col.prop(asr_scene_props, "shading_override", text="Override Shading", toggle=True)
-        row = col.row(align=True)
-        row.enabled = asr_scene_props.shading_override
-        row.prop(asr_scene_props, "override_mode", text="")
-
         box = layout.box()
         box.label(text="Texture Cache")
         box.prop(asr_scene_props, "tex_cache", text="Texture Cache Size")
@@ -107,6 +101,22 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
         box = layout.box()
         box.label(text="Experimental Features")
         box.prop(asr_scene_props, "use_embree", text="Use Embree", toggle=True)
+
+
+class AppleseedShadingOverridePanel(bpy.types.Panel, AppleseedRenderPanelBase):
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_label = "Shading Override"
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        asr_scene_props = scene.appleseed
+
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "shading_override", text="Override Shading", toggle=True)
+        row = col.row(align=True)
+        row.enabled = asr_scene_props.shading_override
+        row.prop(asr_scene_props, "override_mode", text="")
 
 
 class AppleseedDenoiserPanel(bpy.types.Panel, AppleseedRenderPanelBase):
@@ -408,6 +418,7 @@ def register():
     bpy.types.RENDER_PT_output.COMPAT_ENGINES.add('APPLESEED_RENDER')
     util.safe_register_class(AppleseedRender)
     util.safe_register_class(AppleseedRenderSettingsPanel)
+    util.safe_register_class(AppleseedShadingOverridePanel)
     util.safe_register_class(AppleseedDenoiserPanel)
     util.safe_register_class(AppleseedSamplingPanel)
     util.safe_register_class(AppleseedLightingPanel)
@@ -425,6 +436,7 @@ def unregister():
     util.safe_unregister_class(AppleseedLightingPanel)
     util.safe_unregister_class(AppleseedSamplingPanel)
     util.safe_unregister_class(AppleseedDenoiserPanel)
+    util.safe_unregister_class(AppleseedShadingOverridePanel)
     util.safe_unregister_class(AppleseedRenderSettingsPanel)
     util.safe_unregister_class(AppleseedRender)
     bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.remove('APPLESEED_RENDER')
