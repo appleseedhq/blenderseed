@@ -598,14 +598,14 @@ class SceneTranslator(GroupTranslator):
                                 'volume_distance_samples': asr_scene_props.volume_distance_samples,
                                 'dl_light_samples': asr_scene_props.dl_light_samples,
                                 'ibl_env_samples': asr_scene_props.ibl_env_samples,
-                                'dl_low_light_threshold': asr_scene_props.dl_low_light_threshold}
+                                'dl_low_light_threshold': asr_scene_props.dl_low_light_threshold,
+                                'max_diffuse_bounces': asr_scene_props.max_diffuse_bounces if not asr_scene_props.max_diffuse_bounces_unlimited else -1,
+                                'max_glossy_bounces': asr_scene_props.max_glossy_brdf_bounces if not asr_scene_props.max_glossy_brdf_bounces_unlimited else -1,
+                                'max_specular_bounces': asr_scene_props.max_specular_bounces if not asr_scene_props.max_specular_bounces_unlimited else -1,
+                                'max_volume_bounces': asr_scene_props.max_volume_bounces if not asr_scene_props.max_volume_bounces_unlimited else -1,
+                                'max_bounces': asr_scene_props.max_bounces if not asr_scene_props.max_bounces_unlimited else -1}
             if not asr_scene_props.max_ray_intensity_unlimited:
                 parameters['pt']['max_ray_intensity'] = asr_scene_props.max_ray_intensity
-            parameters['pt']['max_diffuse_bounces'] = asr_scene_props.max_diffuse_bounces if not asr_scene_props.max_diffuse_bounces_unlimited else -1
-            parameters['pt']['max_glossy_bounces'] = asr_scene_props.max_glossy_brdf_bounces if not asr_scene_props.max_glossy_brdf_bounces_unlimited else -1
-            parameters['pt']['max_specular_bounces'] = asr_scene_props.max_specular_bounces if not asr_scene_props.max_specular_bounces_unlimited else -1
-            parameters['pt']['max_volume_bounces'] = asr_scene_props.max_volume_bounces if not asr_scene_props.max_volume_bounces_unlimited else -1
-            parameters['pt']['max_bounces'] = asr_scene_props.max_bounces if not asr_scene_props.max_bounces_unlimited else -1
         else:
             parameters['sppm'] = {'alpha': asr_scene_props.sppm_alpha,
                                   'dl_mode': asr_scene_props.sppm_dl_mode,
