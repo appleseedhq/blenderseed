@@ -25,7 +25,8 @@
 # THE SOFTWARE.
 #
 
-import bl_ui.properties_data_mesh as properties_data_mesh
+import bpy
+
 
 from . import camera
 from . import lamps
@@ -37,114 +38,70 @@ from . import scene
 from . import textures
 from . import world
 
-# Enable all existing panels for these contexts
-for member in dir(properties_data_mesh):
-    subclass = getattr(properties_data_mesh, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_data_mesh
 
-import bl_ui.properties_particle as properties_particle
+def get_panels():
+    exclude_panels = {
+        'DATA_PT_area',
+        'DATA_PT_camera_dof',
+        'DATA_PT_lens',
+        'DATA_PT_falloff_curve',
+        'DATA_PT_lamp',
+        'DATA_PT_preview',
+        'DATA_PT_shadow',
+        'DATA_PT_spot',
+        'DATA_PT_sunsky',
+        'MATERIAL_PT_context_material',
+        'MATERIAL_PT_diffuse',
+        'MATERIAL_PT_flare',
+        'MATERIAL_PT_halo',
+        'MATERIAL_PT_mirror',
+        'MATERIAL_PT_options',
+        'MATERIAL_PT_pipeline',
+        'MATERIAL_PT_preview',
+        'MATERIAL_PT_shading',
+        'MATERIAL_PT_shadow',
+        'MATERIAL_PT_specular',
+        'MATERIAL_PT_sss',
+        'MATERIAL_PT_strand',
+        'MATERIAL_PT_transp',
+        'MATERIAL_PT_volume_density',
+        'MATERIAL_PT_volume_integration',
+        'MATERIAL_PT_volume_lighting',
+        'MATERIAL_PT_volume_options',
+        'MATERIAL_PT_volume_shading',
+        'MATERIAL_PT_volume_transp',
+        'RENDERLAYER_PT_layers',
+        'RENDERLAYER_PT_layer_options',
+        'RENDERLAYER_PT_layer_passes',
+        'RENDERLAYER_PT_views',
+        'RENDER_PT_antialiasing',
+        'RENDER_PT_bake',
+        'RENDER_PT_motion_blur',
+        'RENDER_PT_performance',
+        'RENDER_PT_post_processing',
+        'RENDER_PT_shading',
+        'SCENE_PT_simplify',
+        'TEXTURE_PT_context_texture',
+        'TEXTURE_PT_influence',
+        'TEXTURE_PT_colors',
+        'TEXTURE_PT_image_sampling',
+        'TEXTURE_PT_mapping',
+        'WORLD_PT_ambient_occlusion',
+        'WORLD_PT_environment_lighting',
+        'WORLD_PT_gather',
+        'WORLD_PT_indirect_lighting',
+        'WORLD_PT_mist',
+        'WORLD_PT_preview',
+        'WORLD_PT_world'
+    }
 
-for member in dir(properties_particle):
-    subclass = getattr(properties_particle, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_particle
+    panels = []
+    for panel in bpy.types.Panel.__subclasses__():
+        if hasattr(panel, 'COMPAT_ENGINES') and 'BLENDER_RENDER' in panel.COMPAT_ENGINES:
+            if panel.__name__ not in exclude_panels:
+                panels.append(panel)
 
-import bl_ui.properties_physics_common as properties_physics_common
-
-for member in dir(properties_physics_common):
-    subclass = getattr(properties_physics_common, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_physics_common
-
-import bl_ui.properties_physics_cloth as properties_physics_cloth
-
-for member in dir(properties_physics_cloth):
-    subclass = getattr(properties_physics_cloth, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_physics_cloth
-
-import bl_ui.properties_physics_dynamicpaint as properties_physics_dynamicpaint
-
-for member in dir(properties_physics_dynamicpaint):
-    subclass = getattr(properties_physics_dynamicpaint, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_physics_dynamicpaint
-
-import bl_ui.properties_physics_field as properties_physics_field
-
-for member in dir(properties_physics_field):
-    subclass = getattr(properties_physics_field, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_physics_field
-
-import bl_ui.properties_physics_fluid as properties_physics_fluid
-
-for member in dir(properties_physics_fluid):
-    subclass = getattr(properties_physics_fluid, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_physics_fluid
-
-import bl_ui.properties_physics_rigidbody as properties_physics_rigidbody
-
-for member in dir(properties_physics_rigidbody):
-    subclass = getattr(properties_physics_rigidbody, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_physics_rigidbody
-
-import bl_ui.properties_physics_rigidbody_constraint as properties_physics_rigidbody_constraint
-
-for member in dir(properties_physics_rigidbody_constraint):
-    subclass = getattr(properties_physics_rigidbody_constraint, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_physics_rigidbody_constraint
-
-import bl_ui.properties_physics_smoke as properties_physics_smoke
-
-for member in dir(properties_physics_smoke):
-    subclass = getattr(properties_physics_smoke, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_physics_smoke
-
-import bl_ui.properties_physics_softbody as properties_physics_softbody
-
-for member in dir(properties_physics_softbody):
-    subclass = getattr(properties_physics_softbody, member)
-    try:
-        subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    except:
-        pass
-del properties_physics_softbody
+    return panels
 
 
 def register():
@@ -159,8 +116,15 @@ def register():
     #    particles.register()
     lamps.register()
 
+    for panel in get_panels():
+        panel.COMPAT_ENGINES.add('APPLESEED_RENDER')
+
 
 def unregister():
+    for panel in get_panels():
+        if 'APPLESEED_RENDER' in panel.COMPAT_ENGINES:
+            panel.COMPAT_ENGINES.remove('APPLESEED_RENDER')
+
     lamps.unregister()
     #    particles.unregister()
     objects.unregister()

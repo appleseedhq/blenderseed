@@ -197,8 +197,6 @@ class AppleseedTextureConverterPanel(bpy.types.Panel):
 
 
 def register():
-    bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
     util.safe_register_class(AppleseedWorldPanel)
     util.safe_register_class(SSSSetsProps)
     util.safe_register_class(AppleseedWorldSssSets)
@@ -212,5 +210,3 @@ def unregister():
     util.safe_unregister_class(AppleseedWorldSssSets)
     util.safe_unregister_class(SSSSetsProps)
     util.safe_unregister_class(AppleseedWorldPanel)
-    bpy.types.WORLD_PT_context_world.COMPAT_ENGINES.remove('APPLESEED_RENDER')
-    bpy.types.WORLD_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')

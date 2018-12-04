@@ -420,8 +420,6 @@ class AppleseedBlenderPostProcessing(bpy.types.Panel, AppleseedRenderPanelBase):
 
 
 def register():
-    bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.add('APPLESEED_RENDER')
-    bpy.types.RENDER_PT_output.COMPAT_ENGINES.add('APPLESEED_RENDER')
     util.safe_register_class(AppleseedRender)
     util.safe_register_class(AppleseedRenderSettingsPanel)
     util.safe_register_class(AppleseedShadingOverridePanel)
@@ -445,5 +443,3 @@ def unregister():
     util.safe_unregister_class(AppleseedShadingOverridePanel)
     util.safe_unregister_class(AppleseedRenderSettingsPanel)
     util.safe_unregister_class(AppleseedRender)
-    bpy.types.RENDER_PT_dimensions.COMPAT_ENGINES.remove('APPLESEED_RENDER')
-    bpy.types.RENDER_PT_output.COMPAT_ENGINES.remove('APPLESEED_RENDER')

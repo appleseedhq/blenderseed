@@ -125,14 +125,6 @@ class AppleseedObjectBlurPanel(bpy.types.Panel):
 
 
 def register():
-    import bl_ui.properties_object as properties_object
-    for member in dir(properties_object):
-        subclass = getattr(properties_object, member)
-        try:
-            subclass.COMPAT_ENGINES.add('APPLESEED_RENDER')
-        except:
-            pass
-    del properties_object
     util.safe_register_class(AppleseedObjFlagsPanel)
     util.safe_register_class(AppleseedExportOverridePanel)
     util.safe_register_class(AppleseedObjectBlurPanel)
@@ -142,11 +134,3 @@ def unregister():
     util.safe_unregister_class(AppleseedObjectBlurPanel)
     util.safe_unregister_class(AppleseedExportOverridePanel)
     util.safe_unregister_class(AppleseedObjFlagsPanel)
-    import bl_ui.properties_object as properties_object
-    for member in dir(properties_object):
-        subclass = getattr(properties_object, member)
-        try:
-            subclass.COMPAT_ENGINES.remove('APPLESEED_RENDER')
-        except:
-            pass
-    del properties_object
