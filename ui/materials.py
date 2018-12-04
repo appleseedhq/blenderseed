@@ -179,7 +179,6 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
 def register():
     util.safe_register_class(AppleseedMaterialSlots)
-    bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.add('APPLESEED_RENDER')
     util.safe_register_class(AppleseedMaterialPreview)
     util.safe_register_class(AppleseedMaterialShading)
 
@@ -187,5 +186,4 @@ def register():
 def unregister():
     util.safe_unregister_class(AppleseedMaterialShading)
     util.safe_unregister_class(AppleseedMaterialPreview)
-    bpy.types.MATERIAL_PT_custom_props.COMPAT_ENGINES.remove('APPLESEED_RENDER')
     util.safe_unregister_class(AppleseedMaterialSlots)
