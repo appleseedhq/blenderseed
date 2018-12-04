@@ -44,8 +44,13 @@ Some of the notable controls are:
 
 Path Tracer settings:
     - Directly Sample Lights: 
-        This is the control that determines if light sources are directly sampled at surface hit points.  There’s really no reason why you’d turn this off except if you have no discreet light sources in your scene.
-    - The other two controls that affect direct light sampling are the ‘Samples’ and “Low Light Threshold’ controls.  Samples sets how many rays are traced to light sources for each surface hit point, so you may want to raise this if you have a scene with a lot of direct lighting.  Low light threshold is a setting that you can use to speed up render convergence at the expense of lighting quality.  It does this by not directly sampling a light if that light is determined to have less illumination on that point than the threshold setting.  It’s a bit of a tradeoff, less light rays mean faster convergence, but too high of a threshold can cause the lighting of the entire scene to darken.
+        This is the control that determines if light sources are directly sampled at surface hit points.  There’s really no reason why you’d turn this off except if you have no discreet light sources in your scene.  
+        
+        There are two additional controls that affect direct light sampling:  
+        
+        - 'Samples' sets how many rays are traced to light sources for each surface hit point, so you may want to raise this if you have a scene with a lot of direct lighting.  
+        
+        - 'Low Light Threshold' is a setting that you can use to speed up render convergence at the expense of lighting quality.  It does this by not directly sampling a light if that light is determined to have less illumination on that point than the threshold setting.  It’s a tradeoff, less light rays mean faster convergence, but too high of a threshold can cause the lighting of the entire scene to darken.
 
     - Image-Based Lighting:
         This lets you control whether HDRI backgrounds can contribute light to the scene.  The Samples parameter next to it has the same purpose as the direct lighting samples.
