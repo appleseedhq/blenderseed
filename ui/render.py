@@ -87,6 +87,12 @@ class AppleseedRenderSettingsPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         layout.separator()
 
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "noise_seed", text="Noise Seed")
+        col.prop(asr_scene_props, "per_frame_noise", text="Vary Noise per Frame", toggle=True)
+
+        layout.separator()
+
         box = layout.box()
         box.label(text="Render Logging")
         box.prop(asr_scene_props, "log_level", text="")

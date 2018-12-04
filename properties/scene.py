@@ -199,6 +199,14 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                           description="Automatically determine the number of rendering threads",
                                           default=True)
 
+    noise_seed = bpy.props.IntProperty(name="noise_seed",
+                                       default=0)
+
+    per_frame_noise = bpy.props.BoolProperty(name="per_frame_noise",
+                                             description="Vary the noise seed by the frame number.\n"
+                                                         "This gives better results in animations.",
+                                             default=False)
+
     use_embree = bpy.props.BoolProperty(name="use_embree",
                                         description="Use the Intel Embree library for raytracing",
                                         default=False)

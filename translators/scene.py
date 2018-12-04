@@ -650,6 +650,8 @@ class SceneTranslator(GroupTranslator):
             width = int(self.bl_scene.render.resolution_x * scale)
             height = int(self.bl_scene.render.resolution_y * scale)
 
+        noise_seed = (asr_scene_props.noise_seed + self.bl_scene.frame_current) if asr_scene_props.per_frame_noise else asr_scene_props.noise_seed
+
         frame_params = {
             'resolution': asr.Vector2i(width, height),
             'camera': camera_name,
@@ -657,6 +659,7 @@ class SceneTranslator(GroupTranslator):
             'filter': asr_scene_props.pixel_filter,
             'filter_size': asr_scene_props.pixel_filter_size,
             'denoiser': asr_scene_props.denoise_mode,
+            'noise_seed': noise_seed,
             'skip_denoised': asr_scene_props.skip_denoised,
             'random_pixel_order': asr_scene_props.random_pixel_order,
             'prefilter_spikes': asr_scene_props.prefilter_spikes,
