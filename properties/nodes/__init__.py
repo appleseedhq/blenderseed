@@ -56,6 +56,12 @@ class AppleseedOSLNodeTree(NodeTree):
                 if node_tree:
                     return node_tree, mat, mat
 
+        elif obj and obj.type == "LAMP":
+            node_tree = obj.data.appleseed.osl_node_tree
+
+            if node_tree:
+                return node_tree, None, None
+
         return None, None, None
 
     @classmethod
