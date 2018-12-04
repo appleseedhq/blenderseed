@@ -34,6 +34,7 @@ from . import meshes
 from . import objects
 from . import render
 from . import scene
+from . import textures
 from . import world
 
 # Enable all existing panels for these contexts
@@ -149,6 +150,7 @@ del properties_physics_softbody
 def register():
     render.register()
     scene.register()
+    textures.register()
     world.register()
     materials.register()
     meshes.register()
@@ -166,5 +168,6 @@ def unregister():
     meshes.unregister()
     materials.unregister()
     world.unregister()
+    textures.unregister()
     scene.unregister()
     render.unregister()
