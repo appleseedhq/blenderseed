@@ -625,7 +625,10 @@ class SceneTranslator(GroupTranslator):
 
         if asr_scene_props.shading_override:
             parameters['shading_engine'] = {'override_shading': {'mode': asr_scene_props.override_mode}}
+            
         conf_final.set_parameters(parameters)
+
+        parameters['lighting_engine'] = 'pt'
         conf_interactive.set_parameters(parameters)
 
     def __translate_frame(self):
