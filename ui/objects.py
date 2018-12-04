@@ -100,6 +100,7 @@ class AppleseedObjFlagsPanel(bpy.types.Panel):
         layout.separator()
 
         layout.prop(asr_obj, "double_sided", text="Double Sided Shading")
+        layout.prop(asr_obj, "photon_target", text="SPPM Photon Target")
         layout.prop(asr_obj, "medium_priority", text="Nested Glass Priority")
         layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
 

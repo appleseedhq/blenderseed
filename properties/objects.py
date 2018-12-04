@@ -84,6 +84,9 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
     double_sided = bpy.props.BoolProperty(name="double_sided",
                                           default=True)
 
+    photon_target = bpy.props.BoolProperty(name="photon_target",
+                                           default=False)
+
     object_alpha = bpy.props.FloatProperty(name="object_alpha",
                                            description="Object Alpha",
                                            default=1.0,
