@@ -326,7 +326,7 @@ class PackageBuilder(object):
 
     def build_final_zip_file(self):
         progress("Building final zip file from staging directory")
-        package_name = "blenderseed-{0}-{1}_{2}".format(self.package_version, self.settings.platform, self.build_date)
+        package_name = "blenderseed-{0}-{1}-{2}".format(self.package_version, self.settings.platform, self.build_date)
         package_path = os.path.join(self.settings.output_dir, package_name)
         archive_util.make_zipfile(package_path, "blenderseed")
         info("Package path: {0}".format(package_path + ".zip"))
@@ -699,8 +699,7 @@ def main():
     no_release = args.nozip
     package_version = subprocess.Popen("git describe --long", stdout=subprocess.PIPE, shell=True).stdout.read().strip()
 
-    date_time = datetime.datetime.now()
-    build_date = "%i-%i-%i" % (date_time.year, date_time.month, date_time.day)
+    build_date = datetime.date.today().isoformat()
 
     print("blenderseed.package version " + VERSION)
     print("")
