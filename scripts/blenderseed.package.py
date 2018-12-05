@@ -32,6 +32,7 @@ from distutils import archive_util, dir_util
 from xml.etree.ElementTree import ElementTree
 import argparse
 import colorama
+import datetime
 import glob
 import os
 import platform
@@ -203,9 +204,10 @@ class Settings:
 
 class PackageBuilder(object):
 
-    def __init__(self, settings, package_version=None, no_release=False):
+    def __init__(self, settings, package_version, build_date, no_release=False):
         self.settings = settings
         self.package_version = package_version
+        self.build_date = build_date
         self.no_release = no_release
 
     def build_package(self):
@@ -324,7 +326,7 @@ class PackageBuilder(object):
 
     def build_final_zip_file(self):
         progress("Building final zip file from staging directory")
-        package_name = "blenderseed-{0}-{1}".format(self.package_version, self.settings.platform)
+        package_name = "blenderseed-{0}-{1}_{2}".format(self.package_version, self.settings.platform, self.build_date)
         package_path = os.path.join(self.settings.output_dir, package_name)
         archive_util.make_zipfile(package_path, "blenderseed")
         info("Package path: {0}".format(package_path + ".zip"))
@@ -690,13 +692,15 @@ def main():
 
     parser = argparse.ArgumentParser(description="build a blenderseed package from sources")
 
-    parser.add_argument("--version", help="version number of packaged file")
     parser.add_argument("--nozip", action="store_true", help="copies appleseed binaries to blenderseed folder but does not build a release package")
 
     args = parser.parse_args()
 
     no_release = args.nozip
-    package_version = args.version if args.version else "no-version"
+    package_version = subprocess.Popen("git describe --long", stdout=subprocess.PIPE, shell=True).stdout.read().strip()
+
+    date_time = datetime.datetime.now()
+    build_date = "%i-%i-%i" % (date_time.year, date_time.month, date_time.day)
 
     print("blenderseed.package version " + VERSION)
     print("")
@@ -706,11 +710,11 @@ def main():
     settings.print_summary()
 
     if os.name == "nt":
-        package_builder = WindowsPackageBuilder(settings, package_version, no_release)
+        package_builder = WindowsPackageBuilder(settings, package_version, build_date, no_release)
     elif os.name == "posix" and platform.mac_ver()[0] != "":
-        package_builder = MacPackageBuilder(settings, package_version, no_release)
+        package_builder = MacPackageBuilder(settings, package_version, build_date, no_release)
     elif os.name == "posix" and platform.mac_ver()[0] == "":
-        package_builder = LinuxPackageBuilder(settings, package_version, no_release)
+        package_builder = LinuxPackageBuilder(settings, package_version, build_date, no_release)
     else:
         fatal("Unsupported platform: " + os.name)
 
