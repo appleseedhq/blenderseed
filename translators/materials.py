@@ -220,14 +220,15 @@ class MaterialTranslator(Translator):
     def __parse_sockets(self, parameter_types, parameters, shader):
         for socket in shader.inputs:
             if not socket.is_linked:
-                if socket.socket_value != "":
-                    parameter_value = parameter_types[socket.socket_osl_id]
-                    parameter = socket.get_socket_value(True)
-                    if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
-                        parameter = " ".join(map(str, parameter))
-                        if parameter_value == 'float[2]':
-                            parameter_value = 'float[]'
-                    parameters[socket.socket_osl_id] = parameter_value + " " + str(parameter)
+                if hasattr(socket, "socket_value"):
+                    if socket.socket_value != "":
+                        parameter_value = parameter_types[socket.socket_osl_id]
+                        parameter = socket.get_socket_value(True)
+                        if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
+                            parameter = " ".join(map(str, parameter))
+                            if parameter_value == 'float[2]':
+                                parameter_value = 'float[]'
+                        parameters[socket.socket_osl_id] = parameter_value + " " + str(parameter)
 
         shader_file_name = self.asset_handler.process_path(shader.file_name, AssetType.SHADER_ASSET)
         self.__shader_group.add_shader("shader", shader_file_name, shader.name, parameters)
