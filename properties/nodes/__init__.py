@@ -81,7 +81,7 @@ class AppleseedOSLNodeTree(NodeTree):
     refresh = bpy.props.BoolProperty(name='Links Changed', default=False, update=acknowledge_connection)
 
 
-class AppleseedNode:
+class AppleseedNode(object):
     """Base class for appleseed nodes."""
 
     @classmethod
@@ -103,27 +103,6 @@ class AppleseedNode:
                 linked_node = socket.links[0].from_node
                 linked_node.traverse_tree(material_node)
         material_node.tree.append(self)
-
-
-class AppleseedSocket(object):
-    """Base class for appleseed sockets."""
-
-    socket_value = None
-
-    def get_socket_value(self, texture_only=True):
-        """
-        Method to return socket's value, if not linked.
-        If linked, return the name of the node with appended pointer.
-        """
-        if self.is_linked:
-            linked_node = self.links[0].from_node
-            if texture_only and linked_node.node_type == 'texture':
-                # The socket only accepts image textures.
-                return linked_node.get_node_name() + "_inst"
-            if not texture_only:
-                return linked_node.get_node_name()
-        # Return socket value if not linked, or if the incoming node is incompatible.
-        return self.socket_value
 
 
 class AppleseedOSLNodeCategory(NodeCategory):
