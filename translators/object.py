@@ -120,6 +120,13 @@ class InstanceTranslator(ObjectTranslator):
     def update_transform(self, time, matrix):
         self.__ass_inst.transform_sequence().set_transform(time, self._convert_matrix(matrix))
 
+    def _convert_matrix(self, m):
+        if self.bl_obj.is_duplicator and self.bl_obj.dupli_type == 'GROUP':
+            rot_comp = mathutils.Matrix.Rotation(math.radians(90), 4, 'X')
+            m = m * rot_comp
+        return super(InstanceTranslator, self)._convert_matrix(m)
+
+
 class ArchiveTranslator(ObjectTranslator):
 
     #
