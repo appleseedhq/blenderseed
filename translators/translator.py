@@ -27,6 +27,7 @@
 #
 
 import appleseed as asr
+import math
 
 from enum import Enum
 
@@ -128,21 +129,26 @@ class Translator(object):
         """
         Converts a Blender matrix to an appleseed matrix
 
-         We have the following conventions:
+        We have the following conventions:
 
-           Both Blender and appleseed use right-hand coordinate systems.
-           Both Blender and appleseed use column-major matrices.
-           Both Blender and appleseed use pre-multiplication.
-           In Blender, given a matrix m, m[i][j] is the element at the i'th row, j'th column.
+        Both Blender and appleseed use right-hand coordinate systems.
+        Both Blender and appleseed use column-major matrices.
+        Both Blender and appleseed use pre-multiplication.
+        In Blender, given a matrix m, m[i][j] is the element at the i'th row, j'th column.
 
-         The only difference between the coordinate systems of Blender and appleseed is the up vector:
-         in Blender, up is Z+; in appleseed, up is Y+.
+        The only difference between the coordinate systems of Blender and appleseed is the up vector:
+        in Blender, up is Z+; in appleseed, up is Y+.  So we need to add a -90 degree rotation along the x
+        axis to translate.
         """
 
         matrix = asr.Matrix4d([m[0][0], m[0][1], m[0][2], m[0][3],
                                m[1][0], m[1][1], m[1][2], m[1][3],
                                m[2][0], m[2][1], m[2][2], m[2][3],
                                m[3][0], m[3][1], m[3][2], m[3][3]])
+
+        rotation_modify = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(-90.0))
+
+        matrix = rotation_modify * matrix
 
         return asr.Transformd(matrix)
 

@@ -26,6 +26,8 @@
 #
 
 import appleseed as asr
+import math
+import mathutils
 import os
 
 from .assethandlers import AssetType
@@ -161,3 +163,9 @@ class ArchiveTranslator(ObjectTranslator):
 
     def update_transform(self, time, matrix):
         self.__ass_inst.transform_sequence().set_transform(time, self._convert_matrix(matrix))
+
+    def _convert_matrix(self, m):
+        # undo export rotation
+        rotation = mathutils.Matrix.Rotation(math.radians(90), 4, 'X')
+        m = rotation * m
+        return super(ArchiveTranslator, self)._convert_matrix(m)
