@@ -160,11 +160,15 @@ def generate_node(node):
             layout.operator("wm.url_open", text="Node Reference").url = self.url_reference
         layout.separator()
         socket_number = 0
+        param_section = ""
         for x in input_params:
             if x['type'] != 'pointer':
                 if 'hide_ui' in x.keys() and x['hide_ui'] is True:
                     continue
-                elif x['name'] in self.filepaths:
+                if x['section'] != param_section:
+                    layout.label(text=x['section'], icon='SPACE3')
+                    param_section = x['section']
+                if x['name'] in self.filepaths:
                     layout.template_ID_preview(self, x['name'], open="image.open")
                 else:
                     label_text = x['label']
