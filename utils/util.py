@@ -122,6 +122,8 @@ def read_osl_shaders():
                             param_data['widget'] = metadata['widget']['value']
                             if param_data['widget'] == 'null':
                                 param_data['hide_ui'] = True
+                        if 'page' in metadata:
+                            param_data['section'] = metadata['page']['value']
                         if 'min' in metadata:
                             param_data['min'] = metadata['min']['value']
                         if 'max' in metadata:
