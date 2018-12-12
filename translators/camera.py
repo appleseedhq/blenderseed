@@ -160,12 +160,14 @@ class CameraTranslator(Translator):
 
     def __pinhole_camera_params(self, scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
+        x_aspect_comp = 1 if aspect_ratio > 1 else 1 / aspect_ratio
+        y_aspect_comp = aspect_ratio if aspect_ratio > 1 else 1
         cam_params = {'aspect_ratio': aspect_ratio,
                       'focal_length': camera.data.lens / 1000, # mm to meters.
                       'film_dimensions': asr.Vector2f(film_width, film_height),
                       'near_z': camera.data.appleseed.near_z,
-                      'shift_x': camera.data.shift_x * film_width,
-                      'shift_y': camera.data.shift_y * film_height,
+                      'shift_x': camera.data.shift_x * x_aspect_comp * film_width,
+                      'shift_y': camera.data.shift_y * y_aspect_comp * film_height,
                       'shutter_open_end_time': scene.appleseed.shutter_open_end_time,
                       'shutter_open_begin_time': scene.appleseed.shutter_open,
                       'shutter_close_begin_time': scene.appleseed.shutter_close_begin_time,
@@ -337,8 +339,11 @@ class InteractiveCameraTranslator(Translator):
 
         offset = tuple(self.context.region_data.view_camera_offset)
 
-        self.__shift_x = ((offset[0] * 2 + self.bl_camera.data.shift_x) / self.__zoom) * film_width
-        self.__shift_y = ((offset[1] * 2 + self.bl_camera.data.shift_y) / self.__zoom) * film_height
+        x_aspect_comp = 1 if aspect_ratio > 1 else 1 / aspect_ratio
+        y_aspect_comp = aspect_ratio if aspect_ratio > 1 else 1
+
+        self.__shift_x = ((offset[0] * 2 + (self.bl_camera.data.shift_x * x_aspect_comp)) / self.__zoom) * film_width
+        self.__shift_y = ((offset[1] * 2 + (self.bl_camera.data.shift_y * y_aspect_comp)) / self.__zoom) * film_height
 
         self.__matrix = self.bl_camera.matrix_world
         cam_mapping = {'PERSP': 'pinhole_camera',
@@ -361,6 +366,8 @@ class InteractiveCameraTranslator(Translator):
             raise NotImplementedError("Spherical camera not supported for interactive rendering")
 
         else:
+            aspect_ratio = get_frame_aspect_ratio(self.context.scene)
+            render_film_width, render_film_height = calc_film_dimensions(aspect_ratio, self.bl_camera.data, 1)
             params = {'focal_length': self.bl_camera.data.lens / 1000,
                       'aspect_ratio': aspect_ratio,
                       'shift_x': self.__shift_x,
