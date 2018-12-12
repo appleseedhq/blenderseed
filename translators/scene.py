@@ -34,7 +34,7 @@ import appleseed as asr
 from .camera import CameraTranslator, InteractiveCameraTranslator
 from .group import GroupTranslator
 from .assethandlers import AssetHandler, CopyAssetsAssetHandler
-from .object import InstanceTranslator
+from .object import ArchiveTranslator, InstanceTranslator
 from .translator import ObjectKey, ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
@@ -461,6 +461,11 @@ class SceneTranslator(GroupTranslator):
                     # Instance the group into the scene.
                     logger.debug("Creating group instance translator for object %s", obj.name)
                     self._object_translators[obj_key] = InstanceTranslator(obj, self.__group_translators[group_key], self.asset_handler)
+
+                if obj.appleseed.object_export != 'normal':
+                    logger.debug("Creating archive translator for object %s", obj_key)
+                    archive_path = obj.appleseed.archive_path
+                    self._object_translators[obj_key] = ArchiveTranslator(obj, archive_path, self._asset_handler)
 
     def __calc_motion_subframes(self):
         """Calculates subframes for motion blur.  Each blur type can have it's own segment count, so the final list
