@@ -188,7 +188,6 @@ class WorldTranslator(Translator):
         as_sky = self.bl_scene.world.appleseed_sky
         vertical_shift = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(as_sky.vertical_shift))
         horizontal_shift = asr.Matrix4d.make_rotation(asr.Vector3d(0.0, 1.0, 0.0), math.radians(as_sky.horizontal_shift))
-        scene_rot = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(90.0))
-        m = scene_rot * vertical_shift * horizontal_shift * m
+        m = vertical_shift * horizontal_shift * m
 
         return m
