@@ -323,7 +323,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                   ('lighttree', 'Light Tree', 'Light Tree')],
                                            default='cdf')
 
-    enable_importance_sampling = bpy.props.BoolProperty(name="enable_importance_sampling",
+    enable_lamp_importance_sampling = bpy.props.BoolProperty(name="enable_lamp_importance_sampling",
                                                         default=False)
 
     tile_ordering = bpy.props.EnumProperty(name="Tile Ordering",
