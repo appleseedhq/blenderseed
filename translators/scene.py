@@ -584,7 +584,7 @@ class SceneTranslator(GroupTranslator):
                                                      'max_fps': asr_scene_props.interactive_max_fps},
                       'texture_store': {'max_size': asr_scene_props.tex_cache * 1024 * 1024},
                       'light_sampler': {'algorithm': asr_scene_props.light_sampler,
-                                        'enable_lamp_importance_sampling': asr_scene_props.enable_lamp_importance_sampling},
+                                        'enable_light_importance_sampling': asr_scene_props.enable_light_importance_sampling},
                       'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}
 
         if lighting_engine == 'pt':

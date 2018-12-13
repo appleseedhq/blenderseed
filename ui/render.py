@@ -211,7 +211,7 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
             row = col.row(align=True)
             row.enabled = asr_scene_props.enable_dl
             row.prop(asr_scene_props, "dl_low_light_threshold", text="Low Light Threshold")
-            col.prop(asr_scene_props, "enable_lamp_importance_sampling", text="Lamp Importance Sampling", toggle=True)
+            col.prop(asr_scene_props, "enable_light_importance_sampling", text="Light Importance Sampling", toggle=True)
             col.separator()
             col = layout.column()
             col.enabled = asr_scene_props.next_event_estimation
