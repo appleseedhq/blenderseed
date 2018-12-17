@@ -28,6 +28,7 @@
 
 
 import appleseed as asr
+from .materials import MaterialTranslator
 from .mesh import MeshTranslator
 from .object import InstanceTranslator, ObjectKey
 from .translator import Translator, ProjectExportMode
@@ -67,6 +68,7 @@ class DupliTranslator(Translator):
         self.__settings = 'VIEWPORT' if self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER else 'RENDER'
 
         self.__object_translators = []
+        self.__material_translators = {}
         self.__datablock_to_translator = {}
 
     #
@@ -92,6 +94,9 @@ class DupliTranslator(Translator):
 
         for translator in self.__object_translators:
             translator.flush_entities(self.__ass)
+
+        for translator in self.__material_translators:
+            self.__material_translators[translator].flush_entities(self.__ass)
 
         ass_name = self._insert_entity_with_unique_name(
             assembly.assemblies(),
@@ -159,6 +164,16 @@ class DupliTranslator(Translator):
 
                         self.__object_translators.append(translator)
 
+                        for slot in dupli.object.material_slots:
+                            mat = slot.material
+                            mat_key = ObjectKey(mat)
+
+                            if mat_key not in self.__material_translators:
+                                logger.debug("Creating material translator for material %s", mat_key)
+                                mat_translator = MaterialTranslator(mat, self.asset_handler)
+                                self.__material_translators[mat_key] = mat_translator
+                                mat_translator.create_entities(scene)
+
                         if not is_modified:
                             logger.debug("Saving translator for object %s in instance map", obj_key)
                             self.__datablock_to_translator[mesh_key] = translator
@@ -185,6 +200,3 @@ class DupliTranslator(Translator):
 
     def __clear_dupli_instances(self):
         self.__ass.clear()
-
-        self.__datablock_to_translator = {}
-        self.__object_translators = []
