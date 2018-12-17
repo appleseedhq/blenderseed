@@ -17,6 +17,8 @@ Path Tracing Engine
     How many light paths are sent to the light at every surface hit.  Raising this can lower the variance on large area lamps.
 - Low Light Threshold:
     This prevents shadow rays from being traced to lights that do not contribute significant illumination to the surface hit point.  Higher numbers can lead to a decrease in lighting quality but an increase in convergence speed.
+- Light Importance Sampling:
+    This control activates importance sampling on rays traced directly to lights.  In some cases it may help to reduce noise.
 - Environment Emits Light:
     Whether or not an environment map can contribute lighting to the scene.
 - Samples:
