@@ -211,25 +211,28 @@ class GroupTranslator(Translator):
                     archive_path = obj.appleseed.archive_path
                     self._object_translators[obj_key] = ArchiveTranslator(obj, archive_path, self._asset_handler)
                 else:
-                    is_modified = obj.is_modified(scene, 'RENDER')
+                    if len(obj.data.polygons) > 0:
+                        is_modified = obj.is_modified(scene, 'RENDER')
 
-                    if is_modified == False and mesh_key in self._datablock_to_translator:
-                        logger.debug("Creating instance translator for object %s, master obj: %s", obj_key, mesh_key)
+                        if is_modified == False and mesh_key in self._datablock_to_translator:
+                            logger.debug("Creating instance translator for object %s, master obj: %s", obj_key, mesh_key)
 
-                        master_translator = self._datablock_to_translator[mesh_key]
-                        self._object_translators[obj_key] = InstanceTranslator(obj, master_translator, self.asset_handler)
-                        master_translator.add_instance()
+                            master_translator = self._datablock_to_translator[mesh_key]
+                            self._object_translators[obj_key] = InstanceTranslator(obj, master_translator, self.asset_handler)
+                            master_translator.add_instance()
+                        else:
+                            logger.debug("Creating mesh translator for object %s", obj_key)
+
+                            translator = MeshTranslator(obj, self.export_mode, self.asset_handler)
+                            self._object_translators[obj_key] = translator
+
+                            if not is_modified:
+                                logger.debug("Saving translator for object %s in instance map", obj_key)
+                                self._datablock_to_translator[mesh_key] = translator
+
+                            self.__create_material_translators(obj)
                     else:
-                        logger.debug("Creating mesh translator for object %s", obj_key)
-
-                        translator = MeshTranslator(obj, self.export_mode, self.asset_handler)
-                        self._object_translators[obj_key] = translator
-
-                        if not is_modified:
-                            logger.debug("Saving translator for object %s in instance map", obj_key)
-                            self._datablock_to_translator[mesh_key] = translator
-
-                        self.__create_material_translators(obj)
+                        logger.info("Mesh %s has no polygons, skipping export", mesh_key)
 
             else:
                 pass  # log here unknown object found...
