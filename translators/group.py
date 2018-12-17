@@ -190,6 +190,21 @@ class GroupTranslator(Translator):
                 if obj.is_duplicator:
                     logger.debug("Creating dupli translator for object %s", obj_key)
                     self._dupli_translators[obj_key] = DupliTranslator(obj, self.export_mode, self.asset_handler)
+                    if obj.dupli_type == 'NONE':
+                        for particle_sys in obj.particle_systems:
+                            if particle_sys.settings.use_render_emitter:
+                                logger.debug("Creating mesh translator for object %s", obj_key)
+
+                                translator = MeshTranslator(obj, self.export_mode, self.asset_handler)
+                                self._object_translators[obj_key] = translator
+
+                                if not is_modified:
+                                    logger.debug("Saving translator for object %s in instance map", obj_key)
+                                    self._datablock_to_translator[mesh_key] = translator
+
+                                self.__create_material_translators(obj)
+
+                                break
 
                 elif obj.appleseed.object_export != 'normal':
                     logger.debug("Creating archive translator for object %s", obj_key)
