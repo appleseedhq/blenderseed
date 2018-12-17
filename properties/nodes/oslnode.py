@@ -117,10 +117,10 @@ def generate_node(node):
 
     def init(self, context):
         if socket_input_names:
-            for x, y in enumerate(socket_input_names):
-                self.inputs.new(y[0], y[1])
-                if y[1] in self.connectable_props:
-                    self.inputs[x].hide = True
+            for y in socket_input_names:
+                input = self.inputs.new(y['socket_name'], y['socket_label'])
+                if (y['connectable'] is True and y['hide_ui'] is not True) or y['connectable'] is False:
+                    input.hide = True
         if socket_output_names:
             for x in socket_output_names:
                 self.outputs.new(x[0], x[1])
@@ -138,7 +138,7 @@ def generate_node(node):
 
     def update_sockets(self, context):
         for input_socket in self.inputs:
-            if input_socket.name in self.connectable_props:
+            if input_socket.name in self.socket_ui_props:
                 input_socket.hide = not getattr(self, "%s_use_node" % input_socket.name)
 
     def traverse_tree(self):
@@ -252,50 +252,58 @@ def generate_node(node):
     for param in input_params:
         keys = param.keys()
 
-        if param['connectable']:
-            socket_name = 'Appleseed{0}{1}'.format(node['name'], param['name'].capitalize())
+        connectable = False
+        hide_ui = False
 
-            if 'label' in keys:
-                socket_label = "{0}".format(param['label'])
-            else:
-                socket_label = "{0}".format(param['name'])
+        if param['connectable'] is True:
+            connectable = True
 
-            stype = type(socket_name, (AppleseedOSLInSocket,), {})
-            stype.bl_idname = socket_name
-            stype.bl_label = socket_label
-            stype.socket_osl_id = param['name']
-            socket_type = param['type']
+        if param['hide_ui'] is True:
+            hide_ui = True
 
-            if socket_type == "float":
-                stype.draw_color = draw_color_float
+        socket_name = 'Appleseed{0}{1}'.format(node['name'], param['name'].capitalize())
 
-            elif socket_type == "color":
-                stype.draw_color = draw_color_color
+        if 'label' in keys:
+            socket_label = "{0}".format(param['label'])
+        else:
+            socket_label = "{0}".format(param['name'])
 
-            elif socket_type == "pointer":
-                stype.draw_color = draw_closure_color
+        stype = type(socket_name, (AppleseedOSLInSocket,), {})
+        stype.bl_idname = socket_name
+        stype.bl_label = socket_label
+        stype.socket_osl_id = param['name']
+        socket_type = param['type']
 
-            elif socket_type == "vector":
-                stype.draw_color = draw_vector_color
+        if socket_type == "float":
+            stype.draw_color = draw_color_float
 
-            elif socket_type == 'int':
-                stype.draw_color = draw_color_float
+        elif socket_type == "color":
+            stype.draw_color = draw_color_color
 
-            elif socket_type == "float[2]":
-                stype.draw_color = draw_uv_color
+        elif socket_type == "pointer":
+            stype.draw_color = draw_closure_color
 
-            elif socket_type == "normal":
-                stype.draw_color = draw_vector_color
+        elif socket_type == "vector":
+            stype.draw_color = draw_vector_color
 
-            elif socket_type == "matrix":
-                stype.draw_color = draw_matrix_color
+        elif socket_type == 'int':
+            stype.draw_color = draw_color_float
 
-            elif socket_type in ("point", "point[4]"):
-                stype.draw_color = draw_point_color
+        elif socket_type == "float[2]":
+            stype.draw_color = draw_uv_color
 
-            util.safe_register_class(stype)
+        elif socket_type == "normal":
+            stype.draw_color = draw_vector_color
 
-            socket_input_names.append([socket_name, socket_label])
+        elif socket_type == "matrix":
+            stype.draw_color = draw_matrix_color
+
+        elif socket_type in ("point", "point[4]"):
+            stype.draw_color = draw_point_color
+
+        util.safe_register_class(stype)
+
+        socket_input_names.append({'socket_name': socket_name, 'socket_label': socket_label, 'connectable': connectable, 'hide_ui': hide_ui})
 
     # create node class
     node_name = "Appleseed{0}Node".format(name)
@@ -305,19 +313,18 @@ def generate_node(node):
     ntype.bl_label = node_label
     setattr(ntype, 'file_name', node['filename'])
 
-    connectable_props = []
+    socket_ui_props = []
 
     for param in input_params:
         keys = param.keys()
-
-        if 'hide_ui' in keys and param['hide_ui'] is True:
-            continue
-
         widget = ""
         minimum = None
         maximum = None
         soft_minimum = None
         soft_maximum = None
+
+        if param['connectable'] is False and param['hide_ui'] is True:
+            continue
 
         if 'default' in keys:
             default = param['default']
@@ -328,8 +335,8 @@ def generate_node(node):
         if 'label' not in keys:
             param['label'] = prop_name
 
-        if 'connectable' in keys and param['connectable'] is True:
-            connectable_props.append(param['label'])
+        if 'connectable' in keys and param['connectable'] is True and param['hide_ui'] is not True:
+            socket_ui_props.append(param['label'])
 
         if 'help' in keys:
             helper = param['help']
@@ -440,13 +447,13 @@ def generate_node(node):
         elif param['type'] == 'pointer':
             pass
 
-    for prop in connectable_props:
+    for prop in socket_ui_props:
         setattr(ntype, "%s_use_node" % prop, bpy.props.BoolProperty(name="%s_use_node" % prop,
                                                                     description="Use node input",
                                                                     default=False,
                                                                     update=update_sockets))
 
-    ntype.connectable_props = connectable_props
+    ntype.socket_ui_props = socket_ui_props
     ntype.update_sockets = update_sockets
     ntype.parameter_types = parameter_types
     ntype.url_reference = url_reference
