@@ -257,6 +257,16 @@ def find_autofocus_point(scene):
 
     return co_2d.x, y
 
+def get_focal_distance(camera):
+    if camera.data.dof_object is not None:
+        cam_location = camera.matrix_world.to_translation()
+        cam_target_location = bpy.data.objects[camera.data.dof_object.name].matrix_world.to_translation()
+        focal_distance = (cam_target_location - cam_location).magnitude
+    else:
+        focal_distance = camera.data.dof_distance
+
+    return focal_distance
+
 
 # ------------------------------------
 # Object / instance utilities.

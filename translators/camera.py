@@ -34,7 +34,7 @@ import appleseed as asr
 from .assethandlers import AssetType
 from .translator import Translator
 from ..logger import get_logger
-from ..utils.util import calc_film_dimensions, find_autofocus_point, get_frame_aspect_ratio
+from ..utils import util
 
 logger = get_logger()
 
@@ -114,9 +114,9 @@ class CameraTranslator(Translator):
     def __set_params(self, scene):
         camera = self.bl_camera.data
 
-        aspect_ratio = get_frame_aspect_ratio(scene)
+        aspect_ratio = util.get_frame_aspect_ratio(scene)
 
-        film_width, film_height = calc_film_dimensions(aspect_ratio, camera, 1)
+        film_width, film_height = util.calc_film_dimensions(aspect_ratio, camera, 1)
 
         model = self.__as_camera.get_model()
 
@@ -177,21 +177,16 @@ class CameraTranslator(Translator):
 
     def __thin_lens_camera_params(self, scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
-        if camera.data.dof_object is not None:
-            cam_target = bpy.data.objects[camera.data.dof_object.name]
-            focal_distance = (cam_target.location - self.bl_camera.location).magnitude
-        else:
-            focal_distance = camera.data.dof_distance
 
         cam_params = self.__pinhole_camera_params(scene, aspect_ratio, film_width, film_height)
         cam_params.update({'f_stop': camera.data.appleseed.f_number,
                            'autofocus_enabled': False,
                            'diaphragm_blades': camera.data.appleseed.diaphragm_blades,
                            'diaphragm_tilt_angle': camera.data.appleseed.diaphragm_angle,
-                           'focal_distance': focal_distance})
+                           'focal_distance': util.get_focal_distance(camera)})
 
         if camera.data.appleseed.enable_autofocus:
-            x, y = find_autofocus_point(scene)
+            x, y = util.find_autofocus_point(scene)
             cam_params['autofocus_target'] = asr.Vector2f(x, y)
             cam_params['autofocus_enabled'] = True
 
@@ -335,7 +330,7 @@ class InteractiveCameraTranslator(Translator):
             self.__model, self.__params = self.__view_camera_params(aspect_ratio)
 
     def __view_camera_params(self, aspect_ratio):
-        film_width, film_height = calc_film_dimensions(aspect_ratio, self.bl_camera.data, self.__zoom)
+        film_width, film_height = util.calc_film_dimensions(aspect_ratio, self.bl_camera.data, self.__zoom)
 
         offset = tuple(self.context.region_data.view_camera_offset)
 
@@ -366,8 +361,7 @@ class InteractiveCameraTranslator(Translator):
             raise NotImplementedError("Spherical camera not supported for interactive rendering")
 
         else:
-            aspect_ratio = get_frame_aspect_ratio(self.context.scene)
-            render_film_width, render_film_height = calc_film_dimensions(aspect_ratio, self.bl_camera.data, 1)
+            aspect_ratio = util.get_frame_aspect_ratio(self.context.scene)
             params = {'focal_length': self.bl_camera.data.lens / 1000,
                       'aspect_ratio': aspect_ratio,
                       'shift_x': self.__shift_x,
@@ -375,17 +369,11 @@ class InteractiveCameraTranslator(Translator):
                       'film_dimensions': asr.Vector2f(film_width, film_height)}
 
         if model == 'thinlens_camera':
-            if self.bl_camera.data.dof_object is not None:
-                cam_target = bpy.data.objects[self.bl_camera.data.dof_object.name]
-                focal_distance = (cam_target.location - self.bl_camera.location).magnitude
-            else:
-                focal_distance = self.bl_camera.data.dof_distance
-
             params.update({'f_stop': self.bl_camera.data.appleseed.f_number,
                            'autofocus_enabled': False,
                            'diaphragm_blades': self.bl_camera.data.appleseed.diaphragm_blades,
                            'diaphragm_tilt_angle': self.bl_camera.data.appleseed.diaphragm_angle,
-                           'focal_distance': focal_distance})
+                           'focal_distance': util.get_focal_distance(self.bl_camera)})
 
         return model, params
 
