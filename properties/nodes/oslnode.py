@@ -42,6 +42,8 @@ class AppleseedOSLInSocket(NodeSocket):
     bl_idname = "AppleseedOSLInSocket"
     bl_label = "OSL Socket"
 
+    socket_value = ''
+    socket_default_value = ''
     socket_osl_id = ''
 
     def draw(self, context, layout, node, text):
@@ -268,6 +270,24 @@ def generate_node(node):
         else:
             socket_label = "{0}".format(param['name'])
 
+        helper = ""
+        minimum = None
+        maximum = None
+        soft_minimum = None
+        soft_maximum = None
+        if 'default' in keys:
+            default = param['default']
+        if 'help' in keys:
+            helper = param['help']
+        if 'min' in keys:
+            minimum = param['min']
+        if 'max' in keys:
+            maximum = param['max']
+        if 'softmin' in keys:
+            soft_minimum = param['softmin']
+        if 'softmax' in keys:
+            soft_maximum = param['softmax']
+
         stype = type(socket_name, (AppleseedOSLInSocket,), {})
         stype.bl_idname = socket_name
         stype.bl_label = socket_label
@@ -277,8 +297,39 @@ def generate_node(node):
         if socket_type == "float":
             stype.draw_color = draw_color_float
 
+            kwargs = {'name': param['name'], 'description': helper, 'default': float(default)}
+            if minimum is not None:
+                kwargs['min'] = float(minimum)
+            if maximum is not None:
+                kwargs['max'] = float(maximum)
+            if soft_minimum is not None:
+                kwargs['soft_min'] = float(soft_minimum)
+            if soft_maximum is not None:
+                kwargs['soft_max'] = float(soft_maximum)
+
+            stype.socket_value = bpy.props.FloatProperty(**kwargs)
+            stype.socket_default_value = bpy.props.FloatProperty(**kwargs)
+
         elif socket_type == "color":
             stype.draw_color = draw_color_color
+
+            stype.socket_value = bpy.props.FloatVectorProperty(name=param['name'],
+                                                               description=helper,
+                                                               subtype='COLOR',
+                                                               default=(float(default[0]),
+                                                                        float(default[1]),
+                                                                        float(default[2])),
+                                                               min=0.0,
+                                                               max=1.0)
+
+            stype.socket_default_value = bpy.props.FloatVectorProperty(name=param['name'],
+                                                               description=helper,
+                                                               subtype='COLOR',
+                                                               default=(float(default[0]),
+                                                                        float(default[1]),
+                                                                        float(default[2])),
+                                                               min=0.0,
+                                                               max=1.0)
 
         elif socket_type == "pointer":
             stype.draw_color = draw_closure_color
@@ -286,11 +337,43 @@ def generate_node(node):
         elif socket_type == "vector":
             stype.draw_color = draw_vector_color
 
+            kwargs = {'name': param['name'], 'description': helper}
+            if 'default' in keys:
+                kwargs['default'] = (float(default[0]),
+                                     float(default[1]),
+                                     float(default[2]))
+
+            stype.socket_value = bpy.props.FloatVectorProperty(**kwargs)
+            stype.socket_default_value = bpy.props.FloatVectorProperty(**kwargs)
+
         elif socket_type == 'int':
             stype.draw_color = draw_color_float
 
+            kwargs = {'name': param['name'], 'description': helper, 'default': int(default)}
+            if minimum is not None:
+                kwargs['min'] = int(minimum)
+            if maximum is not None:
+                kwargs['max'] = int(maximum)
+            if soft_minimum is not None:
+                kwargs['soft_min'] = int(soft_minimum)
+            if soft_maximum is not None:
+                kwargs['soft_max'] = int(soft_maximum)
+
+            stype.draw_color = draw_color_float
+            stype.socket_value = bpy.props.IntProperty(**kwargs)
+            stype.socket_default_value = bpy.props.IntProperty(**kwargs)
+
         elif socket_type == "float[2]":
             stype.draw_color = draw_uv_color
+
+            kwargs = {'name': param['name'], 'description': helper, 'size': 2}
+            if param['hide_ui'] is False:
+                if 'default' in keys:
+                    kwargs['default'] = (float(default[0]),
+                                         float(default[1]))
+
+                stype.socket_value = bpy.props.FloatVectorProperty(**kwargs)
+                stype.socket_default_value = bpy.props.FloatVectorProperty(**kwargs)
 
         elif socket_type == "normal":
             stype.draw_color = draw_vector_color

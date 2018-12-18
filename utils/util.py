@@ -30,6 +30,7 @@ import multiprocessing
 import os
 
 import bpy
+from bpy.app.handlers import persistent
 import bpy_extras
 
 from . import path_util
@@ -194,6 +195,17 @@ def realpath(path):
 
     return path
 
+@persistent
+def update_shaders(_):
+    for node_group in bpy.data.node_groups:
+            for node in node_group.nodes:
+                for socket in node.inputs:
+                    current_value = socket.socket_value
+                    default_value = socket.socket_default_value
+                    if current_value != default_value:
+                        logger.debug("Updating shader tree %s, Node: %s, Parameter: %s", node_group.name, node.name, socket.socket_osl_id)
+                        setattr(node, socket.socket_osl_id, current_value)
+                        setattr(socket, "socket_value", default_value)
 
 # ------------------------------------
 # Scene export utilities.
