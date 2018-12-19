@@ -323,13 +323,13 @@ def generate_node(node):
                                                                max=1.0)
 
             stype.socket_default_value = bpy.props.FloatVectorProperty(name=param['name'],
-                                                               description=helper,
-                                                               subtype='COLOR',
-                                                               default=(float(default[0]),
-                                                                        float(default[1]),
-                                                                        float(default[2])),
-                                                               min=0.0,
-                                                               max=1.0)
+                                                                       description=helper,
+                                                                       subtype='COLOR',
+                                                                       default=(float(default[0]),
+                                                                                float(default[1]),
+                                                                                float(default[2])),
+                                                                       min=0.0,
+                                                                       max=1.0)
 
         elif socket_type == "pointer":
             stype.draw_color = draw_closure_color
