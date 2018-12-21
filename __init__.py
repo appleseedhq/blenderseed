@@ -68,7 +68,7 @@ def register():
     export.register()
     ui.register()
     render.register()
-    bpy.app.handlers.load_post.append(util.update_shaders)
+    bpy.app.handlers.load_post.append(util.update_project)
     bpy.utils.register_module(__name__)
 
 
@@ -86,5 +86,5 @@ def unregister():
     operators.unregister()
     properties.unregister()
     preferences.unregister()
-    bpy.app.handlers.load_post.remove(util.update_shaders)
+    bpy.app.handlers.load_post.remove(util.update_project)
     bpy.utils.unregister_module(__name__)  # Must be at the end in order to avoid unregistration errors.
