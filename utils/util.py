@@ -196,7 +196,8 @@ def realpath(path):
     return path
 
 @persistent
-def update_shaders(_):
+def update_project(_):
+    # Update shader trees to new node ui
     for node_group in bpy.data.node_groups:
             for node in node_group.nodes:
                 for socket in node.inputs:

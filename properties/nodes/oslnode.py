@@ -119,13 +119,13 @@ def generate_node(node):
 
     def init(self, context):
         if socket_input_names:
-            for y in socket_input_names:
-                input = self.inputs.new(y['socket_name'], y['socket_label'])
-                if (y['connectable'] is True and y['hide_ui'] is not True) or y['connectable'] is False:
+            for socket in socket_input_names:
+                input = self.inputs.new(socket['socket_name'], socket['socket_label'])
+                if (socket['connectable'] is True and socket['hide_ui'] is not True) or socket['connectable'] is False:
                     input.hide = True
         if socket_output_names:
-            for x in socket_output_names:
-                self.outputs.new(x[0], x[1])
+            for socket in socket_output_names:
+                self.outputs.new(socket[0], socket[1])
         else:
             pass
 
