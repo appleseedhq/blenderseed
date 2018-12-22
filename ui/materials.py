@@ -83,7 +83,21 @@ class AppleseedMaterialSlots(bpy.types.Panel):
         split = layout.split(percentage=0.65)
 
         if ob:
-            split.template_ID(ob, "active_material", new="appleseed.new_mat")
+            row = split.row(align=True)
+            sub = row.split(align=True, percentage=1 / (context.region.width * 0.015))
+            sub.prop_search(ob, "active_material", bpy.data, "materials", icon='MATERIAL', text="")
+            row = sub.row(align=True)
+            if ob.active_material:
+                row.prop(ob.active_material, "name", text="")
+                row.prop(ob.active_material, "use_fake_user", text="", toggle=True, icon="FONT_DATA")  # :^)
+                text_new = ""
+            else:
+                text_new = "New"
+
+            row.operator("appleseed.new_mat", text=text_new, icon='ZOOMIN')
+
+            # split.template_ID(ob, "active_material", new="appleseed.new_mat")
+            
             row = split.row()
             if slot:
                 row.prop(slot, "link", text="")
