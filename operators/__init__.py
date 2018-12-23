@@ -50,9 +50,10 @@ class AppleseedNewMat(bpy.types.Operator):
         obj = context.object
         dupli_node_tree = None
         if context.object.active_material is not None and context.object.active_material.appleseed.osl_node_tree is not None:
+            mat_name = context.object.active_material.name
             dupli_node_tree = context.object.active_material.appleseed.osl_node_tree.copy()
 
-        mat = bpy.data.materials.new(name="Material")
+        mat = bpy.data.materials.new(name=mat_name)
 
         if obj.material_slots:
             obj.material_slots[obj.active_material_index].material = mat
