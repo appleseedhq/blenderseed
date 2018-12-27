@@ -47,7 +47,7 @@ class AppleseedNewMat(bpy.types.Operator):
         return obj
 
     def execute(self, context):
-        mat_name = “Material”
+        mat_name = "Material"
         obj = context.object
         dupli_node_tree = None
         if context.object.active_material is not None and context.object.active_material.appleseed.osl_node_tree is not None:
