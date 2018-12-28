@@ -121,7 +121,7 @@ def generate_node(node):
         if socket_input_names:
             for socket in socket_input_names:
                 input = self.inputs.new(socket['socket_name'], socket['socket_label'])
-                if (socket['connectable'] is True and socket['hide_ui'] is not True) or socket['connectable'] is False:
+                if (socket['connectable'] is True and socket['hide_ui'] is False) or socket['connectable'] is False:
                     input.hide = True
         if socket_output_names:
             for socket in socket_output_names:
@@ -164,7 +164,7 @@ def generate_node(node):
         socket_number = 0
         param_section = ""
         for x in input_params:
-            if x['type'] != 'pointer':
+            if x['type'] not in ('pointer', 'float[2]'):
                 if 'hide_ui' in x.keys() and x['hide_ui'] is True:
                     continue
                 if x['section'] != param_section:
@@ -372,8 +372,8 @@ def generate_node(node):
                     kwargs['default'] = (float(default[0]),
                                          float(default[1]))
 
-                stype.socket_value = bpy.props.FloatVectorProperty(**kwargs)
-                stype.socket_default_value = bpy.props.FloatVectorProperty(**kwargs)
+            stype.socket_value = bpy.props.FloatVectorProperty(**kwargs)
+            stype.socket_default_value = bpy.props.FloatVectorProperty(**kwargs)
 
         elif socket_type == "normal":
             stype.draw_color = draw_vector_color
@@ -505,6 +505,16 @@ def generate_node(node):
             setattr(ntype, prop_name, bpy.props.FloatProperty(**kwargs))
 
             parameter_types[param['name']] = "float"
+
+        elif param['type'] == "float[2]":
+            kwargs = {'name': param['name'], 'description': helper, 'size': 2}
+            if 'default' in keys:
+                kwargs['default'] = (float(default[0]),
+                                     float(default[1]))
+
+            setattr(ntype, prop_name, bpy.props.FloatVectorProperty(**kwargs))
+
+            parameter_types[param['name']] = "float[2]"
 
         elif param['type'] == 'color':
             setattr(ntype, prop_name, bpy.props.FloatVectorProperty(name=param['name'],
