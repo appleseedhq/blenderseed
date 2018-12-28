@@ -529,11 +529,14 @@ def generate_node(node):
             parameter_types[param['name']] = "color"
 
         elif param['type'] == 'vector':
-            setattr(ntype, prop_name, bpy.props.FloatVectorProperty(name=param['name'],
-                                                                    description=helper,
-                                                                    default=(float(default[0]),
-                                                                             float(default[1]),
-                                                                             float(default[2]))))
+            kwargs = {'name': param['name'], 'description': helper}
+
+            if 'default' in keys:
+                kwargs['default'] = (float(default[0]),
+                                     float(default[1]),
+                                     float(default[2]))
+
+            setattr(ntype, prop_name, bpy.props.FloatVectorProperty(**kwargs))
 
             parameter_types[param['name']] = "vector"
 
