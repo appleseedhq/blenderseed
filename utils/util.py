@@ -114,7 +114,7 @@ def read_osl_shaders():
                         param_data['name'] = param['name']
                         param_data['type'] = param['type']
                         param_data['connectable'] = True
-                        param_data['hide_ui'] = param['validdefault'] is False or param_data['type'] == "float[2]"
+                        param_data['hide_ui'] = param['validdefault'] is False
                         if 'default' in param:
                             param_data['default'] = param['default']
                         if 'label' in metadata:

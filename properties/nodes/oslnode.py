@@ -164,17 +164,17 @@ def generate_node(node):
         socket_number = 0
         param_section = ""
         for x in input_params:
-            if x['type'] not in ('pointer', 'float[2]'):
+            if x['type'] != 'pointer':
                 if 'hide_ui' in x.keys() and x['hide_ui'] is True:
                     continue
                 if x['section'] != param_section:
-                    layout.label(text=x['section'], icon='SPACE3')
+                    layout.label(text=x['section'], icon='RIGHTARROW')
                     param_section = x['section']
                 if x['name'] in self.filepaths:
                     layout.template_ID_preview(self, x['name'], open="image.open")
                 else:
                     label_text = x['label']
-                    if x['type'] in ['color', 'vector']:
+                    if x['type'] in ('color', 'vector', 'float[2]'):
                         layout.label(text="%s:" % x['label'])
                         label_text = ""
                     if hasattr(self, "%s_use_node" % x['label']):
