@@ -36,7 +36,7 @@ from ..utils import util, path_util
 # Material operators
 
 
-class AppleseedNewMat(bpy.types.Operator):
+class ASMAT_OT_new_mat(bpy.types.Operator):
     bl_label = "New Material"
     bl_description = "Add a new appleseed material"
     bl_idname = "appleseed.new_mat"
@@ -70,7 +70,7 @@ class AppleseedNewMat(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedNewOSLNodeTree(bpy.types.Operator):
+class ASMAT_OT_new_node_tree(bpy.types.Operator):
     """
     appleseed material node tree generator.
     """
@@ -81,7 +81,8 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
 
     def execute(self, context):
         material = context.object.active_material
-        nodetree = bpy.data.node_groups.new('%s_tree' % material.name, 'AppleseedOSLNodeTree')
+        nodetree = bpy.data.node_groups.new('%s_tree' % material.name, 'AppleseedNodeTree')
+        nodetree.use_fake_user = True
         surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
         surface.location = (0, 0)
         disney_node = nodetree.nodes.new('AppleseedasDisneyMaterialNode')
@@ -91,7 +92,7 @@ class AppleseedNewOSLNodeTree(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedViewNodeTree(bpy.types.Operator):
+class ASMAT_OT_view_nodetree(bpy.types.Operator):
     bl_label = "View OSL Nodetree"
     bl_description = "View the node tree attached to this material"
     bl_idname = "appleseed.view_nodetree"
@@ -126,7 +127,7 @@ class AppleseedViewNodeTree(bpy.types.Operator):
         return {"CANCELLED"}
 
 
-class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
+class ASLAMP_OT_new_node_tree(bpy.types.Operator):
     """
     appleseed lamp node tree generator.
     """
@@ -151,7 +152,7 @@ class AppleseedNewLampOSLNodeTree(bpy.types.Operator):
 # Texture operators
 
 
-class AppleseedConvertTextures(bpy.types.Operator):
+class ASTEX_OT_convert_textures(bpy.types.Operator):
     """
     Converts base textures into mipmapped .tx textures for rendering
     """
@@ -187,7 +188,7 @@ class AppleseedConvertTextures(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedRefreshTexture(bpy.types.Operator):
+class ASTEX_OT_refresh_texture(bpy.types.Operator):
     """
     Operator for refreshing texture list to convert.
     """
@@ -225,7 +226,7 @@ class AppleseedRefreshTexture(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedAddTexture(bpy.types.Operator):
+class ASTES_OT_add_texture(bpy.types.Operator):
     """
     Operator for adding a texture to convert.
     """
@@ -243,7 +244,7 @@ class AppleseedAddTexture(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedRemoveTexture(bpy.types.Operator):
+class ASTEX_OT_remove_texture(bpy.types.Operator):
     """
     Operator for removing a texture to convert.
     """
@@ -271,7 +272,7 @@ class AppleseedRemoveTexture(bpy.types.Operator):
 # Post processing operators
 
 
-class AppleseedAddPostProcess(bpy.types.Operator):
+class ASPP_OT_add_pp(bpy.types.Operator):
     bl_label = "Add Stage"
     bl_description = "Add new Post Processing stage"
     bl_idname = "appleseed.add_pp_stage"
@@ -285,7 +286,7 @@ class AppleseedAddPostProcess(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedRemovePostProcess(bpy.types.Operator):
+class ASPP_OT_remove_PP(bpy.types.Operator):
     bl_label = "Remove Stage"
     bl_description = "Remove Post Processing stage"
     bl_idname = "appleseed.remove_pp_stage"
@@ -309,7 +310,7 @@ class AppleseedRemovePostProcess(bpy.types.Operator):
 # SSS set operators
 
 
-class AppleseedAddSssSet(bpy.types.Operator):
+class ASSSS_OT_add_sss_set(bpy.types.Operator):
     """Operator for adding SSS sets"""
 
     bl_label = "Add Set"
@@ -327,7 +328,7 @@ class AppleseedAddSssSet(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AppleseedRemoveSssSet(bpy.types.Operator):
+class ASSSS_OT_remove_sss_set(bpy.types.Operator):
     """Operator for removing SSS sets"""
 
     bl_label = "Remove Set"
@@ -350,31 +351,27 @@ class AppleseedRemoveSssSet(bpy.types.Operator):
         return {'FINISHED'}
 
 
+classes = (
+    ASMAT_OT_new_mat,
+    ASMAT_OT_view_nodetree,
+    ASTEX_OT_convert_textures,
+    ASTEX_OT_refresh_texture,
+    ASTES_OT_add_texture,
+    ASTEX_OT_remove_texture,
+    ASMAT_OT_new_node_tree,
+    ASLAMP_OT_new_node_tree,
+    ASPP_OT_add_pp,
+    ASPP_OT_remove_PP,
+    ASSSS_OT_add_sss_set,
+    ASSSS_OT_remove_sss_set
+)
+
+
 def register():
-    util.safe_register_class(AppleseedNewMat)
-    util.safe_register_class(AppleseedViewNodeTree)
-    util.safe_register_class(AppleseedConvertTextures)
-    util.safe_register_class(AppleseedRefreshTexture)
-    util.safe_register_class(AppleseedAddTexture)
-    util.safe_register_class(AppleseedRemoveTexture)
-    util.safe_register_class(AppleseedNewOSLNodeTree)
-    util.safe_register_class(AppleseedNewLampOSLNodeTree)
-    util.safe_register_class(AppleseedAddPostProcess)
-    util.safe_register_class(AppleseedRemovePostProcess)
-    util.safe_register_class(AppleseedAddSssSet)
-    util.safe_register_class(AppleseedRemoveSssSet)
+    for cls in classes:
+        util.safe_register_class(cls)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedRemoveSssSet)
-    util.safe_unregister_class(AppleseedAddSssSet)
-    util.safe_unregister_class(AppleseedRemovePostProcess)
-    util.safe_unregister_class(AppleseedAddPostProcess)
-    util.safe_unregister_class(AppleseedNewLampOSLNodeTree)
-    util.safe_unregister_class(AppleseedNewOSLNodeTree)
-    util.safe_unregister_class(AppleseedRemoveTexture)
-    util.safe_unregister_class(AppleseedAddTexture)
-    util.safe_unregister_class(AppleseedRefreshTexture)
-    util.safe_unregister_class(AppleseedConvertTextures)
-    util.safe_unregister_class(AppleseedViewNodeTree)
-    util.safe_unregister_class(AppleseedNewMat)
+    for cls in reversed(classes):
+        util.safe_unregister_class(cls)
