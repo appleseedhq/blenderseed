@@ -26,12 +26,12 @@
 #
 
 import datetime
-import multiprocessing
 import os
 
+import appleseed as asr
 import bpy
-from bpy.app.handlers import persistent
 import bpy_extras
+from bpy.app.handlers import persistent
 
 from . import path_util
 from ..logger import get_logger
@@ -72,8 +72,6 @@ def read_osl_shaders():
         return nodes
 
     shader_directories = path_util.get_osl_search_paths()
-
-    import appleseed as asr
 
     q = asr.ShaderQuery()
 
@@ -156,23 +154,6 @@ def read_osl_shaders():
 # Generic utilities and settings.
 # ------------------------------------
 
-sep = os.sep
-
-# Add-on directory.
-for addon_path in bpy.utils.script_paths("addons"):
-    if "blenderseed" in os.listdir(addon_path):
-        addon_dir = os.path.join(addon_path, "blenderseed")
-
-thread_count = multiprocessing.cpu_count()
-
-
-def strip_spaces(name):
-    return '_'.join(name.split(' '))
-
-
-def join_names_underscore(name1, name2):
-    return '_'.join((strip_spaces(name1), strip_spaces(name2)))
-
 
 def filter_params(params):
     filter_list = []
@@ -195,28 +176,15 @@ def realpath(path):
 
     return path
 
+
 @persistent
 def update_project(_):
-    # Update shader trees to new node ui
-    for node_group in bpy.data.node_groups:
-            for node in node_group.nodes:
-                for socket in node.inputs:
-                    if hasattr(socket, "socket_value"):
-                        current_value = socket.socket_value
-                        default_value = socket.socket_default_value
-                        if current_value != default_value:
-                            logger.debug("Updating shader tree %s, Node: %s, Parameter: %s", node_group.name, node.name, socket.socket_osl_id)
-                            setattr(node, socket.socket_osl_id, current_value)
-                            setattr(socket, "socket_value", default_value)
+    pass
+
 
 # ------------------------------------
 # Scene export utilities.
 # ------------------------------------
-
-def inscenelayer(obj, scene):
-    for i in range(len(obj.layers)):
-        if obj.layers[i] and scene.layers[i]:
-            return True
 
 
 def get_render_resolution(scene):
@@ -273,6 +241,7 @@ def find_autofocus_point(scene):
 
     return co_2d.x, y
 
+
 def get_focal_distance(camera):
     if camera.data.dof_object is not None:
         cam_location = camera.matrix_world.to_translation()
@@ -287,19 +256,6 @@ def get_focal_distance(camera):
 # ------------------------------------
 # Object / instance utilities.
 # ------------------------------------
-
-
-def get_instance_materials(ob):
-    obmats = []
-    # Grab materials attached to object instances ...
-    if hasattr(ob, 'material_slots'):
-        for ms in ob.material_slots:
-            obmats.append(ms.material)
-    # ... and to the object's mesh data
-    if hasattr(ob.data, 'materials'):
-        for m in ob.data.materials:
-            obmats.append(m)
-    return obmats
 
 
 def is_object_deforming(ob):
