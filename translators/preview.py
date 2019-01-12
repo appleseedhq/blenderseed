@@ -195,25 +195,7 @@ class PreviewRenderer(object):
         self.__mat_translator = MaterialTranslator(likely_material, self.asset_handler, preview=True)
 
     def __get_preview_material(self, scene):
-        objects_materials = {}
-        for obj in (obj for obj in scene.objects if obj.is_visible(scene) and not obj.hide_render):
-            for mat in util.get_instance_materials(obj):
-                if mat is not None:
-                    if obj.name not in objects_materials.keys():
-                        objects_materials[obj] = []
-                    objects_materials[obj].append(mat)
-
-        # Find objects that are likely to be the preview objects.
-        preview_objects = [o for o in objects_materials.keys() if o.name.startswith('preview')]
-        if not preview_objects:
-            return
-
-        # Find the materials attached to the likely preview object.
-        likely_material = objects_materials[preview_objects[0]]
-        if not likely_material:
-            return
-
-        return likely_material[0]
+        return scene.objects['preview_sphere'].material_slots[0].material
 
     def __create_config(self):
         conf_final = self.as_project.configurations()['final']

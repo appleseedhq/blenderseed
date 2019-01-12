@@ -99,7 +99,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
     #
 
     def __del__(self):
-        self.__stop_rendering()
+        try:
+            self.__stop_rendering()
+        except:
+            pass
 
         # Sometimes __is_interactive does not exist, not sure why.
         try:
@@ -114,7 +117,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
     # RenderEngine methods.
     #
 
-    def render(self, scene):
+    def render(self, depsgraph):
         if self.is_preview:
             if bpy.app.background: # Can this happen?
                 return
@@ -123,7 +126,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             if not RenderAppleseed.__interactive_session:
                 level = 'error'
                 with SetAppleseedLogLevel(level):
-                    self.__render_material_preview(scene)
+                    self.__render_material_preview(depsgraph.scene)
         else:
             level = scene.appleseed.log_level
             with SetAppleseedLogLevel(level):
