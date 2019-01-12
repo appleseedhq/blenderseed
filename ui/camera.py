@@ -30,7 +30,7 @@ import bpy
 from ..utils import util
 
 
-class AppleseedCameraLens(bpy.types.Panel):
+class ASCAMERA_PT_lens(bpy.types.Panel):
     bl_label = "Lens"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -45,41 +45,79 @@ class AppleseedCameraLens(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
+        layout.use_property_split = True
+
+        cam = context.camera
+
+        layout.row().prop(cam, "type")
+
+        col = layout.column()
+        if cam.type == 'PERSP':
+            if cam.lens_unit == 'MILLIMETERS':
+                col.prop(cam, "lens")
+            elif cam.lens_unit == 'FOV':
+                col.prop(cam, "angle")
+            col.prop(cam, "lens_unit")
+
+        elif cam.type == 'ORTHO':
+            col.prop(cam, "ortho_scale")
+
+
+class ASCAMERA_PT_lens_shift(bpy.types.Panel):
+    bl_parent_id = "ASCAMERA_PT_lens"
+    bl_label = "Shift"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_context = "data"
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER' and context.active_object.type == 'CAMERA'
+
+    def draw(self, context):
+        layout = self.layout
+
+        layout.use_property_split = True
+
+        cam = context.camera
+
+        col = layout.column(align=True)
+        col.prop(cam, "shift_x", text="X")
+        col.prop(cam, "shift_y", text="Y")
+
+
+class ASCAMERA_PT_lens_clip(bpy.types.Panel):
+    bl_parent_id = "ASCAMERA_PT_lens"
+    bl_label = "Clip"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    COMPAT_ENGINES = {'APPLESEED_RENDER'}
+    bl_context = "data"
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render
+        return renderer.engine == 'APPLESEED_RENDER' and context.active_object.type == 'CAMERA'
+
+    def draw(self, context):
+        layout = self.layout
+
+        layout.use_property_split = True
+
         cam = context.camera
         scene = context.scene
         asr_cam_props = scene.camera.data.appleseed
 
-        layout.row().prop(cam, "type", expand=True)
-
-        split = layout.split()
-
-        col = split.column()
-        if cam.type == 'PERSP':
-            row = col.row()
-            if cam.lens_unit == 'MILLIMETERS':
-                row.prop(cam, "lens")
-            elif cam.lens_unit == 'FOV':
-                row.prop(cam, "angle")
-            row.prop(cam, "lens_unit", text="")
-
-        elif cam.type == 'ORTHO':
-            row = col.row()
-            row.prop(cam, "ortho_scale")
-
-        split = layout.split()
-
-        col = split.column(align=True)
-        col.label(text="Shift:")
-        col.prop(cam, "shift_x", text="X")
-        col.prop(cam, "shift_y", text="Y")
-
-        col = split.column(align=True)
-        col.label(text="Clipping:")
-        col.prop(asr_cam_props, "near_z", text="Start")
+        col = layout.column(align=True)
+        col.prop(asr_cam_props, "near_z", text="Clip Start")
         col.prop(cam, "clip_end", text="End")
 
 
-class AppleseedCameraDoF(bpy.types.Panel):
+class ASCAMERA_PT_dof(bpy.types.Panel):
     bl_label = "Depth of Field"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -99,6 +137,7 @@ class AppleseedCameraDoF(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
         scene = context.scene
         asr_cam_props = scene.camera.data.appleseed
 
@@ -120,12 +159,19 @@ class AppleseedCameraDoF(bpy.types.Panel):
         row.prop(asr_cam_props, "diaphragm_map_colorspace", text="Color Space")
 
 
-def register():
+classes = (
+    ASCAMERA_PT_dof,
+    ASCAMERA_PT_lens,
+    ASCAMERA_PT_lens_shift,
+    ASCAMERA_PT_lens_clip
+)
 
-    util.safe_register_class(AppleseedCameraLens)
-    util.safe_register_class(AppleseedCameraDoF)
+
+def register():
+    for cls in classes:
+        util.safe_register_class(cls)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedCameraDoF)
-    util.safe_unregister_class(AppleseedCameraLens)
+    for cls in reversed(classes):
+        util.safe_unregister_class(cls)
