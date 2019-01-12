@@ -29,11 +29,11 @@ bl_info = {
     "name": "appleseed",
     "author": "The appleseedhq Organization",
     "version": (1, 0, 0),
-    "blender": (2, 7, 9),
+    "blender": (2, 80, 0),
     "location": "Info Header (Render Engine Menu)",
     "description": "appleseed Render Engine",
     "warning": "",
-    "wiki_url": "https://github.com/appleseedhq/blenderseed/wiki",
+    "wiki_url": "https://appleseed.readthedocs.io/projects/appleseed-blenderseed/en/latest",
     "tracker_url": "https://github.com/appleseedhq/blenderseed/issues",
     "category": "Render"}
 
@@ -69,7 +69,6 @@ def register():
     ui.register()
     render.register()
     bpy.app.handlers.load_post.append(util.update_project)
-    bpy.utils.register_module(__name__)
 
 
 def unregister():
@@ -87,4 +86,3 @@ def unregister():
     properties.unregister()
     preferences.unregister()
     bpy.app.handlers.load_post.remove(util.update_project)
-    bpy.utils.unregister_module(__name__)  # Must be at the end in order to avoid unregistration errors.

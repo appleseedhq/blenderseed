@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2018 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,55 +26,35 @@
 #
 
 import bpy
+import nodeitems_utils
 
-from bpy.types import NodeSocket, Node
-
-from . import AppleseedNode
-from ...logger import get_logger
-from ...utils import util
-
-logger = get_logger()
+from ..utils import util
 
 
-class AppleseedOSLInSocket(NodeSocket):
+class AppleseedOSLSocket(bpy.types.NodeSocket):
     """appleseed OSL base socket"""
 
-    bl_idname = "AppleseedOSLInSocket"
-    bl_label = "OSL Socket"
-
-    socket_value = ''
-    socket_default_value = ''
-    socket_osl_id = ''
-
-    def draw(self, context, layout, node, text):
-        layout.label(text)
-
-    def draw_color(self, context, node):
-        pass
-
-
-class AppleseedOSLOutSocket(NodeSocket):
-    """appleseed OSL base socket"""
-
-    bl_idname = "AppleseedOSLOutSocket"
+    bl_idname = "AppleseedOSLSocket"
     bl_label = "OSL Socket"
 
     socket_osl_id = ''
 
     def draw(self, context, layout, node, text):
-        layout.label(text)
+        layout.label(text=text)
 
     def draw_color(self, context, node):
         pass
 
 
-class AppleseedOSLNode(Node, AppleseedNode):
+class AppleseedOSLNode(bpy.types.Node):
     """appleseed OSL base node"""
     bl_idname = "AppleseedOSLNode"
     bl_label = "OSL Material"
-    bl_icon = 'SMOOTH'
+    bl_icon = "NODE"
 
     node_type = "osl"
+
+    file_name = ""
 
     def traverse_tree(self, material_node):
         """Iterate inputs and traverse the tree backward if any inputs are connected.
@@ -86,6 +66,9 @@ class AppleseedOSLNode(Node, AppleseedNode):
                 linked_node = socket.links[0].from_node
                 linked_node.traverse_tree(material_node)
         material_node.tree.append(self)
+
+
+node_classes = []
 
 
 def generate_node(node):
@@ -168,7 +151,7 @@ def generate_node(node):
                 if 'hide_ui' in x.keys() and x['hide_ui'] is True:
                     continue
                 if x['section'] != param_section:
-                    layout.label(text=x['section'], icon='RIGHTARROW')
+                    layout.label(text=x['section'], icon='DOT')
                     param_section = x['section']
                 if x['name'] in self.filepaths:
                     layout.template_ID_preview(self, x['name'], open="image.open")
@@ -179,7 +162,7 @@ def generate_node(node):
                         label_text = ""
                     if hasattr(self, "%s_use_node" % x['label']):
                         split_percentage = 1 - (150 / context.region.width)
-                        split = layout.split(split_percentage, align=True)
+                        split = layout.split(factor=split_percentage, align=True)
                         split.enabled = not self.inputs[socket_number].is_linked
                         col = split.column(align=True)
                         col.prop(self, x['name'], text=label_text)
@@ -224,7 +207,7 @@ def generate_node(node):
         else:
             socket_label = "{0}".format(out_socket['name'].strip("out_"))
 
-        stype = type(socket_name, (AppleseedOSLOutSocket,), {})
+        stype = type(socket_name, (AppleseedOSLSocket,), {})
         stype.bl_idname = socket_name
         stype.bl_label = socket_label
         stype.socket_osl_id = out_socket['name']
@@ -246,7 +229,7 @@ def generate_node(node):
         elif socket_type == 'float[2]':
             stype.draw_color = draw_uv_color
 
-        util.safe_register_class(stype)
+        node_classes.append(stype)
 
         socket_output_names.append([socket_name, socket_label])
 
@@ -270,25 +253,7 @@ def generate_node(node):
         else:
             socket_label = "{0}".format(param['name'])
 
-        helper = ""
-        minimum = None
-        maximum = None
-        soft_minimum = None
-        soft_maximum = None
-        if 'default' in keys:
-            default = param['default']
-        if 'help' in keys:
-            helper = param['help']
-        if 'min' in keys:
-            minimum = param['min']
-        if 'max' in keys:
-            maximum = param['max']
-        if 'softmin' in keys:
-            soft_minimum = param['softmin']
-        if 'softmax' in keys:
-            soft_maximum = param['softmax']
-
-        stype = type(socket_name, (AppleseedOSLInSocket,), {})
+        stype = type(socket_name, (AppleseedOSLSocket,), {})
         stype.bl_idname = socket_name
         stype.bl_label = socket_label
         stype.socket_osl_id = param['name']
@@ -297,39 +262,8 @@ def generate_node(node):
         if socket_type == "float":
             stype.draw_color = draw_color_float
 
-            kwargs = {'name': param['name'], 'description': helper, 'default': float(default)}
-            if minimum is not None:
-                kwargs['min'] = float(minimum)
-            if maximum is not None:
-                kwargs['max'] = float(maximum)
-            if soft_minimum is not None:
-                kwargs['soft_min'] = float(soft_minimum)
-            if soft_maximum is not None:
-                kwargs['soft_max'] = float(soft_maximum)
-
-            stype.socket_value = bpy.props.FloatProperty(**kwargs)
-            stype.socket_default_value = bpy.props.FloatProperty(**kwargs)
-
         elif socket_type == "color":
             stype.draw_color = draw_color_color
-
-            stype.socket_value = bpy.props.FloatVectorProperty(name=param['name'],
-                                                               description=helper,
-                                                               subtype='COLOR',
-                                                               default=(float(default[0]),
-                                                                        float(default[1]),
-                                                                        float(default[2])),
-                                                               min=0.0,
-                                                               max=1.0)
-
-            stype.socket_default_value = bpy.props.FloatVectorProperty(name=param['name'],
-                                                                       description=helper,
-                                                                       subtype='COLOR',
-                                                                       default=(float(default[0]),
-                                                                                float(default[1]),
-                                                                                float(default[2])),
-                                                                       min=0.0,
-                                                                       max=1.0)
 
         elif socket_type == "pointer":
             stype.draw_color = draw_closure_color
@@ -337,43 +271,11 @@ def generate_node(node):
         elif socket_type == "vector":
             stype.draw_color = draw_vector_color
 
-            kwargs = {'name': param['name'], 'description': helper}
-            if 'default' in keys:
-                kwargs['default'] = (float(default[0]),
-                                     float(default[1]),
-                                     float(default[2]))
-
-            stype.socket_value = bpy.props.FloatVectorProperty(**kwargs)
-            stype.socket_default_value = bpy.props.FloatVectorProperty(**kwargs)
-
         elif socket_type == 'int':
             stype.draw_color = draw_color_float
 
-            kwargs = {'name': param['name'], 'description': helper, 'default': int(default)}
-            if minimum is not None:
-                kwargs['min'] = int(minimum)
-            if maximum is not None:
-                kwargs['max'] = int(maximum)
-            if soft_minimum is not None:
-                kwargs['soft_min'] = int(soft_minimum)
-            if soft_maximum is not None:
-                kwargs['soft_max'] = int(soft_maximum)
-
-            stype.draw_color = draw_color_float
-            stype.socket_value = bpy.props.IntProperty(**kwargs)
-            stype.socket_default_value = bpy.props.IntProperty(**kwargs)
-
         elif socket_type == "float[2]":
             stype.draw_color = draw_uv_color
-
-            kwargs = {'name': param['name'], 'description': helper, 'size': 2}
-            if param['hide_ui'] is False:
-                if 'default' in keys:
-                    kwargs['default'] = (float(default[0]),
-                                         float(default[1]))
-
-            stype.socket_value = bpy.props.FloatVectorProperty(**kwargs)
-            stype.socket_default_value = bpy.props.FloatVectorProperty(**kwargs)
 
         elif socket_type == "normal":
             stype.draw_color = draw_vector_color
@@ -384,7 +286,7 @@ def generate_node(node):
         elif socket_type in ("point", "point[4]"):
             stype.draw_color = draw_point_color
 
-        util.safe_register_class(stype)
+        node_classes.append(stype)
 
         socket_input_names.append({'socket_name': socket_name, 'socket_label': socket_label, 'connectable': connectable, 'hide_ui': hide_ui})
 
@@ -394,7 +296,8 @@ def generate_node(node):
     ntype = type(node_name, (AppleseedOSLNode,), {})
     ntype.bl_idname = node_name
     ntype.bl_label = node_label
-    setattr(ntype, 'file_name', node['filename'])
+    ntype.file_name = node['filename']
+    ntype.__annotations__ = {}
 
     socket_ui_props = []
 
@@ -436,47 +339,49 @@ def generate_node(node):
 
         if param['type'] == "string":
             if widget == "filename":
-                setattr(ntype, prop_name, bpy.props.PointerProperty(name=param['name'],
-                                                                    description=helper,
-                                                                    type=bpy.types.Image))
+                ntype.__annotations__[prop_name] = bpy.props.PointerProperty(name=param['name'],
+                                                                             description=helper,
+                                                                             type=bpy.types.Image)
+
                 filepaths.append(prop_name)
 
             elif widget in ("mapper", "popup"):
                 items = []
                 for enum_item in param['options']:
                     items.append((enum_item, enum_item.capitalize(), ""))
-                setattr(ntype, prop_name, bpy.props.EnumProperty(name=param['label'],
-                                                                 description=helper,
-                                                                 default=str(default),
-                                                                 items=items))
+
+                ntype.__annotations__[prop_name] = bpy.props.EnumProperty(name=param['label'],
+                                                                          description=helper,
+                                                                          default=str(default),
+                                                                          items=items)
 
             else:
-                setattr(ntype, prop_name, bpy.props.StringProperty(name=param['name'],
-                                                                   description=helper,
-                                                                   default=str(default)))
+                ntype.__annotations__[prop_name] = bpy.props.StringProperty(name=param['name'],
+                                                                            description=helper,
+                                                                            default=str(default))
 
             parameter_types[param['name']] = "string"
 
-        elif param['type'] == "int" and widget in ("mapper", "popup"):
-            items = []
-            for enum_item in param['options']:
-                items.append((enum_item.split(":")[1], enum_item.split(":")[0], ""))
-                parameter_types[prop_name] = "int"
-
-            setattr(ntype, prop_name, bpy.props.EnumProperty(name=param['label'],
-                                                             description=helper,
-                                                             default=str(int(default)),
-                                                             items=items))
-
         elif param['type'] == "int":
-            if widget == 'checkBox':
-                kwargs = {'name': param['name'], 'description': helper, 'default': bool(int(default))}
-                setattr(ntype, prop_name, bpy.props.BoolProperty(**kwargs))
-                parameter_types[param['name']] = "int checkbox"
+            if widget != "":
+                if widget in ("mapper", "popup"):
+                    items = []
+                    for enum_item in param['options']:
+                        items.append((enum_item.split(":")[1], enum_item.split(":")[0], ""))
+                        parameter_types[prop_name] = "int"
+
+                    ntype.__annotations__[prop_name] = bpy.props.EnumProperty(name=param['label'],
+                                                                              description=helper,
+                                                                              default=str(int(default)),
+                                                                              items=items)
+
+                elif widget == 'checkBox':
+                    kwargs = {'name': param['name'], 'description': helper, 'default': bool(int(default))}
+                    ntype.__annotations__[prop_name] = bpy.props.BoolProperty(**kwargs)
+                    parameter_types[param['name']] = "int checkbox"
 
             else:
-                kwargs = {'name': param['name'], 'description': helper, 'default': int(default)
-                          }
+                kwargs = {'name': param['name'], 'description': helper, 'default': int(default)}
                 if minimum is not None:
                     kwargs['min'] = int(minimum)
                 if maximum is not None:
@@ -486,7 +391,7 @@ def generate_node(node):
                 if soft_maximum is not None:
                     kwargs['soft_max'] = int(soft_maximum)
 
-                setattr(ntype, prop_name, bpy.props.IntProperty(**kwargs))
+                ntype.__annotations__[prop_name] = bpy.props.IntProperty(**kwargs)
 
                 parameter_types[param['name']] = "int"
 
@@ -502,7 +407,7 @@ def generate_node(node):
             if soft_maximum is not None:
                 kwargs['soft_max'] = float(soft_maximum)
 
-            setattr(ntype, prop_name, bpy.props.FloatProperty(**kwargs))
+            ntype.__annotations__[prop_name] = bpy.props.FloatProperty(**kwargs)
 
             parameter_types[param['name']] = "float"
 
@@ -512,19 +417,19 @@ def generate_node(node):
                 kwargs['default'] = (float(default[0]),
                                      float(default[1]))
 
-            setattr(ntype, prop_name, bpy.props.FloatVectorProperty(**kwargs))
+            ntype.__annotations__[prop_name] = bpy.props.FloatVectorProperty(**kwargs)
 
             parameter_types[param['name']] = "float[2]"
 
         elif param['type'] == 'color':
-            setattr(ntype, prop_name, bpy.props.FloatVectorProperty(name=param['name'],
-                                                                    description=helper,
-                                                                    subtype='COLOR',
-                                                                    default=(float(default[0]),
-                                                                             float(default[1]),
-                                                                             float(default[2])),
-                                                                    min=0.0,
-                                                                    max=1.0))
+            ntype.__annotations__[prop_name] = bpy.props.FloatVectorProperty(name=param['name'],
+                                                                             description=helper,
+                                                                             subtype='COLOR',
+                                                                             default=(float(default[0]),
+                                                                                      float(default[1]),
+                                                                                      float(default[2])),
+                                                                             min=0.0,
+                                                                             max=1.0)
 
             parameter_types[param['name']] = "color"
 
@@ -536,7 +441,7 @@ def generate_node(node):
                                      float(default[1]),
                                      float(default[2]))
 
-            setattr(ntype, prop_name, bpy.props.FloatVectorProperty(**kwargs))
+            ntype.__annotations__[prop_name] = bpy.props.FloatVectorProperty(**kwargs)
 
             parameter_types[param['name']] = "vector"
 
@@ -544,10 +449,10 @@ def generate_node(node):
             pass
 
     for prop in socket_ui_props:
-        setattr(ntype, "%s_use_node" % prop, bpy.props.BoolProperty(name="%s_use_node" % prop,
-                                                                    description="Use node input",
-                                                                    default=False,
-                                                                    update=update_sockets))
+        ntype.__annotations__["%s_use_node" % prop] = bpy.props.BoolProperty(name="%s_use_node" % prop,
+                                                                             description="Use node input",
+                                                                             default=False,
+                                                                             update=update_sockets)
 
     ntype.socket_ui_props = socket_ui_props
     ntype.update_sockets = update_sockets
@@ -565,14 +470,131 @@ def generate_node(node):
         ntype.tree = []
         ntype.node_type = 'osl_surface'
 
-    util.safe_register_class(ntype)
+    node_classes.append(ntype)
 
     return ntype.bl_idname, category
 
 
+class AppleseedNodeTree(bpy.types.NodeTree):
+    """Class for appleseed node tree."""
+
+    bl_idname = 'AppleseedNodeTree'
+    bl_label = 'appleseed OSL Node Tree'
+    bl_icon = 'MATERIAL'
+
+    @classmethod
+    def get_from_context(cls, context):
+        """
+        Switches the displayed node tree when user selects object/material
+        """
+        obj = context.active_object
+
+        if obj and obj.type not in {"LAMP", "CAMERA"}:
+            mat = obj.active_material
+
+            if mat:
+                # ID pointer
+                node_tree = mat.appleseed.osl_node_tree
+
+                if node_tree:
+                    return node_tree, mat, mat
+
+        elif obj and obj.type == "LAMP":
+            node_tree = obj.data.appleseed.osl_node_tree
+
+            if node_tree:
+                return node_tree, None, None
+
+        return None, None, None
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render.engine
+        return renderer == 'APPLESEED_RENDER'
+
+    # This following code is required to avoid a max recursion error when Blender checks for node updates
+    def update(self):
+        self.refresh = True
+
+    def acknowledge_connection(self, context):
+        while self.refresh:
+            self.refresh = False
+            break
+
+    refresh: bpy.props.BoolProperty(name='Links Changed', default=False, update=acknowledge_connection)
+
+
+class AppleseedOSLNodeCategory(nodeitems_utils.NodeCategory):
+    """Node category for extending the Add menu, toolbar panels and search operator.
+
+    Base class for node categories.
+    """
+
+    @classmethod
+    def poll(cls, context):
+        renderer = context.scene.render.engine
+        return context.space_data.tree_type == 'AppleseedNodeTree' and renderer == 'APPLESEED_RENDER'
+
+
+def node_categories(osl_nodes):
+    osl_surface = []
+    osl_shaders = []
+    osl_2d_textures = []
+    osl_3d_textures = []
+    osl_color = []
+    osl_utilities = []
+    osl_other = []
+
+    for node in osl_nodes:
+        node_item = nodeitems_utils.NodeItem(node[0])
+        node_category = node[1]
+        if node_category == 'shader':
+            osl_shaders.append(node_item)
+        elif node_category == 'texture2d':
+            osl_2d_textures.append(node_item)
+        elif node_category == 'utility':
+            osl_utilities.append(node_item)
+        elif node_category == 'texture3d':
+            osl_3d_textures.append(node_item)
+        elif node_category == 'surface':
+            osl_surface.append(node_item)
+        elif node_category == 'color':
+            osl_color.append(node_item)
+        else:
+            osl_other.append(node_item)
+
+    appleseed_node_categories = [
+        AppleseedOSLNodeCategory("OSL_Surfaces", "Surface", items=osl_surface),
+        AppleseedOSLNodeCategory("OSL_Shaders", "Shader", items=osl_shaders),
+        AppleseedOSLNodeCategory("OSL_3D_Textures", "Texture3D", items=osl_3d_textures),
+        AppleseedOSLNodeCategory("OSL_2D_Textures", "Texture2D", items=osl_2d_textures),
+        AppleseedOSLNodeCategory("OSL_Color", "Color", items=osl_color),
+        AppleseedOSLNodeCategory("OSL_Utilities", "Utility", items=osl_utilities),
+        AppleseedOSLNodeCategory("OSL_Other", "No Category", items=osl_other)]
+
+    return appleseed_node_categories
+
+
+osl_node_names = []
+
+
 def register():
-    pass
+    util.safe_register_class(AppleseedNodeTree)
+    node_list = util.read_osl_shaders()
+    for node in node_list:
+        node_name, node_category = generate_node(node)
+        osl_node_names.append([node_name, node_category])
+
+    for cls in node_classes:
+        util.safe_register_class(cls)
+
+    nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
 
 
 def unregister():
-    pass
+    nodeitems_utils.unregister_node_categories("APPLESEED")
+
+    for cls in reversed(node_classes):
+        util.safe_unregister_class(cls)
+
+    util.safe_unregister_class(AppleseedNodeTree)

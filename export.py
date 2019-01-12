@@ -43,13 +43,12 @@ class ExportAppleseedScene(bpy.types.Operator, ExportHelper):
     bl_options = {'PRESET'}
 
     filename_ext = ".appleseed"
-    filter_glob = StringProperty(default="*.appleseed", options={'HIDDEN'})
+    filter_glob: StringProperty(default="*.appleseed", options={'HIDDEN'})
 
     # Properties.
 
-    animation = BoolProperty(name="Animation", description="Write out an appleseed project for each frame", default=False)
+    animation: BoolProperty(name="Animation", description="Write out an appleseed project for each frame", default=False)
 
-    # selected_only = BoolProperty(name="Selection Only", description="Export selected objects only", default=False)
     # packed = BoolProperty(name="Pack Project", description="Export packed projects", default=False)
 
     @classmethod
@@ -109,9 +108,9 @@ def menu_func_export_scene(self, context):
 
 def register():
     util.safe_register_class(ExportAppleseedScene)
-    bpy.types.INFO_MT_file_export.append(menu_func_export_scene)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export_scene)
 
 
 def unregister():
-    bpy.types.INFO_MT_file_export.remove(menu_func_export_scene)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export_scene)
     util.safe_unregister_class(ExportAppleseedScene)

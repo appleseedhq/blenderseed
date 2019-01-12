@@ -31,14 +31,14 @@ from ..utils import util
 
 
 class AppleseedMeshSettings(bpy.types.PropertyGroup):
-    export_normals = bpy.props.BoolProperty(name="export_normals",
-                                            default=True)
+    export_normals: bpy.props.BoolProperty(name="export_normals",
+                                           default=True)
 
-    export_uvs = bpy.props.BoolProperty(name="export_uvs",
-                                        default=True)
+    export_uvs: bpy.props.BoolProperty(name="export_uvs",
+                                       default=True)
 
-    smooth_tangents = bpy.props.BoolProperty(name="smooth_tangents",
-                                             default=False)
+    smooth_tangents: bpy.props.BoolProperty(name="smooth_tangents",
+                                            default=False)
 
 
 def register():
