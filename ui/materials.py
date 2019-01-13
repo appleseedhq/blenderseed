@@ -30,7 +30,7 @@ import bpy
 from ..utils import util
 
 
-class AppleseedMaterialSlots(bpy.types.Panel):
+class ASMATERIAL_PT_slots(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_label = "Material"
     bl_region_type = 'WINDOW'
@@ -63,8 +63,8 @@ class AppleseedMaterialSlots(bpy.types.Panel):
             row.template_list("MATERIAL_UL_matslots", "", ob, "material_slots", ob, "active_material_index", rows=rows)
 
             col = row.column(align=True)
-            col.operator("object.material_slot_add", icon='ZOOMIN', text="")
-            col.operator("object.material_slot_remove", icon='ZOOMOUT', text="")
+            col.operator("object.material_slot_add", icon='ADD', text="")
+            col.operator("object.material_slot_remove", icon='REMOVE', text="")
 
             col.menu("MATERIAL_MT_specials", icon='DOWNARROW_HLT', text="")
 
@@ -80,24 +80,22 @@ class AppleseedMaterialSlots(bpy.types.Panel):
                 row.operator("object.material_slot_select", text="Select")
                 row.operator("object.material_slot_deselect", text="Deselect")
 
-        split = layout.split(percentage=0.65)
+        split = layout.split(factor=0.65)
 
         if ob:
             row = split.row(align=True)
-            sub = row.split(align=True, percentage=1 / (context.region.width * 0.015))
+            sub = row.split(align=True, factor=1 / (context.region.width * 0.015))
             sub.prop_search(ob, "active_material", bpy.data, "materials", icon='MATERIAL', text="")
             row = sub.row(align=True)
             if ob.active_material:
                 row.prop(ob.active_material, "name", text="")
-                row.prop(ob.active_material, "use_fake_user", text="", toggle=True, icon="FONT_DATA")  # :^)
+                row.prop(ob.active_material, "use_fake_user", text="", toggle=True)  # :^)
                 text_new = ""
             else:
                 text_new = "New"
 
-            row.operator("appleseed.new_mat", text=text_new, icon='ZOOMIN')
+            row.operator("appleseed.new_mat", text=text_new, icon='ADD')
 
-            # split.template_ID(ob, "active_material", new="appleseed.new_mat")
-            
             row = split.row()
             if slot:
                 row.prop(slot, "link", text="")
@@ -108,9 +106,10 @@ class AppleseedMaterialSlots(bpy.types.Panel):
             split.separator()
 
 
-class AppleseedMaterialPreview(bpy.types.Panel):
+class ASMATERIAL_PT_preview(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
+    bl_options = {'DEFAULT_CLOSED'}
 
     bl_context = "material"
     bl_label = "Preview"
@@ -130,7 +129,7 @@ class AppleseedMaterialPreview(bpy.types.Panel):
         layout.prop(asr_mat, "preview_quality", text="Preview Quality")
 
 
-class AppleseedMaterialShading(bpy.types.Panel):
+class ASMATERIAL_PT_shading(bpy.types.Panel):
     bl_label = 'Shader Model'
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -149,6 +148,7 @@ class AppleseedMaterialShading(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
         obj = context.object
         material = obj.active_material
         asr_mat = material.appleseed
@@ -166,38 +166,35 @@ class AppleseedMaterialShading(bpy.types.Panel):
             layout.prop(asr_mat, "volume_phase_function_model", text="Volume")
             if asr_mat.volume_phase_function_model != 'none':
                 # Absorption
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Absorption:")
-                col = split.column()
-                col.prop(asr_mat, "volume_absorption", text="")
+                col = layout.column(align=True)
+                col.prop(asr_mat, "volume_absorption", text="Absorption")
 
                 # Absorption Multiplier
-                col = layout.column()
                 col.prop(asr_mat, "volume_absorption_multiplier", text="Absorption Multiplier")
 
                 # Volume Scattering
-                split = layout.split(percentage=0.40)
-                col = split.column()
-                col.label("Scattering:")
-                col = split.column()
-                col.prop(asr_mat, "volume_scattering", text="")
+                col = layout.column(align=True)
+                col.prop(asr_mat, "volume_scattering", text="Scattering")
 
                 # Scattering Multiplier
-                col = layout.column()
                 col.prop(asr_mat, "volume_scattering_multiplier", text="Scattering Multiplier")
 
                 if asr_mat.volume_phase_function_model == 'henyey':
                     col.prop(asr_mat, "volume_average_cosine", text="Average Cosine")
 
 
+classes = (
+    ASMATERIAL_PT_slots,
+    ASMATERIAL_PT_preview,
+    ASMATERIAL_PT_shading
+)
+
+
 def register():
-    util.safe_register_class(AppleseedMaterialSlots)
-    util.safe_register_class(AppleseedMaterialPreview)
-    util.safe_register_class(AppleseedMaterialShading)
+    for cls in classes:
+        util.safe_register_class(cls)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedMaterialShading)
-    util.safe_unregister_class(AppleseedMaterialPreview)
-    util.safe_unregister_class(AppleseedMaterialSlots)
+    for cls in reversed(classes):
+        util.safe_unregister_class(cls)

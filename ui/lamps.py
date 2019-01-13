@@ -30,7 +30,7 @@ import bpy
 from ..utils import util
 
 
-class AppleseedLampPanel(bpy.types.Panel):
+class ASLAMP_PT_lamp(bpy.types.Panel):
     bl_label = "Lamp"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -41,40 +41,41 @@ class AppleseedLampPanel(bpy.types.Panel):
     def poll(cls, context):
         ob = context.object
         renderer = context.scene.render.engine
-        return ob is not None and ob.type == 'LAMP' and renderer == 'APPLESEED_RENDER'
+        return ob is not None and ob.type == 'LIGHT' and renderer == 'APPLESEED_RENDER'
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
         lamp_data = context.object.data
         asr_lamp = lamp_data.appleseed
 
-        layout.prop(lamp_data, "type", expand=True)
-
         if lamp_data.type == 'SPOT':
-            split = layout.split(percentage=0.40)
+            split = layout.split(factor=0.40)
             col = split.column()
-            col.label("Intensity:")
-            split = split.split(percentage=0.83)
+            col.label(text="Intensity:")
+            split = split.split(factor=0.83, align=True)
             col = split.column()
             col.prop(asr_lamp, "radiance", text="")
 
-            col = split.column()
-            col.prop(asr_lamp, "radiance_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            col = split.column(align=True)
+            col.prop(asr_lamp, "radiance_use_tex", text="", icon="TEXTURE", toggle=True)
 
             if asr_lamp.radiance_use_tex:
-                layout.prop(asr_lamp, "radiance_tex", text="")
-                layout.prop(asr_lamp, "radiance_tex_color_space", text="Color Space")
+                col = layout.column(align=True)
+                col.template_ID(asr_lamp, "radiance_tex", open="image.open")
+                col.prop(asr_lamp, "radiance_tex_color_space", text="")
 
-            split = layout.split(percentage=0.90)
-            col = split.column()
+            split = layout.split(factor=0.90, align=True)
+            col = split.column(align=True)
             col.prop(asr_lamp, "radiance_multiplier", text="Intensity Multiplier")
 
-            col = split.column()
-            col.prop(asr_lamp, "radiance_multiplier_use_tex", text="", icon="TEXTURE_SHADED", toggle=True)
+            col = split.column(align=True)
+            col.prop(asr_lamp, "radiance_multiplier_use_tex", text="", icon="TEXTURE", toggle=True)
 
             if asr_lamp.radiance_multiplier_use_tex:
-                layout.prop(asr_lamp, "radiance_multiplier_tex", text="")
-                layout.prop(asr_lamp, "radiance_multiplier_tex_color_space", text="Color Space")
+                col = layout.column(align=True)
+                col.template_ID(asr_lamp, "radiance_multiplier_tex", open="image.open")
+                col.prop(asr_lamp, "radiance_multiplier_tex_color_space", text="")
 
             layout.prop(lamp_data, "spot_blend", text="Inner Angle")
             layout.prop(lamp_data, "spot_size", text="Outer Angle")
@@ -108,33 +109,29 @@ class AppleseedLampPanel(bpy.types.Panel):
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'AREA':
-            layout.prop(asr_lamp, "area_shape", text="Area Lamp Shape")
+            layout.prop(asr_lamp, "area_shape", expand=True, text="Shape")
             col = layout.column(align=True)
             if asr_lamp.area_shape == 'grid':
-                col.prop(lamp_data, "shape", text="")
-                if lamp_data.shape == 'RECTANGLE':
-                    col.prop(lamp_data, "size", text="Size X")
-                    col.prop(lamp_data, "size_y", text="Size Y")
-                else:
-                    col.prop(lamp_data, "size", text="Size")
+                col.prop(lamp_data, "size", text="Size X")
+                col.prop(lamp_data, "size_y", text="Size Y")
             else:
                 col.prop(lamp_data, "size", text="Size")
 
             layout.prop(asr_lamp, "area_visibility", text="Camera Visibility")
             if not asr_lamp.osl_node_tree:
-                layout.operator('appleseed.add_lap_osl_nodetree', text="Add Node Tree")
                 layout.prop(asr_lamp, "area_color", text="Color")
                 layout.prop(asr_lamp, "area_intensity", text="Intensity")
                 layout.prop(asr_lamp, "area_intensity_scale", text="Intensity Scale")
                 layout.prop(asr_lamp, "area_exposure", text="Exposure")
-                layout.prop(asr_lamp, "area_normalize", text="Normalize", toggle=True)
+                layout.prop(asr_lamp, "area_normalize", text="Normalize")
+                layout.operator('appleseed.add_lap_osl_nodetree', text="Add Node Tree")
             else:
                 layout.operator('appleseed.view_nodetree', text="View Nodetree", icon='NODETREE')
 
 
 def register():
-    util.safe_register_class(AppleseedLampPanel)
+    util.safe_register_class(ASLAMP_PT_lamp)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedLampPanel)
+    util.safe_unregister_class(ASLAMP_PT_lamp)

@@ -30,8 +30,8 @@ import bpy
 from ..utils import util
 
 
-class AppleseedRenderPanelBase(object):
-    bl_context = "render"
+class ASAOV_PT_panel_base(object):
+    bl_context = "view_layer"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
 
@@ -41,56 +41,54 @@ class AppleseedRenderPanelBase(object):
         return renderer.engine == 'APPLESEED_RENDER'
 
 
-class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
+class ASAOV_PT_aovs(bpy.types.Panel, ASAOV_PT_panel_base):
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_label = "Render Passes"
-    bl_context = "render_layer"
 
     def draw(self, context):
         layout = self.layout
         asr_scene_props = context.scene.appleseed
 
         col = layout.column(align=True)
-        row = col.row(align=True)
-        row.prop(asr_scene_props, "diffuse_aov", text="Diffuse", toggle=True)
-        row.prop(asr_scene_props, "direct_diffuse_aov", text="Direct Diffuse", toggle=True)
-        row.prop(asr_scene_props, "indirect_diffuse_aov", text="Indirect Diffuse", toggle=True)
-
-        row = col.row(align=True)
-        row.prop(asr_scene_props, "glossy_aov", text="Glossy", toggle=True)
-        row.prop(asr_scene_props, "direct_glossy_aov", text="Direct Glossy", toggle=True)
-        row.prop(asr_scene_props, "indirect_glossy_aov", text="Indirect Glossy", toggle=True)
-
-        row = col.row(align=True)
-        row.prop(asr_scene_props, "albedo_aov", text="Albedo", toggle=True)
-        row.prop(asr_scene_props, "emission_aov", text="Emission", toggle=True)
-
-        layout.separator()
-
-        row = layout.row(align=True)
-        row.prop(asr_scene_props, "npr_shading_aov", text="NPR Shading", toggle=True)
-        row.prop(asr_scene_props, "npr_contour_aov", text="NPR Contour", toggle=True)
+        col.prop(asr_scene_props, "diffuse_aov", text="Diffuse", toggle=True)
+        col.prop(asr_scene_props, "direct_diffuse_aov", text="Direct Diffuse", toggle=True)
+        col.prop(asr_scene_props, "indirect_diffuse_aov", text="Indirect Diffuse", toggle=True)
 
         layout.separator()
 
         col = layout.column(align=True)
-        row = col.row(align=True)
-        row.prop(asr_scene_props, "normal_aov", text="Normals", toggle=True)
-        row.prop(asr_scene_props, "position_aov", text="Position", toggle=True)
-        row = col.row(align=True)
-        row.prop(asr_scene_props, "uv_aov", text="UV Coordinates", toggle=True)
-        row.prop(asr_scene_props, "depth_aov", text="Depth", toggle=True)
-        row = col.row(align=True)
-        row.prop(asr_scene_props, "pixel_time_aov", text="Pixel Time", toggle=True)
-        row.prop(asr_scene_props, "pixel_variation_aov", text="Pixel Variation", toggle=True)
-        row = col.row(align=True)
-        row.prop(asr_scene_props, "pixel_sample_count_aov", text="Sample Count", toggle=True)
-        row.prop(asr_scene_props, "invalid_samples_aov", text="Invalid Samples", toggle=True)
+        col.prop(asr_scene_props, "glossy_aov", text="Glossy", toggle=True)
+        col.prop(asr_scene_props, "direct_glossy_aov", text="Direct Glossy", toggle=True)
+        col.prop(asr_scene_props, "indirect_glossy_aov", text="Indirect Glossy", toggle=True)
+
+        layout.separator()
+
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "albedo_aov", text="Albedo", toggle=True)
+        col.prop(asr_scene_props, "emission_aov", text="Emission", toggle=True)
+
+        layout.separator()
+
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "npr_shading_aov", text="NPR Shading", toggle=True)
+        col.prop(asr_scene_props, "npr_contour_aov", text="NPR Contour", toggle=True)
+
+        layout.separator()
+
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "normal_aov", text="Normals", toggle=True)
+        col.prop(asr_scene_props, "position_aov", text="Position", toggle=True)
+        col.prop(asr_scene_props, "uv_aov", text="UV Coordinates", toggle=True)
+        col.prop(asr_scene_props, "depth_aov", text="Depth", toggle=True)
+        col.prop(asr_scene_props, "pixel_time_aov", text="Pixel Time", toggle=True)
+        col.prop(asr_scene_props, "pixel_variation_aov", text="Pixel Variation", toggle=True)
+        col.prop(asr_scene_props, "pixel_sample_count_aov", text="Sample Count", toggle=True)
+        col.prop(asr_scene_props, "invalid_samples_aov", text="Invalid Samples", toggle=True)
 
 
 def register():
-    util.safe_register_class(AppleseedAOVPanel)
+    util.safe_register_class(ASAOV_PT_aovs)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedAOVPanel)
+    util.safe_unregister_class(ASAOV_PT_aovs)
