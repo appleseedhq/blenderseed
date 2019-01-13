@@ -138,7 +138,7 @@ class ASLAMP_OT_new_node_tree(bpy.types.Operator):
 
     def execute(self, context):
         lamp = context.object.data
-        nodetree = bpy.data.node_groups.new('%s_tree' % lamp.name, 'AppleseedOSLNodeTree')
+        nodetree = bpy.data.node_groups.new('%s_tree' % lamp.name, 'AppleseedNodeTree')
         nodetree.use_fake_user = True
         surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
         surface.location = (0, 0)
