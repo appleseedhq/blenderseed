@@ -42,10 +42,9 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                              description="Use texture to influence lamp intensity",
                                              default=False)
 
-    radiance_tex: bpy.props.StringProperty(name="radiance_tex",
-                                           description="Texture to influence lamp intensity",
-                                           default="",
-                                           subtype='FILE_PATH')
+    radiance_tex: bpy.props.PointerProperty(name="radiance_tex",
+                                            description="Texture to influence lamp intensity",
+                                            type=bpy.types.Image)
 
     radiance_tex_color_space: bpy.props.EnumProperty(name="radiance_tex_color_space",
                                                      items=[('linear_rgb', "Linear", ""),
@@ -62,10 +61,9 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                                         description="Use texture to influence intensity multiplier",
                                                         default=False)
 
-    radiance_multiplier_tex: bpy.props.StringProperty(name="radiance_multiplier_tex",
-                                                      description="Texture to influence intensity multiplier",
-                                                      default="",
-                                                      subtype='FILE_PATH')
+    radiance_multiplier_tex: bpy.props.PointerProperty(name="radiance_multiplier_tex",
+                                                       description="Texture to influence intensity multiplier",
+                                                       type=bpy.types.Image)
 
     radiance_multiplier_tex_color_space: bpy.props.EnumProperty(name="radiance_multiplier_tex_color_space",
                                                                 items=[('linear_rgb', "Linear", ""),
