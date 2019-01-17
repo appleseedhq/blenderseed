@@ -62,7 +62,7 @@ class ASMAT_OT_new_mat(bpy.types.Operator):
             obj.data.materials.append(mat)
 
         if dupli_node_tree is not None:
-            dupli_node_tree.name = context.object.active_material.name + "_tree"
+            dupli_node_tree.name = context.object.active_material.name
             context.object.active_material.appleseed.osl_node_tree = dupli_node_tree
         else:
             bpy.ops.appleseed.add_osl_nodetree()
@@ -81,7 +81,7 @@ class ASMAT_OT_new_node_tree(bpy.types.Operator):
 
     def execute(self, context):
         material = context.object.active_material
-        nodetree = bpy.data.node_groups.new('%s_tree' % material.name, 'AppleseedNodeTree')
+        nodetree = bpy.data.node_groups.new(material.name, 'AppleseedNodeTree')
         nodetree.use_fake_user = True
         surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
         surface.location = (0, 0)
@@ -138,7 +138,7 @@ class ASLAMP_OT_new_node_tree(bpy.types.Operator):
 
     def execute(self, context):
         lamp = context.object.data
-        nodetree = bpy.data.node_groups.new('%s_tree' % lamp.name, 'AppleseedNodeTree')
+        nodetree = bpy.data.node_groups.new('%s' % lamp.name, 'AppleseedNodeTree')
         nodetree.use_fake_user = True
         surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
         surface.location = (0, 0)
