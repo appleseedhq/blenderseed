@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2019 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,40 +31,35 @@ import os
 import bpy
 
 import appleseed as asr
-from .camera import CameraTranslator, InteractiveCameraTranslator
-from .group import GroupTranslator
+
 from .assethandlers import AssetHandler, CopyAssetsAssetHandler
-from .object import ArchiveTranslator, InstanceTranslator
-from .translator import ObjectKey, ProjectExportMode
+from .cameras.final import RenderCameraTranslator
+from .lamps.lamp import LampTranslator
+from .objects.mesh import MeshTranslator
+from .material import MaterialTranslator
+from .nodetree import NodeTreeTranslator
+from .texture import TextureTranslator
+from .utilites import ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
-from ..utils.util import Timer, inscenelayer
+from ..utils.util import Timer
 
 logger = get_logger()
 
 
-class SceneTranslator(GroupTranslator):
+class SceneTranslator(object):
     """
     Class that translates a Blender scene to an appleseed project.
     """
 
-    #
-    # Constants and settings.
-    #
-
-    OBJECT_TYPES_TO_IGNORE = {'ARMATURE'}
-
-    #
     # Constructors.
-    #
-
     @classmethod
-    def create_project_export_translator(cls, scene, filename):
+    def create_project_export_translator(cls, depsgraph):
         """
         Create a scene translator to export the scene to an appleseed project on disk.
         """
 
-        project_dir = os.path.dirname(filename)
+        project_dir = os.path.dirname(depsgraph.scene.appleseed.export_path)
 
         logger.debug("Creating texture and geometry directories in %s", project_dir)
 
@@ -77,19 +72,19 @@ class SceneTranslator(GroupTranslator):
         if not os.path.exists(textures_dir):
             os.makedirs(textures_dir)
 
-        logger.debug("Creating project export scene translator, filename: %s", filename)
+        logger.debug("Creating project export scene translator, filename: %s", depsgraph.scene.appleseed.export_path)
 
         asset_handler = CopyAssetsAssetHandler(project_dir, geometry_dir, textures_dir)
 
         return cls(
-            scene,
+            depsgraph=depsgraph,
             export_mode=ProjectExportMode.PROJECT_EXPORT,
-            selected_only=scene.appleseed.export_selected,
+            selected_only=depsgraph.scene.appleseed.export_selected,
             context=None,
             asset_handler=asset_handler)
 
     @classmethod
-    def create_final_render_translator(cls, scene):
+    def create_final_render_translator(cls, depsgraph):
         """
         Create a scene translator to export the scene to an in memory appleseed project.
         """
@@ -99,7 +94,7 @@ class SceneTranslator(GroupTranslator):
         asset_handler = AssetHandler()
 
         return cls(
-            scene,
+            depsgraph=depsgraph,
             export_mode=ProjectExportMode.FINAL_RENDER,
             selected_only=False,
             context=None,
@@ -117,69 +112,73 @@ class SceneTranslator(GroupTranslator):
         asset_handler = AssetHandler()
 
         return cls(
-            scene=context.scene,
+            depsgraph=context.depsgraph,
             export_mode=ProjectExportMode.INTERACTIVE_RENDER,
             selected_only=False,
             context=context,
             asset_handler=asset_handler)
 
-    def __init__(self, scene, export_mode, selected_only, context, asset_handler):
+    def __init__(self, depsgraph, export_mode, selected_only, context, asset_handler):
         """
         Constructor. Do not use it to create instances of this class.
         Use the @classmethods instead.
         """
 
-        super(SceneTranslator, self).__init__(scene, export_mode, selected_only, asset_handler)
-
+        self.__depsgraph = depsgraph
+        self.__asset_handler = asset_handler
+        self.__export_mode = export_mode
         self.__selected_only = selected_only
-
         self.__context = context
 
-        self.__viewport_resolution = None
+        # Blender datablock lists.
+        self.__bl_obj_datablocks = []
+        self.__bl_mat_datablocks = []
+        self.__bl_nodetree_datablocks = []
 
         # Translators.
         self.__world_translator = None
         self.__camera_translator = None
-        self.__group_translators = {}
+        self.__lamp_translators = {}
+        self.__object_translators = {}
+        self.__material_translators = {}
+        self.__nodetree_translators = {}
+        self.__texture_translators = {}
 
         self.__project = None
+        self.__frame = None
 
-    #
     # Properties.
-    #
+    @property
+    def bl_depsgraph(self):
+        return self.__depsgraph
 
     @property
     def bl_scene(self):
-        """
-        Return the Blender scene.
-        """
-        return self._bl_obj
+        return self.__depsgraph.scene
 
     @property
     def as_project(self):
-        """
-        Return the appleseed project.
-        """
         return self.__project
 
     @property
     def as_scene(self):
-        """
-        Return the appleseed scene.
-        """
         return self.__project.get_scene()
+
+    @property
+    def main_assembly(self):
+        return self.__main_assembly
+
+    @property
+    def asset_handler(self):
+        return self.__asset_handler
 
     @property
     def selected_only(self):
         return self.__selected_only
 
     @property
-    def camera_translator(self):
-        return self.__camera_translator
-
-    #
-    # Scene Translation.
-    #
+    def export_mode(self):
+        return self.__export_mode
 
     def translate_scene(self):
         """
@@ -193,37 +192,64 @@ class SceneTranslator(GroupTranslator):
 
         self.__create_project()
 
-        self.__create_translators()
-
-        # Create appleseed entities for world and camera
-        if self.__world_translator:
-            self.__world_translator.create_entities(self.bl_scene)
-        self.__camera_translator.create_entities(self.bl_scene)
-
-        # Create entities for all mesh objects and lights in scene
-        self._do_create_entities(self.bl_scene)
-
-        # Create entities for any linked groups (libraries) in the scene
-        for x in self.__group_translators.values():
-            x.create_entities(self.bl_scene)
-
-        self.__calc_motion_subframes()
-
-        # Insert appleseed entities into the project.
-        if self.__world_translator:
-            self.__world_translator.flush_entities(self.as_scene)
-
-        self.__camera_translator.flush_entities(self.as_scene)
-
-        self._do_flush_entities(self.__main_assembly)
-
-        for x in self.__group_translators.values():
-            x.flush_entities(self.__main_assembly)
-
         self.__translate_render_settings()
         self.__translate_frame()
 
-        self.__load_searchpaths()
+        self.__create_world_translator()
+
+        self.__create_camera_translator()
+
+        self.__bl_mat_datablocks = self.__parse_material_datablocks()
+
+        self.__bl_nodetree_datablocks = self.__parse_nodetree_datablocks()
+
+        self.__bl_obj_datablocks = self.__parse_object_datablocks()
+
+        self.__create_translators()
+
+        if self.__world_translator != None:
+            self.__world_translator.create_entities(self.bl_scene)
+
+        self.__camera_translator.create_entities(self.bl_scene)
+
+        for translator in self.__material_translators.values():
+            translator.create_entities()
+
+        for translator in self.__nodetree_translators.values():
+            translator.create_entities(self.bl_scene)
+
+        for translator in self.__texture_translators.values():
+            translator.create_entities()
+
+        for translator in self.__lamp_translators.values():
+            translator.create_entities(self.bl_scene)
+
+        for translator in self.__object_translators.values():
+            translator.create_entities(self.bl_scene)
+
+        self.__calc_motion()
+
+        for translator in self.__material_translators.values():
+            translator.flush_entities(self.main_assembly)
+
+        for translator in self.__nodetree_translators.values():
+            translator.flush_entities(self.main_assembly)
+
+        for translator in self.__texture_translators.values():
+            translator.flush_entities(self.main_assembly)
+
+        for translator in self.__lamp_translators.values():
+            translator.flush_entities(self.main_assembly)
+
+        for translator in self.__object_translators.values():
+            translator.flush_entities(self.main_assembly)
+
+        if self.__world_translator != None:
+            self.__world_translator.flush_entities(self.as_scene, self.main_assembly)
+
+        self.__camera_translator.flush_entities(self.as_scene, self.main_assembly)
+
+        # self.__load_searchpaths()
 
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
@@ -238,132 +264,7 @@ class SceneTranslator(GroupTranslator):
             filename,
             asr.ProjectFileWriterOptions.OmitWritingGeometryFiles | asr.ProjectFileWriterOptions.OmitHandlingAssetFiles)
 
-    # Interactive rendering update functions
-    def update_scene(self, scene, context):
-        """
-        Update the scene during interactive rendering.
-        Scene updates are called whenever a parameter changes.
-        """
-
-        # Set internal scene reference to current state of Blender scene
-        logger.debug("Start scene update")
-        self._bl_obj = scene
-        self.__context = context
-
-        # Update materials.
-        for mat in self._material_translators:
-            # Get Blender material
-            try:
-                bl_mat = bpy.data.materials[str(mat)]
-            except:
-                logger.debug("Material not found for %s", mat)
-                continue
-
-            # Check if base material is updated
-            if bl_mat.is_updated or bl_mat.is_updated_data:
-                logger.debug("Updating material %s", mat)
-                self._material_translators[mat].update(bl_mat, self.__main_assembly, scene)
-
-            # Check if material node tree has been updated
-            if bl_mat.appleseed.osl_node_tree is not None:
-                if bl_mat.appleseed.osl_node_tree.is_updated:
-                    logger.debug("Updating material tree for %s", mat)
-                    self._material_translators[mat].update(bl_mat, self.__main_assembly, scene)
-
-        # Update lamp materials
-        for mat in self._lamp_material_translators:
-            # Get Blender lamp
-            try:
-                bl_lamp = bpy.data.lamps[str(mat)]
-            except:
-                logger.debug("Material not found for %s", mat)
-                continue
-            if bl_lamp.appleseed.osl_node_tree.is_updated or bl_lamp.is_updated:
-                logger.debug("Updating material tree for %s", mat)
-                self._lamp_material_translators[mat].update(bl_lamp, self.__main_assembly, scene)
-
-        # Update objects
-        for translator in self._object_translators:
-            try:
-                bl_obj = bpy.data.objects[str(translator)]
-
-                if bl_obj.is_updated or bl_obj.is_updated_data:
-                    logger.debug("Updating object %s", translator)
-                    self._object_translators[translator].update(bl_obj)
-            except:
-                logger.debug("Object not found for %s", translator)
-
-        for translator in self._dupli_translators:
-            try:
-                bl_obj = bpy.data.objects[str(translator)]
-
-                if bl_obj.is_updated or bl_obj.is_updated_data:
-                    logger.debug("Updating dupli object %s", translator)
-
-                    self._dupli_translators[translator].update(bl_obj, self.bl_scene)
-            except Exception as e:
-                logger.debug("Dupli object not found for %s, exception: %s", translator, e)
-
-        for translator in self._lamp_translators:
-            try:
-                bl_lamp = bpy.data.objects[str(translator)]
-
-                if bl_lamp.is_updated or bl_lamp.is_updated_data:
-                    logger.debug("Updating lamp %s", translator)
-                    self._lamp_translators[translator].update(bl_lamp, self.__main_assembly, scene)
-            except:
-                logger.debug("Lamp not found for %s", translator)
-
-        if self.bl_scene.world.is_updated or self.bl_scene.world.is_updated_data:
-            self.__world_translator.update(self.bl_scene, self.as_scene)
-
-        if self.bl_scene.camera.is_updated or self.bl_scene.camera.is_updated_data:
-            self.__camera_translator.update(self.as_scene, camera=self.bl_scene.camera, context=self.__context)
-
-        self.__camera_translator.set_transform(0.0)
-
-    def check_view(self, context):
-        """
-        Check the viewport to see if it has changed camera position or window size.
-        For whatever reason, these changes do not trigger an update request so we must check things manually.
-        """
-
-        view_update = False
-        self.__context = context
-
-        # Check if the camera needs to be updated
-        cam_param_update, cam_translate_update = self.__camera_translator.check_for_camera_update(self.bl_scene.camera, self.__context)
-
-        # Check if the frame needs to be updated
-        width = int(self.__context.region.width)
-        height = int(self.__context.region.height)
-        new_viewport_resolution = [width, height]
-        if new_viewport_resolution != self.__viewport_resolution:
-            view_update = True
-            cam_param_update = True
-
-        return view_update, cam_param_update, cam_translate_update
-
-    def update_view(self, view_update, cam_param_update):
-        """
-        Update the viewport window during interactive rendering.  The viewport update is triggered
-        automatically following a scene update, or when the check view function returns true on any of its checks.
-        """
-
-        logger.debug("Begin view update")
-
-        if cam_param_update:
-            self.__camera_translator.update(self.as_scene)
-
-        if view_update:
-            self.__translate_frame()
-
-        self.__camera_translator.set_transform(0.0)
-
-    #
     # Internal methods.
-    #
-
     def __create_project(self):
         """
         Create a default empty project.
@@ -394,139 +295,6 @@ class SceneTranslator(GroupTranslator):
         # Create default materials.
         self.__create_default_material()
         self.__create_null_material()
-
-    def __create_world_translator(self):
-        logger.debug("Creating world translator")
-
-        self.__world_translator = WorldTranslator(self.bl_scene, self.asset_handler)
-
-    def __create_translators(self):
-        """
-        Create translators for each Blender object.  These translators contain all the functions and information
-        necessary to convert Blender objects, lights, cameras and materials into equivalent appleseed entities.
-        """
-
-        if self.bl_scene.world.appleseed_sky.env_type != 'none':
-            self.__create_world_translator()
-
-        # Create translators for all objects in the scene.
-        super(SceneTranslator, self)._create_translators(self.bl_scene)
-
-        # Always create a translator for the active camera even if it is not visible or renderable.
-        if self.bl_scene.camera:
-            obj_key = ObjectKey(self.bl_scene.camera)
-            logger.debug("Creating camera translator for active camera  %s", obj_key)
-            if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-                self.__camera_translator = CameraTranslator(self.bl_scene.camera, self.asset_handler)
-            else:
-                self.__camera_translator = InteractiveCameraTranslator(self.bl_scene.camera, self.__context, self.asset_handler)
-        else:
-            # Create dummy camera for interactive mode
-            if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
-                self.__camera_translator = InteractiveCameraTranslator(None, self.__context, self.asset_handler)
-
-        for obj in self.bl_scene.objects:
-
-            # Skip object types that are not renderable.
-            if obj.type in SceneTranslator.OBJECT_TYPES_TO_IGNORE:
-                logger.debug("Ignoring object %s of type %s", obj.name, obj.type)
-                continue
-
-            if obj.hide_render:
-                continue
-
-            if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and obj.hide:
-                continue
-
-            if not inscenelayer(obj, self.bl_scene):
-                logger.debug("skipping invisible object %s", obj.name)
-                continue
-
-            if self.selected_only and not obj.select:
-                continue
-
-            obj_key = ObjectKey(obj)
-
-            if obj.type == 'EMPTY':
-                if obj.is_duplicator and obj.dupli_type == 'GROUP':
-                    group = obj.dupli_group
-
-                    group_key = ObjectKey(group)
-
-                    # Create a translator for the group if needed.
-                    if not group_key in self.__group_translators:
-                        logger.debug("Creating group translator for group %s", group_key)
-                        self.__group_translators[group_key] = GroupTranslator(group, self.export_mode, False, self.asset_handler)
-
-                    # Instance the group into the scene.
-                    logger.debug("Creating group instance translator for object %s", obj.name)
-                    self._object_translators[obj_key] = InstanceTranslator(obj, self.__group_translators[group_key], self.asset_handler)
-
-                if obj.appleseed.object_export != 'normal':
-                    logger.debug("Creating archive translator for object %s", obj_key)
-                    archive_path = obj.appleseed.archive_path
-                    self._object_translators[obj_key] = ArchiveTranslator(obj, archive_path, self._asset_handler)
-
-    def __calc_motion_subframes(self):
-        """Calculates subframes for motion blur.  Each blur type can have it's own segment count, so the final list
-        created has every transform time needed.  This way we only have to move the frame set point one time, instead of the dozens
-        and dozens of times the old exporter did (yay for progress).
-        """
-        cam_times = {0.0}
-        xform_times = {0.0}
-        deform_times = {0.0}
-
-        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
-
-            if self.bl_scene.appleseed.enable_camera_blur:
-                self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples, cam_times)
-
-            if self.bl_scene.appleseed.enable_object_blur:
-                self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples, xform_times)
-
-            if self.bl_scene.appleseed.enable_deformation_blur:
-                self.__get_subframes(shutter_length, self.__round_up_pow2(self.bl_scene.appleseed.deformation_blur_samples), deform_times)
-
-        # Merge all subframe times
-        all_times = set()
-        all_times.update(cam_times)
-        all_times.update(xform_times)
-        all_times.update(deform_times)
-        all_times = sorted(list(all_times))
-        current_frame = self.bl_scene.frame_current
-
-        for time in all_times:
-            new_frame = current_frame + time
-            int_frame = math.floor(new_frame)
-            subframe = new_frame - int_frame
-
-            self.bl_scene.frame_set(int_frame, subframe=subframe)
-
-            if time in cam_times:
-                self.__camera_translator.set_transform_key(self.bl_scene, time, cam_times)
-
-            if time in xform_times:
-                self.set_transform_key(self.bl_scene, time, xform_times)
-
-                for x in self.__group_translators.values():
-                    x.set_transform_key(self.bl_scene, time, xform_times)
-
-            if time in deform_times:
-                self.set_deform_key(self.bl_scene, time, deform_times)
-
-                for x in self.__group_translators.values():
-                    x.set_deform_key(self.bl_scene, time, deform_times)
-
-        self.bl_scene.frame_set(current_frame)
-
-    def __get_subframes(self, shutter_length, samples, times):
-        assert samples > 1
-
-        segment_size = shutter_length / (samples - 1)
-
-        for seg in range(0, samples):
-            times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
 
     def __create_default_material(self):
         logger.debug("Creating default material")
@@ -632,7 +400,7 @@ class SceneTranslator(GroupTranslator):
 
         if asr_scene_props.shading_override:
             parameters['shading_engine'] = {'override_shading': {'mode': asr_scene_props.override_mode}}
-            
+
         conf_final.set_parameters(parameters)
 
         parameters['lighting_engine'] = 'pt'
@@ -644,8 +412,6 @@ class SceneTranslator(GroupTranslator):
         """
 
         logger.debug("Translating frame")
-
-        camera_name = self.bl_scene.camera.name if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER else "interactive_camera"
 
         asr_scene_props = self.bl_scene.appleseed
         scale = self.bl_scene.render.resolution_percentage / 100.0
@@ -661,7 +427,7 @@ class SceneTranslator(GroupTranslator):
 
         frame_params = {
             'resolution': asr.Vector2i(width, height),
-            'camera': camera_name,
+            'camera': "Camera",
             'tile_size': asr.Vector2i(asr_scene_props.tile_size, asr_scene_props.tile_size),
             'filter': asr_scene_props.pixel_filter,
             'filter_size': asr_scene_props.pixel_filter_size,
@@ -675,80 +441,12 @@ class SceneTranslator(GroupTranslator):
             'denoise_scales': asr_scene_props.denoise_scales,
             'mark_invalid_pixels': asr_scene_props.mark_invalid_pixels}
 
-        # AOVs
-        aovs = asr.AOVContainer()
-        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            if asr_scene_props.diffuse_aov:
-                aovs.insert(asr.AOV('diffuse_aov', {}))
-            if asr_scene_props.direct_diffuse_aov:
-                aovs.insert(asr.AOV('direct_diffuse_aov', {}))
-            if asr_scene_props.indirect_diffuse_aov:
-                aovs.insert(asr.AOV('indirect_diffuse_aov', {}))
-            if asr_scene_props.glossy_aov:
-                aovs.insert(asr.AOV('glossy_aov', {}))
-            if asr_scene_props.direct_glossy_aov:
-                aovs.insert(asr.AOV('direct_glossy_aov', {}))
-            if asr_scene_props.indirect_glossy_aov:
-                aovs.insert(asr.AOV('indirect_glossy_aov', {}))
-            if asr_scene_props.normal_aov:
-                aovs.insert(asr.AOV('normal_aov', {}))
-            if asr_scene_props.position_aov:
-                aovs.insert(asr.AOV('position_aov', {}))
-            if asr_scene_props.uv_aov:
-                aovs.insert(asr.AOV('uv_aov', {}))
-            if asr_scene_props.depth_aov:
-                aovs.insert(asr.AOV('depth_aov', {}))
-            if asr_scene_props.pixel_time_aov:
-                aovs.insert(asr.AOV('pixel_time_aov', {}))
-            if asr_scene_props.invalid_samples_aov:
-                aovs.insert(asr.AOV('invalid_samples_aov', {}))
-            if asr_scene_props.pixel_sample_count_aov:
-                aovs.insert(asr.AOV('pixel_sample_count_aov', {}))
-            if asr_scene_props.pixel_variation_aov:
-                aovs.insert(asr.AOV('pixel_variation_aov', {}))
-            if asr_scene_props.albedo_aov:
-                aovs.insert(asr.AOV('albedo_aov', {}))
-            if asr_scene_props.emission_aov:
-                aovs.insert(asr.AOV('emission_aov', {}))
-            if asr_scene_props.npr_shading_aov:
-                aovs.insert(asr.AOV('npr_shading_aov', {}))
-            if asr_scene_props.npr_contour_aov:
-                aovs.insert(asr.AOV('npr_contour_aov', {}))
-
-        # Create and set the frame in the project.
-        frame = asr.Frame("beauty", frame_params, aovs)
-
-        if len(asr_scene_props.post_processing_stages) > 0 and self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            for index, stage in enumerate(asr_scene_props.post_processing_stages):
-                if stage.model == 'render_stamp_post_processing_stage':
-                    params = {'order': index,
-                              'format_string': stage.render_stamp}
-                else:
-                    params = {'order': index,
-                              'color_map': stage.color_map,
-                              'auto_range': stage.auto_range,
-                              'range_min': stage.range_min,
-                              'range_max': stage.range_max,
-                              'add_legend_bar': stage.add_legend_bar,
-                              'legend_bar_ticks': stage.legend_bar_ticks,
-                              'render_isolines': stage.render_isolines,
-                              'line_thickness': stage.line_thickness}
-
-                    if stage.color_map == 'custom':
-                        params['color_map_file_path'] = stage.color_map_file_path
-
-                post_process = asr.PostProcessingStage(stage.model,
-                                                       stage.name,
-                                                       params)
-
-                frame.post_processing_stages().insert(post_process)
-
         if self.bl_scene.render.use_border and self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             min_x = int(self.bl_scene.render.border_min_x * width)
             max_x = int(self.bl_scene.render.border_max_x * width) - 1
             min_y = height - int(self.bl_scene.render.border_max_y * height)
             max_y = height - int(self.bl_scene.render.border_min_y * height) - 1
-            frame.set_crop_window([min_x, min_y, max_x, max_y])
+            self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
         elif self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and self.__context.space_data.use_render_border \
                 and self.__context.region_data.view_perspective in ('ORTHO', 'PERSP'):
@@ -756,17 +454,210 @@ class SceneTranslator(GroupTranslator):
             max_x = int(self.__context.space_data.render_border_max_x * width) - 1
             min_y = height - int(self.__context.space_data.render_border_max_y * height)
             max_y = height - int(self.__context.space_data.render_border_min_y * height) - 1
-            frame.set_crop_window([min_x, min_y, max_x, max_y])
+            self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
-        self.__project.set_frame(frame)
+        # Create and set the frame in the project.
+        self.__frame = asr.Frame("beauty",
+                                 frame_params)
 
-    def __load_searchpaths(self):
-        paths = self.__project.get_search_paths()
+        self.__project.set_frame(self.__frame)
+        self.__frame = self.as_project.get_frame()
 
-        # Load any search paths from asset handler
-        paths.extend(x for x in self.asset_handler.searchpaths if x not in paths)
+        if len(asr_scene_props.post_processing_stages) > 0 and self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            self.__set_post_process()
 
-        self.__project.set_search_paths(paths)
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            self.__set_aovs()
+
+    def __set_aovs(self):
+        asr_scene_props = self.bl_scene.appleseed
+
+        if asr_scene_props.diffuse_aov:
+            self.__frame.aovs().insert(asr.AOV('diffuse_aov', {}))
+        if asr_scene_props.direct_diffuse_aov:
+            self.__frame.aovs().insert(asr.AOV('direct_diffuse_aov', {}))
+        if asr_scene_props.indirect_diffuse_aov:
+            self.__frame.aovs().insert(asr.AOV('indirect_diffuse_aov', {}))
+        if asr_scene_props.glossy_aov:
+            self.__frame.aovs().insert(asr.AOV('glossy_aov', {}))
+        if asr_scene_props.direct_glossy_aov:
+            self.__frame.aovs().insert(asr.AOV('direct_glossy_aov', {}))
+        if asr_scene_props.indirect_glossy_aov:
+            self.__frame.aovs().insert(asr.AOV('indirect_glossy_aov', {}))
+        if asr_scene_props.normal_aov:
+            self.__frame.aovs().insert(asr.AOV('normal_aov', {}))
+        if asr_scene_props.position_aov:
+            self.__frame.aovs().insert(asr.AOV('position_aov', {}))
+        if asr_scene_props.uv_aov:
+            self.__frame.aovs().insert(asr.AOV('uv_aov', {}))
+        if asr_scene_props.depth_aov:
+            self.__frame.aovs().insert(asr.AOV('depth_aov', {}))
+        if asr_scene_props.pixel_time_aov:
+            self.__frame.aovs().insert(asr.AOV('pixel_time_aov', {}))
+        if asr_scene_props.invalid_samples_aov:
+            self.__frame.aovs().insert(asr.AOV('invalid_samples_aov', {}))
+        if asr_scene_props.pixel_sample_count_aov:
+            self.__frame.aovs().insert(asr.AOV('pixel_sample_count_aov', {}))
+        if asr_scene_props.pixel_variation_aov:
+            self.__frame.aovs().insert(asr.AOV('pixel_variation_aov', {}))
+        if asr_scene_props.albedo_aov:
+            self.__frame.aovs().insert(asr.AOV('albedo_aov', {}))
+        if asr_scene_props.emission_aov:
+            self.__frame.aovs().insert(asr.AOV('emission_aov', {}))
+        if asr_scene_props.npr_shading_aov:
+            self.__frame.aovs().insert(asr.AOV('npr_shading_aov', {}))
+        if asr_scene_props.npr_contour_aov:
+            self.__frame.aovs().insert(asr.AOV('npr_contour_aov', {}))
+
+    def __set_post_process(self):
+        asr_scene_props = self.bl_scene.appleseed
+
+        for index, stage in enumerate(asr_scene_props.post_processing_stages):
+            if stage.model == 'render_stamp_post_processing_stage':
+                params = {'order': index,
+                          'format_string': stage.render_stamp}
+            else:
+                params = {'order': index,
+                          'color_map': stage.color_map,
+                          'auto_range': stage.auto_range,
+                          'range_min': stage.range_min,
+                          'range_max': stage.range_max,
+                          'add_legend_bar': stage.add_legend_bar,
+                          'legend_bar_ticks': stage.legend_bar_ticks,
+                          'render_isolines': stage.render_isolines,
+                          'line_thickness': stage.line_thickness}
+
+                if stage.color_map == 'custom':
+                    params['color_map_file_path'] = stage.color_map_file_path
+
+            post_process = asr.PostProcessingStage(stage.model,
+                                                   stage.name,
+                                                   params)
+
+            self.__frame.post_processing_stages().insert(post_process)
+
+    def __create_world_translator(self):
+        if self.bl_scene.world.appleseed_sky.env_type != 'none':
+            self.__world_translator = WorldTranslator(self.bl_scene.world,
+                                                      self.asset_handler)
+
+            if self.bl_scene.world.appleseed_sky.env_type in ('latlong_map', 'mirrorball_map'):
+                tex_key = self.bl_scene.world.appleseed_sky.env_tex.name_full
+                if tex_key not in self.__texture_translators:
+                    self.__texture_translators[tex_key] = TextureTranslator(self.bl_scene.world.appleseed_sky.env_tex,
+                                                                            self.bl_scene.world.appleseed_sky.env_tex_colorspace,
+                                                                            self.asset_handler)
+
+    def __create_camera_translator(self):
+        if self.bl_scene.camera != None:
+            logger.debug("Creating camera translator for active camera")
+            if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+                self.__camera_translator = RenderCameraTranslator(self.bl_scene.camera,
+                                                                  self.asset_handler)
+            else:
+                raise NotImplementedError()
+
+            if self.bl_scene.camera.data.appleseed.diaphragm_map != None:
+                tex_key = self.bl_scene.camera.data.appleseed.diaphragm_map.name_full
+                if tex_key not in self.__texture_translators:
+                    self.__texture_translators[tex_key] = TextureTranslator(self.bl_scene.camera.data.appleseed.diaphragm_map,
+                                                                            self.bl_scene.camera.data.appleseed.diaphragm_map_colorspace,
+                                                                            self.asset_handler)
+
+    def __calc_motion(self):
+        """Calculates subframes for motion blur.  Each blur type can have it's own segment count, so the final list
+        created has every transform time needed.  This way we only have to move the frame set point one time, instead of the dozens
+        and dozens of times the old exporter did (yay for progress).
+        """
+        cam_times = {0.0}
+        xform_times = {0.0}
+        deform_times = {0.0}
+
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
+
+            if self.bl_scene.appleseed.enable_camera_blur:
+                self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples, cam_times)
+
+            if self.bl_scene.appleseed.enable_object_blur:
+                self.__get_subframes(shutter_length, self.bl_scene.appleseed.object_blur_samples, xform_times)
+
+            if self.bl_scene.appleseed.enable_deformation_blur:
+                self.__get_subframes(shutter_length, self.__round_up_pow2(self.bl_scene.appleseed.deformation_blur_samples), deform_times)
+
+        # Merge all subframe times
+        all_times = set()
+        all_times.update(cam_times)
+        all_times.update(xform_times)
+        all_times.update(deform_times)
+        all_times = sorted(list(all_times))
+        current_frame = self.bl_scene.frame_current
+
+        for time in all_times:
+            new_frame = current_frame + time
+            int_frame = math.floor(new_frame)
+            subframe = new_frame - int_frame
+
+            self.bl_scene.frame_set(int_frame, subframe=subframe)
+
+            if time in cam_times:
+                self.__camera_translator.set_transform(time)
+
+        self.bl_scene.frame_set(current_frame)
+
+    def __get_subframes(self, shutter_length, samples, times):
+        assert samples > 1
+
+        segment_size = shutter_length / (samples - 1)
+
+        for seg in range(0, samples):
+            times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
+
+    def __parse_material_datablocks(self):
+        mat_blocks = []
+
+        for block in self.bl_depsgraph.ids:
+            if isinstance(block, bpy.types.Material):
+                mat_blocks.append(block)
+
+        return mat_blocks
+
+    def __parse_nodetree_datablocks(self):
+        nodetree_blocks = []
+
+        for block in self.bl_depsgraph.ids:
+            if isinstance(block, bpy.types.Material):
+                if block.appleseed.osl_node_tree is not None and block.appleseed.mode == 'surface':
+                    nodetree_blocks.append(block.appleseed.osl_node_tree)
+            if isinstance(block, bpy.types.Light):
+                if block.appleseed.osl_node_tree is not None:
+                    nodetree_blocks.append(block.appleseed.osl_node_tree)
+
+        return nodetree_blocks
+
+    def __parse_object_datablocks(self):
+        obj_blocks = []
+
+        for obj in self.bl_depsgraph.objects:
+            obj_blocks.append(obj)
+
+        return obj_blocks
+
+    def __create_translators(self):
+        for mat in self.__bl_mat_datablocks:
+            mat_key = mat.name_full
+            self.__material_translators[mat_key] = MaterialTranslator(mat)
+
+        for tree in self.__bl_nodetree_datablocks:
+            tree_key = tree.name_full
+            self.__nodetree_translators[tree_key] = NodeTreeTranslator(tree, self.asset_handler)
+
+        for obj in self.__bl_obj_datablocks:
+            obj_key = obj.name_full
+            if obj.type == 'MESH':
+                self.__object_translators[obj_key] = MeshTranslator(obj, self.asset_handler)
+            elif obj.type == 'LIGHT':
+                self.__lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
 
     @staticmethod
     def __round_up_pow2(x):

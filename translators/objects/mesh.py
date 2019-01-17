@@ -1,11 +1,10 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2019 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,4 +25,32 @@
 # THE SOFTWARE.
 #
 
-from .scene import SceneTranslator
+import appleseed as asr
+from ..translator import Translator
+
+
+class MeshTranslator(Translator):
+    def __init__(self, obj, asset_handler):
+        super().__init__(obj, asset_handler=asset_handler)
+        self.__xform_seq = asr.TransformSequence()
+        self.__instance_count = 1
+
+        self.__as_mesh = None
+        self.__as_mesh_inst = None
+        self.__as_mesh_inst_params = {}
+
+        self.__as_ass = None
+        self.__as_ass_inst = None
+
+    @property
+    def bl_obj(self):
+        return self._bl_obj
+
+    def create_entities(self, bl_scene):
+        pass
+
+    def flush_entities(self, as_assembly):
+        pass
+
+    def add_instance(self):
+        self.__instance_count += 1
