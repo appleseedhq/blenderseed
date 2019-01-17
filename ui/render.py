@@ -48,8 +48,14 @@ class ASRENDER_PT_export(bpy.types.Panel, ASRENDER_PT_base):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        scene = context.scene
+        asr_scene_props = scene.appleseed
 
-        layout.operator("appleseed.export_scene", text="Export")
+        layout.prop(asr_scene_props, "scene_export_mode", text="Render Mode")
+        # layout.operator("appleseed.export_scene", text="Export")
+        if asr_scene_props.scene_export_mode == 'export_only':
+            layout.prop(asr_scene_props, "export_path", text="Export Path")
+            layout.prop(asr_scene_props, "export_selected", text="Only Export Selected Objects")
 
 
 class ASRENDER_PT_settings(bpy.types.Panel, ASRENDER_PT_base):
