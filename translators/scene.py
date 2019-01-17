@@ -656,8 +656,21 @@ class SceneTranslator(object):
             obj_key = obj.name_full
             if obj.type == 'MESH':
                 self.__object_translators[obj_key] = MeshTranslator(obj, self.asset_handler)
+                
             elif obj.type == 'LIGHT':
                 self.__lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
+                if obj.data.appleseed.radiance_use_tex and obj.data.appleseed.radiance_tex is not None:
+                    tex_key = obj.data.appleseed.radiance_tex.name_full
+                    if tex_key not in self.__texture_translators:
+                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_tex,
+                                                                                obj.data.appleseed.radiance_tex_color_space,
+                                                                                self.asset_handler)
+                if obj.data.appleseed.radiance_multiplier_use_tex and obj.data.appleseed.radiance_multiplier_tex is not None:
+                    tex_key = obj.data.appleseed.radiance_multiplier_tex.name_full
+                    if tex_key not in self.__texture_translators:
+                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
+                                                                                obj.data.appleseed.radiance_multiplier_tex_color_space,
+                                                                                self.asset_handler)
 
     @staticmethod
     def __round_up_pow2(x):
