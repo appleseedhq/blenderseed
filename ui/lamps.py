@@ -93,20 +93,24 @@ class ASLAMP_PT_lamp(bpy.types.Panel):
             layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'SUN':
-            layout.prop(asr_lamp, "use_edf", text="Use Environment For Sun Direction")
-            layout.prop(asr_lamp, "turbidity", text="Turbidity")
-            layout.prop(asr_lamp, "distance", text="Sun Distance")
-            layout.prop(asr_lamp, "size_multiplier", text="Size Multiplier")
-            layout.prop(asr_lamp, "radiance_multiplier", text="Radiance Multiplier")
-            layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
-            layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
+            layout.prop(asr_lamp, "sun_mode", text="Sun Lamp Mode")
+            if asr_lamp.sun_mode == 'sun':
+                layout.prop(asr_lamp, "use_edf", text="Use Environment For Sun Direction")
+                if asr_lamp.use_edf and context.scene.world.appleseed_sky.env_type != 'sunsky':
+                    layout.label(text="WARNING: Must select 'Physical Sky' for environemnt model")
+                layout.prop(asr_lamp, "turbidity", text="Turbidity")
+                layout.prop(asr_lamp, "distance", text="Sun Distance")
+                layout.prop(asr_lamp, "size_multiplier", text="Size Multiplier")
+                layout.prop(asr_lamp, "radiance_multiplier", text="Radiance Multiplier")
+                layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
+                layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
-        if lamp_data.type == 'HEMI':
-            layout.prop(asr_lamp, "radiance", text="Intensity")
-            layout.prop(asr_lamp, "radiance_multiplier", text="Intensity Multiplier")
-            layout.prop(asr_lamp, "exposure", text="Exposure")
-            layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
-            layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
+            if lamp_data.sun_mode == 'distant':
+                layout.prop(asr_lamp, "radiance", text="Intensity")
+                layout.prop(asr_lamp, "radiance_multiplier", text="Intensity Multiplier")
+                layout.prop(asr_lamp, "exposure", text="Exposure")
+                layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
+                layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'AREA':
             layout.prop(asr_lamp, "area_shape", expand=True, text="Shape")
