@@ -71,10 +71,8 @@ class AppleseedCameraSettings(bpy.types.PropertyGroup):
                                              max=360,
                                              precision=3)
 
-    diaphragm_map: bpy.props.StringProperty(name="diaphragm_map",
-                                            description="Image texture to define bokeh",
-                                            default='',
-                                            subtype='FILE_PATH')
+    diaphragm_map: bpy.props.PointerProperty(name="diaphragm_map",
+                                             type=bpy.types.Image)
 
     diaphragm_map_colorspace: bpy.props.EnumProperty(name="env_tex_colorspace",
                                                      description="Color space of input texture",

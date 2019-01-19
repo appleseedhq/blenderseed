@@ -37,11 +37,11 @@ def refresh_preview(self, context):
 
     if hasattr(context, "material"):
         if context.material is not None:
-            context.material.preview_render_type: context.material.preview_render_type
+            context.material.preview_render_type = context.material.preview_render_type
 
     if hasattr(context, "texture"):
         if context.texture is not None:
-            context.texture.type: context.texture.type
+            context.texture.type = context.texture.type
 
 
 class AppleseedMatProps(bpy.types.PropertyGroup):

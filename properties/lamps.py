@@ -31,6 +31,12 @@ from ..utils import util
 
 
 class AppleseedLampProps(bpy.types.PropertyGroup):
+    sun_mode = bpy.props.EnumProperty(name="sun_mode",
+                                      description='Mode of the sun lamp.  Sun|Distant',
+                                      items=[('sun', "Sun", ""),
+                                             ('distant', "Distant", "")],
+                                      default='distant')
+
     radiance: bpy.props.FloatVectorProperty(name="radiance",
                                             description="Color of light emitted by lamp",
                                             default=(0.8, 0.8, 0.8),
