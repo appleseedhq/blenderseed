@@ -51,6 +51,7 @@ class AppleseedOSLNode(bpy.types.Node):
     bl_idname = "AppleseedOSLNode"
     bl_label = "OSL Material"
     bl_icon = "NODE"
+    bl_width_default = 240.0
 
     node_type = "osl"
 
@@ -363,22 +364,21 @@ def generate_node(node):
             parameter_types[param['name']] = "string"
 
         elif param['type'] == "int":
-            if widget != "":
-                if widget in ("mapper", "popup"):
-                    items = []
-                    for enum_item in param['options']:
-                        items.append((enum_item.split(":")[1], enum_item.split(":")[0], ""))
-                        parameter_types[prop_name] = "int"
+            if widget != "" and widget in ("mapper", "popup"):
+                items = []
+                for enum_item in param['options']:
+                    items.append((enum_item.split(":")[1], enum_item.split(":")[0], ""))
+                    parameter_types[prop_name] = "int"
 
-                    ntype.__annotations__[prop_name] = bpy.props.EnumProperty(name=param['label'],
-                                                                              description=helper,
-                                                                              default=str(int(default)),
-                                                                              items=items)
+                ntype.__annotations__[prop_name] = bpy.props.EnumProperty(name=param['label'],
+                                                                          description=helper,
+                                                                          default=str(int(default)),
+                                                                          items=items)
 
-                elif widget == 'checkBox':
-                    kwargs = {'name': param['name'], 'description': helper, 'default': bool(int(default))}
-                    ntype.__annotations__[prop_name] = bpy.props.BoolProperty(**kwargs)
-                    parameter_types[param['name']] = "int checkbox"
+            elif widget != "" and widget == 'checkBox':
+                kwargs = {'name': param['name'], 'description': helper, 'default': bool(int(default))}
+                ntype.__annotations__[prop_name] = bpy.props.BoolProperty(**kwargs)
+                parameter_types[param['name']] = "int checkbox"
 
             else:
                 kwargs = {'name': param['name'], 'description': helper, 'default': int(default)}
@@ -512,16 +512,8 @@ class AppleseedNodeTree(bpy.types.NodeTree):
         renderer = context.scene.render.engine
         return renderer == 'APPLESEED_RENDER'
 
-    # This following code is required to avoid a max recursion error when Blender checks for node updates
     def update(self):
-        self.refresh = True
-
-    def acknowledge_connection(self, context):
-        while self.refresh:
-            self.refresh = False
-            break
-
-    refresh: bpy.props.BoolProperty(name='Links Changed', default=False, update=acknowledge_connection)
+        bpy.context.material.preview_render_type = bpy.context.material.preview_render_type
 
 
 class AppleseedOSLNodeCategory(nodeitems_utils.NodeCategory):

@@ -30,16 +30,21 @@ import os
 import appleseed as asr
 
 from .assethandlers import AssetHandler
-from .materials import MaterialTranslator
+from .material import MaterialTranslator
+from .nodetree import NodeTreeTranslator
 from ..utils import util
 
 
 class PreviewRenderer(object):
+    """
+    This class handles creating a small scene used to preview Blender materials
+    """
 
     def __init__(self):
         self.__project = None
 
         self.__asset_handler = AssetHandler()
+        self.__mat_tree_translator = None
 
     @property
     def as_project(self):
@@ -50,9 +55,9 @@ class PreviewRenderer(object):
         return self.__asset_handler
 
     def translate_preview(self, scene):
-        self.__create_preview_scene(scene)
-
         self.__generate_material(scene)
+
+        self.__create_preview_scene(scene)
 
         self.__create_material(scene)
 
@@ -61,19 +66,6 @@ class PreviewRenderer(object):
         self.__set_searchpaths()
 
         self.__set_frame(scene)
-
-    def update_preview(self, scene):
-        likely_material = self.__get_preview_material(scene)
-        self.__mat_translator.update(likely_material, self.__main_assembly, scene)
-
-        as_scene = self.__project.get_scene()
-        camera = as_scene.cameras().get_by_name("preview_camera")
-        as_scene.cameras().remove(camera)
-
-        self.__create_config()
-        self.__create_camera(scene)
-        self.__set_frame(scene)
-        self.__set_searchpaths()
 
     def __create_preview_scene(self, scene):
         """This function creates the scene that is used to render material previews.  It consists of:
@@ -155,7 +147,7 @@ class PreviewRenderer(object):
         sphere = asr.MeshObjectReader.read(self.__project.get_search_paths(), "sphere_obj",
                                            {'filename': os.path.join(preview_template_dir, 'material_preview_sphere.binarymesh')})
         sphere_inst = asr.ObjectInstance("sphere", {}, "sphere_obj.part_0", asr.Transformd(asr.Matrix4d.identity()),
-                                         {'default': "preview_mat"}, {'default': "preview_mat"})
+                                         {'default': self.__mat_name}, {'default': self.__mat_name})
         return sphere, sphere_inst
 
     def __create_backdrop(self, preview_template_dir):
@@ -187,12 +179,21 @@ class PreviewRenderer(object):
     def __create_material(self, scene):
         self.__mat_translator.create_entities(scene)
         self.__mat_translator.flush_entities(self.__main_assembly)
+        if self.__mat_tree_translator is not None:
+            self.__mat_tree_translator.create_entities(scene)
+            self.__mat_tree_translator.flush_entities(self.__main_assembly)
+        
 
     def __generate_material(self, scene):
         # Collect objects and their materials in a object -> [materials] dictionary.
         likely_material = self.__get_preview_material(scene)
 
-        self.__mat_translator = MaterialTranslator(likely_material, self.asset_handler, preview=True)
+        self.__mat_name = f"{likely_material.name_full}_mat"
+
+        self.__mat_translator = MaterialTranslator(likely_material)
+
+        if likely_material.appleseed.osl_node_tree is not None:
+            self.__mat_tree_translator = NodeTreeTranslator(likely_material.appleseed.osl_node_tree, self.asset_handler)
 
     def __get_preview_material(self, scene):
         return scene.objects['preview_sphere'].material_slots[0].material
