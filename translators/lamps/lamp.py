@@ -40,9 +40,7 @@ class LampTranslator(Translator):
 
         self.__as_lamp_radiance = None
         self.__as_lamp = None
-        self.__as_lamp_params = None
 
-        self.__as_area_lamp_params = None
         self.__as_area_lamp_material = None
         self.__as_area_lamp_shader = None
         self.__as_area_lamp_mesh = None
@@ -56,22 +54,21 @@ class LampTranslator(Translator):
         as_lamp_data = self.bl_lamp.data.appleseed
         self.__bl_lamp_type = self.bl_lamp.data.type
 
-        if self.__bl_lamp_type != 'AREA':
-            if self.__bl_lamp_type == 'POINT':
-                model = 'point_light'
-                self.__as_lamp_params = self.__get_point_lamp_params()
-            elif self.__bl_lamp_type == 'SPOT':
-                model = 'spot_light'
-                self.__as_lamp_params = self.__get_spot_lamp_params()
-            elif self.__bl_lamp_type == 'SUN' and not as_lamp_data.use_edf:
-                model = 'directional_light'
-                self.__as_lamp_params = self.__get_directional_lamp_params()
-            elif self.__bl_lamp_type == 'SUN':
-                model = 'sun_light'
-                self.__as_lamp_params = self.__get_sun_lamp_params()
+        self.__as_lamp_model = self.__get_lamp_model()
 
-            self.__as_lamp = asr.Light(model, self.appleseed_name, {})
-            
+        if self.__bl_lamp_type != 'AREA':
+            if self.__as_lamp_model == 'point_light':
+                as_lamp_params = self.__get_point_lamp_params()
+            if self.__as_lamp_model == 'spot_light':
+                as_lamp_params = self.__get_spot_lamp_params()
+            if self.__as_lamp_model == 'directional_light':
+                as_lamp_params = self.__get_directional_lamp_params()
+            if self.__as_lamp_model == 'sun_light':
+                as_lamp_params = self.__get_sun_lamp_params()
+
+            self.__as_lamp = asr.Light(self.__as_lamp_model, self.appleseed_name, as_lamp_params)
+            self.__as_lamp.set_transform(self._convert_matrix(self.bl_lamp.matrix_world))
+
             radiance = self._convert_color(as_lamp_data.radiance)
             lamp_radiance_name = f"{self.appleseed_name}_radiance"
             self.__as_lamp_radiance = asr.ColorEntity(lamp_radiance_name, {'color_space': 'linear_rgb'}, radiance)
@@ -80,13 +77,14 @@ class LampTranslator(Translator):
 
     def flush_entities(self, as_assembly):
         if self.__bl_lamp_type != 'AREA':
-            self.__as_lamp.set_parameters(self.__as_lamp_params)
-            self.__as_lamp.set_transform(self._convert_matrix(self.bl_lamp.matrix_world))
             as_assembly.lights().insert(self.__as_lamp)
             self.__as_lamp = as_assembly.lights().get_by_name(self.appleseed_name)
 
             as_assembly.colors().insert(self.__as_lamp_radiance)
             self.__as_lamp_radiance = as_assembly.colors().get_by_name(f"{self.appleseed_name}_radiance")
+
+    def set_xform_step(self, time, bl_matrix):
+        pass
 
     def __get_point_lamp_params(self):
         as_lamp_data = self.bl_lamp.data.appleseed
@@ -146,3 +144,14 @@ class LampTranslator(Translator):
             light_params['environment_edf'] = 'sky_edf'
 
         return light_params
+
+    def __get_lamp_model(self):
+        as_lamp_data = self.bl_lamp.data.appleseed
+        if self.__bl_lamp_type == 'POINT':
+            return 'point_light'
+        if self.__bl_lamp_type == 'SPOT':
+            return 'spot_light'
+        if self.__bl_lamp_type == 'SUN' and as_lamp_data.sun_mode == 'distant':
+            return 'directional_light'
+        if self.__bl_lamp_type == 'SUN' and as_lamp_data.sun_mode == 'sun':
+            return 'sun_light'
