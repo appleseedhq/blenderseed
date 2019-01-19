@@ -27,10 +27,8 @@
 
 import math
 
-from mathutils import Matrix
 
 import appleseed as asr
-from .assethandlers import AssetType
 from .translator import Translator
 from ..logger import get_logger
 
@@ -38,6 +36,9 @@ logger = get_logger()
 
 
 class WorldTranslator(Translator):
+    """
+    This class translates a Blender world block into an appleseed environment
+    """
 
     # Constructor.
     def __init__(self, world, asset_handler):

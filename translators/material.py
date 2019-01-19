@@ -34,8 +34,11 @@ logger = get_logger()
 
 
 class MaterialTranslator(Translator):
+    """
+    This class translates a Blender material data block into its associated appleseed entities (Material and Surface shader)
+    """
 
-    def __init__(self, mat, preview=False):
+    def __init__(self, mat):
         super().__init__(mat)
 
         self.__as_mat_params = {}
@@ -54,7 +57,7 @@ class MaterialTranslator(Translator):
     def bl_node_tree(self):
         return self._bl_obj.appleseed.osl_node_tree
 
-    def create_entities(self):
+    def create_entities(self, bl_scene):
         as_mat_data = self.bl_mat.appleseed
 
         mat_name = f"{self.appleseed_name}_mat"

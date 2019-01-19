@@ -34,11 +34,17 @@ from .translator import Translator
 
 
 class TextureTranslator(Translator):
+    """
+    Stores the parameters and appleseed entities needed to hold a texture from Blender's internal texture system for rendering.
+    OSL shaders do not store anything here
+    """
 
-    def __init__(self, bl_texture, color_space, asset_handler):
+    def __init__(self, bl_texture, color_space, asset_handler=None, wrap_mode=None, alpha_mode=None):
         super().__init__(bl_texture, asset_handler=asset_handler)
 
         self.__as_color_space = color_space
+        self.__as_wrap_mode = wrap_mode
+        self.__as_alpha_mode = alpha_mode
         self.__as_tex = None
         self.__as_tex_inst = None
 
@@ -47,7 +53,7 @@ class TextureTranslator(Translator):
     def bl_tex(self):
         return self._bl_obj
 
-    def create_entities(self):
+    def create_entities(self, bl_scene):
         filepath = self.asset_handler.process_path(self.bl_tex.filepath, AssetType.TEXTURE_ASSET)
 
         tex_params = {'filename': filepath,
@@ -57,8 +63,11 @@ class TextureTranslator(Translator):
                                     tex_params,
                                     [])
 
-        tex_inst_params = {'addressing_mode': 'wrap',
-                           'filtering_mode': 'bilinear'}
+        address_mode = self.__as_wrap_mode if self.__as_wrap_mode is not None else 'wrap'
+        alpha_mode = self.__as_alpha_mode if self.__as_alpha_mode is not None else 'detect'
+        tex_inst_params = {'addressing_mode': address_mode,
+                           'filtering_mode': 'bilinear',
+                           'alpha_mode': alpha_mode}
         self.__as_tex_inst = asr.TextureInstance(f"{self.appleseed_name}_inst",
                                                  tex_inst_params,
                                                  self.appleseed_name,

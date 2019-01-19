@@ -39,6 +39,10 @@ class AssetType(Enum):
 
 
 class AssetHandler(object):
+    """
+    This class holds methods that are used to translate Blender textures and OSL shader asset filepaths into the correct
+    format for rendering
+    """
 
     def __init__(self):
         self._searchpaths = []
@@ -68,6 +72,10 @@ class AssetHandler(object):
 
 
 class CopyAssetsAssetHandler(AssetHandler):
+    """
+    This class holds methods that are used to translate Blender textures and OSL shader asset filepaths into the correct
+    format for exported scene files.  It also copies texture assets into the correct output folder
+    """
 
     def __init__(self, export_dir, geometry_dir, textures_dir):
         super(CopyAssetsAssetHandler, self).__init__()

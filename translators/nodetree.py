@@ -35,6 +35,10 @@ logger = get_logger()
 
 
 class NodeTreeTranslator(Translator):
+    """
+    This class translates a Blender node tree into an appleseed OSL shader group
+    """
+
     def __init__(self, node_tree, asset_handler):
         super().__init__(node_tree, asset_handler=asset_handler)
 
@@ -64,7 +68,7 @@ class NodeTreeTranslator(Translator):
                 self.__shader_list = surface_shader.traverse_tree()
 
         if surface_shader is None:
-            logger.debug("No surface shader for %s", self.__shader_group.get_name())
+            logger.debug("No surface shader for %s", self.__as_shader_group.get_name())
             return
 
         self.__as_shader_group.clear()
@@ -105,8 +109,6 @@ class NodeTreeTranslator(Translator):
                                                                   output.socket_osl_id,
                                                                   link.to_node.name,
                                                                   link.to_socket.socket_osl_id)
-                        else:
-                            continue
 
         surface_shader_file = self.asset_handler.process_path(surface_shader.file_name,
                                                               AssetType.SHADER_ASSET)

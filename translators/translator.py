@@ -54,24 +54,24 @@ class Translator(object):
         return self._asset_handler
 
     # Entity translation.
-    def create_entities(self, scene):
-        """todo: document me..."""
+    def create_entities(self, bl_scene):
+        """
+        This function creates the parameter lists and appleseed entities that are being hosted by the translator
+        :param bl_scene: Blender scene
+        :return: None
+        """
 
         raise NotImplementedError()
 
-    def flush_entities(self, as_scene, as_assembly):
-        """todo: document me..."""
+    def flush_entities(self, as_assembly):
+        """
+        This function flushes the appleseed entities into the appropriate location in the project file and then
+        retrieves Python wrapped pointers to the entities for further editing if needed
+        :param as_assembly: The primary scene assembly for the appleseed project
+        :return: None
+        """
 
         raise NotImplementedError()
-
-    # Utility methods.
-    def _reset(self, obj):
-        """
-        This exists in order to reset the basic data on the translator when doing an interactive render update.
-        This is necessary when the name of an object or material changes.
-        """
-
-        self._bl_obj = obj
 
     @staticmethod
     def _convert_matrix(m):
@@ -88,6 +88,8 @@ class Translator(object):
         The only difference between the coordinate systems of Blender and appleseed is the up vector:
         in Blender, up is Z+; in appleseed, up is Y+.  So we need to add a -90 degree rotation along the x
         axis to translate.
+        :param m: Input Blender object matrix
+        :return: appleseed transform of the modified matrix
         """
 
         matrix = asr.Matrix4d([m[0][0], m[0][1], m[0][2], m[0][3],
@@ -103,6 +105,9 @@ class Translator(object):
 
     @staticmethod
     def _convert_color(color):
-        """Convert a Blender color to a Python list."""
-
+        """
+        Convert a Blender color to a Python list
+        :param color: Blender FloatVectorProperty with color information
+        :return: List of extracted RGB values
+        """
         return [color[0], color[1], color[2]]

@@ -28,18 +28,17 @@
 import math
 import os
 
+import appleseed as asr
 import bpy
 
-import appleseed as asr
-
 from .assethandlers import AssetHandler, CopyAssetsAssetHandler
-from .cameras.final import RenderCameraTranslator
-from .lamps.lamp import LampTranslator
-from .objects.mesh import MeshTranslator
+from .cameras import RenderCameraTranslator
+from .lamps import LampInstanceTranslator, LampTranslator
 from .material import MaterialTranslator
 from .nodetree import NodeTreeTranslator
-from .texture import TextureTranslator
-from .utilites import ProjectExportMode
+from .objects import InstanceSourceMesh, MeshInstanceTranslator, MeshTranslator
+from .textures import TextureTranslator
+from .utilities import ProjectExportMode, create_bl_render_mesh
 from .world import WorldTranslator
 from ..logger import get_logger
 from ..utils.util import Timer
@@ -49,7 +48,7 @@ logger = get_logger()
 
 class SceneTranslator(object):
     """
-    Class that translates a Blender scene to an appleseed project.
+    Translates a Blender scene into an appleseed project.
     """
 
     # Constructors.
@@ -76,12 +75,11 @@ class SceneTranslator(object):
 
         asset_handler = CopyAssetsAssetHandler(project_dir, geometry_dir, textures_dir)
 
-        return cls(
-            depsgraph=depsgraph,
-            export_mode=ProjectExportMode.PROJECT_EXPORT,
-            selected_only=depsgraph.scene.appleseed.export_selected,
-            context=None,
-            asset_handler=asset_handler)
+        return cls(depsgraph=depsgraph,
+                   export_mode=ProjectExportMode.PROJECT_EXPORT,
+                   selected_only=depsgraph.scene.appleseed.export_selected,
+                   context=None,
+                   asset_handler=asset_handler)
 
     @classmethod
     def create_final_render_translator(cls, depsgraph):
@@ -93,12 +91,11 @@ class SceneTranslator(object):
 
         asset_handler = AssetHandler()
 
-        return cls(
-            depsgraph=depsgraph,
-            export_mode=ProjectExportMode.FINAL_RENDER,
-            selected_only=False,
-            context=None,
-            asset_handler=asset_handler)
+        return cls(depsgraph=depsgraph,
+                   export_mode=ProjectExportMode.FINAL_RENDER,
+                   selected_only=False,
+                   context=None,
+                   asset_handler=asset_handler)
 
     @classmethod
     def create_interactive_render_translator(cls, context):
@@ -111,12 +108,11 @@ class SceneTranslator(object):
 
         asset_handler = AssetHandler()
 
-        return cls(
-            depsgraph=context.depsgraph,
-            export_mode=ProjectExportMode.INTERACTIVE_RENDER,
-            selected_only=False,
-            context=context,
-            asset_handler=asset_handler)
+        return cls(depsgraph=context.depsgraph,
+                   export_mode=ProjectExportMode.INTERACTIVE_RENDER,
+                   selected_only=False,
+                   context=context,
+                   asset_handler=asset_handler)
 
     def __init__(self, depsgraph, export_mode, selected_only, context, asset_handler):
         """
@@ -140,6 +136,8 @@ class SceneTranslator(object):
         self.__camera_translator = None
         self.__lamp_translators = {}
         self.__object_translators = {}
+        self.__instance_translators = {}
+        self.__instance_sources = {}
         self.__material_translators = {}
         self.__nodetree_translators = {}
         self.__texture_translators = {}
@@ -180,6 +178,16 @@ class SceneTranslator(object):
     def export_mode(self):
         return self.__export_mode
 
+    @property
+    def all_translators(self):
+        return[self.__lamp_translators,
+               self.__object_translators,
+               self.__instance_translators,
+               self.__instance_sources,
+               self.__material_translators,
+               self.__nodetree_translators,
+               self.__texture_translators]
+
     def translate_scene(self):
         """
         Translate the Blender scene to an appleseed project.
@@ -207,42 +215,23 @@ class SceneTranslator(object):
 
         self.__create_translators()
 
-        if self.__world_translator != None:
+        if self.export_mode == ProjectExportMode.FINAL_RENDER:
+            self.__create_final_render_instancers()
+
+        if self.__world_translator is not None:
             self.__world_translator.create_entities(self.bl_scene)
 
         self.__camera_translator.create_entities(self.bl_scene)
 
-        for translator in self.__material_translators.values():
-            translator.create_entities()
-
-        for translator in self.__nodetree_translators.values():
-            translator.create_entities(self.bl_scene)
-
-        for translator in self.__texture_translators.values():
-            translator.create_entities()
-
-        for translator in self.__lamp_translators.values():
-            translator.create_entities(self.bl_scene)
-
-        for translator in self.__object_translators.values():
-            translator.create_entities(self.bl_scene)
+        for translators in self.all_translators:
+            for translator in translators.values():
+                translator.create_entities(self.bl_scene)
 
         self.__calc_motion()
 
-        for translator in self.__material_translators.values():
-            translator.flush_entities(self.main_assembly)
-
-        for translator in self.__nodetree_translators.values():
-            translator.flush_entities(self.main_assembly)
-
-        for translator in self.__texture_translators.values():
-            translator.flush_entities(self.main_assembly)
-
-        for translator in self.__lamp_translators.values():
-            translator.flush_entities(self.main_assembly)
-
-        for translator in self.__object_translators.values():
-            translator.flush_entities(self.main_assembly)
+        for translators in self.all_translators:
+            for translator in translators.values():
+                translator.flush_entities(self.main_assembly)
 
         if self.__world_translator != None:
             self.__world_translator.flush_entities(self.as_scene, self.main_assembly)
@@ -267,7 +256,7 @@ class SceneTranslator(object):
     # Internal methods.
     def __create_project(self):
         """
-        Create a default empty project.
+        Creates the base project.
         """
 
         logger.debug("Creating appleseed project")
@@ -549,7 +538,7 @@ class SceneTranslator(object):
                                                                             self.asset_handler)
 
     def __create_camera_translator(self):
-        if self.bl_scene.camera != None:
+        if self.bl_scene.camera is not None:
             logger.debug("Creating camera translator for active camera")
             if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
                 self.__camera_translator = RenderCameraTranslator(self.bl_scene.camera,
@@ -557,7 +546,7 @@ class SceneTranslator(object):
             else:
                 raise NotImplementedError()
 
-            if self.bl_scene.camera.data.appleseed.diaphragm_map != None:
+            if self.bl_scene.camera.data.appleseed.diaphragm_map is not None:
                 tex_key = self.bl_scene.camera.data.appleseed.diaphragm_map.name_full
                 if tex_key not in self.__texture_translators:
                     self.__texture_translators[tex_key] = TextureTranslator(self.bl_scene.camera.data.appleseed.diaphragm_map,
@@ -565,9 +554,9 @@ class SceneTranslator(object):
                                                                             self.asset_handler)
 
     def __calc_motion(self):
-        """Calculates subframes for motion blur.  Each blur type can have it's own segment count, so the final list
-        created has every transform time needed.  This way we only have to move the frame set point one time, instead of the dozens
-        and dozens of times the old exporter did (yay for progress).
+        """Calculates subframes for motion blur.  Each blur type can have its own segment count, so the final list
+        created has every transform time needed.  This way we only have to move the frame set point (with the associated
+        depsgraph recalculation) one time.
         """
         cam_times = {0.0}
         xform_times = {0.0}
@@ -601,7 +590,16 @@ class SceneTranslator(object):
             self.bl_scene.frame_set(int_frame, subframe=subframe)
 
             if time in cam_times:
-                self.__camera_translator.set_transform(time)
+                self.__camera_translator.set_xform_step(time)
+
+            if time in xform_times:
+                for obj in self.bl_scene.objects:
+                    self.__object_translators[obj.name_full].set_xform_step(time)
+                
+                for inst in self.bl_depsgraph.object_instances:
+                    if inst.is_instance and inst.instance_object.type == 'MESH':
+                        inst_key = f"{inst.instance_object.name_full}|{inst.persistent_id[0]}"
+                        self.__instance_translators[inst_key].set_xform_step(time, inst.matrix_world)
 
         self.bl_scene.frame_set(current_frame)
 
@@ -614,6 +612,10 @@ class SceneTranslator(object):
             times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
 
     def __parse_material_datablocks(self):
+        """
+        Parses the material blocks present in the evaluated depsgraph and returns them in a list
+        :return: List of Blender material data blocks
+        """
         mat_blocks = []
 
         for block in self.bl_depsgraph.ids:
@@ -623,6 +625,10 @@ class SceneTranslator(object):
         return mat_blocks
 
     def __parse_nodetree_datablocks(self):
+        """
+        Parses the node group blocks present in the evaluated depsgraph and returns them in a list
+        :return: List of Blender node group data blocks
+        """
         nodetree_blocks = []
 
         for block in self.bl_depsgraph.ids:
@@ -636,6 +642,10 @@ class SceneTranslator(object):
         return nodetree_blocks
 
     def __parse_object_datablocks(self):
+        """
+        Parses the mesh blocks present in the evaluated depsgraph and returns them in a list
+        :return: List of Blender mesh data blocks
+        """
         obj_blocks = []
 
         for obj in self.bl_depsgraph.objects:
@@ -644,6 +654,10 @@ class SceneTranslator(object):
         return obj_blocks
 
     def __create_translators(self):
+        """
+        Creates appleseed translators for all the 'real' object, lamps and materials in the scene
+        :return: None
+        """
         for mat in self.__bl_mat_datablocks:
             mat_key = mat.name_full
             self.__material_translators[mat_key] = MaterialTranslator(mat)
@@ -655,8 +669,14 @@ class SceneTranslator(object):
         for obj in self.__bl_obj_datablocks:
             obj_key = obj.name_full
             if obj.type == 'MESH':
-                self.__object_translators[obj_key] = MeshTranslator(obj, self.asset_handler)
-                
+                self.__object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
+                if obj.appleseed.object_alpha_texture is not None:
+                    tex_key = obj.appleseed.object_alpha_texture.name_full
+                    if tex_key not in self.__texture_translators:
+                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.object_alpha_texture,
+                                                                                obj.data.appleseed.object_alpha_texture_colorspace,
+                                                                                self.asset_handler)
+
             elif obj.type == 'LIGHT':
                 self.__lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
                 if obj.data.appleseed.radiance_use_tex and obj.data.appleseed.radiance_tex is not None:
@@ -665,12 +685,42 @@ class SceneTranslator(object):
                         self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_tex,
                                                                                 obj.data.appleseed.radiance_tex_color_space,
                                                                                 self.asset_handler)
+
                 if obj.data.appleseed.radiance_multiplier_use_tex and obj.data.appleseed.radiance_multiplier_tex is not None:
                     tex_key = obj.data.appleseed.radiance_multiplier_tex.name_full
                     if tex_key not in self.__texture_translators:
                         self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
                                                                                 obj.data.appleseed.radiance_multiplier_tex_color_space,
                                                                                 self.asset_handler)
+            else:
+                continue
+
+    def __create_final_render_instancers(self):
+        """
+        Creates instance translators for each instance of a lamp/object that was created via a particle system
+        or dupli item.  For final rendering all instances are placed in a single level dictionary in order to make
+        it easier to assign xform blur steps later on.
+        :return: None
+        """
+        mesh_instance_sources = []
+        for inst in self.bl_depsgraph.object_instances:
+            if inst.is_instance:
+                source_key = inst.instance_object.name_full
+                inst_key = f"{source_key}|{inst.persistent_id[0]}"
+                if inst.instance_object.type == 'MESH':
+                    self.__instance_translators[inst_key] = MeshInstanceTranslator(inst_key, source_key)
+                    if inst.instance_object not in mesh_instance_sources:
+                        mesh_instance_sources.append(inst.instance_object)
+                elif inst.instance_object.type == 'LIGHT':
+                    self.__instance_translators[inst_key] = LampInstanceTranslator(inst.instance_object, self.asset_handler, inst_key, inst.matrix_world)
+
+        for obj in mesh_instance_sources:
+            obj_key = obj.name_full
+            if obj.type == 'MESH':
+                if obj.persistent_id[0] == 0 and obj_key not in self.__object_translators:
+                    self.__instance_sources[obj_key] = InstanceSourceMesh(obj)
+                else:
+                    self.__object_translators[obj_key].add_instance()
 
     @staticmethod
     def __round_up_pow2(x):

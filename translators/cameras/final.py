@@ -46,7 +46,6 @@ class RenderCameraTranslator(Translator):
         super().__init__(camera, asset_handler)
 
         self.__as_camera = None
-        self.__as_camera_params = {}
         self.__xform_seq = asr.TransformSequence()
 
     # Properties.
@@ -59,11 +58,13 @@ class RenderCameraTranslator(Translator):
 
         model = self.__get_model()
 
-        self.__as_camera = asr.Camera(model, "Camera", {})
+        as_camera_params = self.__get_cam_params(bl_scene)
 
-        self.__as_camera_params = self.__get_cam_params(bl_scene)
+        self.__as_camera = asr.Camera(model, "Camera", as_camera_params)
 
-    def set_transform(self, time):
+        self.__xform_seq.set_transform(0.0, self._convert_matrix(self.bl_camera.matrix_world))
+
+    def set_xform_step(self, time):
         self.__xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
     def flush_entities(self, as_scene, as_assembly):
@@ -72,8 +73,6 @@ class RenderCameraTranslator(Translator):
         logger.debug("Flushing camera entity for camera, num xform keys = %s", self.__xform_seq.size())
 
         self.__as_camera.set_transform_sequence(self.__xform_seq)
-
-        self.__as_camera.set_parameters(self.__as_camera_params)
 
         # Insert the camera into the scene.
         as_scene.cameras().insert(self.__as_camera)
@@ -170,8 +169,8 @@ class RenderCameraTranslator(Translator):
             cam_params['autofocus_target'] = asr.Vector2f(x, y)
             cam_params['autofocus_enabled'] = True
 
-        if camera.data.appleseed.diaphragm_map != "":
-            tex_name = f"{camera.data.appleseed.diaphragm_map.name}_inst"
+        if camera.data.appleseed.diaphragm_map is not None:
+            tex_name = f"{camera.data.appleseed.diaphragm_map.name_full}_inst"
             cam_params['diaphragm_map'] = tex_name
             del cam_params['diaphragm_blades']
 
