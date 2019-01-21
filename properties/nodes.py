@@ -513,7 +513,8 @@ class AppleseedNodeTree(bpy.types.NodeTree):
         return renderer == 'APPLESEED_RENDER'
 
     def update(self):
-        bpy.context.material.preview_render_type = bpy.context.material.preview_render_type
+        if hasattr(bpy.context, "material"):
+            bpy.context.material.preview_render_type = bpy.context.material.preview_render_type
 
 
 class AppleseedOSLNodeCategory(nodeitems_utils.NodeCategory):

@@ -36,9 +36,9 @@ from .cameras import RenderCameraTranslator
 from .lamps import LampInstanceTranslator, LampTranslator
 from .material import MaterialTranslator
 from .nodetree import NodeTreeTranslator
-from .objects import InstanceSourceMesh, MeshInstanceTranslator, MeshTranslator
+from .objects import MeshInstanceTranslator, MeshTranslator
 from .textures import TextureTranslator
-from .utilities import ProjectExportMode, create_bl_render_mesh
+from .utilities import ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
 from ..utils.util import Timer
@@ -594,12 +594,17 @@ class SceneTranslator(object):
 
             if time in xform_times:
                 for obj in self.bl_scene.objects:
-                    self.__object_translators[obj.name_full].set_xform_step(time)
+                    if obj.type == 'MESH':
+                        self.__object_translators[obj.name_full].set_xform_step(time)
                 
                 for inst in self.bl_depsgraph.object_instances:
                     if inst.is_instance and inst.instance_object.type == 'MESH':
                         inst_key = f"{inst.instance_object.name_full}|{inst.persistent_id[0]}"
                         self.__instance_translators[inst_key].set_xform_step(time, inst.matrix_world)
+
+            if time in deform_times:
+                for translator in self.__object_translators.values():
+                    translator.set_deform_key(time, self.bl_depsgraph, all_times)
 
         self.bl_scene.frame_set(current_frame)
 
@@ -718,7 +723,7 @@ class SceneTranslator(object):
             obj_key = obj.name_full
             if obj.type == 'MESH':
                 if obj.persistent_id[0] == 0 and obj_key not in self.__object_translators:
-                    self.__instance_sources[obj_key] = InstanceSourceMesh(obj)
+                    self.__instance_sources[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler, is_source=True)
                 else:
                     self.__object_translators[obj_key].add_instance()
 

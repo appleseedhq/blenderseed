@@ -128,31 +128,31 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 with SetAppleseedLogLevel(level):
                     self.__render_material_preview(depsgraph.scene)
         else:
-            level = scene.appleseed.log_level
+            level = depsgraph.scene.appleseed.log_level
             with SetAppleseedLogLevel(level):
-                self.__add_render_passes(scene)
-                self.__render_final(scene)
+                self.__add_render_passes(depsgraph.scene)
+                self.__render_final(depsgraph)
 
-    def view_update(self, context):
-        if self.__interactive_scene_translator is None:
-            self.__start_interactive_render(context)
-        else:
-            self.__pause_rendering()
-            logger.debug("Updating scene")
-            self.__interactive_scene_translator.update_scene(context.scene, context)
-            self.__restart_interactive_render()
+    # def view_update(self, context):
+    #     if self.__interactive_scene_translator is None:
+    #         self.__start_interactive_render(context)
+    #     else:
+    #         self.__pause_rendering()
+    #         logger.debug("Updating scene")
+    #         self.__interactive_scene_translator.update_scene(context.scene, context)
+    #         self.__restart_interactive_render()
 
-    def view_draw(self, context):
-        self.__draw_pixels(context)
+    # def view_draw(self, context):
+    #     self.__draw_pixels(context)
 
-        # Check if view has changed.
-        view_update, cam_param_update, cam_translate_update = self.__interactive_scene_translator.check_view(context)
+    #     # Check if view has changed.
+    #     view_update, cam_param_update, cam_translate_update = self.__interactive_scene_translator.check_view(context)
 
-        if view_update or cam_param_update or cam_translate_update:
-            self.__pause_rendering()
-            logger.debug("Updating view")
-            self.__interactive_scene_translator.update_view(view_update, cam_param_update)
-            self.__restart_interactive_render()
+    #     if view_update or cam_param_update or cam_translate_update:
+    #         self.__pause_rendering()
+    #         logger.debug("Updating view")
+    #         self.__interactive_scene_translator.update_view(view_update, cam_param_update)
+    #         self.__restart_interactive_render()
 
     def update_render_passes(self, scene=None, renderlayer=None):
         asr_scene_props = scene.appleseed
@@ -210,16 +210,22 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__start_final_render(scene, material_preview_renderer.as_project)
 
-    def __render_final(self, scene):
+    def __render_final(self, depsgraph):
         """
         Export and render the scene.
         """
 
-        scene_translator = SceneTranslator.create_final_render_translator(scene)
-        self.update_stats("appleseed Rendering: Translating scene", "")
-        scene_translator.translate_scene()
+        if depsgraph.scene.appleseed.scene_export_mode == 'export_only':
+            scene_translator = SceneTranslator.create_project_export_translator(depsgraph)
+            scene_translator.translate_scene()
+            scene_translator.write_project(depsgraph.scene.appleseed.export_path)
+        else:
+            scene_translator = SceneTranslator.create_final_render_translator(depsgraph)
+            self.update_stats("appleseed Rendering: Translating scene", "")
+            scene_translator.translate_scene()
 
-        self.__start_final_render(scene, scene_translator.as_project)
+
+        # self.__start_final_render(depsgraph.scene, scene_translator.as_project)
 
     def __start_final_render(self, scene, project):
         """

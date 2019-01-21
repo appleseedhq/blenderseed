@@ -26,4 +26,3 @@
 #
 
 from .utilites import ProjectExportMode
-from .mesh_converter import create_bl_render_mesh

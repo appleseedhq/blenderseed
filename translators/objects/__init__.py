@@ -25,6 +25,5 @@
 # THE SOFTWARE.
 #
 
-from .instance_source import InstanceSourceMesh
 from .mesh import MeshTranslator
 from .mesh_instance import MeshInstanceTranslator

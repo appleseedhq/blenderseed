@@ -58,9 +58,11 @@ class RenderCameraTranslator(Translator):
 
         model = self.__get_model()
 
+        self.__as_camera = asr.Camera(model, "Camera", {})
+
         as_camera_params = self.__get_cam_params(bl_scene)
 
-        self.__as_camera = asr.Camera(model, "Camera", as_camera_params)
+        self.__as_camera.set_parameters(as_camera_params)
 
         self.__xform_seq.set_transform(0.0, self._convert_matrix(self.bl_camera.matrix_world))
 

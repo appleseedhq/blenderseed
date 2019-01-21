@@ -196,6 +196,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     export_selected: bpy.props.BoolProperty(name="export_selected",
                                             default=False)
 
+    export_path: bpy.props.StringProperty(name="export_path",
+                                          subtype='FILE_PATH')
+
     threads_auto: bpy.props.BoolProperty(name="threads_auto",
                                          description="Automatically determine the number of rendering threads",
                                          default=True)
@@ -725,7 +728,7 @@ classes = (
 def register():
     for cls in classes:
         util.safe_register_class(cls)
-    
+
     bpy.types.Scene.appleseed = bpy.props.PointerProperty(type=AppleseedRenderSettings)
 
 
