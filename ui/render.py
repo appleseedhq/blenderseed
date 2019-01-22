@@ -42,7 +42,7 @@ class ASRENDER_PT_base(object):
 
 
 class ASRENDER_PT_export(bpy.types.Panel, ASRENDER_PT_base):
-    bl_label = "Export Scene File"
+    bl_label = "Rendering"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
 
     def draw(self, context):

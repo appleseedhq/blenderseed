@@ -238,7 +238,7 @@ class SceneTranslator(object):
 
         self.__camera_translator.flush_entities(self.as_scene, self.main_assembly)
 
-        # self.__load_searchpaths()
+        self.__load_searchpaths()
 
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
@@ -596,7 +596,7 @@ class SceneTranslator(object):
                 for obj in self.bl_scene.objects:
                     if obj.type == 'MESH':
                         self.__object_translators[obj.name_full].set_xform_step(time)
-                
+
                 for inst in self.bl_depsgraph.object_instances:
                     if inst.is_instance and inst.instance_object.type == 'MESH':
                         inst_key = f"{inst.instance_object.name_full}|{inst.persistent_id[0]}"
@@ -708,24 +708,39 @@ class SceneTranslator(object):
         :return: None
         """
         mesh_instance_sources = []
+
         for inst in self.bl_depsgraph.object_instances:
             if inst.is_instance:
                 source_key = inst.instance_object.name_full
                 inst_key = f"{source_key}|{inst.persistent_id[0]}"
                 if inst.instance_object.type == 'MESH':
-                    self.__instance_translators[inst_key] = MeshInstanceTranslator(inst_key, source_key)
-                    if inst.instance_object not in mesh_instance_sources:
+                    self.__instance_translators[inst_key] = MeshInstanceTranslator(inst_key,
+                                                                                   source_key)
+                    if inst.persistent_id[0] == 0:
                         mesh_instance_sources.append(inst.instance_object)
                 elif inst.instance_object.type == 'LIGHT':
-                    self.__instance_translators[inst_key] = LampInstanceTranslator(inst.instance_object, self.asset_handler, inst_key, inst.matrix_world)
+                    self.__instance_translators[inst_key] = LampInstanceTranslator(inst.instance_object,
+                                                                                   self.asset_handler,
+                                                                                   inst_key,
+                                                                                   inst.matrix_world)
 
         for obj in mesh_instance_sources:
             obj_key = obj.name_full
             if obj.type == 'MESH':
-                if obj.persistent_id[0] == 0 and obj_key not in self.__object_translators:
-                    self.__instance_sources[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler, is_source=True)
+                if obj_key not in self.__object_translators:
+                    self.__instance_sources[obj_key] = MeshTranslator(obj,
+                                                                      self.export_mode,
+                                                                      self.asset_handler,
+                                                                      is_source=True)
                 else:
                     self.__object_translators[obj_key].add_instance()
+
+    def __load_searchpaths(self):
+        paths = self.as_project.get_search_paths()
+
+        paths.extend(path for path in self.asset_handler.searchpaths if path not in paths)
+
+        self.as_project.set_search_paths(paths)
 
     @staticmethod
     def __round_up_pow2(x):

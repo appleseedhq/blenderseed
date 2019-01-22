@@ -224,8 +224,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.update_stats("appleseed Rendering: Translating scene", "")
             scene_translator.translate_scene()
 
-
-        # self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+        self.__start_final_render(depsgraph.scene, scene_translator.as_project)
 
     def __start_final_render(self, scene, project):
         """

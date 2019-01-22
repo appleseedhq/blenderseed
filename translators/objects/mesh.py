@@ -72,7 +72,7 @@ class MeshTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene):
-        mesh_name = f"{self.appleseed_name}_mesh"
+        mesh_name = f"{self.appleseed_name}_obj"
 
         mesh_params = self.__get_mesh_params()
 
@@ -81,9 +81,8 @@ class MeshTranslator(Translator):
         self.__as_mesh_inst_params = self.__get_mesh_inst_params()
         self.__front_materials, self.__back_materials = self.__get_material_mappings()
 
-        self.__xform_seq.set_transform(0.0, self._convert_matrix(self.bl_obj.matrix_world))
-
     def set_xform_step(self, time):
+
         self.__xform_seq.set_transform(time, self._convert_matrix(self.bl_obj.matrix_world))
 
     def set_deform_key(self, time, depsgraph, key_times):
@@ -91,10 +90,10 @@ class MeshTranslator(Translator):
             logger.debug("Skipping mesh key for non deforming object %s", self.bl_obj.name)
             return
 
-        mesh_name = f"{self.appleseed_name}_mesh"
+        mesh_name = f"{self.appleseed_name}_obj"
 
         me = self.__create_bl_render_mesh(depsgraph)
-        
+
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Write a mesh file for the mesh key.
             logger.debug("Writing mesh file object %s, time = %s", self.bl_obj.name, time)
@@ -118,11 +117,12 @@ class MeshTranslator(Translator):
         bpy.data.meshes.remove(me)
         self.__key_index += 1
 
-
     def flush_entities(self, as_assembly):
         self.__xform_seq.optimize()
 
-        mesh_name = self.__object_instance_mesh_name(f"{self.appleseed_name}_mesh")
+        mesh_name = f"{self.appleseed_name}_obj"
+
+        logger.debug("Flushing mesh %s", mesh_name)
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Replace the MeshObject by an empty one referencing
@@ -142,6 +142,9 @@ class MeshTranslator(Translator):
                     params['filename'][str(i)] = "_geometry/" + f
 
             self.__as_mesh = asr.MeshObject(mesh_name, params)
+
+        
+        mesh_name = self.__object_instance_mesh_name(f"{self.appleseed_name}_obj")
 
         as_assembly.objects().insert(self.__as_mesh)
         self.__as_mesh = as_assembly.objects().get_by_name(mesh_name)
@@ -231,7 +234,7 @@ class MeshTranslator(Translator):
                 else:
                     front_mats["default"] = "__default_material"
             else:
-                mesh_name = f"{self.appleseed_name}_mesh"
+                mesh_name = f"{self.appleseed_name}_obj"
                 logger.debug("Mesh %s has no materials, assigning default material instead", mesh_name)
                 front_mats["default"] = "__default_material"
 
@@ -239,8 +242,6 @@ class MeshTranslator(Translator):
 
         if double_sided_materials:
             rear_mats = front_mats
-
-        print(front_mats)
 
         return front_mats, rear_mats
 
@@ -280,9 +281,9 @@ class MeshTranslator(Translator):
             me.calc_normals()
             me.split_faces()
 
-        vert_pointer = me.vertices[0].as_pointer()
-
         me.calc_loop_triangles()
+
+        vert_pointer = me.vertices[0].as_pointer()
 
         loop_tris_pointer = me.loop_triangles[0].as_pointer()
         loop_tris_length = len(me.loop_triangles)
@@ -306,17 +307,16 @@ class MeshTranslator(Translator):
 
             uv_layer_pointer = active_uv.data[0].as_pointer()
 
-        asr.convert_bl_mesh(
-            self.__as_mesh,
-            loop_tris_length,
-            loop_tris_pointer,
-            loops_length,
-            loops_pointer,
-            polygons_pointer,
-            vert_pointer,
-            uv_layer_pointer,
-            do_normals,
-            do_uvs)
+        asr.convert_bl_mesh(self.__as_mesh,
+                            loop_tris_length,
+                            loop_tris_pointer,
+                            loops_length,
+                            loops_pointer,
+                            polygons_pointer,
+                            vert_pointer,
+                            uv_layer_pointer,
+                            do_normals,
+                            do_uvs)
 
     def __set_mesh_key(self, me, key_index):
         pose = key_index - 1
@@ -328,12 +328,15 @@ class MeshTranslator(Translator):
             me.split_faces()
 
         vertex_pointer = me.vertices[0].as_pointer()
-        vertices_length = len(me.vertices)
+
+        loop_length = len(me.loops)
+        loops_pointer = me.loops[0].as_pointer()
 
         asr.convert_bl_vertex_pose(
             self.__as_mesh,
             pose,
-            vertices_length,
+            loops_pointer,
+            loop_length,
             vertex_pointer,
             do_normals)
 
