@@ -42,7 +42,7 @@ class ASRENDER_PT_base(object):
 
 
 class ASRENDER_PT_export(bpy.types.Panel, ASRENDER_PT_base):
-    bl_label = "Rendering"
+    bl_label = "Rendering Mode"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
 
     def draw(self, context):
@@ -51,7 +51,7 @@ class ASRENDER_PT_export(bpy.types.Panel, ASRENDER_PT_base):
         scene = context.scene
         asr_scene_props = scene.appleseed
 
-        layout.prop(asr_scene_props, "scene_export_mode", text="Render Mode")
+        layout.prop(asr_scene_props, "scene_export_mode", text="")
         # layout.operator("appleseed.export_scene", text="Export")
         if asr_scene_props.scene_export_mode == 'export_only':
             layout.prop(asr_scene_props, "export_path", text="Export Path")

@@ -32,7 +32,7 @@ import bmesh
 
 import appleseed as asr
 from ..translator import Translator
-from ..utilities import ProjectExportMode
+from ..utilites import ProjectExportMode
 from ...logger import get_logger
 from ...utils.util import is_object_deforming
 
@@ -175,9 +175,10 @@ class MeshTranslator(Translator):
             as_assembly.assemblies().insert(self.__as_ass)
             self.__as_ass = as_assembly.assemblies().get_by_name(ass_name)
 
-            self.__as_ass_inst.set_transform_sequence(self.__xform_seq)
-            as_assembly.assembly_instances().insert(self.__as_ass_inst)
-            self.__as_ass_inst = as_assembly.assembly_instances().get_by_name(ass_inst_name)
+            if not self.__is_source:
+                self.__as_ass_inst.set_transform_sequence(self.__xform_seq)
+                as_assembly.assembly_instances().insert(self.__as_ass_inst)
+                self.__as_ass_inst = as_assembly.assembly_instances().get_by_name(ass_inst_name)
 
         else:
             self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,

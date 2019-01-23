@@ -36,9 +36,9 @@ from .cameras import RenderCameraTranslator
 from .lamps import LampInstanceTranslator, LampTranslator
 from .material import MaterialTranslator
 from .nodetree import NodeTreeTranslator
-from .objects import MeshInstanceTranslator, MeshTranslator
+from .objects import ArchiveAssemblyTranslator, MeshInstanceTranslator, MeshTranslator
 from .textures import TextureTranslator
-from .utilities import ProjectExportMode
+from .utilites import ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
 from ..utils.util import Timer
@@ -211,9 +211,10 @@ class SceneTranslator(object):
 
         self.__bl_nodetree_datablocks = self.__parse_nodetree_datablocks()
 
-        self.__bl_obj_datablocks = self.__parse_object_datablocks()
-
         self.__create_translators()
+
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            self.__create_final_render_instancers()
 
         if self.export_mode == ProjectExportMode.FINAL_RENDER:
             self.__create_final_render_instancers()
@@ -593,17 +594,23 @@ class SceneTranslator(object):
                 self.__camera_translator.set_xform_step(time)
 
             if time in xform_times:
-                for obj in self.bl_scene.objects:
+                for deps_obj in self.bl_depsgraph.objects:
+                    obj = self.bl_scene.objects[deps_obj.name]
                     if obj.type == 'MESH':
                         self.__object_translators[obj.name_full].set_xform_step(time)
 
                 for inst in self.bl_depsgraph.object_instances:
                     if inst.is_instance and inst.instance_object.type == 'MESH':
                         inst_key = f"{inst.instance_object.name_full}|{inst.persistent_id[0]}"
-                        self.__instance_translators[inst_key].set_xform_step(time, inst.matrix_world)
+                        try:
+                            self.__instance_translators[inst_key].set_xform_step(time, inst.matrix_world)
+                        except:
+                            pass
 
             if time in deform_times:
                 for translator in self.__object_translators.values():
+                    translator.set_deform_key(time, self.bl_depsgraph, all_times)
+                for translator in self.__instance_sources.values():
                     translator.set_deform_key(time, self.bl_depsgraph, all_times)
 
         self.bl_scene.frame_set(current_frame)
@@ -671,9 +678,19 @@ class SceneTranslator(object):
             tree_key = tree.name_full
             self.__nodetree_translators[tree_key] = NodeTreeTranslator(tree, self.asset_handler)
 
-        for obj in self.__bl_obj_datablocks:
+    def __create_final_render_instancers(self):
+        """
+        Creates translators for each mesh/lamp and instance of a lamp/object that was created via a particle system
+        or dupli item.  For final rendering all instances are placed in a single level dictionary in order to make
+        it easier to assign xform blur steps later on.
+        :return: None
+        """
+        for deps_obj in self.bl_depsgraph.objects:
+            obj = self.bl_scene.objects[deps_obj.name]
             obj_key = obj.name_full
-            if obj.type == 'MESH':
+            if obj.appleseed.object_export == "archive_assembly":
+                self.__object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
+            elif obj.type == 'MESH':
                 self.__object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
                 if obj.appleseed.object_alpha_texture is not None:
                     tex_key = obj.appleseed.object_alpha_texture.name_full
@@ -697,17 +714,6 @@ class SceneTranslator(object):
                         self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
                                                                                 obj.data.appleseed.radiance_multiplier_tex_color_space,
                                                                                 self.asset_handler)
-            else:
-                continue
-
-    def __create_final_render_instancers(self):
-        """
-        Creates instance translators for each instance of a lamp/object that was created via a particle system
-        or dupli item.  For final rendering all instances are placed in a single level dictionary in order to make
-        it easier to assign xform blur steps later on.
-        :return: None
-        """
-        mesh_instance_sources = []
 
         for inst in self.bl_depsgraph.object_instances:
             if inst.is_instance:
@@ -716,24 +722,21 @@ class SceneTranslator(object):
                 if inst.instance_object.type == 'MESH':
                     self.__instance_translators[inst_key] = MeshInstanceTranslator(inst_key,
                                                                                    source_key)
+
                     if inst.persistent_id[0] == 0:
-                        mesh_instance_sources.append(inst.instance_object)
+                        if source_key not in self.__object_translators:
+                            self.__instance_sources[source_key] = MeshTranslator(inst.instance_object,
+                                                                                 self.export_mode,
+                                                                                 self.asset_handler,
+                                                                                 is_source=True)
+                        else:
+                            self.__object_translators[source_key].add_instance()
+
                 elif inst.instance_object.type == 'LIGHT':
                     self.__instance_translators[inst_key] = LampInstanceTranslator(inst.instance_object,
                                                                                    self.asset_handler,
                                                                                    inst_key,
                                                                                    inst.matrix_world)
-
-        for obj in mesh_instance_sources:
-            obj_key = obj.name_full
-            if obj.type == 'MESH':
-                if obj_key not in self.__object_translators:
-                    self.__instance_sources[obj_key] = MeshTranslator(obj,
-                                                                      self.export_mode,
-                                                                      self.asset_handler,
-                                                                      is_source=True)
-                else:
-                    self.__object_translators[obj_key].add_instance()
 
     def __load_searchpaths(self):
         paths = self.as_project.get_search_paths()
