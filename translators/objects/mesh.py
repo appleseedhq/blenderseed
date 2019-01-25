@@ -34,7 +34,7 @@ import appleseed as asr
 from ..translator import Translator
 from ..utilites import ProjectExportMode
 from ...logger import get_logger
-from ...utils.util import is_object_deforming
+from ...utils.util import is_object_deforming, Timer
 
 
 logger = get_logger()
@@ -72,6 +72,8 @@ class MeshTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene):
+        logger.debug("Creating translator for mesh %s", self.appleseed_name)
+        
         mesh_name = f"{self.appleseed_name}_obj"
 
         mesh_params = self.__get_mesh_params()
@@ -122,7 +124,7 @@ class MeshTranslator(Translator):
 
         mesh_name = f"{self.appleseed_name}_obj"
 
-        logger.debug("Flushing mesh %s", mesh_name)
+        logger.debug("Flushing mesh %s, number of xform steps: %s", mesh_name, self.__xform_seq.size())
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Replace the MeshObject by an empty one referencing
@@ -143,7 +145,6 @@ class MeshTranslator(Translator):
 
             self.__as_mesh = asr.MeshObject(mesh_name, params)
 
-        
         mesh_name = self.__object_instance_mesh_name(f"{self.appleseed_name}_obj")
 
         as_assembly.objects().insert(self.__as_mesh)
@@ -254,18 +255,23 @@ class MeshTranslator(Translator):
         return params
 
     def __create_bl_render_mesh(self, depsgraph):
-        me = self._bl_obj.to_mesh(
-            depsgraph,
-            apply_modifiers=True)
+        timer = Timer()
+        me = self._bl_obj.to_mesh(depsgraph,
+                                  apply_modifiers=True)
 
         bm = bmesh.new()
         bm.from_mesh(me)
         bm.to_mesh(me)
         bm.free()
 
+        timer.stop()
+
+        logger.debug("\nMesh %s converted to render mesh in %s", self.bl_obj, timer.elapsed())
+
         return me
 
     def __convert_mesh(self, me):
+        main_timer = Timer()
         material_slots = self.bl_obj.material_slots
 
         self.__as_mesh.reserve_material_slots(len(material_slots))
@@ -278,11 +284,17 @@ class MeshTranslator(Translator):
 
         do_normals = self.bl_obj.data.appleseed.export_normals
 
+        normal_timer = Timer()
+
         if do_normals is True and not self.bl_obj.data.has_custom_normals:
             me.calc_normals()
             me.split_faces()
 
+        normal_timer.stop()
+
+        looptri_timer = Timer()
         me.calc_loop_triangles()
+        looptri_timer.stop()
 
         vert_pointer = me.vertices[0].as_pointer()
 
@@ -308,6 +320,8 @@ class MeshTranslator(Translator):
 
             uv_layer_pointer = active_uv.data[0].as_pointer()
 
+        convert_timer = Timer()
+
         asr.convert_bl_mesh(self.__as_mesh,
                             loop_tris_length,
                             loop_tris_pointer,
@@ -318,6 +332,15 @@ class MeshTranslator(Translator):
                             uv_layer_pointer,
                             do_normals,
                             do_uvs)
+
+        convert_timer.stop()
+        main_timer.stop()
+
+        logger.debug("\nMesh %s converted in: %s", self.appleseed_name, main_timer.elapsed())
+        logger.debug("  Number of triangles:    %s", len(me.loop_triangles))
+        logger.debug("  Normals converted in:   %s", normal_timer.elapsed())
+        logger.debug("  Looptris converted in:  %s", looptri_timer.elapsed())
+        logger.debug("  C++ conversion in:      %s", convert_timer.elapsed())
 
     def __set_mesh_key(self, me, key_index):
         pose = key_index - 1

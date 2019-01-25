@@ -105,7 +105,7 @@ class ASLAMP_PT_lamp(bpy.types.Panel):
                 layout.prop(asr_lamp, "cast_indirect", text="Cast Indirect Light")
                 layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
-            if lamp_data.sun_mode == 'distant':
+            if asr_lamp.sun_mode == 'distant':
                 layout.prop(asr_lamp, "radiance", text="Intensity")
                 layout.prop(asr_lamp, "radiance_multiplier", text="Intensity Multiplier")
                 layout.prop(asr_lamp, "exposure", text="Exposure")

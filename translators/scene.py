@@ -604,16 +604,14 @@ class SceneTranslator(object):
 
             self.bl_engine.frame_set(int_frame, subframe=subframe)
 
+            logger.debug("Processing transforms for frame %s", self.bl_scene.frame_current)
+
             if time in cam_times:
                 self.__camera_translator.set_xform_step(time)
 
             if time in xform_times:
                 for inst in self.bl_depsgraph.object_instances:
-                    if not inst.is_instance:
-                        obj = inst.object
-                        if obj.type == 'MESH':
-                            self.__object_translators[obj.name_full].set_xform_step(time)
-                    else:
+                    if inst.is_instance:
                         obj = inst.instance_object
                         if obj.type == 'MESH':
                             inst_key = f"{inst.instance_object.name_full}|{inst.persistent_id[0]}"
@@ -622,7 +620,13 @@ class SceneTranslator(object):
                             except Exception as e:
                                 logger.debug("%s", e)
 
+                for obj in self.bl_depsgraph.objects:
+                    if obj.type == 'MESH' or (obj.type == 'EMPTY' and obj.appleseed.object_export == "archive_assembly"):
+                        self.__object_translators[obj.name_full].set_xform_step(time)
+
             if time in deform_times:
+                logger.debug("Processing deformations for frame %s", self.bl_scene.frame_current)
+
                 for translator in self.__object_translators.values():
                     translator.set_deform_key(time, self.bl_depsgraph, all_times)
                 for translator in self.__instance_sources.values():
@@ -643,6 +647,8 @@ class SceneTranslator(object):
         Parses the material blocks present in the evaluated depsgraph and returns them in a list
         :return: List of Blender material data blocks
         """
+        logger.debug("Parsing Material Datablocks")
+
         mat_blocks = []
 
         for block in self.bl_depsgraph.ids:
@@ -656,6 +662,8 @@ class SceneTranslator(object):
         Parses the node group blocks present in the evaluated depsgraph and returns them in a list
         :return: List of Blender node group data blocks
         """
+        logger.debug("Parsing Nodetree Datablocks")
+
         nodetree_blocks = []
 
         for block in self.bl_depsgraph.ids:
@@ -667,18 +675,6 @@ class SceneTranslator(object):
                     nodetree_blocks.append(block.appleseed.osl_node_tree)
 
         return nodetree_blocks
-
-    def __parse_object_datablocks(self):
-        """
-        Parses the mesh blocks present in the evaluated depsgraph and returns them in a list
-        :return: List of Blender mesh data blocks
-        """
-        obj_blocks = []
-
-        for obj in self.bl_depsgraph.objects:
-            obj_blocks.append(obj)
-
-        return obj_blocks
 
     def __create_translators(self):
         """
@@ -700,52 +696,51 @@ class SceneTranslator(object):
         it easier to assign xform blur steps later on.
         :return: None
         """
+        for obj in self.bl_depsgraph.objects:
+            obj_key = obj.name_full
+            if obj.appleseed.object_export == "archive_assembly":
+                self.__object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
+            elif obj.type == 'MESH':
+                self.__object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
+                if obj.appleseed.object_alpha_texture is not None:
+                    tex_key = obj.appleseed.object_alpha_texture.name_full
+                    if tex_key not in self.__texture_translators:
+                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.object_alpha_texture,
+                                                                                obj.data.appleseed.object_alpha_texture_colorspace,
+                                                                                self.asset_handler)
+
+            elif obj.type == 'LIGHT':
+                self.__lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
+                if obj.data.appleseed.radiance_use_tex and obj.data.appleseed.radiance_tex is not None:
+                    tex_key = obj.data.appleseed.radiance_tex.name_full
+                    if tex_key not in self.__texture_translators:
+                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_tex,
+                                                                                obj.data.appleseed.radiance_tex_color_space,
+                                                                                self.asset_handler)
+
+                if obj.data.appleseed.radiance_multiplier_use_tex and obj.data.appleseed.radiance_multiplier_tex is not None:
+                    tex_key = obj.data.appleseed.radiance_multiplier_tex.name_full
+                    if tex_key not in self.__texture_translators:
+                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
+                                                                                obj.data.appleseed.radiance_multiplier_tex_color_space,
+                                                                                self.asset_handler)
+
+
         for inst in self.bl_depsgraph.object_instances:
-            if not inst.is_instance:
-                obj = inst.object
-                obj_key = obj.name_full
-                if obj.appleseed.object_export == "archive_assembly":
-                    self.__object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
-                elif obj.type == 'MESH':
-                    self.__object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
-                    if obj.appleseed.object_alpha_texture is not None:
-                        tex_key = obj.appleseed.object_alpha_texture.name_full
-                        if tex_key not in self.__texture_translators:
-                            self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.object_alpha_texture,
-                                                                                    obj.data.appleseed.object_alpha_texture_colorspace,
-                                                                                    self.asset_handler)
-
-                elif obj.type == 'LIGHT':
-                    self.__lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
-                    if obj.data.appleseed.radiance_use_tex and obj.data.appleseed.radiance_tex is not None:
-                        tex_key = obj.data.appleseed.radiance_tex.name_full
-                        if tex_key not in self.__texture_translators:
-                            self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_tex,
-                                                                                    obj.data.appleseed.radiance_tex_color_space,
-                                                                                    self.asset_handler)
-
-                    if obj.data.appleseed.radiance_multiplier_use_tex and obj.data.appleseed.radiance_multiplier_tex is not None:
-                        tex_key = obj.data.appleseed.radiance_multiplier_tex.name_full
-                        if tex_key not in self.__texture_translators:
-                            self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
-                                                                                    obj.data.appleseed.radiance_multiplier_tex_color_space,
-                                                                                    self.asset_handler)
-
-            else:
+            if inst.is_instance:
                 source_key = inst.instance_object.name_full
                 inst_key = f"{source_key}|{inst.persistent_id[0]}"
                 if inst.instance_object.type == 'MESH':
                     self.__instance_translators[inst_key] = MeshInstanceTranslator(inst_key,
                                                                                    source_key)
 
-                    if inst.persistent_id[0] == 0:
-                        if source_key not in self.__object_translators:
-                            self.__instance_sources[source_key] = MeshTranslator(inst.instance_object,
-                                                                                 self.export_mode,
-                                                                                 self.asset_handler,
-                                                                                 is_source=True)
-                        else:
-                            self.__object_translators[source_key].add_instance()
+                    if source_key not in self.__object_translators:
+                        self.__instance_sources[source_key] = MeshTranslator(inst.instance_object,
+                                                                                self.export_mode,
+                                                                                self.asset_handler,
+                                                                                is_source=True)
+                    else:
+                        self.__object_translators[source_key].add_instance()
 
                 elif inst.instance_object.type == 'LIGHT':
                     self.__instance_translators[inst_key] = LampInstanceTranslator(inst.instance_object,

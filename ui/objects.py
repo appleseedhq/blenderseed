@@ -40,7 +40,7 @@ class ASOBJECT_PT_obj_flags(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE'}
+        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE', 'EMPTY'}
 
     def draw(self, context):
         pass

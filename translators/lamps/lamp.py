@@ -70,6 +70,8 @@ class LampTranslator(Translator):
 
             self.__as_lamp = asr.Light(lamp_model, self.appleseed_name, as_lamp_params)
 
+            self.__as_lamp.set_transform(self._convert_matrix(self.bl_lamp.matrix_world))
+
             radiance = self._convert_color(as_lamp_data.radiance)
             lamp_radiance_name = f"{self.appleseed_name}_radiance"
             self.__as_lamp_radiance = asr.ColorEntity(lamp_radiance_name, {'color_space': 'linear_rgb'}, radiance)
@@ -87,10 +89,10 @@ class LampTranslator(Translator):
             self.__as_area_lamp_mesh_inst = asr.ObjectInstance(inst_name,
                                                                instance_params,
                                                                mesh_name,
-                                                               asr.TransformSequence(),
+                                                               self.__convert_area_matrix(self.bl_lamp.matrix_world),
                                                                {"default": mat_name}, {"default": "__null_material"})
 
-            shader_name = f"{self.bl_lamp.name_full}_tree"
+            shader_name = f"{self.bl_lamp.name_full}_tree" if as_lamp_data.osl_node_tree is None else f"{as_lamp_data.osl_node_tree.name_full}_tree"
 
             if as_lamp_data.osl_node_tree is None:
                 self.__as_area_lamp_shadergroup = self.__set_shadergroup()
@@ -101,7 +103,6 @@ class LampTranslator(Translator):
 
     def flush_entities(self, as_assembly):
         if self.bl_lamp.data.type != 'AREA':
-            self.__as_lamp.set_transform(self._convert_matrix(self.bl_lamp.matrix_world))
             as_assembly.lights().insert(self.__as_lamp)
             self.__as_lamp = as_assembly.lights().get_by_name(self.appleseed_name)
 
@@ -109,7 +110,6 @@ class LampTranslator(Translator):
             self.__as_lamp_radiance = as_assembly.colors().get_by_name(f"{self.appleseed_name}_radiance")
 
         else:
-            self.__as_area_lamp_mesh_inst.transform_sequence().set_transform(0.0, self.__convert_area_matrix(self.bl_lamp.matrix_world))
             mesh_name = self.__as_area_lamp_mesh.get_name()
             mesh_inst_name = self.__as_area_lamp_mesh_inst.get_name()
             mat_name = self.__as_area_lamp_material.get_name()

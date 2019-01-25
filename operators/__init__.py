@@ -120,7 +120,7 @@ class ASMAT_OT_view_nodetree(bpy.types.Operator):
                 if area.type == "NODE_EDITOR":
                     for space in area.spaces:
                         if space.type == "NODE_EDITOR":
-                            space.tree_type = node_tree.bl_idname
+                            space.tree_type = "AppleseedNodeTree"
                             space.node_tree = node_tree
                             return {"FINISHED"}
 
