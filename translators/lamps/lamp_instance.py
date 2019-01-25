@@ -26,7 +26,8 @@
 #
 
 import appleseed as asr
-from .lamp import LampTranslator 
+from .lamp import LampTranslator
+
 
 class LampInstanceTranslator(LampTranslator):
     def __init__(self, bl_lamp, asset_handler, inst_name, bl_matrix):
@@ -36,25 +37,15 @@ class LampInstanceTranslator(LampTranslator):
         self.__bl_matrix = bl_matrix
 
     def create_entities(self, bl_scene):
-        self.__bl_lamp_type = self.bl_lamp.data.type
-
-        self.__as_lamp_model = self.__get_lamp_model()
-
-        if self.__bl_lamp_type != 'AREA':
-            if self.__as_lamp_model == 'point_light':
-                as_lamp_params = self.__get_point_lamp_params()
-            if self.__as_lamp_model == 'spot_light':
-                as_lamp_params = self.__get_spot_lamp_params()
-            if self.__as_lamp_model == 'directional_light':
-                as_lamp_params = self.__get_directional_lamp_params()
-            if self.__as_lamp_model == 'sun_light':
-                as_lamp_params = self.__get_sun_lamp_params()
-
-            self.__as_lamp = asr.Light(self.__as_lamp_model, self.__inst_name, as_lamp_params)
-            self.__as_lamp.set_transform(self._convert_matrix(self.__bl_matrix))
-
-        else:
-            pass
+        super().create_entities(bl_scene)
 
     def set_xform_step(self, time, bl_matrix):
         pass
+
+    def flush_entities(self, as_assembly):
+        super().flush_entities(as_assembly)
+
+        if self.bl_lamp.data.type != 'AREA':
+            self.__as_lamp.set_transform(self._convert_matrix(self.__bl_matrix))
+        else:
+            self.__as_area_lamp_mesh_inst.transform_sequence().set_transform(0.0, self.__convert_area_matrix(self.__bl_matrix))

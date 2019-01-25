@@ -26,23 +26,26 @@
 #
 
 import math
+import os
+
+import mathutils
 
 import appleseed as asr
 
+from ..assethandlers import AssetType
 from ..translator import Translator
+from ...utils.path_util import get_osl_search_paths
 
 
 class LampTranslator(Translator):
     def __init__(self, bl_lamp, asset_handler=None):
         super().__init__(bl_lamp, asset_handler=asset_handler)
 
-        self.__bl_lamp_type = None
-
         self.__as_lamp_radiance = None
         self.__as_lamp = None
 
         self.__as_area_lamp_material = None
-        self.__as_area_lamp_shader = None
+        self.__as_area_lamp_shadergroup = None
         self.__as_area_lamp_mesh = None
         self.__as_area_lamp_mesh_inst = None
 
@@ -52,36 +55,78 @@ class LampTranslator(Translator):
 
     def create_entities(self, bl_scene):
         as_lamp_data = self.bl_lamp.data.appleseed
-        self.__bl_lamp_type = self.bl_lamp.data.type
 
-        self.__as_lamp_model = self.__get_lamp_model()
+        lamp_model = self.__get_lamp_model()
 
-        if self.__bl_lamp_type != 'AREA':
-            if self.__as_lamp_model == 'point_light':
+        if self.bl_lamp.data.type != 'AREA':
+            if lamp_model == 'point_light':
                 as_lamp_params = self.__get_point_lamp_params()
-            if self.__as_lamp_model == 'spot_light':
+            if lamp_model == 'spot_light':
                 as_lamp_params = self.__get_spot_lamp_params()
-            if self.__as_lamp_model == 'directional_light':
+            if lamp_model == 'directional_light':
                 as_lamp_params = self.__get_directional_lamp_params()
-            if self.__as_lamp_model == 'sun_light':
+            if lamp_model == 'sun_light':
                 as_lamp_params = self.__get_sun_lamp_params()
 
-            self.__as_lamp = asr.Light(self.__as_lamp_model, self.appleseed_name, as_lamp_params)
-            self.__as_lamp.set_transform(self._convert_matrix(self.bl_lamp.matrix_world))
+            self.__as_lamp = asr.Light(lamp_model, self.appleseed_name, as_lamp_params)
 
             radiance = self._convert_color(as_lamp_data.radiance)
             lamp_radiance_name = f"{self.appleseed_name}_radiance"
             self.__as_lamp_radiance = asr.ColorEntity(lamp_radiance_name, {'color_space': 'linear_rgb'}, radiance)
+            
         else:
-            pass
+            shape_params = self.__get_area_mesh_params()
+            mesh_name = f"{self.bl_lamp.name_full}_mesh"
+
+            self.__as_area_lamp_mesh = asr.create_primitive_mesh(mesh_name, shape_params)
+
+            inst_name = f"{self.bl_lamp.name_full}_inst"
+            instance_params = self.__get_area_mesh_instance_params()
+            mat_name = f"{self.bl_lamp.name_full}_mat"
+
+            self.__as_area_lamp_mesh_inst = asr.ObjectInstance(inst_name,
+                                                               instance_params,
+                                                               mesh_name,
+                                                               asr.TransformSequence(),
+                                                               {"default": mat_name}, {"default": "__null_material"})
+
+            shader_name = f"{self.bl_lamp.name_full}_tree"
+
+            if as_lamp_data.osl_node_tree is None:
+                self.__as_area_lamp_shadergroup = self.__set_shadergroup()
+
+            self.__as_area_lamp_material = asr.Material('osl_material',
+                                                        mat_name,
+                                                        {'osl_surface': shader_name})
 
     def flush_entities(self, as_assembly):
-        if self.__bl_lamp_type != 'AREA':
+        if self.bl_lamp.data.type != 'AREA':
+            self.__as_lamp.set_transform(self._convert_matrix(self.bl_lamp.matrix_world))
             as_assembly.lights().insert(self.__as_lamp)
             self.__as_lamp = as_assembly.lights().get_by_name(self.appleseed_name)
 
             as_assembly.colors().insert(self.__as_lamp_radiance)
             self.__as_lamp_radiance = as_assembly.colors().get_by_name(f"{self.appleseed_name}_radiance")
+
+        else:
+            self.__as_area_lamp_mesh_inst.transform_sequence().set_transform(0.0, self.__convert_area_matrix(self.bl_lamp.matrix_world))
+            mesh_name = self.__as_area_lamp_mesh.get_name()
+            mesh_inst_name = self.__as_area_lamp_mesh_inst.get_name()
+            mat_name = self.__as_area_lamp_material.get_name()
+
+            as_assembly.materials().insert(self.__as_area_lamp_material)
+            self.__as_area_lamp_material = as_assembly.materials().get_by_name(mat_name)
+
+            as_assembly.objects().insert(self.__as_area_lamp_mesh)
+            self.__as_area_lamp_mesh = as_assembly.objects().get_by_name(mesh_name)
+
+            as_assembly.object_instances().insert(self.__as_area_lamp_mesh_inst)
+            self.__as_area_lamp_mesh_inst = as_assembly.object_instances().get_by_name(mesh_inst_name)
+
+            if self.__as_area_lamp_shadergroup is not None:
+                shadergroup_name = self.__as_area_lamp_shadergroup.get_name()
+                as_assembly.shader_groups().insert(self.__as_area_lamp_shadergroup)
+                self.__as_area_lamp_shadergroup = as_assembly.shader_groups().get_by_name(shadergroup_name)
 
     def set_xform_step(self, time, bl_matrix):
         pass
@@ -147,11 +192,84 @@ class LampTranslator(Translator):
 
     def __get_lamp_model(self):
         as_lamp_data = self.bl_lamp.data.appleseed
-        if self.__bl_lamp_type == 'POINT':
+        lamp_type = self.bl_lamp.data.type
+
+        if lamp_type == 'POINT':
             return 'point_light'
-        if self.__bl_lamp_type == 'SPOT':
+        if lamp_type == 'SPOT':
             return 'spot_light'
-        if self.__bl_lamp_type == 'SUN' and as_lamp_data.sun_mode == 'distant':
+        if lamp_type == 'SUN' and as_lamp_data.sun_mode == 'distant':
             return 'directional_light'
-        if self.__bl_lamp_type == 'SUN' and as_lamp_data.sun_mode == 'sun':
+        if lamp_type == 'SUN' and as_lamp_data.sun_mode == 'sun':
             return 'sun_light'
+
+    def __get_area_mesh_params(self):
+        lamp_data = self.bl_lamp.data
+        as_lamp_data = lamp_data.appleseed
+
+        shape_params = {'primitive': as_lamp_data.area_shape}
+
+        if as_lamp_data.area_shape == 'grid':
+            shape_params['width'] = lamp_data.size
+            shape_params['height'] = lamp_data.size_y
+
+        elif as_lamp_data.area_shape == 'disk':
+            shape_params['radius'] = self.bl_lamp.data.size / 2
+
+        else:
+            shape_params['radius'] = self.bl_lamp.data.size / 2
+            shape_params['resolution_u'] = 4
+            shape_params['resolution_v'] = 4
+
+        return shape_params
+
+    def __get_area_mesh_instance_params(self):
+        lamp_data = self.bl_lamp.data
+        as_lamp_data = lamp_data.appleseed
+
+        lamp_inst_params = {'visibility': {'camera': False}} if not as_lamp_data.area_visibility else {}
+
+        return lamp_inst_params
+
+    def __set_shadergroup(self):
+        as_lamp_data = self.bl_lamp.data.appleseed
+
+        shader_name = f"{self.bl_lamp.name_full}_tree"
+
+        if self.__as_area_lamp_shadergroup is None:
+            shader_group = asr.ShaderGroup(shader_name)
+        else:
+            shader_group = self.__as_area_lamp_shadergroup
+
+        shader_group.clear()
+
+        shader_dir_path = self.__find_shader_dir()
+        shader_path = self.asset_handler.process_path(os.path.join(shader_dir_path, "as_blender_areaLight.oso"), AssetType.SHADER_ASSET)
+        surface_path = self.asset_handler.process_path(os.path.join(shader_dir_path, "as_closure2surface.oso"), AssetType.SHADER_ASSET)
+
+        lamp_color = " ".join(map(str, as_lamp_data.area_color))
+
+        lamp_params = {'in_color': f"color {lamp_color}",
+                       'in_intensity': f"float {as_lamp_data.area_intensity}",
+                       'in_intensity_scale': f"float {as_lamp_data.area_intensity_scale}",
+                       'in_exposure': f"float {as_lamp_data.area_exposure}",
+                       'in_normalize': f"int {as_lamp_data.area_normalize}"}
+
+        shader_group.add_shader("shader", shader_path, "asAreaLight", lamp_params)
+        shader_group.add_shader("surface", surface_path, "asClosure2Surface", {})
+        shader_group.add_connection("asAreaLight", "out_output", "asClosure2Surface", "in_input")
+
+        return shader_group
+
+    def __convert_area_matrix(self, m):
+        rot = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
+        m = m @ rot
+
+        return self._convert_matrix(m)
+
+    @staticmethod
+    def __find_shader_dir():
+        for directory in get_osl_search_paths():
+            if os.path.basename(directory) in ('shaders', 'blenderseed'):
+
+                return directory

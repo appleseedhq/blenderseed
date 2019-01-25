@@ -49,14 +49,14 @@ class ArchiveAssemblyTranslator(Translator):
         ass_name = f"{self._bl_obj.name_full}_ass"
         ass_inst_name = f"{ass_name}_inst"
 
-        self.__as_ass = asr.Assembly(ass_name)
-
         file_path = self.asset_handler.process_path(self._bl_obj.appleseed.archive_path, AssetType.ARCHIVE_ASSET)
 
         as_ass_params = {'filename': file_path}
 
+        self.__as_ass = asr.Assembly("archive_assembly", ass_name, as_ass_params)
+
         self.__as_ass_inst = asr.AssemblyInstance(ass_inst_name,
-                                                  as_ass_params,
+                                                  {},
                                                   ass_name)
 
     def flush_entities(self, as_assembly):
@@ -70,7 +70,5 @@ class ArchiveAssemblyTranslator(Translator):
     def set_xform_step(self, time):
         self.__xform_seq.set_transform(time, self._convert_matrix(self._bl_obj.matrix_world))
 
-    def _convert_matrix(self, m):
-        rotation = mathutils.Matrix.Rotation(math.radians(90), 4, 'X')
-        m = rotation @ m
-        return super()._convert_matrix(m)
+    def set_deform_key(self, time, depsgraph, all_times):
+        pass
