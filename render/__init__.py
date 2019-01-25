@@ -216,11 +216,11 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         if depsgraph.scene.appleseed.scene_export_mode == 'export_only':
-            scene_translator = SceneTranslator.create_project_export_translator(depsgraph)
+            scene_translator = SceneTranslator.create_project_export_translator(self, depsgraph)
             scene_translator.translate_scene()
             scene_translator.write_project(depsgraph.scene.appleseed.export_path)
         else:
-            scene_translator = SceneTranslator.create_final_render_translator(depsgraph)
+            scene_translator = SceneTranslator.create_final_render_translator(self, depsgraph)
             self.update_stats("appleseed Rendering: Translating scene", "")
             scene_translator.translate_scene()
 

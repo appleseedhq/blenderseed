@@ -53,7 +53,7 @@ class SceneTranslator(object):
 
     # Constructors.
     @classmethod
-    def create_project_export_translator(cls, depsgraph):
+    def create_project_export_translator(cls, engine, depsgraph):
         """
         Create a scene translator to export the scene to an appleseed project on disk.
         """
@@ -75,14 +75,15 @@ class SceneTranslator(object):
 
         asset_handler = CopyAssetsAssetHandler(project_dir, geometry_dir, textures_dir)
 
-        return cls(depsgraph=depsgraph,
+        return cls(engine=engine,
+                   depsgraph=depsgraph,
                    export_mode=ProjectExportMode.PROJECT_EXPORT,
                    selected_only=depsgraph.scene.appleseed.export_selected,
                    context=None,
                    asset_handler=asset_handler)
 
     @classmethod
-    def create_final_render_translator(cls, depsgraph):
+    def create_final_render_translator(cls, engine, depsgraph):
         """
         Create a scene translator to export the scene to an in memory appleseed project.
         """
@@ -91,14 +92,15 @@ class SceneTranslator(object):
 
         asset_handler = AssetHandler()
 
-        return cls(depsgraph=depsgraph,
+        return cls(engine=engine,
+                   depsgraph=depsgraph,
                    export_mode=ProjectExportMode.FINAL_RENDER,
                    selected_only=False,
                    context=None,
                    asset_handler=asset_handler)
 
     @classmethod
-    def create_interactive_render_translator(cls, context):
+    def create_interactive_render_translator(cls, engine, context):
         """
         Create a scene translator to export the scene to an in memory appleseed project
         optimized for quick interactive edits.
@@ -108,18 +110,20 @@ class SceneTranslator(object):
 
         asset_handler = AssetHandler()
 
-        return cls(depsgraph=context.depsgraph,
+        return cls(engine=engine,
+                   depsgraph=context.depsgraph,
                    export_mode=ProjectExportMode.INTERACTIVE_RENDER,
                    selected_only=False,
                    context=context,
                    asset_handler=asset_handler)
 
-    def __init__(self, depsgraph, export_mode, selected_only, context, asset_handler):
+    def __init__(self, engine, depsgraph, export_mode, selected_only, context, asset_handler):
         """
         Constructor. Do not use it to create instances of this class.
         Use the @classmethods instead.
         """
 
+        self.__engine = engine
         self.__depsgraph = depsgraph
         self.__asset_handler = asset_handler
         self.__export_mode = export_mode
@@ -146,6 +150,10 @@ class SceneTranslator(object):
         self.__frame = None
 
     # Properties.
+    @property
+    def bl_engine(self):
+        return self.__engine
+
     @property
     def bl_depsgraph(self):
         return self.__depsgraph
@@ -446,9 +454,13 @@ class SceneTranslator(object):
             max_y = height - int(self.__context.space_data.render_border_min_y * height) - 1
             self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            aovs = self.__set_aovs()
+
         # Create and set the frame in the project.
         self.__frame = asr.Frame("beauty",
-                                 frame_params)
+                                 frame_params,
+                                 aovs)
 
         self.__project.set_frame(self.__frame)
         self.__frame = self.as_project.get_frame()
@@ -456,48 +468,50 @@ class SceneTranslator(object):
         if len(asr_scene_props.post_processing_stages) > 0 and self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             self.__set_post_process()
 
-        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            self.__set_aovs()
-
     def __set_aovs(self):
-        asr_scene_props = self.bl_scene.appleseed
+        aovs = asr.AOVContainer()
 
-        if asr_scene_props.diffuse_aov:
-            self.__frame.aovs().insert(asr.AOV('diffuse_aov', {}))
-        if asr_scene_props.direct_diffuse_aov:
-            self.__frame.aovs().insert(asr.AOV('direct_diffuse_aov', {}))
-        if asr_scene_props.indirect_diffuse_aov:
-            self.__frame.aovs().insert(asr.AOV('indirect_diffuse_aov', {}))
-        if asr_scene_props.glossy_aov:
-            self.__frame.aovs().insert(asr.AOV('glossy_aov', {}))
-        if asr_scene_props.direct_glossy_aov:
-            self.__frame.aovs().insert(asr.AOV('direct_glossy_aov', {}))
-        if asr_scene_props.indirect_glossy_aov:
-            self.__frame.aovs().insert(asr.AOV('indirect_glossy_aov', {}))
-        if asr_scene_props.normal_aov:
-            self.__frame.aovs().insert(asr.AOV('normal_aov', {}))
-        if asr_scene_props.position_aov:
-            self.__frame.aovs().insert(asr.AOV('position_aov', {}))
-        if asr_scene_props.uv_aov:
-            self.__frame.aovs().insert(asr.AOV('uv_aov', {}))
-        if asr_scene_props.depth_aov:
-            self.__frame.aovs().insert(asr.AOV('depth_aov', {}))
-        if asr_scene_props.pixel_time_aov:
-            self.__frame.aovs().insert(asr.AOV('pixel_time_aov', {}))
-        if asr_scene_props.invalid_samples_aov:
-            self.__frame.aovs().insert(asr.AOV('invalid_samples_aov', {}))
-        if asr_scene_props.pixel_sample_count_aov:
-            self.__frame.aovs().insert(asr.AOV('pixel_sample_count_aov', {}))
-        if asr_scene_props.pixel_variation_aov:
-            self.__frame.aovs().insert(asr.AOV('pixel_variation_aov', {}))
-        if asr_scene_props.albedo_aov:
-            self.__frame.aovs().insert(asr.AOV('albedo_aov', {}))
-        if asr_scene_props.emission_aov:
-            self.__frame.aovs().insert(asr.AOV('emission_aov', {}))
-        if asr_scene_props.npr_shading_aov:
-            self.__frame.aovs().insert(asr.AOV('npr_shading_aov', {}))
-        if asr_scene_props.npr_contour_aov:
-            self.__frame.aovs().insert(asr.AOV('npr_contour_aov', {}))
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            asr_scene_props = self.bl_scene.appleseed
+
+            if asr_scene_props.diffuse_aov:
+                aovs.insert(asr.AOV('diffuse_aov', {}))
+            if asr_scene_props.direct_diffuse_aov:
+                aovs.insert(asr.AOV('direct_diffuse_aov', {}))
+            if asr_scene_props.indirect_diffuse_aov:
+                aovs.insert(asr.AOV('indirect_diffuse_aov', {}))
+            if asr_scene_props.glossy_aov:
+                aovs.insert(asr.AOV('glossy_aov', {}))
+            if asr_scene_props.direct_glossy_aov:
+                aovs.insert(asr.AOV('direct_glossy_aov', {}))
+            if asr_scene_props.indirect_glossy_aov:
+                aovs.insert(asr.AOV('indirect_glossy_aov', {}))
+            if asr_scene_props.normal_aov:
+                aovs.insert(asr.AOV('normal_aov', {}))
+            if asr_scene_props.position_aov:
+                aovs.insert(asr.AOV('position_aov', {}))
+            if asr_scene_props.uv_aov:
+                aovs.insert(asr.AOV('uv_aov', {}))
+            if asr_scene_props.depth_aov:
+                aovs.insert(asr.AOV('depth_aov', {}))
+            if asr_scene_props.pixel_time_aov:
+                aovs.insert(asr.AOV('pixel_time_aov', {}))
+            if asr_scene_props.invalid_samples_aov:
+                aovs.insert(asr.AOV('invalid_samples_aov', {}))
+            if asr_scene_props.pixel_sample_count_aov:
+                aovs.insert(asr.AOV('pixel_sample_count_aov', {}))
+            if asr_scene_props.pixel_variation_aov:
+                aovs.insert(asr.AOV('pixel_variation_aov', {}))
+            if asr_scene_props.albedo_aov:
+                aovs.insert(asr.AOV('albedo_aov', {}))
+            if asr_scene_props.emission_aov:
+                aovs.insert(asr.AOV('emission_aov', {}))
+            if asr_scene_props.npr_shading_aov:
+                aovs.insert(asr.AOV('npr_shading_aov', {}))
+            if asr_scene_props.npr_contour_aov:
+                aovs.insert(asr.AOV('npr_contour_aov', {}))
+
+        return aovs
 
     def __set_post_process(self):
         asr_scene_props = self.bl_scene.appleseed
@@ -588,24 +602,25 @@ class SceneTranslator(object):
             int_frame = math.floor(new_frame)
             subframe = new_frame - int_frame
 
-            self.bl_scene.frame_set(int_frame, subframe=subframe)
+            self.bl_engine.frame_set(int_frame, subframe=subframe)
 
             if time in cam_times:
                 self.__camera_translator.set_xform_step(time)
 
             if time in xform_times:
-                for deps_obj in self.bl_depsgraph.objects:
-                    obj = self.bl_scene.objects[deps_obj.name]
-                    if obj.type == 'MESH':
-                        self.__object_translators[obj.name_full].set_xform_step(time)
-
                 for inst in self.bl_depsgraph.object_instances:
-                    if inst.is_instance and inst.instance_object.type == 'MESH':
-                        inst_key = f"{inst.instance_object.name_full}|{inst.persistent_id[0]}"
-                        try:
-                            self.__instance_translators[inst_key].set_xform_step(time, inst.matrix_world)
-                        except:
-                            pass
+                    if not inst.is_instance:
+                        obj = inst.object
+                        if obj.type == 'MESH':
+                            self.__object_translators[obj.name_full].set_xform_step(time)
+                    else:
+                        obj = inst.instance_object
+                        if obj.type == 'MESH':
+                            inst_key = f"{inst.instance_object.name_full}|{inst.persistent_id[0]}"
+                            try:
+                                self.__instance_translators[inst_key].set_xform_step(time, inst.matrix_world)
+                            except Exception as e:
+                                logger.debug("%s", e)
 
             if time in deform_times:
                 for translator in self.__object_translators.values():
@@ -613,7 +628,7 @@ class SceneTranslator(object):
                 for translator in self.__instance_sources.values():
                     translator.set_deform_key(time, self.bl_depsgraph, all_times)
 
-        self.bl_scene.frame_set(current_frame)
+        self.bl_engine.frame_set(current_frame, subframe=0.0)
 
     def __get_subframes(self, shutter_length, samples, times):
         assert samples > 1
@@ -685,38 +700,38 @@ class SceneTranslator(object):
         it easier to assign xform blur steps later on.
         :return: None
         """
-        for deps_obj in self.bl_depsgraph.objects:
-            obj = self.bl_scene.objects[deps_obj.name]
-            obj_key = obj.name_full
-            if obj.appleseed.object_export == "archive_assembly":
-                self.__object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
-            elif obj.type == 'MESH':
-                self.__object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
-                if obj.appleseed.object_alpha_texture is not None:
-                    tex_key = obj.appleseed.object_alpha_texture.name_full
-                    if tex_key not in self.__texture_translators:
-                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.object_alpha_texture,
-                                                                                obj.data.appleseed.object_alpha_texture_colorspace,
-                                                                                self.asset_handler)
-
-            elif obj.type == 'LIGHT':
-                self.__lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
-                if obj.data.appleseed.radiance_use_tex and obj.data.appleseed.radiance_tex is not None:
-                    tex_key = obj.data.appleseed.radiance_tex.name_full
-                    if tex_key not in self.__texture_translators:
-                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_tex,
-                                                                                obj.data.appleseed.radiance_tex_color_space,
-                                                                                self.asset_handler)
-
-                if obj.data.appleseed.radiance_multiplier_use_tex and obj.data.appleseed.radiance_multiplier_tex is not None:
-                    tex_key = obj.data.appleseed.radiance_multiplier_tex.name_full
-                    if tex_key not in self.__texture_translators:
-                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
-                                                                                obj.data.appleseed.radiance_multiplier_tex_color_space,
-                                                                                self.asset_handler)
-
         for inst in self.bl_depsgraph.object_instances:
-            if inst.is_instance:
+            if not inst.is_instance:
+                obj = inst.object
+                obj_key = obj.name_full
+                if obj.appleseed.object_export == "archive_assembly":
+                    self.__object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
+                elif obj.type == 'MESH':
+                    self.__object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
+                    if obj.appleseed.object_alpha_texture is not None:
+                        tex_key = obj.appleseed.object_alpha_texture.name_full
+                        if tex_key not in self.__texture_translators:
+                            self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.object_alpha_texture,
+                                                                                    obj.data.appleseed.object_alpha_texture_colorspace,
+                                                                                    self.asset_handler)
+
+                elif obj.type == 'LIGHT':
+                    self.__lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
+                    if obj.data.appleseed.radiance_use_tex and obj.data.appleseed.radiance_tex is not None:
+                        tex_key = obj.data.appleseed.radiance_tex.name_full
+                        if tex_key not in self.__texture_translators:
+                            self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_tex,
+                                                                                    obj.data.appleseed.radiance_tex_color_space,
+                                                                                    self.asset_handler)
+
+                    if obj.data.appleseed.radiance_multiplier_use_tex and obj.data.appleseed.radiance_multiplier_tex is not None:
+                        tex_key = obj.data.appleseed.radiance_multiplier_tex.name_full
+                        if tex_key not in self.__texture_translators:
+                            self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
+                                                                                    obj.data.appleseed.radiance_multiplier_tex_color_space,
+                                                                                    self.asset_handler)
+
+            else:
                 source_key = inst.instance_object.name_full
                 inst_key = f"{source_key}|{inst.persistent_id[0]}"
                 if inst.instance_object.type == 'MESH':
