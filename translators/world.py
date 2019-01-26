@@ -97,7 +97,7 @@ class WorldTranslator(Translator):
     def set_transform(self, time):
         self.__xform_seq.set_transform(time, self._convert_matrix(asr.Matrix4d.identity()))
 
-    def flush_entities(self, as_scene, as_assembly):
+    def flush_entities(self, as_scene, as_assembly, as_project):
         for index, color in enumerate(self.__as_colors):
             color_name = color.get_name()
             as_scene.colors().insert(color)
@@ -115,7 +115,7 @@ class WorldTranslator(Translator):
 
     # Internal methods.
     def _convert_matrix(self, m):
-        as_world = self.bl_scene.world.appleseed_sky
+        as_world = self.bl_world.appleseed_sky
         vertical_shift = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(as_world.vertical_shift))
         horizontal_shift = asr.Matrix4d.make_rotation(asr.Vector3d(0.0, 1.0, 0.0), math.radians(as_world.horizontal_shift))
         m = vertical_shift * horizontal_shift * m

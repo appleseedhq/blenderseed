@@ -119,7 +119,7 @@ class MeshTranslator(Translator):
         bpy.data.meshes.remove(me)
         self.__key_index += 1
 
-    def flush_entities(self, as_assembly):
+    def flush_entities(self, as_assembly, as_project):
         self.__xform_seq.optimize()
 
         mesh_name = f"{self.appleseed_name}_obj"

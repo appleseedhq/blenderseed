@@ -73,11 +73,12 @@ class TextureTranslator(Translator):
                                                  self.appleseed_name,
                                                  asr.Transformf(asr.Matrix4f.identity()))
 
-    def flush_entities(self, as_assembly):
+    def flush_entities(self, as_assembly, as_project):
+        scene = as_project.get_scene()
         tex_name = self.__as_tex.get_name()
-        as_assembly.textures().insert(self.__as_tex)
-        self.__as_tex = as_assembly.textures().get_by_name(tex_name)
+        scene.textures().insert(self.__as_tex)
+        self.__as_tex = scene.textures().get_by_name(tex_name)
 
         tex_inst_name = self.__as_tex_inst.get_name()
-        as_assembly.texture_instances().insert(self.__as_tex_inst)
-        self.__as_tex_inst = as_assembly.texture_instances().get_by_name(tex_inst_name)
+        scene.texture_instances().insert(self.__as_tex_inst)
+        self.__as_tex_inst = scene.texture_instances().get_by_name(tex_inst_name)

@@ -92,24 +92,24 @@ class MaterialTranslator(Translator):
         self.__as_mat.set_parameters(self.__as_mat_params)
         self.__as_shader.set_parameters(self.__as_shader_params)
 
-    def flush_entities(self, assembly):
+    def flush_entities(self, as_assembly, as_project):
         shader_name = self.__as_shader.get_name()
-        assembly.surface_shaders().insert(self.__as_shader)
-        self.__as_shader = assembly.surface_shaders().get_by_name(shader_name)
+        as_assembly.surface_shaders().insert(self.__as_shader)
+        self.__as_shader = as_assembly.surface_shaders().get_by_name(shader_name)
 
         mat_name = self.__as_mat.get_name()
-        assembly.materials().insert(self.__as_mat)
-        self.__as_mat = assembly.materials().get_by_name(mat_name)
+        as_assembly.materials().insert(self.__as_mat)
+        self.__as_mat = as_assembly.materials().get_by_name(mat_name)
 
         for index, color in enumerate(self.__as_colors):
             col_name = color.get_name()
-            assembly.colors().insert(color)
-            self.__as_colors[index] = assembly.colors().get_by_name(col_name)
+            as_assembly.colors().insert(color)
+            self.__as_colors[index] = as_assembly.colors().get_by_name(col_name)
 
         if self.__as_volume is not None:
             vol_name = self.__as_volume.get_name()
-            assembly.volumes().insert(self.__as_volume)
-            self.__as_volume = assembly.volumes().get_by_name(vol_name)
+            as_assembly.volumes().insert(self.__as_volume)
+            self.__as_volume = as_assembly.volumes().get_by_name(vol_name)
 
     def __get_shader_params(self):
         as_mat_data = self.bl_mat.appleseed

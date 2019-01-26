@@ -69,7 +69,7 @@ class RenderCameraTranslator(Translator):
     def set_xform_step(self, time):
         self.__xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
 
-    def flush_entities(self, as_scene, as_assembly):
+    def flush_entities(self, as_scene, as_assembly, as_project):
         self.__xform_seq.optimize()
 
         logger.debug("Flushing camera entity for camera, num xform keys = %s", self.__xform_seq.size())

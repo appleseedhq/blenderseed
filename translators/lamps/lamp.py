@@ -101,7 +101,7 @@ class LampTranslator(Translator):
                                                         mat_name,
                                                         {'osl_surface': shader_name})
 
-    def flush_entities(self, as_assembly):
+    def flush_entities(self, as_assembly, as_project):
         if self.bl_lamp.data.type != 'AREA':
             as_assembly.lights().insert(self.__as_lamp)
             self.__as_lamp = as_assembly.lights().get_by_name(self.appleseed_name)

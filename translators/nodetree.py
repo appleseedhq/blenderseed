@@ -55,7 +55,7 @@ class NodeTreeTranslator(Translator):
 
         self.__create_shadergroup(bl_scene)
 
-    def flush_entities(self, as_assembly):
+    def flush_entities(self, as_assembly, as_project):
         shader_groupname = self.__as_shader_group.get_name()
         as_assembly.shader_groups().insert(self.__as_shader_group)
         self.__as_shader_group = as_assembly.shader_groups().get_by_name(shader_groupname)

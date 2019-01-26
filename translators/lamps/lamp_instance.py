@@ -42,7 +42,7 @@ class LampInstanceTranslator(LampTranslator):
     def set_xform_step(self, time, bl_matrix):
         pass
 
-    def flush_entities(self, as_assembly):
+    def flush_entities(self, as_assembly, as_project):
         super().flush_entities(as_assembly)
 
         if self.bl_lamp.data.type != 'AREA':

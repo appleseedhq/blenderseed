@@ -49,7 +49,7 @@ class MeshInstanceTranslator(Translator):
     def set_xform_step(self, time, bl_matrix):
         self.__xform_seq.set_transform(time, self._convert_matrix(bl_matrix))
 
-    def flush_entities(self, as_assembly):
+    def flush_entities(self, as_assembly, as_project):
         self.__xform_seq.optimize()
         self.__as_ass_inst.set_transform_sequence(self.__xform_seq)
 

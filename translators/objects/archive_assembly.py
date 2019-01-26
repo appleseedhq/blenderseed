@@ -59,7 +59,7 @@ class ArchiveAssemblyTranslator(Translator):
                                                   {},
                                                   ass_name)
 
-    def flush_entities(self, as_assembly):
+    def flush_entities(self, as_assembly, as_project):
         self.__xform_seq.optimize()
 
         self.__as_ass_inst.set_transform_sequence(self.__xform_seq)
