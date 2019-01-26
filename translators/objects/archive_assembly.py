@@ -47,7 +47,7 @@ class ArchiveAssemblyTranslator(Translator):
 
     def create_entities(self, bl_scene):
         ass_name = f"{self._bl_obj.name_full}_ass"
-        ass_inst_name = f"{ass_name}_inst"
+        ass_inst_name = f"{ass_name}_ass_inst"
 
         file_path = self.asset_handler.process_path(self._bl_obj.appleseed.archive_path, AssetType.ARCHIVE_ASSET)
 

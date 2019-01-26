@@ -41,12 +41,12 @@ logger = get_logger()
 
 
 class MeshTranslator(Translator):
-    def __init__(self, obj, export_mode, asset_handler, is_source=False):
+    def __init__(self, obj, export_mode, asset_handler, is_inst_source=False):
         super().__init__(obj, asset_handler=asset_handler)
         self.__export_mode = export_mode
         self.__xform_seq = asr.TransformSequence()
         self.__instance_count = 1
-        self.__is_source = is_source
+        self.__is_inst_source = is_inst_source
 
         self.__bl_temp_mesh = None
         self.__as_mesh = None
@@ -152,7 +152,7 @@ class MeshTranslator(Translator):
 
         # Check if mesh needs separate assembly
         self.__has_assembly = self.__instance_count > 1 or self.__xform_seq.size() > 1 or \
-            self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__is_source
+            self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__is_inst_source
 
         if self.__has_assembly:
             self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
@@ -176,7 +176,7 @@ class MeshTranslator(Translator):
             as_assembly.assemblies().insert(self.__as_ass)
             self.__as_ass = as_assembly.assemblies().get_by_name(ass_name)
 
-            if not self.__is_source:
+            if not self.__is_inst_source:
                 self.__as_ass_inst.set_transform_sequence(self.__xform_seq)
                 as_assembly.assembly_instances().insert(self.__as_ass_inst)
                 self.__as_ass_inst = as_assembly.assembly_instances().get_by_name(ass_inst_name)
