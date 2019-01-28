@@ -81,7 +81,7 @@ class ASMAT_OT_new_node_tree(bpy.types.Operator):
 
     def execute(self, context):
         material = context.object.active_material
-        nodetree = bpy.data.node_groups.new(material.name, 'AppleseedNodeTree')
+        nodetree = bpy.data.node_groups.new(material.name, 'AppleseedOSLNodeTree')
         nodetree.use_fake_user = True
         surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
         surface.location = (0, 0)
@@ -120,7 +120,7 @@ class ASMAT_OT_view_nodetree(bpy.types.Operator):
                 if area.type == "NODE_EDITOR":
                     for space in area.spaces:
                         if space.type == "NODE_EDITOR":
-                            space.tree_type = "AppleseedNodeTree"
+                            space.tree_type = "AppleseedOSLNodeTree"
                             space.node_tree = node_tree
                             return {"FINISHED"}
 
@@ -138,7 +138,7 @@ class ASLAMP_OT_new_node_tree(bpy.types.Operator):
 
     def execute(self, context):
         lamp = context.object.data
-        nodetree = bpy.data.node_groups.new('%s' % lamp.name, 'AppleseedNodeTree')
+        nodetree = bpy.data.node_groups.new('%s' % lamp.name, 'AppleseedOSLNodeTree')
         nodetree.use_fake_user = True
         surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
         surface.location = (0, 0)

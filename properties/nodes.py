@@ -475,10 +475,10 @@ def generate_node(node):
     return ntype.bl_idname, category
 
 
-class AppleseedNodeTree(bpy.types.NodeTree):
+class AppleseedOSLNodeTree(bpy.types.NodeTree):
     """Class for appleseed node tree."""
 
-    bl_idname = 'AppleseedNodeTree'
+    bl_idname = 'AppleseedOSLNodeTree'
     bl_label = 'appleseed OSL Node Tree'
     bl_icon = 'MATERIAL'
 
@@ -526,7 +526,7 @@ class AppleseedOSLNodeCategory(nodeitems_utils.NodeCategory):
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render.engine
-        return context.space_data.tree_type == 'AppleseedNodeTree' and renderer == 'APPLESEED_RENDER'
+        return context.space_data.tree_type == 'AppleseedOSLNodeTree' and renderer == 'APPLESEED_RENDER'
 
 
 def node_categories(osl_nodes):
@@ -572,7 +572,7 @@ osl_node_names = []
 
 
 def register():
-    util.safe_register_class(AppleseedNodeTree)
+    util.safe_register_class(AppleseedOSLNodeTree)
     node_list = util.read_osl_shaders()
     for node in node_list:
         node_name, node_category = generate_node(node)
@@ -590,4 +590,4 @@ def unregister():
     for cls in reversed(node_classes):
         util.safe_unregister_class(cls)
 
-    util.safe_unregister_class(AppleseedNodeTree)
+    util.safe_unregister_class(AppleseedOSLNodeTree)
