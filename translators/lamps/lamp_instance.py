@@ -36,6 +36,8 @@ class LampInstanceTranslator(LampTranslator):
         self.__inst_name = inst_name
         self.__bl_matrix = bl_matrix
 
+        self._lamp_name = inst_name
+
     def create_entities(self, bl_scene):
         super().create_entities(bl_scene)
 
@@ -43,9 +45,4 @@ class LampInstanceTranslator(LampTranslator):
         pass
 
     def flush_entities(self, as_assembly, as_project):
-        super().flush_entities(as_assembly)
-
-        if self.bl_lamp.data.type != 'AREA':
-            self.__as_lamp.set_transform(self._convert_matrix(self.__bl_matrix))
-        else:
-            self.__as_area_lamp_mesh_inst.transform_sequence().set_transform(0.0, self.__convert_area_matrix(self.__bl_matrix))
+        super().flush_entities(as_assembly, as_project, self.__bl_matrix)

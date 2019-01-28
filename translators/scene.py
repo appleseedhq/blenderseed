@@ -45,7 +45,7 @@ from ..utils.util import Timer
 
 logger = get_logger()
 
-objects_to_ignore = ('ARMATURE', 'CURVE')
+objects_to_ignore = ('ARMATURE', 'CURVE', 'CAMERA')
 
 
 class SceneTranslator(object):
@@ -625,7 +625,10 @@ class SceneTranslator(object):
                         if inst.show_self:
                             obj = inst.object
                             if obj.type == 'MESH' or (obj.type == 'EMPTY' and obj.appleseed.object_export == "archive_assembly"):
-                                self.__object_translators[obj.name_full].set_xform_step(time)
+                                try:
+                                    self.__object_translators[obj.name_full].set_xform_step(time)
+                                except Exception as e:
+                                    print(str(e))
 
             if time in deform_times:
                 logger.debug("Processing deformations for frame %s", self.bl_scene.frame_current)
@@ -685,7 +688,7 @@ class SceneTranslator(object):
         for inst in self.bl_depsgraph.object_instances:
             if inst.show_self and not inst.is_instance:
                 obj = inst.object
-                if obj.type not in objects_to_ignore:
+                if obj.type not in objects_to_ignore and len(obj.data.polygons) > 0:
                     object_blocks.append(obj)
 
         return object_blocks
@@ -760,7 +763,7 @@ class SceneTranslator(object):
                     self.__instance_translators[inst_key] = LampInstanceTranslator(inst.instance_object,
                                                                                    self.asset_handler,
                                                                                    inst_key,
-                                                                                   inst.matrix_world)
+                                                                                   inst.matrix_world.copy())
 
     def __load_searchpaths(self):
         paths = self.as_project.get_search_paths()
