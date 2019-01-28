@@ -243,6 +243,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__renderer = asr.MasterRenderer(project,
                                              project.configurations()['final'].get_inherited_parameters(),
+                                             [],
                                              self.__renderer_controller,
                                              self.__tile_callback)
 

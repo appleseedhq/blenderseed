@@ -612,10 +612,6 @@ class SceneTranslator(object):
                 self.__camera_translator.set_xform_step(time)
 
             if time in xform_times:
-                for obj in self.bl_depsgraph.objects:
-                    if obj.type == 'MESH' or (obj.type == 'EMPTY' and obj.appleseed.object_export == "archive_assembly"):
-                        self.__object_translators[obj.name_full].set_xform_step(time)
-
                 for inst in self.bl_depsgraph.object_instances:
                     if inst.is_instance:
                         source_key = inst.instance_object.name_full
@@ -625,6 +621,11 @@ class SceneTranslator(object):
                             self.__instance_translators[inst_key].set_xform_step(time, inst.matrix_world)
                         except Exception as e:
                             print(str(e))
+                    else:
+                        if inst.show_self:
+                            obj = inst.object
+                            if obj.type == 'MESH' or (obj.type == 'EMPTY' and obj.appleseed.object_export == "archive_assembly"):
+                                self.__object_translators[obj.name_full].set_xform_step(time)
 
             if time in deform_times:
                 logger.debug("Processing deformations for frame %s", self.bl_scene.frame_current)
@@ -681,9 +682,11 @@ class SceneTranslator(object):
     def __parse_object_datablocks(self):
         object_blocks = []
 
-        for obj in self.bl_depsgraph.objects:
-            if obj.type not in objects_to_ignore:
-                object_blocks.append(obj)
+        for inst in self.bl_depsgraph.object_instances:
+            if inst.show_self and not inst.is_instance:
+                obj = inst.object
+                if obj.type not in objects_to_ignore:
+                    object_blocks.append(obj)
 
         return object_blocks
 
