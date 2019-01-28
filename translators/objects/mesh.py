@@ -255,18 +255,8 @@ class MeshTranslator(Translator):
         return params
 
     def __create_bl_render_mesh(self, depsgraph):
-        timer = Timer()
         me = self._bl_obj.to_mesh(depsgraph,
                                   apply_modifiers=True)
-
-        bm = bmesh.new()
-        bm.from_mesh(me)
-        bm.to_mesh(me)
-        bm.free()
-
-        timer.stop()
-
-        logger.debug("\nMesh %s converted to render mesh in %s", self.bl_obj, timer.elapsed())
 
         return me
 
