@@ -688,7 +688,7 @@ class SceneTranslator(object):
         for inst in self.bl_depsgraph.object_instances:
             if inst.show_self and not inst.is_instance:
                 obj = inst.object
-                if obj.type not in objects_to_ignore and len(obj.data.polygons) > 0:
+                if obj.type not in objects_to_ignore:
                     object_blocks.append(obj)
 
         return object_blocks
@@ -710,7 +710,7 @@ class SceneTranslator(object):
             obj_key = obj.name_full
             if obj.appleseed.object_export == "archive_assembly":
                 self.__object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
-            elif obj.type == 'MESH':
+            elif obj.type == 'MESH' and len(obj.data.polygons) > 0:
                 self.__object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
                 if obj.appleseed.object_alpha_texture is not None:
                     tex_key = obj.appleseed.object_alpha_texture.name_full
