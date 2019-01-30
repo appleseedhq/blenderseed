@@ -63,7 +63,11 @@ class ASLAMP_PT_lamp(bpy.types.Panel):
             if asr_lamp.radiance_use_tex:
                 col = layout.column(align=True)
                 col.template_ID(asr_lamp, "radiance_tex", open="image.open")
-                col.prop(asr_lamp, "radiance_tex_color_space", text="")
+                if asr_lamp.radiance_tex is not None:
+                    as_rad_tex = asr_lamp.radiance_tex
+                    col.prop(as_rad_tex.appleseed, "as_color_space", text="Color Space")
+                    col.prop(as_rad_tex.appleseed, "as_wrap_mode", text="Wrap Mode")
+                    col.prop(as_rad_tex.appleseed, "as_alpha_mode", text="Alpha Mode")
 
             split = layout.split(factor=0.90, align=True)
             col = split.column(align=True)
@@ -75,7 +79,11 @@ class ASLAMP_PT_lamp(bpy.types.Panel):
             if asr_lamp.radiance_multiplier_use_tex:
                 col = layout.column(align=True)
                 col.template_ID(asr_lamp, "radiance_multiplier_tex", open="image.open")
-                col.prop(asr_lamp, "radiance_multiplier_tex_color_space", text="")
+                if asr_lamp.radiance_multiplier_tex is not None:
+                    as_rad_mult_tex = asr_lamp.radiance_multiplier_tex
+                    col.prop(as_rad_mult_tex.appleseed, "as_color_space", text="Color Space")
+                    col.prop(as_rad_mult_tex.appleseed, "as_wrap_mode", text="Wrap Mode")
+                    col.prop(as_rad_mult_tex.appleseed, "as_alpha_mode", text="Alpha Mode")
 
             layout.prop(lamp_data, "spot_blend", text="Inner Angle")
             layout.prop(lamp_data, "spot_size", text="Outer Angle")

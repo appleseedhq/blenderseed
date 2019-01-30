@@ -39,12 +39,9 @@ class TextureTranslator(Translator):
     OSL shaders do not store anything here
     """
 
-    def __init__(self, bl_texture, color_space, asset_handler=None, wrap_mode=None, alpha_mode=None):
+    def __init__(self, bl_texture, asset_handler=None):
         super().__init__(bl_texture, asset_handler=asset_handler)
 
-        self.__as_color_space = color_space
-        self.__as_wrap_mode = wrap_mode
-        self.__as_alpha_mode = alpha_mode
         self.__as_tex = None
         self.__as_tex_inst = None
 
@@ -54,20 +51,13 @@ class TextureTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene):
-        filepath = self.asset_handler.process_path(self.bl_tex.filepath, AssetType.TEXTURE_ASSET)
-
-        tex_params = {'filename': filepath,
-                      'color_space': self.__as_color_space}
+        tex_params = self.__get_tex_params()
         self.__as_tex = asr.Texture('disk_texture_2d',
                                     self.appleseed_name,
                                     tex_params,
                                     [])
 
-        address_mode = self.__as_wrap_mode if self.__as_wrap_mode is not None else 'wrap'
-        alpha_mode = self.__as_alpha_mode if self.__as_alpha_mode is not None else 'detect'
-        tex_inst_params = {'addressing_mode': address_mode,
-                           'filtering_mode': 'bilinear',
-                           'alpha_mode': alpha_mode}
+        tex_inst_params = self.__get_tex_inst_params()
         self.__as_tex_inst = asr.TextureInstance(f"{self.appleseed_name}_inst",
                                                  tex_inst_params,
                                                  self.appleseed_name,
@@ -82,3 +72,19 @@ class TextureTranslator(Translator):
         tex_inst_name = self.__as_tex_inst.get_name()
         scene.texture_instances().insert(self.__as_tex_inst)
         self.__as_tex_inst = scene.texture_instances().get_by_name(tex_inst_name)
+
+    def __get_tex_params(self):
+        as_tex_params = self.bl_tex.appleseed
+        filepath = self.asset_handler.process_path(self.bl_tex.filepath, AssetType.TEXTURE_ASSET)
+        tex_params = {'filename': filepath,
+                      'color_space': as_tex_params.as_color_space}
+
+        return tex_params
+
+    def __get_tex_inst_params(self):
+        as_tex_params = self.bl_tex.appleseed
+        tex_inst_params = {'addressing_mode': as_tex_params.as_wrap_mode,
+                           'filtering_mode': 'bilinear',
+                           'alpha_mode': as_tex_params.as_alpha_mode}
+
+        return tex_inst_params

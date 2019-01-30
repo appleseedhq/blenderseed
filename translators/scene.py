@@ -546,11 +546,10 @@ class SceneTranslator(object):
             self.__world_translator = WorldTranslator(self.bl_scene.world,
                                                       self.asset_handler)
 
-            if self.bl_scene.world.appleseed_sky.env_type in ('latlong_map', 'mirrorball_map'):
-                tex_key = self.bl_scene.world.appleseed_sky.env_tex.name_full
-                if tex_key not in self.__texture_translators:
-                    self.__texture_translators[tex_key] = TextureTranslator(self.bl_scene.world.appleseed_sky.env_tex,
-                                                                            self.bl_scene.world.appleseed_sky.env_tex_colorspace,
+            if self.bl_scene.world.appleseed_sky.env_tex is not None:
+                tex_id = self.bl_scene.world.appleseed_sky.env_tex.name_full
+                if tex_id not in self.__texture_translators:
+                    self.__texture_translators[tex_id] = TextureTranslator(self.bl_scene.world.appleseed_sky.env_tex,
                                                                             self.asset_handler)
 
     def __create_camera_translator(self):
@@ -564,10 +563,9 @@ class SceneTranslator(object):
                 raise NotImplementedError()
 
             if camera.data.appleseed.diaphragm_map is not None:
-                tex_key = camera.data.appleseed.diaphragm_map.name_full
-                if tex_key not in self.__texture_translators:
-                    self.__texture_translators[tex_key] = TextureTranslator(camera.data.appleseed.diaphragm_map,
-                                                                            camera.data.appleseed.diaphragm_map_colorspace,
+                tex_id = camera.data.appleseed.diaphragm_map.name_full
+                if tex_id not in self.__texture_translators:
+                    self.__texture_translators[tex_id] = TextureTranslator(camera.data.appleseed.diaphragm_map,
                                                                             self.asset_handler)
 
     def __calc_motion(self):
@@ -712,27 +710,26 @@ class SceneTranslator(object):
                 self.__object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
             elif obj.type == 'MESH' and len(obj.data.polygons) > 0:
                 self.__object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
+
                 if obj.appleseed.object_alpha_texture is not None:
-                    tex_key = obj.appleseed.object_alpha_texture.name_full
-                    if tex_key not in self.__texture_translators:
-                        self.__texture_translators[tex_key] = TextureTranslator(obj.appleseed.object_alpha_texture,
-                                                                                obj.appleseed.object_alpha_texture_colorspace,
+                    tex_id = obj.appleseed.object_alpha_texture.name_full
+                    if tex_id not in self.__texture_translators:
+                        self.__texture_translators[tex_id] = TextureTranslator(obj.appleseed.object_alpha_texture,
                                                                                 self.asset_handler)
 
             elif obj.type == 'LIGHT':
                 self.__lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
-                if obj.data.appleseed.radiance_use_tex and obj.data.appleseed.radiance_tex is not None:
-                    tex_key = obj.data.appleseed.radiance_tex.name_full
-                    if tex_key not in self.__texture_translators:
-                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_tex,
-                                                                                obj.data.appleseed.radiance_tex_color_space,
+
+                if obj.data.appleseed.radiance_tex is not None:
+                    tex_id = obj.data.appleseed.radiance_tex.name_full
+                    if tex_id not in self.__texture_translators:
+                        self.__texture_translators[tex_id] = TextureTranslator(obj.data.appleseed.radiance_tex,
                                                                                 self.asset_handler)
 
-                if obj.data.appleseed.radiance_multiplier_use_tex and obj.data.appleseed.radiance_multiplier_tex is not None:
-                    tex_key = obj.data.appleseed.radiance_multiplier_tex.name_full
-                    if tex_key not in self.__texture_translators:
-                        self.__texture_translators[tex_key] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
-                                                                                obj.data.appleseed.radiance_multiplier_tex_color_space,
+                if obj.data.appleseed.radiance_multiplier_tex is not None:
+                    tex_id = obj.data.appleseed.radiance_multiplier_tex.name_full
+                    if tex_id not in self.__texture_translators:
+                        self.__texture_translators[tex_id] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
                                                                                 self.asset_handler)
 
     def __create_final_render_instancers(self):

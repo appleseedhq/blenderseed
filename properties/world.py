@@ -117,14 +117,6 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                           description="",
                                           default=1)
 
-    env_tex_colorspace: bpy.props.EnumProperty(name="env_tex_colorspace",
-                                               description="Color space of input texture",
-                                               items=[
-                                                   ('srgb', "sRGB", ""),
-                                                   ('linear_rgb', "Linear RGB", ""),
-                                                   ('ciexyz', "CIE XYZ", "")],
-                                               default='linear_rgb')
-
     env_tex: bpy.props.PointerProperty(name="env_tex",
                                        type=bpy.types.Image)
 

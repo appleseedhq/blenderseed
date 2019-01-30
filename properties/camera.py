@@ -74,15 +74,6 @@ class AppleseedCameraSettings(bpy.types.PropertyGroup):
     diaphragm_map: bpy.props.PointerProperty(name="diaphragm_map",
                                              type=bpy.types.Image)
 
-    diaphragm_map_colorspace: bpy.props.EnumProperty(name="env_tex_colorspace",
-                                                     description="Color space of input texture",
-                                                     items=[
-                                                         ('srgb', "sRGB", ""),
-                                                         ('linear_rgb', "Linear RGB", ""),
-                                                         ('ciexyz', "CIE XYZ", "")],
-                                                     default="linear_rgb")
-
-
 def register():
     util.safe_register_class(AppleseedCameraSettings)
     bpy.types.Camera.appleseed = bpy.props.PointerProperty(type=AppleseedCameraSettings)

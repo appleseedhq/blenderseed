@@ -35,6 +35,7 @@ from . import nodes
 from . import camera
 from . import nodes
 from . import lamps
+from . import texture
 
 
 def register():
@@ -46,9 +47,11 @@ def register():
     meshes.register()
     camera.register()
     lamps.register()
+    texture.register()
 
 
 def unregister():
+    texture.unregister()
     lamps.unregister()
     camera.unregister()
     meshes.unregister()

@@ -154,9 +154,11 @@ class ASCAMERA_PT_dof(bpy.types.Panel):
         layout.prop(asr_cam_props, "diaphragm_blades", text="Blades")
         layout.prop(asr_cam_props, "diaphragm_angle", text="Tilt Angle")
         layout.template_ID(asr_cam_props, "diaphragm_map", open="image.open")
-        row = layout.row()
-        row.enabled = asr_cam_props.diaphragm_map != None
-        row.prop(asr_cam_props, "diaphragm_map_colorspace", text="Color Space")
+        if asr_cam_props.diaphragm_map != None:
+            as_diaphragm_map = asr_cam_props.diaphragm_map
+            layout.prop(as_diaphragm_map.appleseed, "as_color_space", text="Color Space")
+            layout.prop(as_diaphragm_map.appleseed, "as_wrap_mode", text="Wrap Mode")
+            layout.prop(as_diaphragm_map.appleseed, "as_alpha_mode", text="Alpha Mode")
 
 
 classes = (

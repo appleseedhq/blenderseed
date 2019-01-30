@@ -80,17 +80,26 @@ class ASWORLD_PT_world(bpy.types.Panel):
 
         elif asr_sky_props.env_type == "mirrorball_map":
             col = layout.column(align=True)
-            col.prop(asr_sky_props, "env_tex", text="")
-            col.prop(asr_sky_props, "env_tex_colorspace", text="")
-            col.operator("image.open", text="Import Image", icon="ZOOMIN")
-            layout.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
-            layout.prop(asr_sky_props, "env_exposure", text="Exposure")
-            layout.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")
+            col.template_ID(asr_sky_props, "env_tex", open="image.open")
+            if asr_sky_props.env_tex is not None:
+                as_rad_tex = asr_sky_props.env_tex
+                col.prop(as_rad_tex.appleseed, "as_color_space", text="Color Space")
+                col.prop(as_rad_tex.appleseed, "as_wrap_mode", text="Wrap Mode")
+                col.prop(as_rad_tex.appleseed, "as_alpha_mode", text="Alpha Mode")
+            col.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
+
+            col = layout.column()
+            col.prop(asr_sky_props, "env_exposure", text="Exposure")
+            col.prop(asr_sky_props, "env_exposure_multiplier", text="Exposure Multiplier")
 
         elif asr_sky_props.env_type == "latlong_map":
             col = layout.column()
             col.template_ID(asr_sky_props, "env_tex", open="image.open")
-            col.prop(asr_sky_props, "env_tex_colorspace", text="")
+            if asr_sky_props.env_tex is not None:
+                as_rad_tex = asr_sky_props.env_tex
+                col.prop(as_rad_tex.appleseed, "as_color_space", text="Color Space")
+                col.prop(as_rad_tex.appleseed, "as_wrap_mode", text="Wrap Mode")
+                col.prop(as_rad_tex.appleseed, "as_alpha_mode", text="Alpha Mode")
             col.prop(asr_sky_props, "env_tex_mult", text="Radiance Multiplier")
 
             col = layout.column()

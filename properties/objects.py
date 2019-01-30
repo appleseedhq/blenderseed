@@ -99,25 +99,6 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
     object_alpha_texture: bpy.props.PointerProperty(name="object_alpha_texture",
                                                     type=bpy.types.Image)
 
-    object_alpha_texture_colorspace: bpy.props.EnumProperty(name="object_alpha_texture_colorspace",
-                                                            description="Color space",
-                                                            items=[('srgb', "sRGB", ""),
-                                                                   ('linear_rgb', "Linear", "")],
-                                                            default='linear_rgb')
-
-    object_alpha_texture_wrap_mode: bpy.props.EnumProperty(name="object_alpha_texture_wrap_mode",
-                                                           description="Texture wrapping method",
-                                                           items=[('clamp', "Clamp", ""),
-                                                                  ('wrap', "Wrap", "")],
-                                                           default='wrap')
-
-    object_alpha_mode: bpy.props.EnumProperty(name="object_alpha_mode",
-                                              items=[
-                                                  ('alpha_channel', "Alpha Channel", ""),
-                                                  ('luminance', "Luminance", ""),
-                                                  ('detect', "Detect", "")],
-                                              default='detect')
-
     object_sss_set: bpy.props.StringProperty(name="object_sss_set",
                                              description="SSS set",
                                              default="")

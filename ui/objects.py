@@ -122,9 +122,11 @@ class ASOBJECT_PT_obj_alpha(bpy.types.Panel):
 
         col = layout.column(align=True)
         col.template_ID(asr_obj, "object_alpha_texture", open="image.open")
-        col.prop(asr_obj, "object_alpha_texture_colorspace", text="Color Space")
-        col.prop(asr_obj, "object_alpha_texture_wrap_mode", text="Wrap Mode")
-        col.prop(asr_obj, "object_alpha_mode", text="Alpha Mode")
+        if asr_obj.object_alpha_texture is not None:
+            as_alpha_tex = asr_obj.object_alpha_texture
+            col.prop(as_alpha_tex.appleseed, "as_color_space", text="Color Space")
+            col.prop(as_alpha_tex.appleseed, "as_wrap_mode", text="Wrap Mode")
+            col.prop(as_alpha_tex.appleseed, "as_alpha_mode", text="Alpha Mode")
 
 
 class ASOBJECT_PT_motion_blur(bpy.types.Panel):
