@@ -36,7 +36,7 @@ from .cameras import RenderCameraTranslator
 from .lamps import LampInstanceTranslator, LampTranslator
 from .material import MaterialTranslator
 from .nodetree import NodeTreeTranslator
-from .objects import ArchiveAssemblyTranslator, MeshInstanceTranslator, MeshTranslator
+from .objects import ArchiveAssemblyTranslator, ObjectInstanceTranslator, MeshTranslator
 from .textures import TextureTranslator
 from .utilites import ProjectExportMode
 from .world import WorldTranslator
@@ -133,7 +133,7 @@ class SceneTranslator(object):
         self.__context = context
 
         # Blender datablock lists.
-        self.__bl_obeject_datablocks = []
+        self.__bl_object_datablocks = []
         self.__bl_material_datablocks = []
         self.__bl_nodetree_datablocks = []
 
@@ -142,8 +142,6 @@ class SceneTranslator(object):
         self.__camera_translator = None
         self.__lamp_translators = {}
         self.__object_translators = {}
-        self.__instance_translators = {}
-        self.__instance_sources = {}
         self.__material_translators = {}
         self.__nodetree_translators = {}
         self.__texture_translators = {}
@@ -192,8 +190,6 @@ class SceneTranslator(object):
     def all_translators(self):
         return[self.__lamp_translators,
                self.__object_translators,
-               self.__instance_translators,
-               self.__instance_sources,
                self.__material_translators,
                self.__nodetree_translators,
                self.__texture_translators]
@@ -221,7 +217,7 @@ class SceneTranslator(object):
 
         self.__bl_nodetree_datablocks = self.__parse_nodetree_datablocks()
 
-        self.__bl_obeject_datablocks = self.__parse_object_datablocks()
+        self.__bl_object_datablocks = self.__parse_object_datablocks()
 
         self.__create_translators()
 
@@ -243,7 +239,7 @@ class SceneTranslator(object):
             for translator in translators.values():
                 translator.flush_entities(self.main_assembly, self.as_project)
 
-        if self.__world_translator != None:
+        if self.__world_translator is not None:
             self.__world_translator.flush_entities(self.as_scene, self.main_assembly, self.as_project)
 
         self.__camera_translator.flush_entities(self.as_scene, self.main_assembly, self.as_project)
@@ -612,28 +608,21 @@ class SceneTranslator(object):
             if time in xform_times:
                 for inst in self.bl_depsgraph.object_instances:
                     if inst.is_instance:
-                        source_key = inst.instance_object.name_full
+                        source = inst.instance_object
                         parent_key = inst.parent.name_full
-                        inst_key = f"{source_key}|{parent_key}|{inst.persistent_id[0]}"
-                        try:
-                            self.__instance_translators[inst_key].set_xform_step(time, inst.matrix_world)
-                        except Exception as e:
-                            print(str(e))
+                        inst_key = f"{source.name_full}|{parent_key}|{inst.persistent_id[0]}"
                     else:
-                        if inst.show_self:
-                            obj = inst.object
-                            if obj.type == 'MESH' or (obj.type == 'EMPTY' and obj.appleseed.object_export == "archive_assembly"):
-                                try:
-                                    self.__object_translators[obj.name_full].set_xform_step(time)
-                                except Exception as e:
-                                    print(str(e))
+                        source = inst.object
+                        inst_key = source.name_full
+
+                    if source.type == 'MESH' or source.appleseed.object_export == "archive_assembly":
+                        if source.name_full in self.__object_translators:
+                            self.__object_translators[source.name_full].set_xform_step(time, inst_key, inst.matrix_world)
+
+            logger.debug("Processing deformations for frame %s", self.bl_scene.frame_current)
 
             if time in deform_times:
-                logger.debug("Processing deformations for frame %s", self.bl_scene.frame_current)
-
                 for translator in self.__object_translators.values():
-                    translator.set_deform_key(time, self.bl_depsgraph, all_times)
-                for translator in self.__instance_sources.values():
                     translator.set_deform_key(time, self.bl_depsgraph, all_times)
 
         self.bl_engine.frame_set(current_frame, subframe=0.0)
@@ -683,11 +672,9 @@ class SceneTranslator(object):
     def __parse_object_datablocks(self):
         object_blocks = []
 
-        for inst in self.bl_depsgraph.object_instances:
-            if inst.show_self and not inst.is_instance:
-                obj = inst.object
-                if obj.type not in objects_to_ignore:
-                    object_blocks.append(obj)
+        for obj in self.bl_depsgraph.ids:
+            if isinstance(obj, bpy.types.Object):
+                object_blocks.append(obj)
 
         return object_blocks
 
@@ -704,11 +691,11 @@ class SceneTranslator(object):
             tree_key = tree.name_full
             self.__nodetree_translators[tree_key] = NodeTreeTranslator(tree, self.asset_handler)
 
-        for obj in self.__bl_obeject_datablocks:
+        for obj in self.__bl_object_datablocks:
             obj_key = obj.name_full
             if obj.appleseed.object_export == "archive_assembly":
                 self.__object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
-            elif obj.type == 'MESH' and len(obj.data.polygons) > 0:
+            elif obj.type == 'MESH':
                 self.__object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
 
                 if obj.appleseed.object_alpha_texture is not None:
@@ -740,27 +727,26 @@ class SceneTranslator(object):
         :return: None
         """
         for inst in self.bl_depsgraph.object_instances:
-            if inst.is_instance:
-                source_key = inst.instance_object.name_full
-                parent_key = inst.parent.name_full
-                inst_key = f"{source_key}|{parent_key}|{inst.persistent_id[0]}"
-                if inst.instance_object.type == 'MESH':
-                    self.__instance_translators[inst_key] = MeshInstanceTranslator(inst_key,
-                                                                                   source_key)
+            if inst.show_self:
+                if inst.is_instance:
+                    source = inst.instance_object
+                    parent_key = inst.parent.name_full
+                    inst_key = f"{source.name_full}|{parent_key}|{inst.persistent_id[0]}"
+                else:
+                    source = inst.object
+                    inst_key = source.name_full
 
-                    if source_key not in self.__object_translators:
-                        self.__instance_sources[source_key] = MeshTranslator(inst.instance_object,
-                                                                             self.export_mode,
-                                                                             self.asset_handler,
-                                                                             is_inst_source=True)
-                    else:
-                        self.__object_translators[source_key].add_instance()
+                if source.type == 'MESH' or source.appleseed.object_export == "archive_assembly":
+                    instance = ObjectInstanceTranslator(inst_key, source.name_full)
+                    self.__object_translators[source.name_full].add_instance(inst_key, instance)
+                elif source.type == 'LIGHT':
+                    instance = LampInstanceTranslator(source, self.asset_handler, inst_key, inst.matrix_world.copy())
+                    self.__lamp_translators[source.name_full].add_instance(inst_key, instance)
 
-                elif inst.instance_object.type == 'LIGHT':
-                    self.__instance_translators[inst_key] = LampInstanceTranslator(inst.instance_object,
-                                                                                   self.asset_handler,
-                                                                                   inst_key,
-                                                                                   inst.matrix_world.copy())
+        for key in list(self.__object_translators.keys()):
+            translator = self.__object_translators[key]
+            if len(translator.instances) == 0:
+                del self.__object_translators[key]
 
     def __load_searchpaths(self):
         paths = self.as_project.get_search_paths()

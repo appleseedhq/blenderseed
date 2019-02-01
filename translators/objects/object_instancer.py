@@ -30,29 +30,32 @@ import appleseed as asr
 from ..translator import Translator
 
 
-class MeshInstanceTranslator(Translator):
+class ObjectInstanceTranslator(Translator):
     def __init__(self, inst_key, source_key):
         self.__inst_key = inst_key
         self.__source_key = source_key
 
-        self.__as_ass_inst = None
+        self.__ass_inst = None
 
         self.__xform_seq = asr.TransformSequence()
 
+    @property
+    def xform_seq(self):
+        return self.__xform_seq
+
     def create_entities(self, bl_scene):
         ass_name = f"{self.__source_key}_ass"
-        assembly_instance_name = f"{self.__inst_key}_ass_inst"
-        self.__as_ass_inst = asr.AssemblyInstance(assembly_instance_name,
-                                                  {},
-                                                  ass_name)
+        ass_inst_name = f"{self.__inst_key}_ass_inst"
+        self.__ass_inst = asr.AssemblyInstance(ass_inst_name,
+                                               {},
+                                               ass_name)
 
     def set_xform_step(self, time, bl_matrix):
         self.__xform_seq.set_transform(time, self._convert_matrix(bl_matrix))
 
-    def flush_entities(self, as_assembly, as_project):
-        self.__xform_seq.optimize()
-        self.__as_ass_inst.set_transform_sequence(self.__xform_seq)
+    def flush_entities(self, as_assembly):
+        self.__ass_inst.set_transform_sequence(self.__xform_seq)
 
-        ass_name = self.__as_ass_inst.get_name()
-        as_assembly.assembly_instances().insert(self.__as_ass_inst)
-        self.__as_ass_inst = as_assembly.assemblies().get_by_name(ass_name)
+        ass_inst_name = self.__ass_inst.get_name()
+        as_assembly.assembly_instances().insert(self.__ass_inst)
+        self.__ass_inst = as_assembly.assemblies().get_by_name(ass_inst_name)

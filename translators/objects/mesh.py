@@ -41,14 +41,11 @@ logger = get_logger()
 
 
 class MeshTranslator(Translator):
-    def __init__(self, obj, export_mode, asset_handler, is_inst_source=False):
+    def __init__(self, obj, export_mode, asset_handler):
         super().__init__(obj, asset_handler=asset_handler)
         self.__export_mode = export_mode
-        self.__xform_seq = asr.TransformSequence()
-        self.__instance_count = 1
-        self.__is_inst_source = is_inst_source
+        self.__instances = {}
 
-        self.__bl_temp_mesh = None
         self.__as_mesh = None
         self.__as_mesh_inst = None
         self.__as_mesh_inst_params = {}
@@ -58,8 +55,7 @@ class MeshTranslator(Translator):
         self.__geom_dir = self.asset_handler.geometry_dir if export_mode == ProjectExportMode.PROJECT_EXPORT else None
 
         self.__has_assembly = False
-        self.__as_ass = None
-        self.__as_ass_inst = None
+        self.__ass = None
 
         self.__mesh_filenames = []
 
@@ -70,6 +66,10 @@ class MeshTranslator(Translator):
     @property
     def bl_obj(self):
         return self._bl_obj
+
+    @property
+    def instances(self):
+        return self.__instances
 
     def create_entities(self, bl_scene):
         logger.debug("Creating translator for mesh %s", self.appleseed_name)
@@ -83,48 +83,50 @@ class MeshTranslator(Translator):
         self.__as_mesh_inst_params = self.__get_mesh_inst_params()
         self.__front_materials, self.__back_materials = self.__get_material_mappings()
 
-    def set_xform_step(self, time):
+        for instance in self.__instances.values():
+            instance.create_entities(bl_scene)
 
-        self.__xform_seq.set_transform(time, self._convert_matrix(self.bl_obj.matrix_world))
+    def set_xform_step(self, time, inst_key, bl_matrix):
+        self.__instances[inst_key].set_xform_step(time, bl_matrix)
 
     def set_deform_key(self, time, depsgraph, key_times):
-        if not self.__deforming and self.__key_index > 0:
-            logger.debug("Skipping mesh key for non deforming object %s", self.bl_obj.name)
-            return
+        if len(self.bl_obj.data.polygons) > 0:
+            if not self.__deforming and self.__key_index > 0:
+                logger.debug("Skipping mesh key for non deforming object %s", self.bl_obj.name)
+                return
 
-        mesh_name = f"{self.appleseed_name}_obj"
+            mesh_name = f"{self.appleseed_name}_obj"
 
-        me = self.__create_bl_render_mesh(depsgraph)
+            me = self.__create_bl_render_mesh(depsgraph)
 
-        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
-            # Write a mesh file for the mesh key.
-            logger.debug("Writing mesh file object %s, time = %s", self.bl_obj.name, time)
+            if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+                # Write a mesh file for the mesh key.
+                logger.debug("Writing mesh file object %s, time = %s", self.bl_obj.name, time)
 
-            self.__convert_mesh(me)
-            self.__write_mesh(mesh_name)
-
-        else:
-            if self.__key_index == 0:
-                # First key, convert the mesh and reserve keys.
-                logger.debug("Converting mesh object %s", self.bl_obj.name)
                 self.__convert_mesh(me)
+                self.__write_mesh(mesh_name)
 
-                if self.__deforming:
-                    self.__as_mesh.set_motion_segment_count(len(key_times) - 1)
             else:
-                # Set vertex and normal poses.
-                logger.debug("Setting mesh key for object %s, time = %s", self.bl_obj.name, time)
-                self.__set_mesh_key(me, self.__key_index)
+                if self.__key_index == 0:
+                    # First key, convert the mesh and reserve keys.
+                    logger.debug("Converting mesh object %s", self.bl_obj.name)
+                    self.__convert_mesh(me)
 
-        bpy.data.meshes.remove(me)
-        self.__key_index += 1
+                    if self.__deforming:
+                        self.__as_mesh.set_motion_segment_count(len(key_times) - 1)
+                else:
+                    # Set vertex and normal poses.
+                    logger.debug("Setting mesh key for object %s, time = %s", self.bl_obj.name, time)
+                    self.__set_mesh_key(me, self.__key_index)
+
+            bpy.data.meshes.remove(me)
+            self.__key_index += 1
 
     def flush_entities(self, as_assembly, as_project):
-        self.__xform_seq.optimize()
+        for instance in self.__instances.values():
+            instance.xform_seq.optimize()
 
         mesh_name = f"{self.appleseed_name}_obj"
-
-        logger.debug("Flushing mesh %s, number of xform steps: %s", mesh_name, self.__xform_seq.size())
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Replace the MeshObject by an empty one referencing
@@ -147,12 +149,13 @@ class MeshTranslator(Translator):
 
         mesh_name = self.__object_instance_mesh_name(f"{self.appleseed_name}_obj")
 
-        as_assembly.objects().insert(self.__as_mesh)
-        self.__as_mesh = as_assembly.objects().get_by_name(mesh_name)
-
-        # Check if mesh needs separate assembly
-        self.__has_assembly = self.__instance_count > 1 or self.__xform_seq.size() > 1 or \
-            self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__is_inst_source
+        if self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or len(self.__instances) > 1:
+            self.__has_assembly = True
+        else:
+            for instance in self.__instances.values():
+                xform_seq = instance.xform_seq
+            if xform_seq.size() > 1:
+                self.__has_assembly = True
 
         if self.__has_assembly:
             self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
@@ -163,37 +166,37 @@ class MeshTranslator(Translator):
                                                      self.__back_materials)
 
             ass_name = f"{self.appleseed_name}_ass"
-            ass_inst_name = f"{self.appleseed_name}_ass_inst"
 
-            self.__as_ass = asr.Assembly(ass_name)
-            self.__as_ass_inst = asr.AssemblyInstance(ass_inst_name,
-                                                      {},
-                                                      ass_name)
+            self.__ass = asr.Assembly(ass_name)
 
-            self.__as_ass.object_instances().insert(self.__as_mesh_inst)
-            self.__as_mesh_inst = self.__as_ass.object_instances().get_by_name(self.appleseed_name)
+            self.__ass.objects().insert(self.__as_mesh)
+            self.__as_mesh = self.__ass.objects().get_by_name(mesh_name)
 
-            as_assembly.assemblies().insert(self.__as_ass)
-            self.__as_ass = as_assembly.assemblies().get_by_name(ass_name)
+            self.__ass.object_instances().insert(self.__as_mesh_inst)
+            self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.appleseed_name)
 
-            if not self.__is_inst_source:
-                self.__as_ass_inst.set_transform_sequence(self.__xform_seq)
-                as_assembly.assembly_instances().insert(self.__as_ass_inst)
-                self.__as_ass_inst = as_assembly.assembly_instances().get_by_name(ass_inst_name)
+            as_assembly.assemblies().insert(self.__ass)
+            self.__ass = as_assembly.assemblies().get_by_name(ass_name)
+
+            for instance in self.__instances.values():
+                instance.flush_entities(as_assembly)
 
         else:
             self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
                                                      self.__as_mesh_inst_params,
                                                      mesh_name,
-                                                     self.__xform_seq.get_earliest_transform(),
+                                                     xform_seq.get_earliest_transform(),
                                                      self.__front_materials,
                                                      self.__back_materials)
+
+            as_assembly.objects().insert(self.__as_mesh)
+            self.__as_mesh = as_assembly.objects().get_by_name(mesh_name)
 
             as_assembly.object_instances().insert(self.__as_mesh_inst)
             self.__as_mesh_inst = as_assembly.object_instances().get_by_name(self.appleseed_name)
 
-    def add_instance(self):
-        self.__instance_count += 1
+    def add_instance(self, key, instance):
+        self.__instances[key] = instance
 
     def __get_mesh_inst_params(self):
         asr_obj_props = self.bl_obj.appleseed

@@ -40,35 +40,43 @@ class ArchiveAssemblyTranslator(Translator):
     def __init__(self, archive_obj, asset_handler):
         super().__init__(archive_obj, asset_handler=asset_handler)
 
-        self.__xform_seq = asr.TransformSequence()
+        self.__instances = {}
 
-        self.__as_ass = None
-        self.__as_ass_inst = None
+        self.__ass = None
+
+    @property
+    def instances(self):
+        return self.__instances
 
     def create_entities(self, bl_scene):
-        ass_name = f"{self._bl_obj.name_full}_ass"
-        ass_inst_name = f"{ass_name}_ass_inst"
+        ass_name = f"{self.appleseed_name}_ass"
 
         file_path = self.asset_handler.process_path(self._bl_obj.appleseed.archive_path, AssetType.ARCHIVE_ASSET)
 
-        as_ass_params = {'filename': file_path}
+        ass_options = {'filename': file_path}
 
-        self.__as_ass = asr.Assembly("archive_assembly", ass_name, as_ass_params)
+        self.__ass = asr.Assembly("archive_assembly", ass_name, ass_options)
 
-        self.__as_ass_inst = asr.AssemblyInstance(ass_inst_name,
-                                                  {},
-                                                  ass_name)
+        for instance in self.__instances.values():
+            instance.create_entities(bl_scene)
 
     def flush_entities(self, as_assembly, as_project):
-        self.__xform_seq.optimize()
+        for instance in self.__instances.values():
+            instance.xform_seq.optimize()
 
-        self.__as_ass_inst.set_transform_sequence(self.__xform_seq)
+        ass_name = f"{self.appleseed_name}_ass"
 
-        as_assembly.assemblies().insert(self.__as_ass)
-        as_assembly.assembly_instances().insert(self.__as_ass_inst)
+        as_assembly.assemblies().insert(self.__ass)
+        self.__ass = as_assembly.assemblies().get_by_name(ass_name)
 
-    def set_xform_step(self, time):
-        self.__xform_seq.set_transform(time, self._convert_matrix(self._bl_obj.matrix_world))
+        for instance in self.__instances.values():
+            instance.flush_entities(as_assembly)
+
+    def set_xform_step(self, time, inst_key, bl_matrix):
+        self.__instances[inst_key].set_xform_step(time, bl_matrix)
+
+    def add_instance(self, inst_key, instance):
+        self.__instances[inst_key] = instance
 
     def set_deform_key(self, time, depsgraph, all_times):
         pass
