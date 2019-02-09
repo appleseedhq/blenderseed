@@ -563,6 +563,7 @@ def node_categories(osl_nodes):
         AppleseedOSLNodeCategory("OSL_2D_Textures", "Texture2D", items=osl_2d_textures),
         AppleseedOSLNodeCategory("OSL_Color", "Color", items=osl_color),
         AppleseedOSLNodeCategory("OSL_Utilities", "Utility", items=osl_utilities),
+        AppleseedOSLNodeCategory("OSL_Script", "Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptNode")]),
         AppleseedOSLNodeCategory("OSL_Other", "No Category", items=osl_other)]
 
     return appleseed_node_categories
@@ -570,15 +571,19 @@ def node_categories(osl_nodes):
 
 osl_node_names = []
 
+classes = []
+
 
 def register():
     util.safe_register_class(AppleseedOSLNodeTree)
+    util.safe_register_class(AppleseedOSLScriptNode)
     node_list = util.read_osl_shaders()
     for node in node_list:
-        node_name, node_category = generate_node(node)
+        node_name, node_category, node_classes = util.generate_node(node, AppleseedOSLNode)
+        classes.extend(node_classes)
         osl_node_names.append([node_name, node_category])
 
-    for cls in node_classes:
+    for cls in classes:
         util.safe_register_class(cls)
 
     nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
@@ -587,7 +592,8 @@ def register():
 def unregister():
     nodeitems_utils.unregister_node_categories("APPLESEED")
 
-    for cls in reversed(node_classes):
+    for cls in reversed(classes):
         util.safe_unregister_class(cls)
 
+    util.safe_unregister_class(AppleseedOSLScriptNode)
     util.safe_unregister_class(AppleseedOSLNodeTree)

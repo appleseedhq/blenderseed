@@ -33,6 +33,7 @@ import bpy
 import bpy_extras
 from bpy.app.handlers import persistent
 
+from ..properties.nodes import AppleseedOSLSocket
 from . import path_util
 from ..logger import get_logger
 
@@ -83,71 +84,74 @@ def read_osl_shaders():
             for file in os.listdir(shader_dir):
                 if file.endswith(".oso"):
                     logger.debug("[appleseed] Reading {0}...".format(file))
-                    d = {}
                     filename = os.path.join(shader_dir, file)
                     q.open(filename)
-                    d['inputs'] = []
-                    d['outputs'] = []
-                    shader_meta = q.get_metadata()
-                    if 'as_node_name' in shader_meta:
-                        d['name'] = shader_meta['as_node_name']['value']
-                    else:
-                        d['name'] = q.get_shader_name()
-                    d['filename'] = filename
-                    if 'URL' in shader_meta:
-                        d['url'] = shader_meta['URL']['value']
-                    else:
-                        d['url'] = ''
-                    if 'as_category' in shader_meta:
-                        d['category'] = shader_meta['as_category']['value']
-                    else:
-                        d['category'] = 'other'
-                    num_of_params = q.get_num_params()
-                    for x in range(0, num_of_params):
-                        metadata = {}
-                        param = q.get_param_info(x)
-                        if 'metadata' in param:
-                            metadata = param['metadata']
-                        param_data = {}
-                        param_data['name'] = param['name']
-                        param_data['type'] = param['type']
-                        param_data['connectable'] = True
-                        param_data['hide_ui'] = param['validdefault'] is False
-                        if 'default' in param:
-                            param_data['default'] = param['default']
-                        if 'label' in metadata:
-                            param_data['label'] = metadata['label']['value']
-                        if 'widget' in metadata:
-                            param_data['widget'] = metadata['widget']['value']
-                            if param_data['widget'] == 'null':
-                                param_data['hide_ui'] = True
-                        if 'page' in metadata:
-                            param_data['section'] = metadata['page']['value']
-                        if 'min' in metadata:
-                            param_data['min'] = metadata['min']['value']
-                        if 'max' in metadata:
-                            param_data['max'] = metadata['max']['value']
-                        if 'softmin' in metadata:
-                            param_data['softmin'] = metadata['softmin']['value']
-                        if 'softmax' in metadata:
-                            param_data['softmax'] = metadata['softmax']['value']
-                        if 'help' in metadata:
-                            param_data['help'] = metadata['help']['value']
-                        if 'options' in metadata:
-                            param_data['options'] = metadata['options']['value'].split(" = ")[-1].replace("\"", "").split("|")
-                        if 'as_blender_input_socket' in metadata:
-                            param_data['connectable'] = False if metadata['as_blender_input_socket']['value'] == 0.0 else True
-
-                        if param['isoutput'] is True:
-                            d['outputs'].append(param_data)
-                        else:
-                            d['inputs'].append(param_data)
-
-                    nodes.append(d)
+                    nodes.append(parse_shader(q, filename=filename))
 
     logger.debug("[appleseed] OSL parsing complete.")
 
     return nodes
+
+def parse_shader(q, filename=None):
+    d = {}
+    d['inputs'] = []
+    d['outputs'] = []
+    shader_meta = q.get_metadata()
+    if 'as_node_name' in shader_meta:
+        d['name'] = shader_meta['as_node_name']['value']
+    else:
+        d['name'] = q.get_shader_name()
+    d['filename'] = filename
+    if 'URL' in shader_meta:
+        d['url'] = shader_meta['URL']['value']
+    else:
+        d['url'] = ''
+    if 'as_category' in shader_meta:
+        d['category'] = shader_meta['as_category']['value']
+    else:
+        d['category'] = 'other'
+    num_of_params = q.get_num_params()
+    for x in range(0, num_of_params):
+        metadata = {}
+        param = q.get_param_info(x)
+        if 'metadata' in param:
+            metadata = param['metadata']
+        param_data = {}
+        param_data['name'] = param['name']
+        param_data['type'] = param['type']
+        param_data['connectable'] = True
+        param_data['hide_ui'] = param['validdefault'] is False
+        if 'default' in param:
+            param_data['default'] = param['default']
+        if 'label' in metadata:
+            param_data['label'] = metadata['label']['value']
+        if 'widget' in metadata:
+            param_data['widget'] = metadata['widget']['value']
+            if param_data['widget'] == 'null':
+                param_data['hide_ui'] = True
+        if 'page' in metadata:
+            param_data['section'] = metadata['page']['value']
+        if 'min' in metadata:
+            param_data['min'] = metadata['min']['value']
+        if 'max' in metadata:
+            param_data['max'] = metadata['max']['value']
+        if 'softmin' in metadata:
+            param_data['softmin'] = metadata['softmin']['value']
+        if 'softmax' in metadata:
+            param_data['softmax'] = metadata['softmax']['value']
+        if 'help' in metadata:
+            param_data['help'] = metadata['help']['value']
+        if 'options' in metadata:
+            param_data['options'] = metadata['options']['value'].split(" = ")[-1].replace("\"", "").split("|")
+        if 'as_blender_input_socket' in metadata:
+            param_data['connectable'] = False if metadata['as_blender_input_socket']['value'] == 0.0 else True
+
+        if param['isoutput'] is True:
+            d['outputs'].append(param_data)
+        else:
+            d['inputs'].append(param_data)
+            
+    return d
 
 
 # ------------------------------------

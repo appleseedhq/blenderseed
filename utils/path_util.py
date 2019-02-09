@@ -92,3 +92,9 @@ def get_osl_search_paths():
     shader_directories = list(tmp)
 
     return shader_directories
+
+
+def get_stdosl_paths():
+    appleseed_parent_dir = get_appleseed_parent_dir_path()
+
+    return os.path.join(appleseed_parent_dir, 'shaders', 'stdosl.h')

@@ -30,10 +30,52 @@ import subprocess
 
 import bpy
 
+from ..properties.nodes import AppleseedOSLScriptNode
 from ..utils import util, path_util
 
 
 # Material operators
+
+class ASMAT_OT_compile_script(bpy.types.Operator):
+    bl_idname = "appleseed.compile_osl_script"
+    bl_label = "Compile OSL Script Node"
+
+    def execute(self, context):
+        material = context.object.active_material
+        node_tree = material.appleseed.osl_node_tree
+        node = node_tree.nodes.active
+        script = node.script
+        osl_path = bpy.path.abspath(script.filepath, library=script.library)
+        if script.is_in_memory or script.is_dirty or script.is_modified or not os.path.exists(osl_path):
+            node.osl_source_code = script.as_string()
+        else:
+            code = open(osl_path, 'r')
+            node.osl_source_code = code.read()
+            code.close()
+
+        import appleseed as asr
+
+        stdosl_path = path_util.get_stdosl_paths()
+
+        compiler = asr.ShaderCompiler(stdosl_path)
+        node.osl_bytecode = compiler.compile_buffer(node.osl_source_code)
+
+        q = asr.ShaderQuery()
+        q.open_bytecode(node.osl_bytecode)
+
+        node_data = util.parse_shader(q)
+
+        node_name, node_category, node_classes = util.generate_node(node_data, AppleseedOSLScriptNode)
+
+        for cls in node_classes:
+            util.safe_register_class(cls)
+
+        new_node = node_tree.nodes.new(node_name)
+        new_node.classes = node_classes
+        new_node.osl_source_code = node.osl_source_code
+        new_node.osl_initialized = True
+
+        return {'FINISHED'}
 
 
 class ASMAT_OT_new_mat(bpy.types.Operator):
@@ -352,6 +394,7 @@ class ASSSS_OT_remove_sss_set(bpy.types.Operator):
 
 
 classes = (
+    ASMAT_OT_compile_script,
     ASMAT_OT_new_mat,
     ASMAT_OT_view_nodetree,
     ASTEX_OT_convert_textures,
