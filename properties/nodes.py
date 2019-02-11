@@ -68,11 +68,163 @@ class AppleseedOSLNode(bpy.types.Node):
                 linked_node.traverse_tree(material_node)
         material_node.tree.append(self)
 
+    def draw_buttons(self, context, layout):
+        if self.url_reference != '':
+            layout.operator("wm.url_open", text="Node Reference").url = self.url_reference
+        layout.separator()
+        socket_number = 0
+        param_section = ""
+        for x in self.input_params:
+            if x['type'] != 'pointer':
+                if 'hide_ui' in x.keys() and x['hide_ui'] is True:
+                    continue
+                if 'section' in x.keys():
+                    if x['section'] != param_section:
+                        layout.label(text=x['section'], icon='DOT')
+                        param_section = x['section']
+                if x['name'] in self.filepaths:
+                    layout.template_ID_preview(self, x['name'], open="image.open")
+                else:
+                    label_text = x['label']
+                    if x['type'] in ('color', 'vector', 'float[2]'):
+                        layout.label(text="%s:" % x['label'])
+                        label_text = ""
+                    if hasattr(self, "%s_use_node" % x['label']):
+                        split_percentage = 1 - (150 / context.region.width)
+                        split = layout.split(factor=split_percentage, align=True)
+                        split.enabled = not self.inputs[socket_number].is_linked
+                        col = split.column(align=True)
+                        col.prop(self, x['name'], text=label_text)
+                        col = split.column(align=True)
+                        col.prop(self, "%s_use_node" % x['label'], text="", toggle=True, icon='NODETREE')
+                        socket_number += 1
+                    else:
+                        layout.prop(self, x['name'], text=label_text)
 
-node_classes = []
+    def draw_buttons_ext(self, context, layout):
+        for x in self.input_params:
+            if x['type'] != 'pointer':
+                if 'hide_ui' in x.keys() and x['hide_ui'] is True:
+                    continue
+                elif x['name'] in self.filepaths:
+                    layout.template_ID_preview(self, x['name'], open="image.open")
+                    layout.label(text="Image Path")
+                    image_block = getattr(self, x['name'])
+                    col = layout.column()
+                    col.enabled = image_block.packed_file is None
+                    col.prop(image_block, "filepath", text="")
+                    layout.separator()
+                else:
+                    layout.prop(self, x['name'], text=x['label'])
+
+    def init(self, context):
+        if self.socket_input_names:
+            for socket in self.socket_input_names:
+                input = self.inputs.new(socket['socket_name'], socket['socket_label'])
+                if (socket['connectable'] is True and socket['hide_ui'] is False) or socket['connectable'] is False:
+                    input.hide = True
+        if self.socket_output_names:
+            for socket in self.socket_output_names:
+                self.outputs.new(socket[0], socket[1])
 
 
-def generate_node(node):
+class AppleseedOSLScriptNode(bpy.types.Node):
+    bl_idname = "AppleseedOSLScriptNode"
+    bl_label = "OSL Script"
+    bl_icon = "NODE"
+    bl_width_default = 240.0
+
+    node_type = "osl_script"
+
+    classes = []
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "script", text="")
+        layout.operator('appleseed.compile_osl_script', text="Compile Script")
+        socket_number = 0
+        param_section = ""
+        if hasattr(self, "input_params"):
+            for x in self.input_params:
+                if x['type'] != 'pointer':
+                    if 'hide_ui' in x.keys() and x['hide_ui'] is True:
+                        continue
+                    if 'section' in x.keys():
+                        if x['section'] != param_section:
+                            layout.label(text=x['section'], icon='DOT')
+                            param_section = x['section']
+                    if x['name'] in self.filepaths:
+                        layout.template_ID_preview(self, x['name'], open="image.open")
+                    else:
+                        label_text = x['label']
+                        if x['type'] in ('color', 'vector', 'float[2]'):
+                            layout.label(text="%s:" % x['label'])
+                            label_text = ""
+                        if hasattr(self, "%s_use_node" % x['label']):
+                            split_percentage = 1 - (150 / context.region.width)
+                            split = layout.split(factor=split_percentage, align=True)
+                            split.enabled = not self.inputs[socket_number].is_linked
+                            col = split.column(align=True)
+                            col.prop(self, x['name'], text=label_text)
+                            col = split.column(align=True)
+                            col.prop(self, "%s_use_node" % x['label'], text="", toggle=True, icon='NODETREE')
+                            socket_number += 1
+                        else:
+                            layout.prop(self, x['name'], text=label_text)
+
+    def draw_buttons_ext(self, context, layout):
+        if hasattr(self, "input_params"):
+            for x in self.input_params:
+                if x['type'] != 'pointer':
+                    if 'hide_ui' in x.keys() and x['hide_ui'] is True:
+                        continue
+                    elif x['name'] in self.filepaths:
+                        layout.template_ID_preview(self, x['name'], open="image.open")
+                        layout.label(text="Image Path")
+                        image_block = getattr(self, x['name'])
+                        col = layout.column()
+                        col.enabled = image_block.packed_file is None
+                        col.prop(image_block, "filepath", text="")
+                        layout.separator()
+                    else:
+                        layout.prop(self, x['name'], text=x['label'])
+
+    def init(self, context):
+        if hasattr(self, "socket_input_names"):
+            for socket in self.socket_input_names:
+                input = self.inputs.new(socket['socket_name'], socket['socket_label'])
+                if (socket['connectable'] is True and socket['hide_ui'] is False) or socket['connectable'] is False:
+                    input.hide = True
+        if hasattr(self, "socket_output_names"):
+            for socket in self.socket_output_names:
+                self.outputs.new(socket[0], socket[1])
+
+    def traverse_tree(self, material_node):
+        """Iterate inputs and traverse the tree backward if any inputs are connected.
+
+        Nodes are added to a list attribute of the material output node.
+        """
+        for socket in self.inputs:
+            if socket.is_linked:
+                linked_node = socket.links[0].from_node
+                linked_node.traverse_tree(material_node)
+        material_node.tree.append(self)
+
+
+class AppleseedOSLScriptBaseNode(AppleseedOSLScriptNode):
+    bl_idname = "AppleseedOSLScriptBaseNode"
+    bl_label = "OSL Script Base"
+    bl_icon = "NODE"
+    bl_width_default = 240.0
+
+    script: bpy.props.PointerProperty(name="script",
+                                      type=bpy.types.Text)
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "script", text="")
+        layout.operator('appleseed.compile_osl_script', text="Compile Script")
+
+
+def generate_node(node, node_class):
     """
     Generates a node based on the provided node data
 
@@ -100,18 +252,6 @@ def generate_node(node):
 
     def draw_matrix_color(self, context, node):
         return 1.0, 0.5, 1.0, 1.0
-
-    def init(self, context):
-        if socket_input_names:
-            for socket in socket_input_names:
-                input = self.inputs.new(socket['socket_name'], socket['socket_label'])
-                if (socket['connectable'] is True and socket['hide_ui'] is False) or socket['connectable'] is False:
-                    input.hide = True
-        if socket_output_names:
-            for socket in socket_output_names:
-                self.outputs.new(socket[0], socket[1])
-        else:
-            pass
 
     def copy(self, node):
         pass
@@ -141,54 +281,7 @@ def generate_node(node):
                 linked_node.traverse_tree(self)
         return util.filter_params(self.tree)
 
-    def draw_buttons(self, context, layout):
-        if self.url_reference != '':
-            layout.operator("wm.url_open", text="Node Reference").url = self.url_reference
-        layout.separator()
-        socket_number = 0
-        param_section = ""
-        for x in input_params:
-            if x['type'] != 'pointer':
-                if 'hide_ui' in x.keys() and x['hide_ui'] is True:
-                    continue
-                if x['section'] != param_section:
-                    layout.label(text=x['section'], icon='DOT')
-                    param_section = x['section']
-                if x['name'] in self.filepaths:
-                    layout.template_ID_preview(self, x['name'], open="image.open")
-                else:
-                    label_text = x['label']
-                    if x['type'] in ('color', 'vector', 'float[2]'):
-                        layout.label(text="%s:" % x['label'])
-                        label_text = ""
-                    if hasattr(self, "%s_use_node" % x['label']):
-                        split_percentage = 1 - (150 / context.region.width)
-                        split = layout.split(factor=split_percentage, align=True)
-                        split.enabled = not self.inputs[socket_number].is_linked
-                        col = split.column(align=True)
-                        col.prop(self, x['name'], text=label_text)
-                        col = split.column(align=True)
-                        col.prop(self, "%s_use_node" % x['label'], text="", toggle=True, icon='NODETREE')
-                        socket_number += 1
-                    else:
-                        layout.prop(self, x['name'], text=label_text)
-
-    def draw_buttons_ext(self, context, layout):
-        for x in input_params:
-            if x['type'] != 'pointer':
-                if 'hide_ui' in x.keys() and x['hide_ui'] is True:
-                    continue
-                elif x['name'] in self.filepaths:
-                    layout.template_ID_preview(self, x['name'], open="image.open")
-                    layout.label(text="Image Path")
-                    image_block = getattr(self, x['name'])
-                    col = layout.column()
-                    col.enabled = image_block.packed_file is None
-                    col.prop(image_block, "filepath", text="")
-                    layout.separator()
-                else:
-                    layout.prop(self, x['name'], text=x['label'])
-
+    node_classes = []
     parameter_types = {}
     filepaths = []
     name = node['name']
@@ -294,10 +387,15 @@ def generate_node(node):
     # create node class
     node_name = "Appleseed{0}Node".format(name)
     node_label = "{0}".format(name)
-    ntype = type(node_name, (AppleseedOSLNode,), {})
+    ntype = type(node_name, (node_class,), {})
     ntype.bl_idname = node_name
     ntype.bl_label = node_label
     ntype.file_name = node['filename']
+    ntype.input_params = input_params
+    ntype.output_sockets = output_sockets
+    ntype.socket_input_names = socket_input_names
+    ntype.socket_output_names = socket_output_names
+
     ntype.__annotations__ = {}
 
     socket_ui_props = []
@@ -454,13 +552,14 @@ def generate_node(node):
                                                                              default=False,
                                                                              update=update_sockets)
 
+    ntype.__annotations__["script"] = bpy.props.PointerProperty(name="script",
+                                                                type=bpy.types.Text)
+
+    ntype.initialized = True
     ntype.socket_ui_props = socket_ui_props
     ntype.update_sockets = update_sockets
     ntype.parameter_types = parameter_types
     ntype.url_reference = url_reference
-    ntype.init = init
-    ntype.draw_buttons = draw_buttons
-    ntype.draw_buttons_ext = draw_buttons_ext
     ntype.copy = copy
     ntype.filepaths = filepaths
     ntype.free = free
@@ -472,7 +571,7 @@ def generate_node(node):
 
     node_classes.append(ntype)
 
-    return ntype.bl_idname, category
+    return ntype.bl_idname, category, node_classes
 
 
 class AppleseedOSLNodeTree(bpy.types.NodeTree):
@@ -563,7 +662,7 @@ def node_categories(osl_nodes):
         AppleseedOSLNodeCategory("OSL_2D_Textures", "Texture2D", items=osl_2d_textures),
         AppleseedOSLNodeCategory("OSL_Color", "Color", items=osl_color),
         AppleseedOSLNodeCategory("OSL_Utilities", "Utility", items=osl_utilities),
-        AppleseedOSLNodeCategory("OSL_Script", "Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptNode")]),
+        AppleseedOSLNodeCategory("OSL_Script", "Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptBaseNode")]),
         AppleseedOSLNodeCategory("OSL_Other", "No Category", items=osl_other)]
 
     return appleseed_node_categories
@@ -577,9 +676,10 @@ classes = []
 def register():
     util.safe_register_class(AppleseedOSLNodeTree)
     util.safe_register_class(AppleseedOSLScriptNode)
+    util.safe_register_class(AppleseedOSLScriptBaseNode)
     node_list = util.read_osl_shaders()
     for node in node_list:
-        node_name, node_category, node_classes = util.generate_node(node, AppleseedOSLNode)
+        node_name, node_category, node_classes = generate_node(node, AppleseedOSLNode)
         classes.extend(node_classes)
         osl_node_names.append([node_name, node_category])
 
@@ -595,5 +695,6 @@ def unregister():
     for cls in reversed(classes):
         util.safe_unregister_class(cls)
 
+    util.safe_unregister_class(AppleseedOSLScriptBaseNode)
     util.safe_unregister_class(AppleseedOSLScriptNode)
     util.safe_unregister_class(AppleseedOSLNodeTree)

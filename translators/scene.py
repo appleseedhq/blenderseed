@@ -221,8 +221,7 @@ class SceneTranslator(object):
 
         self.__create_translators()
 
-        if self.export_mode == ProjectExportMode.FINAL_RENDER:
-            self.__create_final_render_instancers()
+        self.__create_instancers()
 
         if self.__world_translator is not None:
             self.__world_translator.create_entities(self.bl_scene)
@@ -613,7 +612,7 @@ class SceneTranslator(object):
                         inst_key = f"{source.name_full}|{parent_key}|{inst.persistent_id[0]}"
                     else:
                         source = inst.object
-                        inst_key = source.name_full
+                        inst_key = f"{source.name_full}|{inst.persistent_id[0]}"
 
                     if source.type == 'MESH' or source.appleseed.object_export == "archive_assembly":
                         if source.name_full in self.__object_translators:
@@ -719,7 +718,7 @@ class SceneTranslator(object):
                         self.__texture_translators[tex_id] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
                                                                                 self.asset_handler)
 
-    def __create_final_render_instancers(self):
+    def __create_instancers(self):
         """
         Creates translators for each mesh/lamp and instance of a lamp/object that was created via a particle system
         or dupli item.  For final rendering all instances are placed in a single level dictionary in order to make
@@ -734,7 +733,7 @@ class SceneTranslator(object):
                     inst_key = f"{source.name_full}|{parent_key}|{inst.persistent_id[0]}"
                 else:
                     source = inst.object
-                    inst_key = source.name_full
+                    inst_key = f"{source.name_full}|{inst.persistent_id[0]}"
 
                 if source.type == 'MESH' or source.appleseed.object_export == "archive_assembly":
                     instance = ObjectInstanceTranslator(inst_key, source.name_full)

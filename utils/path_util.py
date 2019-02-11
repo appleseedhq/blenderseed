@@ -98,3 +98,9 @@ def get_stdosl_paths():
     appleseed_parent_dir = get_appleseed_parent_dir_path()
 
     return os.path.join(appleseed_parent_dir, 'shaders', 'stdosl.h')
+
+
+def get_stdosl_render_paths():
+    appleseed_parent_dir = get_appleseed_parent_dir_path()
+
+    return os.path.join(appleseed_parent_dir, 'shaders')

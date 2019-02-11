@@ -38,6 +38,7 @@ from ..logger import get_logger
 from ..translators.preview import PreviewRenderer
 from ..translators.scene import SceneTranslator
 from ..utils.util import safe_register_class, safe_unregister_class
+from ..utils.path_util import get_stdosl_render_paths
 
 logger = get_logger()
 
@@ -224,7 +225,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.update_stats("appleseed Rendering: Translating scene", "")
             scene_translator.translate_scene()
 
-        self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+            self.__start_final_render(depsgraph.scene, scene_translator.as_project)
 
     def __start_final_render(self, scene, project):
         """
@@ -243,7 +244,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__renderer = asr.MasterRenderer(project,
                                              project.configurations()['final'].get_inherited_parameters(),
-                                             [],
+                                             [get_stdosl_render_paths()],
                                              self.__renderer_controller,
                                              self.__tile_callback)
 

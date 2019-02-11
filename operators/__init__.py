@@ -30,7 +30,7 @@ import subprocess
 
 import bpy
 
-from ..properties.nodes import AppleseedOSLScriptNode
+from ..properties.nodes import AppleseedOSLScriptNode, generate_node
 from ..utils import util, path_util
 
 
@@ -47,10 +47,10 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
         script = node.script
         osl_path = bpy.path.abspath(script.filepath, library=script.library)
         if script.is_in_memory or script.is_dirty or script.is_modified or not os.path.exists(osl_path):
-            node.osl_source_code = script.as_string()
+            source_code = script.as_string()
         else:
             code = open(osl_path, 'r')
-            node.osl_source_code = code.read()
+            source_code = code.read()
             code.close()
 
         import appleseed as asr
@@ -58,22 +58,22 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
         stdosl_path = path_util.get_stdosl_paths()
 
         compiler = asr.ShaderCompiler(stdosl_path)
-        node.osl_bytecode = compiler.compile_buffer(node.osl_source_code)
+        osl_bytecode = compiler.compile_buffer(source_code)
 
         q = asr.ShaderQuery()
-        q.open_bytecode(node.osl_bytecode)
+        q.open_bytecode(osl_bytecode)
 
         node_data = util.parse_shader(q)
 
-        node_name, node_category, node_classes = util.generate_node(node_data, AppleseedOSLScriptNode)
+        node_name, node_category, node_classes = generate_node(node_data, AppleseedOSLScriptNode)
 
         for cls in node_classes:
             util.safe_register_class(cls)
 
         new_node = node_tree.nodes.new(node_name)
-        new_node.classes = node_classes
-        new_node.osl_source_code = node.osl_source_code
-        new_node.osl_initialized = True
+        new_node.script = script
+        new_node.classes.extend(node_classes)
+        node_tree.nodes.remove(node)
 
         return {'FINISHED'}
 

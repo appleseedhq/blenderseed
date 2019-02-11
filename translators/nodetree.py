@@ -25,6 +25,9 @@
 # THE SOFTWARE.
 #
 
+import os
+
+import bpy
 import appleseed as asr
 
 from .assethandlers import AssetType
@@ -94,12 +97,28 @@ class NodeTreeTranslator(Translator):
                         parameter = " ".join(map(str, parameter))
                     parameters[key] = parameter_value + " " + str(parameter)
 
-            shader_file_name = self.asset_handler.process_path(node.file_name,
-                                                               AssetType.SHADER_ASSET)
+            if node.node_type == 'osl':
+                shader_file_name = self.asset_handler.process_path(node.file_name,
+                                                                   AssetType.SHADER_ASSET)
+                self.__as_shader_group.add_shader("shader",
+                                                  shader_file_name,
+                                                  node.name,
+                                                  parameters)
+            elif node.node_type == 'osl_script':
+                script = node.script
+                osl_path = bpy.path.abspath(script.filepath, library=script.library)
+                if script.is_in_memory or script.is_dirty or script.is_modified or not os.path.exists(osl_path):
+                    source_code = script.as_string()
+                else:
+                    code = open(osl_path, 'r')
+                    source_code = code.read()
+                    code.close()
 
-            self.__as_shader_group.add_shader("shader",
-                                              shader_file_name,
-                                              node.name, parameters)
+                self.__as_shader_group.add_source_shader("shader",
+                                                         node.bl_idname,
+                                                         node.name,
+                                                         source_code,
+                                                         parameters)
 
             for output in node.outputs:
                 if output.is_linked:
