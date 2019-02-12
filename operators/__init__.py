@@ -60,20 +60,24 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
         compiler = asr.ShaderCompiler(stdosl_path)
         osl_bytecode = compiler.compile_buffer(source_code)
 
-        q = asr.ShaderQuery()
-        q.open_bytecode(osl_bytecode)
+        if osl_bytecode is not None:
+            q = asr.ShaderQuery()
+            q.open_bytecode(osl_bytecode)
+        
 
-        node_data = util.parse_shader(q)
+            node_data = util.parse_shader(q)
 
-        node_name, node_category, node_classes = generate_node(node_data, AppleseedOSLScriptNode)
+            node_name, node_category, node_classes = generate_node(node_data, AppleseedOSLScriptNode)
 
-        for cls in node_classes:
-            util.safe_register_class(cls)
+            for cls in node_classes:
+                util.safe_register_class(cls)
 
-        new_node = node_tree.nodes.new(node_name)
-        new_node.script = script
-        new_node.classes.extend(node_classes)
-        node_tree.nodes.remove(node)
+            new_node = node_tree.nodes.new(node_name)
+            new_node.script = script
+            new_node.classes.extend(node_classes)
+            node_tree.nodes.remove(node)
+        else:
+            self.report({'ERROR'}, "OSL script did not compile!")
 
         return {'FINISHED'}
 
