@@ -38,13 +38,33 @@ from ..utils import util, path_util
 
 class ASMAT_OT_compile_script(bpy.types.Operator):
     bl_idname = "appleseed.compile_osl_script"
-    bl_label = "Compile OSL Script Node"
+    bl_label = "Compile OSL Script Node Parameters"
 
     def execute(self, context):
+        temp_values = {}
+        input_connections = {}
+        output_connections = {}
+
         material = context.object.active_material
         node_tree = material.appleseed.osl_node_tree
         node = node_tree.nodes.active
+        location = node.location
+        width = node.width
         script = node.script
+
+        # Save existing connections and parameters
+        for key, value in node.items():
+            temp_values[key] = value
+        for input in node.inputs:
+            if input.is_linked:
+                input_connections[input.bl_idname] = input.links[0].from_socket
+        for output in node.outputs:
+            if output.is_linked:
+                outputs = []
+                for link in output.links:
+                    outputs.append(link.to_socket)
+                output_connections[output.bl_idname] = outputs
+
         osl_path = bpy.path.abspath(script.filepath, library=script.library)
         if script.is_in_memory or script.is_dirty or script.is_modified or not os.path.exists(osl_path):
             source_code = script.as_string()
@@ -53,9 +73,9 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
             source_code = code.read()
             code.close()
 
-        import appleseed as asr
-
         stdosl_path = path_util.get_stdosl_paths()
+
+        import appleseed as asr
 
         compiler = asr.ShaderCompiler(stdosl_path)
         osl_bytecode = compiler.compile_buffer(source_code)
@@ -72,10 +92,33 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
             for cls in node_classes:
                 util.safe_register_class(cls)
 
-            new_node = node_tree.nodes.new(node_name)
-            new_node.script = script
-            new_node.classes.extend(node_classes)
             node_tree.nodes.remove(node)
+            new_node = node_tree.nodes.new(node_name)
+            new_node.location = location
+            new_node.width = width
+            new_node.classes.extend(node_classes)
+
+            # Copy variables to new node
+            for variable, value in temp_values.items():
+                if variable in dir(new_node):
+                    setattr(new_node, variable, value)
+
+            # Recreate node connections
+            for connection, sockets in output_connections.items():
+                for output in new_node.outputs:
+                    if output.bl_idname == connection:
+                        output_socket_class = output
+                if output_socket_class:
+                    for output_connection in sockets:
+                        node_tree.links.new(output_socket_class, output_connection)
+            for connection, sockets in input_connections.items():
+                for input in new_node.inputs:
+                    if input.bl_idname == connection:
+                        input_socket_class = input
+                if input_socket_class:
+                    for input_connection in sockets:
+                        node_tree.links.new(input_socket_class, input_connection)
+
         else:
             self.report({'ERROR'}, "OSL script did not compile!")
 

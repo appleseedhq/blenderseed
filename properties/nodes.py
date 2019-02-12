@@ -140,7 +140,7 @@ class AppleseedOSLScriptNode(bpy.types.Node):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "script", text="")
-        layout.operator('appleseed.compile_osl_script', text="Compile Script")
+        layout.operator('appleseed.compile_osl_script', text="Reload Parameters")
         socket_number = 0
         param_section = ""
         if hasattr(self, "input_params"):
@@ -221,7 +221,7 @@ class AppleseedOSLScriptBaseNode(AppleseedOSLScriptNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "script", text="")
-        layout.operator('appleseed.compile_osl_script', text="Compile Script")
+        layout.operator('appleseed.compile_osl_script', text="Create Parameters")
 
 
 def generate_node(node, node_class):
