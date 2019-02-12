@@ -30,6 +30,8 @@ import subprocess
 
 import bpy
 
+import appleseed as asr
+
 from ..properties.nodes import AppleseedOSLScriptNode, generate_node
 from ..utils import util, path_util
 
@@ -65,25 +67,13 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
                     outputs.append(link.to_socket)
                 output_connections[output.bl_idname] = outputs
 
-        osl_path = bpy.path.abspath(script.filepath, library=script.library)
-        if script.is_in_memory or script.is_dirty or script.is_modified or not os.path.exists(osl_path):
-            source_code = script.as_string()
-        else:
-            code = open(osl_path, 'r')
-            source_code = code.read()
-            code.close()
-
         stdosl_path = path_util.get_stdosl_paths()
-
-        import appleseed as asr
-
         compiler = asr.ShaderCompiler(stdosl_path)
-        osl_bytecode = compiler.compile_buffer(source_code)
+        osl_bytecode = util.compile_osl_bytecode(compiler, script)
 
         if osl_bytecode is not None:
             q = asr.ShaderQuery()
             q.open_bytecode(osl_bytecode)
-        
 
             node_data = util.parse_shader(q)
 
@@ -97,6 +87,7 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
             new_node.location = location
             new_node.width = width
             new_node.classes.extend(node_classes)
+            setattr(new_node, "node_type", "osl_script")
 
             # Copy variables to new node
             for variable, value in temp_values.items():

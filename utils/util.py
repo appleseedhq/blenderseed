@@ -33,7 +33,7 @@ import bpy
 import bpy_extras
 from bpy.app.handlers import persistent
 
-from ..properties.nodes import AppleseedOSLSocket
+from ..properties.nodes import generate_node, AppleseedOSLScriptNode
 from . import path_util
 from ..logger import get_logger
 
@@ -181,11 +181,36 @@ def realpath(path):
     return path
 
 
+def compile_osl_bytecode(compiler, script_block):
+    osl_path = bpy.path.abspath(script_block.filepath, library=script_block.library)
+    if script_block.is_in_memory or script_block.is_dirty or script_block.is_modified or not os.path.exists(osl_path):
+        source_code = script_block.as_string()
+    else:
+        code = open(osl_path, 'r')
+        source_code = code.read()
+        code.close()
+
+    return compiler.compile_buffer(source_code)
+
+
 @persistent
 def update_project(_):
-    pass
+    # Compile all OSL Script nodes
+    stdosl_path = path_util.get_stdosl_paths()
+    compiler = asr.ShaderCompiler(stdosl_path)
+    q = asr.ShaderQuery()
+    for script in bpy.data.texts:
+        osl_bytecode = compile_osl_bytecode(compiler, script)
+        if osl_bytecode is not None:
+            q.open_bytecode(osl_bytecode)
 
+            node_data = parse_shader(q)
 
+            node_name, node_category, node_classes = generate_node(node_data, AppleseedOSLScriptNode)
+
+            for cls in node_classes:
+                safe_register_class(cls)
+    
 # ------------------------------------
 # Scene export utilities.
 # ------------------------------------

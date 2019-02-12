@@ -216,6 +216,8 @@ class AppleseedOSLScriptBaseNode(AppleseedOSLScriptNode):
     bl_icon = "NODE"
     bl_width_default = 240.0
 
+    node_type = "osl_script"
+
     script: bpy.props.PointerProperty(name="script",
                                       type=bpy.types.Text)
 
