@@ -28,12 +28,10 @@
 import os
 import subprocess
 
+import appleseed as asr
 import bpy
 
-import appleseed as asr
-
-from ..properties.nodes import AppleseedOSLScriptNode, generate_node
-from ..utils import util, path_util
+from ..utils import util, path_util, osl_utils
 
 
 # Material operators
@@ -69,15 +67,18 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
 
         stdosl_path = path_util.get_stdosl_paths()
         compiler = asr.ShaderCompiler(stdosl_path)
-        osl_bytecode = util.compile_osl_bytecode(compiler, script)
+        osl_bytecode = osl_utils.compile_osl_bytecode(compiler, script)
 
         if osl_bytecode is not None:
             q = asr.ShaderQuery()
             q.open_bytecode(osl_bytecode)
 
-            node_data = util.parse_shader(q)
+            node_data = osl_utils.parse_shader(q)
 
-            node_name, node_category, node_classes = generate_node(node_data, AppleseedOSLScriptNode)
+            node_name, node_category, node_classes = osl_utils.generate_node(node_data, osl_utils.AppleseedOSLScriptNode)
+
+            for cls in reversed(node.classes):
+                util.safe_unregister_class(cls)
 
             for cls in node_classes:
                 util.safe_register_class(cls)
