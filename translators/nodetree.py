@@ -79,12 +79,11 @@ class NodeTreeTranslator(Translator):
         for node in self.__shader_list:
             parameters = {}
             parameter_types = node.parameter_types
-            node_keys = dir(node)
 
-            for key in parameter_types:
-                if key in node_keys:
+            for key, parameter in node.items():
+                if key in parameter_types:
                     parameter_value = parameter_types[key]
-                    parameter = getattr(node, key)
+
                     if key in node.filepaths:
                         sub_texture = bl_scene.appleseed.sub_textures
                         parameter = self.asset_handler.process_path(parameter.filepath,
