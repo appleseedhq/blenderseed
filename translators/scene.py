@@ -160,7 +160,7 @@ class SceneTranslator(object):
 
     @property
     def bl_scene(self):
-        return self.__depsgraph.scene
+        return self.__depsgraph.scene_eval
 
     @property
     def as_project(self):
@@ -548,19 +548,18 @@ class SceneTranslator(object):
                                                                             self.asset_handler)
 
     def __create_camera_translator(self):
-        if self.bl_scene.camera is not None:
-            camera = self.bl_depsgraph.objects[self.bl_scene.camera.name_full]
-            logger.debug("Creating camera translator for active camera")
-            if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-                self.__camera_translator = RenderCameraTranslator(camera,
-                                                                  self.asset_handler)
-            else:
-                raise NotImplementedError()
+        camera = self.bl_scene.camera
+        logger.debug("Creating camera translator for active camera")
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            self.__camera_translator = RenderCameraTranslator(camera,
+                                                                self.asset_handler)
+        else:
+            raise NotImplementedError()
 
-            if camera.data.appleseed.diaphragm_map is not None:
-                tex_id = camera.data.appleseed.diaphragm_map.name_full
-                if tex_id not in self.__texture_translators:
-                    self.__texture_translators[tex_id] = TextureTranslator(camera.data.appleseed.diaphragm_map,
+        if camera.data.appleseed.diaphragm_map is not None:
+            tex_id = camera.data.appleseed.diaphragm_map.name_full
+            if tex_id not in self.__texture_translators:
+                self.__texture_translators[tex_id] = TextureTranslator(camera.data.appleseed.diaphragm_map,
                                                                             self.asset_handler)
 
     def __calc_motion(self):
