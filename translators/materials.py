@@ -25,6 +25,8 @@
 # THE SOFTWARE.
 #
 
+import bpy
+
 import appleseed as asr
 
 from .assethandlers import AssetType
@@ -176,9 +178,10 @@ class MaterialTranslator(Translator):
     def __set_shader_group_parameters(self, scene):
         surface_shader = None
         for shader in self.__shaders:
-            if shader.node_type == 'osl_surface':
-                surface_shader = shader
-                self.__shader_list = surface_shader.traverse_tree()
+            if not isinstance(shader, bpy.types.NodeInternal):
+                if shader.node_type == 'osl_surface':
+                    surface_shader = shader
+                    self.__shader_list = surface_shader.traverse_tree()
 
         if surface_shader is None:
             logger.debug("No surface shader for %s", self.__shader_group.get_name())
