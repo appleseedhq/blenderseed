@@ -182,6 +182,7 @@ class MaterialTranslator(Translator):
                 if shader.node_type == 'osl_surface':
                     surface_shader = shader
                     self.__shader_list = surface_shader.traverse_tree()
+                    break
 
         if surface_shader is None:
             logger.debug("No surface shader for %s", self.__shader_group.get_name())
