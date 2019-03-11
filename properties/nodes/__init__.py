@@ -33,7 +33,7 @@ from ...utils import util
 
 
 class AppleseedOSLNodeTree(NodeTree):
-    """Class for appleseed node tree."""
+    """Class for appleseed node tree"""
 
     bl_idname = 'AppleseedOSLNodeTree'
     bl_label = 'appleseed OSL Node Tree'
@@ -82,7 +82,7 @@ class AppleseedOSLNodeTree(NodeTree):
 
 
 class AppleseedNode(object):
-    """Base class for appleseed nodes."""
+    """Base class for appleseed nodes"""
 
     @classmethod
     def poll(cls, context):
@@ -90,13 +90,13 @@ class AppleseedNode(object):
         return context.bl_idname == "AppleseedNodeTree" and renderer == 'APPLESEED_RENDER'
 
     def get_node_name(self):
-        """Return the node's name, including appended pointer."""
+        """Return the node's name, including appended pointer"""
         return util.join_names_underscore(self.name, str(self.as_pointer()))
 
     def traverse_tree(self, material_node):
-        """Iterate inputs and traverse the tree backward if any inputs are connected.
+        """Iterate inputs and traverse the tree backward if any inputs are connected
 
-        Nodes are added to a list attribute of the material output node.
+        Nodes are added to a list attribute of the material output node
         """
         for socket in self.inputs:
             if socket.is_linked:
@@ -106,9 +106,9 @@ class AppleseedNode(object):
 
 
 class AppleseedOSLNodeCategory(NodeCategory):
-    """Node category for extending the Add menu, toolbar panels and search operator.
+    """Node category for extending the Add menu, toolbar panels and search operator
 
-    Base class for node categories.
+    Base class for node categories
     """
 
     @classmethod
