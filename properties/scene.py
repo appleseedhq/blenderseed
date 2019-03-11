@@ -664,6 +664,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     uv_aov = bpy.props.BoolProperty(name="uv_aov",
                                     default=False)
 
+    screen_space_velocity_aov = bpy.props.BoolProperty(name="screen_space_velocity_aov",
+                                                       default=False)
+
     pixel_time_aov = bpy.props.BoolProperty(name="pixel_time_aov",
                                             default=False)
 

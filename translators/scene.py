@@ -682,6 +682,8 @@ class SceneTranslator(GroupTranslator):
                 aovs.insert(asr.AOV('diffuse_aov', {}))
             if asr_scene_props.direct_diffuse_aov:
                 aovs.insert(asr.AOV('direct_diffuse_aov', {}))
+            if asr_scene_props.screen_space_velocity_aov:
+                aovs.insert(asr.AOV('screen_space_velocity_aov', {}))
             if asr_scene_props.indirect_diffuse_aov:
                 aovs.insert(asr.AOV('indirect_diffuse_aov', {}))
             if asr_scene_props.glossy_aov:
