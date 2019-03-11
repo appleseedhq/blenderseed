@@ -66,6 +66,16 @@ class AppleseedCameraLens(bpy.types.Panel):
             row = col.row()
             row.prop(cam, "ortho_scale")
 
+        elif cam.type == "PANO":
+            row = col.row()
+            row.prop(asr_cam_props, "fisheye_projection_type", text="Fisheye Projection")
+            row = col.row()
+            if cam.lens_unit == 'MILLIMETERS':
+                row.prop(cam, "lens")
+            elif cam.lens_unit == 'FOV':
+                row.prop(cam, "angle")
+            row.prop(cam, "lens_unit", text="")
+
         split = layout.split()
 
         col = split.column(align=True)
@@ -89,7 +99,9 @@ class AppleseedCameraDoF(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.active_object.type == 'CAMERA' and context.active_object.data.type == 'PERSP'
+        is_context = renderer.engine == 'APPLESEED_RENDER' and context.active_object.type == 'CAMERA'
+        is_model = context.active_object.data.type == 'PERSP' or (context.active_object.data.type == 'PANO' and context.active_object.data.appleseed.fisheye_projection_type is not 'none')
+        return  is_context and is_model
 
     def draw_header(self, context):
         header = self.layout
