@@ -92,8 +92,10 @@ class NodeTreeTranslator(Translator):
                     if parameter_value == "int checkbox":
                         parameter_value = "int"
                         parameter = int(parameter)
-                    if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
+                    if parameter_value in ('color', 'vector', 'normal'):
                         parameter = " ".join(map(str, parameter))
+                    if parameter_value == 'float[2]':
+                        parameter_value = 'float[]'
                     parameters[key] = parameter_value + " " + str(parameter)
 
             if node.node_type == 'osl':
