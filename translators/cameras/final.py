@@ -87,6 +87,9 @@ class RenderCameraTranslator(Translator):
 
         model = cam_mapping[self.bl_camera.data.type]
 
+        if model == 'spherical_camera' and not self.bl_camera.data.appleseed.fisheye_projection_type == 'none':
+            model = 'fisheyelens_camera'
+
         if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof:
             model = 'thinlens_camera'
 
@@ -102,13 +105,16 @@ class RenderCameraTranslator(Translator):
         model = self.__as_camera.get_model()
 
         if model == 'pinhole_camera':
-            cam_params = self.__pinhole_camera_params(bl_scene, aspect_ratio, film_width, film_height)
+            cam_params = self.__base_camera_params(bl_scene, aspect_ratio, film_width, film_height)
 
         elif model == 'thinlens_camera':
             cam_params = self.__thin_lens_camera_params(bl_scene, aspect_ratio, film_width, film_height)
 
         elif model == 'spherical_camera':
             cam_params = self.__spherical_camera_params(bl_scene)
+
+        elif model == 'fisheyelens_camera':
+            cam_params = self.__fisheye_camera_params(bl_scene, aspect_ratio, film_width, film_height)
 
         else:
             cam_params = self.__ortho_camera_params(bl_scene, aspect_ratio)
@@ -139,7 +145,7 @@ class RenderCameraTranslator(Translator):
 
         return cam_params
 
-    def __pinhole_camera_params(self, bl_scene, aspect_ratio, film_width, film_height):
+    def __base_camera_params(self, bl_scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
         x_aspect_comp = 1 if aspect_ratio > 1 else 1 / aspect_ratio
         y_aspect_comp = aspect_ratio if aspect_ratio > 1 else 1
@@ -159,7 +165,7 @@ class RenderCameraTranslator(Translator):
     def __thin_lens_camera_params(self, bl_scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
 
-        cam_params = self.__pinhole_camera_params(bl_scene, aspect_ratio, film_width, film_height)
+        cam_params = self.__base_camera_params(bl_scene, aspect_ratio, film_width, film_height)
         cam_params.update({'f_stop': camera.data.appleseed.f_number,
                            'autofocus_enabled': False,
                            'diaphragm_blades': camera.data.appleseed.diaphragm_blades,
@@ -175,5 +181,14 @@ class RenderCameraTranslator(Translator):
             tex_name = f"{camera.data.appleseed.diaphragm_map.name_full}_inst"
             cam_params['diaphragm_map'] = tex_name
             del cam_params['diaphragm_blades']
+
+        return cam_params
+
+    def __fisheye_camera_params(self, scene, aspect_ratio, film_width, film_height):
+        camera = self.bl_camera
+
+        cam_params = self.__base_camera_params(scene, aspect_ratio, film_width, film_height)
+
+        cam_params.update({'projection_type': camera.data.appleseed.fisheye_projection_type})
 
         return cam_params

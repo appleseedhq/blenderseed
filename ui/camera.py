@@ -49,10 +49,20 @@ class ASCAMERA_PT_lens(bpy.types.Panel):
 
         cam = context.camera
 
+        asr_cam_props = cam.appleseed
+
         layout.row().prop(cam, "type")
 
         col = layout.column()
         if cam.type == 'PERSP':
+            if cam.lens_unit == 'MILLIMETERS':
+                col.prop(cam, "lens")
+            elif cam.lens_unit == 'FOV':
+                col.prop(cam, "angle")
+            col.prop(cam, "lens_unit")
+
+        elif cam.type == "PANO":
+            col.prop(asr_cam_props, "fisheye_projection_type", text="Fisheye Projection")
             if cam.lens_unit == 'MILLIMETERS':
                 col.prop(cam, "lens")
             elif cam.lens_unit == 'FOV':
