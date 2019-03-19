@@ -678,44 +678,44 @@ class SceneTranslator(GroupTranslator):
         # AOVs
         aovs = asr.AOVContainer()
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            if asr_scene_props.albedo_aov:
+                aovs.insert(asr.AOV('albedo_aov', {}))
+            if asr_scene_props.depth_aov:
+                aovs.insert(asr.AOV('depth_aov', {}))
             if asr_scene_props.diffuse_aov:
                 aovs.insert(asr.AOV('diffuse_aov', {}))
             if asr_scene_props.direct_diffuse_aov:
                 aovs.insert(asr.AOV('direct_diffuse_aov', {}))
-            if asr_scene_props.screen_space_velocity_aov:
-                aovs.insert(asr.AOV('screen_space_velocity_aov', {}))
-            if asr_scene_props.indirect_diffuse_aov:
-                aovs.insert(asr.AOV('indirect_diffuse_aov', {}))
-            if asr_scene_props.glossy_aov:
-                aovs.insert(asr.AOV('glossy_aov', {}))
             if asr_scene_props.direct_glossy_aov:
                 aovs.insert(asr.AOV('direct_glossy_aov', {}))
-            if asr_scene_props.indirect_glossy_aov:
-                aovs.insert(asr.AOV('indirect_glossy_aov', {}))
-            if asr_scene_props.normal_aov:
-                aovs.insert(asr.AOV('normal_aov', {}))
-            if asr_scene_props.position_aov:
-                aovs.insert(asr.AOV('position_aov', {}))
-            if asr_scene_props.uv_aov:
-                aovs.insert(asr.AOV('uv_aov', {}))
-            if asr_scene_props.depth_aov:
-                aovs.insert(asr.AOV('depth_aov', {}))
-            if asr_scene_props.pixel_time_aov:
-                aovs.insert(asr.AOV('pixel_time_aov', {}))
-            if asr_scene_props.invalid_samples_aov:
-                aovs.insert(asr.AOV('invalid_samples_aov', {}))
-            if asr_scene_props.pixel_sample_count_aov:
-                aovs.insert(asr.AOV('pixel_sample_count_aov', {}))
-            if asr_scene_props.pixel_variation_aov:
-                aovs.insert(asr.AOV('pixel_variation_aov', {}))
-            if asr_scene_props.albedo_aov:
-                aovs.insert(asr.AOV('albedo_aov', {}))
             if asr_scene_props.emission_aov:
                 aovs.insert(asr.AOV('emission_aov', {}))
-            if asr_scene_props.npr_shading_aov:
-                aovs.insert(asr.AOV('npr_shading_aov', {}))
+            if asr_scene_props.glossy_aov:
+                aovs.insert(asr.AOV('glossy_aov', {}))
+            if asr_scene_props.indirect_diffuse_aov:
+                aovs.insert(asr.AOV('indirect_diffuse_aov', {}))
+            if asr_scene_props.indirect_glossy_aov:
+                aovs.insert(asr.AOV('indirect_glossy_aov', {}))
+            if asr_scene_props.invalid_samples_aov:
+                aovs.insert(asr.AOV('invalid_samples_aov', {}))
+            if asr_scene_props.normal_aov:
+                aovs.insert(asr.AOV('normal_aov', {}))
             if asr_scene_props.npr_contour_aov:
                 aovs.insert(asr.AOV('npr_contour_aov', {}))
+            if asr_scene_props.npr_shading_aov:
+                aovs.insert(asr.AOV('npr_shading_aov', {}))
+            if asr_scene_props.pixel_sample_count_aov:
+                aovs.insert(asr.AOV('pixel_sample_count_aov', {}))
+            if asr_scene_props.pixel_time_aov:
+                aovs.insert(asr.AOV('pixel_time_aov', {}))
+            if asr_scene_props.pixel_variation_aov:
+                aovs.insert(asr.AOV('pixel_variation_aov', {}))  
+            if asr_scene_props.position_aov:
+                aovs.insert(asr.AOV('position_aov', {}))
+            if asr_scene_props.screen_space_velocity_aov:
+                aovs.insert(asr.AOV('screen_space_velocity_aov', {}))
+            if asr_scene_props.uv_aov:
+                aovs.insert(asr.AOV('uv_aov', {}))
 
         # Create and set the frame in the project.
         frame = asr.Frame("beauty", frame_params, aovs)
