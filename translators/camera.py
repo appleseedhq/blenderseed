@@ -73,6 +73,9 @@ class CameraTranslator(Translator):
 
         model = cam_mapping[self.bl_camera.data.type]
 
+        if model == 'spherical_camera' and not self.bl_camera.data.appleseed.fisheye_projection_type == 'none':
+            model = 'fisheyelens_camera'
+
         if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof:
             model = 'thinlens_camera'
 
@@ -121,13 +124,16 @@ class CameraTranslator(Translator):
         model = self.__as_camera.get_model()
 
         if model == 'pinhole_camera':
-            cam_params = self.__pinhole_camera_params(scene, aspect_ratio, film_width, film_height)
+            cam_params = self.__basic_camera_params(scene, aspect_ratio, film_width, film_height)
 
         elif model == 'thinlens_camera':
             cam_params = self.__thin_lens_camera_params(scene, aspect_ratio, film_width, film_height)
 
         elif model == 'spherical_camera':
             cam_params = self.__spherical_camera_params(scene)
+
+        elif model == 'fisheyelens_camera':
+            cam_params = self.__fisheye_camera_params(scene, aspect_ratio, film_width, film_height)
 
         else:
             cam_params = self.__ortho_camera_params(scene, aspect_ratio)
@@ -158,7 +164,7 @@ class CameraTranslator(Translator):
 
         return cam_params
 
-    def __pinhole_camera_params(self, scene, aspect_ratio, film_width, film_height):
+    def __basic_camera_params(self, scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
         x_aspect_comp = 1 if aspect_ratio > 1 else 1 / aspect_ratio
         y_aspect_comp = aspect_ratio if aspect_ratio > 1 else 1
@@ -178,7 +184,7 @@ class CameraTranslator(Translator):
     def __thin_lens_camera_params(self, scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
 
-        cam_params = self.__pinhole_camera_params(scene, aspect_ratio, film_width, film_height)
+        cam_params = self.__basic_camera_params(scene, aspect_ratio, film_width, film_height)
         cam_params.update({'f_stop': camera.data.appleseed.f_number,
                            'autofocus_enabled': False,
                            'diaphragm_blades': camera.data.appleseed.diaphragm_blades,
@@ -200,6 +206,15 @@ class CameraTranslator(Translator):
 
             cam_params['diaphragm_map'] = 'cam_map_inst'
             del cam_params['diaphragm_blades']
+
+        return cam_params
+
+    def __fisheye_camera_params(self, scene, aspect_ratio, film_width, film_height):
+        camera = self.bl_camera
+
+        cam_params = self.__basic_camera_params(scene, aspect_ratio, film_width, film_height)
+
+        cam_params.update({'projection_type': camera.data.appleseed.fisheye_projection_type})
 
         return cam_params
 
@@ -343,7 +358,8 @@ class InteractiveCameraTranslator(Translator):
         self.__matrix = self.bl_camera.matrix_world
         cam_mapping = {'PERSP': 'pinhole_camera',
                        'ORTHO': 'orthographic_camera',
-                       'PANO': 'pinhole_camera'}
+                       'PANO': 'fisheyelens_camera'}
+
         model = cam_mapping[self.bl_camera.data.type]
 
         if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof and self.bl_camera.data.type != 'PANO':
@@ -357,9 +373,6 @@ class InteractiveCameraTranslator(Translator):
             if self.bl_camera.data.sensor_fit == 'VERTICAL' or (self.bl_camera.data.sensor_fit == 'AUTO' and aspect_ratio < 1):
                 params['film_height'] = params.pop('film_width')
 
-        elif model == 'spherical_camera':
-            raise NotImplementedError("Spherical camera not supported for interactive rendering")
-
         else:
             aspect_ratio = util.get_frame_aspect_ratio(self.context.scene)
             params = {'focal_length': self.bl_camera.data.lens / 1000,
@@ -367,6 +380,12 @@ class InteractiveCameraTranslator(Translator):
                       'shift_x': self.__shift_x,
                       'shift_y': self.__shift_y,
                       'film_dimensions': asr.Vector2f(film_width, film_height)}
+
+        if model == 'fisheyelens_camera':
+            if self.bl_camera.data.appleseed.fisheye_projection_type is not 'none':
+                params['projection_type'] = self.bl_camera.data.appleseed.fisheye_projection_type
+            else:
+                print("Spherical camera not supported for interactive rendering")
 
         if model == 'thinlens_camera':
             params.update({'f_stop': self.bl_camera.data.appleseed.f_number,

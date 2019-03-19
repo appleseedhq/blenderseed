@@ -192,6 +192,7 @@ class FinalTileCallback(asr.ITileCallback):
 
         aov_mapping = {'beauty': "Combined",
                        'diffuse': "Diffuse",
+                       'screen_space_velocity': "Screen Space Velocity",
                        'direct_diffuse': "Direct Diffuse",
                        'indirect_diffuse': "Indirect Diffuse",
                        'glossy': "Glossy",

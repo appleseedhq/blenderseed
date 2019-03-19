@@ -39,12 +39,14 @@ def get_shutter_max(self, context):
 
 
 class AppleseedCameraSettings(bpy.types.PropertyGroup):
-    camera_model = bpy.props.EnumProperty(name="camera_model",
-                                          items=[('pinhole', "Pinhole", ''),
-                                                 ('thinlens', "Thin Lens", ''),
-                                                 ('spherical', "Spherical", '')],
-                                          description="Camera model",
-                                          default='pinhole')
+    fisheye_projection_type = bpy.props.EnumProperty(name="fisheye_projection_type",
+                                                     items=[
+                                                         ('none', "None", ""),
+                                                         ('equisolid_angle', "Equisolid Angle", ""),
+                                                         ('equidistant', "Equidistant", ""),
+                                                         ('stereographic', "Stereographic", ""),
+                                                         ('thoby', "Thoby", "")],
+                                                     default='equisolid_angle')
 
     near_z = bpy.props.FloatProperty(name="near_z",
                                      description="Near clipping distance",

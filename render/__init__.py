@@ -158,6 +158,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.register_pass(scene, renderlayer, "Combined", 4, "RGBA", 'COLOR')
             if asr_scene_props.diffuse_aov:
                 self.register_pass(scene, renderlayer, "Diffuse", 4, "RGBA", 'COLOR')
+            if asr_scene_props.screen_space_velocity_aov:
+                self.register_pass(scene, renderlayer, "Screen Space Velocity", 3, "RGB", 'COLOR')
             if asr_scene_props.direct_diffuse_aov:
                 self.register_pass(scene, renderlayer, "Direct Diffuse", 4, "RGBA", 'COLOR')
             if asr_scene_props.indirect_diffuse_aov:
@@ -356,6 +358,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
     def __add_render_passes(self, scene):
         asr_scene_props = scene.appleseed
 
+        if asr_scene_props.screen_space_velocity_aov:
+            self.add_pass("Screen Space Velocity", 3, "RGB")
         if asr_scene_props.diffuse_aov:
             self.add_pass("Diffuse", 4, "RGBA")
         if asr_scene_props.direct_diffuse_aov:

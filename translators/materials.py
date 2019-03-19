@@ -220,6 +220,8 @@ class MaterialTranslator(Translator):
                     parameter = int(parameter)
                 if parameter_value in ('color', 'vector', 'normal', 'float[2]'):
                     parameter = " ".join(map(str, parameter))
+                if parameter_value == 'float[2]':
+                    parameter_value = 'float[]'
                 parameters[key] = parameter_value + " " + str(parameter)
 
     def __create_shader_connections(self, shader):

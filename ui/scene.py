@@ -75,6 +75,8 @@ class AppleseedAOVPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
         col = layout.column(align=True)
         row = col.row(align=True)
+        row.prop(asr_scene_props, "screen_space_velocity_aov", text="Screen Space Velocity", toggle=True)
+        row = col.row(align=True)
         row.prop(asr_scene_props, "normal_aov", text="Normals", toggle=True)
         row.prop(asr_scene_props, "position_aov", text="Position", toggle=True)
         row = col.row(align=True)
