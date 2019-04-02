@@ -66,9 +66,11 @@ class NodeTreeTranslator(Translator):
     def __create_shadergroup(self, bl_scene):
         surface_shader = None
         for node in self.bl_nodes:
-            if node.node_type == 'osl_surface':
-                surface_shader = node
-                self.__shader_list = surface_shader.traverse_tree()
+            if not isinstance(node, bpy.types.NodeInternal):
+                if node.node_type == 'osl_surface':
+                    surface_shader = node
+                    self.__shader_list = surface_shader.traverse_tree()
+                    break
 
         if surface_shader is None:
             logger.debug("No surface shader for %s", self.__as_shader_group.get_name())
