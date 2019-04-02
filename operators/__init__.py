@@ -25,96 +25,13 @@
 # THE SOFTWARE.
 #
 
-import os
-import subprocess
-
-import appleseed as asr
 import bpy
 
-from ..utils import util, path_util, osl_utils
+from . import osl_ops, texture_ops
+from ..utils import util
 
 
 # Material operators
-
-class ASMAT_OT_compile_script(bpy.types.Operator):
-    bl_idname = "appleseed.compile_osl_script"
-    bl_label = "Compile OSL Script Node Parameters"
-
-    def execute(self, context):
-        temp_values = {}
-        input_connections = {}
-        output_connections = {}
-
-        material = context.object.active_material
-        node_tree = material.appleseed.osl_node_tree
-        node = node_tree.nodes.active
-        location = node.location
-        width = node.width
-        script = node.script
-
-        # Save existing connections and parameters
-        for key, value in node.items():
-            temp_values[key] = value
-        for input in node.inputs:
-            if input.is_linked:
-                input_connections[input.bl_idname] = input.links[0].from_socket
-        for output in node.outputs:
-            if output.is_linked:
-                outputs = []
-                for link in output.links:
-                    outputs.append(link.to_socket)
-                output_connections[output.bl_idname] = outputs
-
-        stdosl_path = path_util.get_stdosl_paths()
-        compiler = asr.ShaderCompiler(stdosl_path)
-        osl_bytecode = osl_utils.compile_osl_bytecode(compiler, script)
-
-        if osl_bytecode is not None:
-            q = asr.ShaderQuery()
-            q.open_bytecode(osl_bytecode)
-
-            node_data = osl_utils.parse_shader(q)
-
-            node_name, node_category, node_classes = osl_utils.generate_node(node_data, osl_utils.AppleseedOSLScriptNode)
-
-            for cls in reversed(node.classes):
-                util.safe_unregister_class(cls)
-
-            for cls in node_classes:
-                util.safe_register_class(cls)
-
-            node_tree.nodes.remove(node)
-            new_node = node_tree.nodes.new(node_name)
-            new_node.location = location
-            new_node.width = width
-            new_node.classes.extend(node_classes)
-            setattr(new_node, "node_type", "osl_script")
-
-            # Copy variables to new node
-            for variable, value in temp_values.items():
-                if variable in dir(new_node):
-                    setattr(new_node, variable, value)
-
-            # Recreate node connections
-            for connection, sockets in output_connections.items():
-                for output in new_node.outputs:
-                    if output.bl_idname == connection:
-                        output_socket_class = output
-                if output_socket_class:
-                    for output_connection in sockets:
-                        node_tree.links.new(output_socket_class, output_connection)
-            for connection, sockets in input_connections.items():
-                for input in new_node.inputs:
-                    if input.bl_idname == connection:
-                        input_socket_class = input
-                if input_socket_class:
-                    for input_connection in sockets:
-                        node_tree.links.new(input_socket_class, input_connection)
-
-        else:
-            self.report({'ERROR'}, "OSL script did not compile!")
-
-        return {'FINISHED'}
 
 
 class ASMAT_OT_new_mat(bpy.types.Operator):
@@ -233,123 +150,6 @@ class ASLAMP_OT_new_node_tree(bpy.types.Operator):
 # Texture operators
 
 
-class ASTEX_OT_convert_textures(bpy.types.Operator):
-    """
-    Converts base textures into mipmapped .tx textures for rendering
-    """
-    bl_label = "Convert Textures"
-    bl_description = "Convert textures"
-    bl_idname = "appleseed.convert_textures"
-
-    def execute(self, context):
-        scene = context.scene
-        textures = scene.appleseed
-
-        tool_dir = path_util.get_appleseed_tool_dir()
-
-        for tex in textures.textures:
-            filename = bpy.path.abspath(tex.name.filepath)
-            cmd = ['maketx', '--oiio --monochrome-detect -u --constant-color-detect --opaque-detect', '"{0}"'.format(filename)]
-            if tex.input_space != 'linear':
-                cmd.insert(-1, '--colorconvert {0} linear --unpremult'.format(tex.input_space))
-            if tex.output_depth != 'default':
-                cmd.insert(-1, '-d {0}'.format(tex.output_depth))
-            if tex.command_string:
-                cmd.insert(-1, '{0}'.format(tex.command_string))
-            if textures.tex_output_use_cust_dir:
-                tex_name = os.path.basename(filename).split('.')[0]
-                out_path = os.path.join(textures.tex_output_dir, '{0}.tx'.format(tex_name))
-                cmd.insert(-1, '-o "{0}"'.format(out_path))
-            process = subprocess.Popen(" ".join(cmd), cwd=tool_dir, shell=True, bufsize=1)
-            process.wait()
-
-            subbed_filename = "{0}.tx".format(os.path.splitext(filename)[0])
-            bpy.ops.image.open(filepath=subbed_filename)
-
-        return {'FINISHED'}
-
-
-class ASTEX_OT_refresh_texture(bpy.types.Operator):
-    """
-    Operator for refreshing texture list to convert.
-    """
-
-    bl_label = "Refresh Texture"
-    bl_description = "Refresh textures for conversion"
-    bl_idname = "appleseed.refresh_textures"
-
-    def invoke(self, context, event):
-        scene = context.scene
-        collection = scene.appleseed.textures
-
-        existing_textures = [x.name for x in collection]
-
-        scene_textures = []
-
-        for tree in bpy.data.node_groups:
-            for node in tree.nodes:
-                for param in node.filepaths:
-                    texture_block = getattr(node, param)
-                    if texture_block not in scene_textures:
-                        scene_textures.append(texture_block)
-                        if texture_block not in existing_textures:
-                            collection.add()
-                            num = len(collection)
-                            collection[num - 1].name = texture_block
-
-        texture_index = len(collection) - 1
-        while texture_index > -1:
-            texture = collection[texture_index]
-            if texture.name not in scene_textures:
-                collection.remove(texture_index)
-            texture_index -= 1
-
-        return {'FINISHED'}
-
-
-class ASTES_OT_add_texture(bpy.types.Operator):
-    """
-    Operator for adding a texture to convert.
-    """
-
-    bl_label = "Add Texture"
-    bl_description = "Add new texture"
-    bl_idname = "appleseed.add_texture"
-
-    def invoke(self, context, event):
-        scene = context.scene
-        collection = scene.appleseed.textures
-
-        collection.add()
-
-        return {'FINISHED'}
-
-
-class ASTEX_OT_remove_texture(bpy.types.Operator):
-    """
-    Operator for removing a texture to convert.
-    """
-
-    bl_label = "Remove Texture"
-    bl_description = "Remove texture"
-    bl_idname = "appleseed.remove_texture"
-
-    def invoke(self, context, event):
-        scene = context.scene
-        collection = scene.appleseed.textures
-        index = scene.appleseed.textures_index
-
-        collection.remove(index)
-        num = len(collection)
-        if index >= num:
-            index = num - 1
-        if index < 0:
-            index = 0
-        scene.appleseed.textures_index = index
-
-        return {'FINISHED'}
-
-
 # Post processing operators
 
 
@@ -433,13 +233,8 @@ class ASSSS_OT_remove_sss_set(bpy.types.Operator):
 
 
 classes = (
-    ASMAT_OT_compile_script,
     ASMAT_OT_new_mat,
     ASMAT_OT_view_nodetree,
-    ASTEX_OT_convert_textures,
-    ASTEX_OT_refresh_texture,
-    ASTES_OT_add_texture,
-    ASTEX_OT_remove_texture,
     ASMAT_OT_new_node_tree,
     ASLAMP_OT_new_node_tree,
     ASPP_OT_add_pp,
@@ -450,6 +245,8 @@ classes = (
 
 
 def register():
+    osl_ops.register()
+    texture_ops.register()
     for cls in classes:
         util.safe_register_class(cls)
 
@@ -457,3 +254,5 @@ def register():
 def unregister():
     for cls in reversed(classes):
         util.safe_unregister_class(cls)
+    texture_ops.unregister()
+    osl_ops.unregister()

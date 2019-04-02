@@ -159,7 +159,7 @@ class ASTEXTURE_UL_texture_slots(bpy.types.UIList):
             layout.label(text=texture, translate=False, icon_value=icon)
 
 
-class ASTEXTURE_UL_texture_converter(bpy.types.Panel):
+class ASTEXTURE_PT_texture_converter(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
 
@@ -212,7 +212,7 @@ classes = (
     ASSSS_UL_sss_props,
     ASWORLD_PT_sss_sets,
     ASTEXTURE_UL_texture_slots,
-    ASTEXTURE_UL_texture_converter
+    ASTEXTURE_PT_texture_converter
 )
 
 
