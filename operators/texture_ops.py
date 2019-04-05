@@ -46,23 +46,17 @@ class ASTEX_OT_convert_textures(bpy.types.Operator):
         scene = context.scene
         textures = scene.appleseed
 
-        tool_dir = path_util.get_appleseed_tool_dir()
-
         for tex in textures.textures:
             filename = bpy.path.abspath(tex.name.filepath)
-            cmd = ['maketx', '--oiio --monochrome-detect -u --constant-color-detect --opaque-detect', '"{0}"'.format(filename)]
-            if tex.input_space != 'linear':
-                cmd.insert(-1, '--colorconvert {0} linear --unpremult'.format(tex.input_space))
-            if tex.output_depth != 'default':
-                cmd.insert(-1, '-d {0}'.format(tex.output_depth))
-            if tex.command_string:
-                cmd.insert(-1, '{0}'.format(tex.command_string))
             if textures.tex_output_use_cust_dir:
                 tex_name = os.path.basename(filename).split('.')[0]
                 out_path = os.path.join(textures.tex_output_dir, '{0}.tx'.format(tex_name))
-                cmd.insert(-1, '-o "{0}"'.format(out_path))
-            process = subprocess.Popen(" ".join(cmd), cwd=tool_dir, shell=True, bufsize=1)
-            process.wait()
+            else:
+                out_path = filename.split('.')[0] + ".tx"
+
+            import appleseed as asr
+
+            asr.oiio_make_texture(filename, out_path, tex.input_space, tex.output_depth)
 
             subbed_filename = "{0}.tx".format(os.path.splitext(filename)[0])
             bpy.ops.image.open(filepath=subbed_filename)
