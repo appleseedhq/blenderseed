@@ -85,6 +85,11 @@ class ASAOV_PT_aovs(bpy.types.Panel, ASAOV_PT_panel_base):
         col.prop(asr_scene_props, "pixel_sample_count_aov", text="Sample Count", toggle=True)
         col.prop(asr_scene_props, "invalid_samples_aov", text="Invalid Samples", toggle=True)
 
+        layout.separator()
+        col = layout.column(align=True)
+        col.prop(asr_scene_props, "cryptomatte_object_aov", text="Cryptomatte Object", toggle=True)
+        col.prop(asr_scene_props, "cryptomatte_material_aov", text="Cryptomatte Material", toggle=True)
+
 
 def register():
     util.safe_register_class(ASAOV_PT_aovs)

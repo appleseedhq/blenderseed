@@ -509,6 +509,10 @@ class SceneTranslator(object):
                 aovs.insert(asr.AOV('npr_shading_aov', {}))
             if asr_scene_props.npr_contour_aov:
                 aovs.insert(asr.AOV('npr_contour_aov', {}))
+            if asr_scene_props.cryptomatte_material_aov:
+                aovs.insert(asr.AOV('cryptomatte_material_aov', {}))
+            if asr_scene_props.cryptomatte_object_aov:
+                aovs.insert(asr.AOV('cryptomatte_object_aov', {}))
 
         return aovs
 
@@ -548,7 +552,7 @@ class SceneTranslator(object):
                 tex_id = self.bl_scene.world.appleseed_sky.env_tex.name_full
                 if tex_id not in self.__texture_translators:
                     self.__texture_translators[tex_id] = TextureTranslator(self.bl_scene.world.appleseed_sky.env_tex,
-                                                                            self.asset_handler)
+                                                                           self.asset_handler)
 
     def __create_camera_translator(self):
         camera = self.bl_scene.camera
@@ -564,7 +568,7 @@ class SceneTranslator(object):
             tex_id = camera.data.appleseed.diaphragm_map.name_full
             if tex_id not in self.__texture_translators:
                 self.__texture_translators[tex_id] = TextureTranslator(camera.data.appleseed.diaphragm_map,
-                                                                            self.asset_handler)
+                                                                       self.asset_handler)
 
     def __calc_motion(self):
         """Calculates subframes for motion blur.  Each blur type can have its own segment count, so the final list
@@ -735,7 +739,7 @@ class SceneTranslator(object):
                     tex_id = obj.appleseed.object_alpha_texture.name_full
                     if tex_id not in self.__texture_translators:
                         self.__texture_translators[tex_id] = TextureTranslator(obj.appleseed.object_alpha_texture,
-                                                                                self.asset_handler)
+                                                                               self.asset_handler)
 
             elif obj.type == 'LIGHT':
                 self.__lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
@@ -744,13 +748,13 @@ class SceneTranslator(object):
                     tex_id = obj.data.appleseed.radiance_tex.name_full
                     if tex_id not in self.__texture_translators:
                         self.__texture_translators[tex_id] = TextureTranslator(obj.data.appleseed.radiance_tex,
-                                                                                self.asset_handler)
+                                                                               self.asset_handler)
 
                 if obj.data.appleseed.radiance_multiplier_tex is not None:
                     tex_id = obj.data.appleseed.radiance_multiplier_tex.name_full
                     if tex_id not in self.__texture_translators:
                         self.__texture_translators[tex_id] = TextureTranslator(obj.data.appleseed.radiance_multiplier_tex,
-                                                                                self.asset_handler)
+                                                                               self.asset_handler)
 
     def __create_instancers(self):
         """

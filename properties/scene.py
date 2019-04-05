@@ -685,6 +685,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     npr_contour_aov: bpy.props.BoolProperty(name="npr_contour_aov",
                                             default=False)
 
+    cryptomatte_object_aov: bpy.props.BoolProperty(name="cryptomatte_object_aov",
+                                                   default=False)
+
+    cryptomatte_material_aov: bpy.props.BoolProperty(name="cryptomatte_material_aov",
+                                                     default=False)
+
     # Overrides
 
     shading_override: bpy.props.BoolProperty(name="shading_override",
