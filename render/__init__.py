@@ -223,9 +223,16 @@ class RenderAppleseed(bpy.types.RenderEngine):
         else:
             scene_translator = SceneTranslator.create_final_render_translator(self, depsgraph)
             self.update_stats("appleseed Rendering: Translating scene", "")
+
             scene_translator.translate_scene()
 
-            self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+            if depsgraph.scene.render.use_multiview and len(depsgraph.scene.render.views) > 1:
+                for view in depsgraph.scene.render.views:
+                    self.active_view_set(view.name)
+                    scene_translator.update_multiview_camera()
+                    self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+            else:
+                self.__start_final_render(depsgraph.scene, scene_translator.as_project)
 
     def __start_final_render(self, scene, project):
         """
@@ -263,45 +270,42 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Cleanup.
         asr.global_logger().remove_target(log_target)
 
-        if scene.appleseed.denoise_mode == 'write_outputs':
-            project.get_frame().write_main_image(os.path.join(scene.appleseed.denoise_output_dir, "output.exr"))
-
         self.__stop_rendering()
 
-    def __start_interactive_render(self, context):
-        """
-        Start an interactive rendering session.
-        """
+    # def __start_interactive_render(self, context):
+    #     """
+    #     Start an interactive rendering session.
+    #     """
 
-        # Preconditions.
-        assert(self.__interactive_scene_translator is None)
-        assert(self.__renderer is None)
-        assert(self.__renderer_controller is None)
-        assert(self.__tile_callback is None)
-        assert(self.__render_thread is None)
+    #     # Preconditions.
+    #     assert(self.__interactive_scene_translator is None)
+    #     assert(self.__renderer is None)
+    #     assert(self.__renderer_controller is None)
+    #     assert(self.__tile_callback is None)
+    #     assert(self.__render_thread is None)
 
-        logger.debug("Starting interactive rendering")
-        self.__is_interactive = True
-        RenderAppleseed.__interactive_session = True
+    #     logger.debug("Starting interactive rendering")
+    #     self.__is_interactive = True
+    #     RenderAppleseed.__interactive_session = True
 
-        logger.debug("Translating scene for interactive rendering")
+    #     logger.debug("Translating scene for interactive rendering")
 
-        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(context)
-        self.__interactive_scene_translator.translate_scene()
+    #     self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(context)
+    #     self.__interactive_scene_translator.translate_scene()
 
-        self.__camera = self.__interactive_scene_translator.camera_translator
+    #     self.__camera = self.__interactive_scene_translator.camera_translator
 
-        project = self.__interactive_scene_translator.as_project
+    #     project = self.__interactive_scene_translator.as_project
 
-        self.__renderer_controller = InteractiveRendererController(self.__camera)
-        self.__tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
+    #     self.__renderer_controller = InteractiveRendererController(self.__camera)
+    #     self.__tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
 
-        self.__renderer = asr.MasterRenderer(project,
-                                             project.configurations()['interactive'].get_inherited_parameters(),
-                                             self.__renderer_controller,
-                                             self.__tile_callback)
+    #     self.__renderer = asr.MasterRenderer(project,
+    #                                          project.configurations()['interactive'].get_inherited_parameters(),
+    #                                          self.__renderer_controller,
+    #                                          self.__tile_callback)
 
-        self.__restart_interactive_render()
+    #     self.__restart_interactive_render()
 
     def __restart_interactive_render(self):
         """

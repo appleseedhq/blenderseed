@@ -248,6 +248,9 @@ class SceneTranslator(object):
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
+    def update_multiview_camera(self):
+        self.__calc_multiview_camera()
+
     def write_project(self, filename):
         """
         Write the appleseed project out to disk.
@@ -552,7 +555,8 @@ class SceneTranslator(object):
         logger.debug("Creating camera translator for active camera")
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             self.__camera_translator = RenderCameraTranslator(camera,
-                                                                self.asset_handler)
+                                                              self.asset_handler,
+                                                              self.bl_engine)
         else:
             raise NotImplementedError()
 
@@ -624,6 +628,37 @@ class SceneTranslator(object):
                     translator.set_deform_key(time, self.bl_depsgraph, all_times)
 
         self.bl_engine.frame_set(current_frame, subframe=0.0)
+
+    def __calc_multiview_camera(self):
+        self.__camera_translator.remove_cam(self.as_scene)
+
+        self.__camera_translator.create_entities(self.bl_scene)
+
+        cam_times = {0.0}
+
+        if self.bl_scene.appleseed.enable_camera_blur:
+            shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
+            self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples, cam_times)
+
+        all_times = sorted(list(cam_times))
+
+        current_frame = self.bl_scene.frame_current
+
+        for time in all_times:
+            new_frame = current_frame + time
+            int_frame = math.floor(new_frame)
+            subframe = new_frame - int_frame
+
+            self.bl_engine.frame_set(int_frame, subframe=subframe)
+
+            logger.debug("Processing transforms for frame %s", self.bl_scene.frame_current)
+
+            if time in cam_times:
+                self.__camera_translator.set_xform_step(time)
+
+        self.bl_engine.frame_set(current_frame, subframe=0.0)
+
+        self.__camera_translator.flush_entities(self.as_scene, self.main_assembly, self.as_project)
 
     def __get_subframes(self, shutter_length, samples, times):
         assert samples > 1

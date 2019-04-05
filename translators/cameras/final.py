@@ -42,11 +42,12 @@ logger = get_logger()
 
 class RenderCameraTranslator(Translator):
     # Constructor.
-    def __init__(self, camera, asset_handler):
+    def __init__(self, camera, asset_handler, engine):
         super().__init__(camera, asset_handler)
 
         self.__as_camera = None
         self.__xform_seq = asr.TransformSequence()
+        self.__engine = engine
 
     # Properties.
     @property
@@ -64,10 +65,10 @@ class RenderCameraTranslator(Translator):
 
         self.__as_camera.set_parameters(as_camera_params)
 
-        self.__xform_seq.set_transform(0.0, self._convert_matrix(self.bl_camera.matrix_world))
+        self.__xform_seq.set_transform(0.0, self._convert_matrix(self.__engine.camera_model_matrix(self.bl_camera)))
 
     def set_xform_step(self, time):
-        self.__xform_seq.set_transform(time, self._convert_matrix(self.bl_camera.matrix_world))
+        self.__xform_seq.set_transform(time, self._convert_matrix(self.__engine.camera_model_matrix(self.bl_camera)))
 
     def flush_entities(self, as_scene, as_assembly, as_project):
         self.__xform_seq.optimize()
@@ -79,6 +80,9 @@ class RenderCameraTranslator(Translator):
         # Insert the camera into the scene.
         as_scene.cameras().insert(self.__as_camera)
         self.__as_camera = as_scene.cameras().get_by_name("Camera")
+
+    def remove_cam(self, as_scene):
+        as_scene.cameras().remove(self.__as_camera)
 
     def __get_model(self):
         cam_mapping = {'PERSP': 'pinhole_camera',
@@ -153,7 +157,7 @@ class RenderCameraTranslator(Translator):
                       'focal_length': camera.data.lens / 1000,  # mm to meters.
                       'film_dimensions': asr.Vector2f(film_width, film_height),
                       'near_z': camera.data.appleseed.near_z,
-                      'shift_x': camera.data.shift_x * x_aspect_comp * film_width,
+                      'shift_x': (self.__engine.camera_shift_x(camera) + camera.data.shift_x) * x_aspect_comp * film_width,
                       'shift_y': camera.data.shift_y * y_aspect_comp * film_height,
                       'shutter_open_end_time': bl_scene.appleseed.shutter_open_end_time,
                       'shutter_open_begin_time': bl_scene.appleseed.shutter_open,

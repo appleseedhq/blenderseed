@@ -140,18 +140,19 @@ class FinalTileCallback(asr.ITileCallback):
         y0 = self.__max_y - iy1  # bottom
 
         # Update image.
-        result = self.__engine.begin_result(x0, y0, take_x, take_y)
-        layer = result.layers[0].passes["Combined"]
+        result = self.__engine.begin_result(x0, y0, take_x, take_y, view=self.__engine.active_view_get())
+        layer = result.layers[0].passes.find_by_name("Combined", self.__engine.active_view_get())
         pix = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
         layer.rect = pix
         if len(frame.aovs()) > 0:
             self.__engine.update_result(result)
             for aov in frame.aovs():
-                image = aov.get_image()
-                pix = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
-                layer = result.layers[0].passes[self.__map_aovs(aov.get_name())]
-                layer.rect = pix
-                self.__engine.update_result(result)
+                if aov.get_model() not in ("cryptomatte_object_aov", "cryptomatte_material_aov"):
+                    image = aov.get_image()
+                    pix = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+                    layer = result.layers[0].passes.find_by_name(self.__map_aovs(aov.get_name()))
+                    layer.rect = pix
+                    self.__engine.update_result(result)
         self.__engine.end_result(result)
 
         # Update progress bar.
@@ -162,7 +163,8 @@ class FinalTileCallback(asr.ITileCallback):
         seconds_per_pixel = (time.time() - self.__time_start) / self.__rendered_pixels
         remaining_seconds = (self.__total_pixels - self.__rendered_pixels) * seconds_per_pixel
         self.__rendered_tiles += 1
-        self.__render_stats = ["appleseed Rendering: Pass %i of %i, Tile %i of %i completed" % (self.__pass_number, self.__total_passes, self.__rendered_tiles, self.__total_tiles), "Time Remaining: {0}".format(self.__format_seconds_to_hhmmss(remaining_seconds))]
+        self.__render_stats = ["appleseed Rendering: Pass %i of %i, Tile %i of %i completed" %
+                               (self.__pass_number, self.__total_passes, self.__rendered_tiles, self.__total_tiles), "Time Remaining: {0}".format(self.__format_seconds_to_hhmmss(remaining_seconds))]
 
     def __get_pixels(self, image, tile_x, tile_y, take_x, take_y, skip_x, skip_y):
         tile = image.tile(tile_x, tile_y)
