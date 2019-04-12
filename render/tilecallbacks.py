@@ -140,8 +140,9 @@ class FinalTileCallback(asr.ITileCallback):
         y0 = self.__max_y - iy1  # bottom
 
         # Update image.
-        result = self.__engine.begin_result(x0, y0, take_x, take_y, view=self.__engine.active_view_get())
-        layer = result.layers[0].passes.find_by_name("Combined", self.__engine.active_view_get())
+        render_view = self.__engine.active_view_get()
+        result = self.__engine.begin_result(x0, y0, take_x, take_y, view=render_view)
+        layer = result.layers[0].passes.find_by_name("Combined", render_view)
         pix = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
         layer.rect = pix
         if len(frame.aovs()) > 0:
@@ -150,7 +151,7 @@ class FinalTileCallback(asr.ITileCallback):
                 if aov.get_model() not in ("cryptomatte_object_aov", "cryptomatte_material_aov"):
                     image = aov.get_image()
                     pix = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
-                    layer = result.layers[0].passes.find_by_name(self.__map_aovs(aov.get_name()))
+                    layer = result.layers[0].passes.find_by_name(self.__map_aovs(aov.get_name()), render_view)
                     layer.rect = pix
                     self.__engine.update_result(result)
         self.__engine.end_result(result)
