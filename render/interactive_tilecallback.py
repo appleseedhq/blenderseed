@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2019 The appleseedhq Organization
+# Copyright (c) 2019 Jonathan Dent, The appleseedhq Organization.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,5 +25,25 @@
 # THE SOFTWARE.
 #
 
-from .final import RenderCameraTranslator
-from .interactive import InteractiveCameraTranslator
+import time
+from math import ceil
+
+import appleseed as asr
+from ..utils import util
+from ..logger import get_logger
+
+logger = get_logger()
+
+
+class InteractiveTileCallback(asr.ITileCallback):
+    def __init__(self, engine, scene):
+        super().__init__()
+
+        self.__engine = engine
+        self.__scene = scene
+
+    def on_progressive_frame_update(self):
+        pass
+
+    def draw_pixels(self, x_start, y_start, width, height):
+        pass

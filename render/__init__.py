@@ -30,10 +30,13 @@ import sys
 import threading
 
 import bpy
+import bgl
 
 import appleseed as asr
+
 from .renderercontroller import FinalRendererController, InteractiveRendererController
-from .tilecallbacks import FinalTileCallback
+from .final_tilecallback import FinalTileCallback
+from .interactive_tilecallback import InteractiveTileCallback
 from ..logger import get_logger
 from ..translators.preview import PreviewRenderer
 from ..translators.scene import SceneTranslator
@@ -134,26 +137,26 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 self.__add_render_passes(depsgraph.scene)
                 self.__render_final(depsgraph)
 
-    # def view_update(self, context):
-    #     if self.__interactive_scene_translator is None:
-    #         self.__start_interactive_render(context)
-    #     else:
-    #         self.__pause_rendering()
-    #         logger.debug("Updating scene")
-    #         self.__interactive_scene_translator.update_scene(context.scene, context)
-    #         self.__restart_interactive_render()
+    def view_update(self, context):
+        if self.__interactive_scene_translator is None:
+            self.__start_interactive_render(context)
+        else:
+            self.__pause_rendering()
+            logger.debug("Updating scene")
+            self.__interactive_scene_translator.update_scene(context)
+            self.__restart_interactive_render()
 
-    # def view_draw(self, context):
-    #     self.__draw_pixels(context)
+    def view_draw(self, context):
+        self.__draw_pixels(context)
 
-    #     # Check if view has changed.
-    #     view_update, cam_param_update, cam_translate_update = self.__interactive_scene_translator.check_view(context)
+        # Check if view has changed.
+        view_update, cam_param_update, cam_translate_update, cam_model_update = self.__interactive_scene_translator.check_view(context)
 
-    #     if view_update or cam_param_update or cam_translate_update:
-    #         self.__pause_rendering()
-    #         logger.debug("Updating view")
-    #         self.__interactive_scene_translator.update_view(view_update, cam_param_update)
-    #         self.__restart_interactive_render()
+        if view_update or cam_param_update or cam_translate_update or cam_model_update:
+            self.__pause_rendering()
+            logger.debug("Updating view")
+            self.__interactive_scene_translator.update_view(view_update, cam_param_update, cam_model_update)
+            self.__restart_interactive_render()
 
     def update_render_passes(self, scene=None, renderlayer=None):
         asr_scene_props = scene.appleseed
@@ -272,40 +275,41 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__stop_rendering()
 
-    # def __start_interactive_render(self, context):
-    #     """
-    #     Start an interactive rendering session.
-    #     """
+    def __start_interactive_render(self, context):
+        """
+        Start an interactive rendering session.
+        """
 
-    #     # Preconditions.
-    #     assert(self.__interactive_scene_translator is None)
-    #     assert(self.__renderer is None)
-    #     assert(self.__renderer_controller is None)
-    #     assert(self.__tile_callback is None)
-    #     assert(self.__render_thread is None)
+        # Preconditions.
+        assert(self.__interactive_scene_translator is None)
+        assert(self.__renderer is None)
+        assert(self.__renderer_controller is None)
+        assert(self.__tile_callback is None)
+        assert(self.__render_thread is None)
 
-    #     logger.debug("Starting interactive rendering")
-    #     self.__is_interactive = True
-    #     RenderAppleseed.__interactive_session = True
+        logger.debug("Starting interactive rendering")
+        self.__is_interactive = True
+        RenderAppleseed.__interactive_session = True
 
-    #     logger.debug("Translating scene for interactive rendering")
+        logger.debug("Translating scene for interactive rendering")
 
-    #     self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(context)
-    #     self.__interactive_scene_translator.translate_scene()
+        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(self, context)
+        self.__interactive_scene_translator.translate_scene()
 
-    #     self.__camera = self.__interactive_scene_translator.camera_translator
+        self.__camera = self.__interactive_scene_translator.camera_translator
 
-    #     project = self.__interactive_scene_translator.as_project
+        project = self.__interactive_scene_translator.as_project
 
-    #     self.__renderer_controller = InteractiveRendererController(self.__camera)
-    #     self.__tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
+        self.__renderer_controller = InteractiveRendererController(self, self.__camera)
+        self.__tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
 
-    #     self.__renderer = asr.MasterRenderer(project,
-    #                                          project.configurations()['interactive'].get_inherited_parameters(),
-    #                                          self.__renderer_controller,
-    #                                          self.__tile_callback)
+        self.__renderer = asr.MasterRenderer(project,
+                                             project.configurations()['interactive'].get_inherited_parameters(),
+                                             [get_stdosl_render_paths()],
+                                             self.__renderer_controller,
+                                             self.__tile_callback)
 
-    #     self.__restart_interactive_render()
+        self.__restart_interactive_render()
 
     def __restart_interactive_render(self):
         """
@@ -361,9 +365,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
         width = int(context.region.width)
         height = int(context.region.height)
 
-        self.bind_display_space_shader(context.scene)
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
+        self.bind_display_space_shader(context.depsgraph.scene)
+
         self.__tile_callback.draw_pixels(0, 0, width, height)
+
         self.unbind_display_space_shader()
+        bgl.glDisable(bgl.GL_BLEND)
 
     def __add_render_passes(self, scene):
         asr_scene_props = scene.appleseed

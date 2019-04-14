@@ -32,7 +32,7 @@ import appleseed as asr
 import bpy
 
 from .assethandlers import AssetHandler, CopyAssetsAssetHandler
-from .cameras import RenderCameraTranslator
+from .cameras import InteractiveCameraTranslator, RenderCameraTranslator
 from .lamps import LampInstanceTranslator, LampTranslator
 from .material import MaterialTranslator
 from .nodetree import NodeTreeTranslator
@@ -163,6 +163,10 @@ class SceneTranslator(object):
         return self.__depsgraph.scene_eval
 
     @property
+    def camera_translator(self):
+        return self.__camera_translator
+
+    @property
     def as_project(self):
         return self.__project
 
@@ -248,9 +252,50 @@ class SceneTranslator(object):
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
+    # Multiview functions
     def update_multiview_camera(self):
         self.__calc_multiview_camera()
 
+    # Interactive mode functions
+    def check_view(self, context):
+        """
+        Check the viewport to see if it has changed camera position or window size.
+        For whatever reason, these changes do not trigger an update request so we must check things manually.
+        """
+        view_update = False
+        self.__context = context
+        cam_param_update, cam_translate_update, cam_model_update = self.__camera_translator.check_view(context)
+
+        # Check if the frame needs to be updated
+        width = int(self.__context.region.width)
+        height = int(self.__context.region.height)
+        new_viewport_resolution = [width, height]
+        if new_viewport_resolution != self.__viewport_resolution:
+            view_update = True
+            cam_param_update = True
+
+        return view_update, cam_param_update, cam_translate_update, cam_model_update
+
+    def update_view(self, view_update, cam_param_update, cam_model_update):
+        """
+        Update the viewport window during interactive rendering.  The viewport update is triggered
+        automatically following a scene update, or when the check view function returns true on any of its checks.
+        """
+
+        logger.debug("Begin view update")
+
+        if cam_param_update or cam_model_update:
+            self.__camera_translator.interactive_update(self.as_scene, cam_model_update)
+
+        if view_update:
+            self.__translate_frame()
+
+        self.__camera_translator.set_xform_step(0.0)
+
+    def update_scene(self, context):
+        pass
+
+    # Project file export functions
     def write_project(self, filename):
         """
         Write the appleseed project out to disk.
@@ -453,8 +498,9 @@ class SceneTranslator(object):
             max_y = height - int(self.__context.space_data.render_border_min_y * height) - 1
             self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
+        aovs = asr.AOVContainer()
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            aovs = self.__set_aovs()
+            aovs = self.__set_aovs(aovs)
 
         # Create and set the frame in the project.
         self.__frame = asr.Frame("beauty",
@@ -467,9 +513,7 @@ class SceneTranslator(object):
         if len(asr_scene_props.post_processing_stages) > 0 and self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             self.__set_post_process()
 
-    def __set_aovs(self):
-        aovs = asr.AOVContainer()
-
+    def __set_aovs(self, aovs):
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             asr_scene_props = self.bl_scene.appleseed
 
@@ -555,14 +599,21 @@ class SceneTranslator(object):
                                                                            self.asset_handler)
 
     def __create_camera_translator(self):
-        camera = self.bl_scene.camera
+        camera = self.bl_scene.camera if self.bl_scene.camera is not None else None
         logger.debug("Creating camera translator for active camera")
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            self.__camera_translator = RenderCameraTranslator(camera,
-                                                              self.asset_handler,
-                                                              self.bl_engine)
+            if camera is None:
+                self.bl_engine.report({'ERROR'}, "No camera in scene!")
+                raise NotImplementedError
+            else:
+                self.__camera_translator = RenderCameraTranslator(camera,
+                                                                  self.asset_handler,
+                                                                  self.bl_engine)
         else:
-            raise NotImplementedError()
+            self.__camera_translator = InteractiveCameraTranslator(self.asset_handler,
+                                                                   self.bl_engine,
+                                                                   self.__context,
+                                                                   camera)
 
         if camera.data.appleseed.diaphragm_map is not None:
             tex_id = camera.data.appleseed.diaphragm_map.name_full

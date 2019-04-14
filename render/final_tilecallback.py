@@ -37,7 +37,7 @@ logger = get_logger()
 
 class FinalTileCallback(asr.ITileCallback):
     def __init__(self, engine, scene):
-        super(FinalTileCallback, self).__init__()
+        super().__init__()
 
         self.__engine = engine
         self.__scene = scene

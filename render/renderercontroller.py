@@ -79,9 +79,10 @@ class FinalRendererController(BaseRendererController):
 
 
 class InteractiveRendererController(BaseRendererController):
-    def __init__(self, camera):
+    def __init__(self, engine, camera):
         super(InteractiveRendererController, self).__init__()
 
+        self.__engine = engine
         self.__camera = camera
 
     def on_frame_begin(self):
@@ -92,4 +93,6 @@ class InteractiveRendererController(BaseRendererController):
             pass
 
     def get_status(self):
+        if self.__engine.test_break():
+            return asr.IRenderControllerStatus.AbortRendering
         return self._status

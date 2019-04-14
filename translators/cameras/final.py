@@ -41,15 +41,18 @@ logger = get_logger()
 
 
 class RenderCameraTranslator(Translator):
-    # Constructor.
+    """
+    This translator is responsible for translating the Blender camera into an appleseed
+    camera object for final rendering.  This includes support for stereoscopic rendering.
+    """
+    
     def __init__(self, camera, asset_handler, engine):
         super().__init__(camera, asset_handler)
 
         self.__as_camera = None
         self.__xform_seq = asr.TransformSequence()
         self.__engine = engine
-
-    # Properties.
+        
     @property
     def bl_camera(self):
         return self._bl_obj
@@ -65,8 +68,6 @@ class RenderCameraTranslator(Translator):
 
         self.__as_camera.set_parameters(as_camera_params)
 
-        self.__xform_seq.set_transform(0.0, self._convert_matrix(self.__engine.camera_model_matrix(self.bl_camera)))
-
     def set_xform_step(self, time):
         self.__xform_seq.set_transform(time, self._convert_matrix(self.__engine.camera_model_matrix(self.bl_camera)))
 
@@ -77,7 +78,6 @@ class RenderCameraTranslator(Translator):
 
         self.__as_camera.set_transform_sequence(self.__xform_seq)
 
-        # Insert the camera into the scene.
         as_scene.cameras().insert(self.__as_camera)
         self.__as_camera = as_scene.cameras().get_by_name("Camera")
 
