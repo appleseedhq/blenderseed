@@ -187,7 +187,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             if asr_scene_props.depth_aov:
                 self.register_pass(scene, renderlayer, "Z Depth", 1, "Z", 'VALUE')
             if asr_scene_props.pixel_time_aov:
-                self.register_pass(scene, renderlayer, "Pixel Time", 1, "X", "VALUE")
+                self.register_pass(scene, renderlayer, "Pixel Time", 3, "RGB", "VECTOR")
             if asr_scene_props.invalid_samples_aov:
                 self.register_pass(scene, renderlayer, "Invalid Samples", 3, "RGB", "VECTOR")
             if asr_scene_props.pixel_sample_count_aov:
@@ -381,7 +381,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         if asr_scene_props.depth_aov:
             self.add_pass("Z Depth", 1, "Z")
         if asr_scene_props.pixel_time_aov:
-            self.add_pass("Pixel Time", 1, "X")
+            self.add_pass("Pixel Time", 3, "RGB")
         if asr_scene_props.invalid_samples_aov:
             self.add_pass("Invalid Samples", 3, "RGB")
         if asr_scene_props.pixel_sample_count_aov:
