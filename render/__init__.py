@@ -36,7 +36,6 @@ import appleseed as asr
 
 from .renderercontroller import FinalRendererController, InteractiveRendererController
 from .final_tilecallback import FinalTileCallback
-from .interactive_tilecallback import InteractiveTileCallback
 from ..logger import get_logger
 from ..translators.preview import PreviewRenderer
 from ..translators.scene import SceneTranslator
