@@ -625,10 +625,11 @@ class SceneTranslator(GroupTranslator):
                                   'max_path_length': 0,
                                   'max_photons_per_estimate': asr_scene_props.sppm_max_per_estimate,
                                   'path_tracing_max_path_length': asr_scene_props.sppm_pt_max_length,
-                                  'path_tracing_max_ray_intensity': asr_scene_props.sppm_pt_max_ray_intensity,
                                   'path_tracing_rr_min_path_length': asr_scene_props.sppm_pt_rr_start,
                                   'photon_tracing_max_path_length': asr_scene_props.sppm_photon_max_length,
                                   'photon_tracing_rr_min_path_length': asr_scene_props.sppm_photon_rr_start}
+            if asr_scene_props.sppm_pt_max_ray_intensity != 0.0:
+                parameters['sppm']['path_tracing_max_ray_intensity'] = asr_scene_props.sppm_pt_max_ray_intensity
 
         if asr_scene_props.shading_override:
             parameters['shading_engine'] = {'override_shading': {'mode': asr_scene_props.override_mode}}
