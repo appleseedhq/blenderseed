@@ -348,11 +348,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Draw rendered image in Blender's viewport.
         """
 
-        width = int(context.region.width)
-        height = int(context.region.height)
-
         self.bind_display_space_shader(context.scene)
-        self.__tile_callback.draw_pixels(0, 0, width, height)
+        self.__tile_callback.draw_pixels()
         self.unbind_display_space_shader()
 
     def __add_render_passes(self, scene):
