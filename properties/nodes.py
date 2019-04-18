@@ -61,7 +61,7 @@ class AppleseedOSLNodeTree(bpy.types.NodeTree):
         """
         obj = context.active_object
 
-        if obj and obj.type not in {"LAMP", "CAMERA"}:
+        if obj and obj.type not in {"LIGHT", "CAMERA"}:
             mat = obj.active_material
 
             if mat:
@@ -71,7 +71,7 @@ class AppleseedOSLNodeTree(bpy.types.NodeTree):
                 if node_tree:
                     return node_tree, mat, mat
 
-        elif obj and obj.type == "LAMP":
+        elif obj and obj.type == "LIGHT":
             node_tree = obj.data.appleseed.osl_node_tree
 
             if node_tree:
