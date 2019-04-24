@@ -53,6 +53,11 @@ class ObjectInstanceTranslator(Translator):
     def set_xform_step(self, time, bl_matrix):
         self.__xform_seq.set_transform(time, self._convert_matrix(bl_matrix))
 
+    def xform_update(self, bl_matrix):
+        self.__xform_seq = asr.TransformSequence()
+        self.__xform_seq.set_transform(0.0, self._convert_matrix(bl_matrix))
+        self.__ass_inst.set_transform_sequence(self.__xform_seq)
+
     def flush_entities(self, as_assembly):
         self.__ass_inst.set_transform_sequence(self.__xform_seq)
 

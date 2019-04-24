@@ -67,6 +67,27 @@ class LampInstanceTranslator(LampTranslator):
     def set_xform_step(self, time, bl_matrix):
         pass
 
+    def xform_update(self, bl_matrix, as_assembly):
+        if self.bl_lamp.data.type != 'AREA':
+            self.__as_lamp.set_transform(self._convert_matrix(bl_matrix))
+
+        else:
+            as_assembly.object_instances().remove(self.__as_area_lamp_mesh_inst)
+            mesh_name = f"{self.__inst_name}_mesh"
+            inst_name = f"{self.__inst_name}_inst"
+            mat_name = f"{self.appleseed_name}_mat"
+            instance_params = self._get_area_mesh_instance_params()
+
+            self.__as_area_lamp_mesh_inst = asr.ObjectInstance(inst_name,
+                                                               instance_params,
+                                                               mesh_name,
+                                                               self._convert_area_matrix(bl_matrix),
+                                                               {"default": mat_name},
+                                                               {"default": "__null_material"})
+            
+            as_assembly.object_instances().insert(self.__as_area_lamp_mesh_inst)
+            self.__as_area_lamp_mesh_inst = as_assembly.object_instances().get_by_name(inst_name)
+
     def flush_entities(self, as_assembly):
         if self.bl_lamp.data.type != 'AREA':
             self.__as_lamp.set_transform(self._convert_matrix(self.__bl_matrix))

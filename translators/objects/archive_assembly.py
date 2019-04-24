@@ -75,6 +75,9 @@ class ArchiveAssemblyTranslator(Translator):
     def set_xform_step(self, time, inst_key, bl_matrix):
         self.__instances[inst_key].set_xform_step(time, bl_matrix)
 
+    def xform_update(self, inst_key, bl_matrix):
+        self.__instances[inst_key].xform_update(bl_matrix)
+
     def add_instance(self, inst_key, instance):
         self.__instances[inst_key] = instance
 

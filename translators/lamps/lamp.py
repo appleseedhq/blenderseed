@@ -104,6 +104,9 @@ class LampTranslator(Translator):
     def set_xform_step(self, time, bl_matrix):
         pass
 
+    def xform_update(self, inst_key, bl_matrix, as_assembly):
+        self.__instances[inst_key].xform_update(bl_matrix, as_assembly)
+
     def add_instance(self, inst_key, instance):
         self.__instances[inst_key] = instance
 

@@ -286,10 +286,30 @@ class SceneTranslator(object):
     def update_scene(self, context):
         transformed_objects = []
         for obj in context.depsgraph.updates:
-            print(obj.id.name)
             if isinstance(obj.id, bpy.types.Material):
                 mat_key = obj.id.name_full
                 self.__material_translators[mat_key].interactive_update(context, self.main_assembly)
+            if isinstance(obj.id, bpy.types.Object):
+                if obj.is_updated_transform:
+                    transformed_objects.append(obj.id)
+
+        # Update transforms
+        for inst in context.depsgraph.object_instances:
+            if inst.show_self:
+                if inst.is_instance:
+                    source = inst.instance_object
+                    parent_key = inst.parent.name_full
+                    inst_key = f"{source.name_full}|{parent_key}|{inst.persistent_id[0]}"
+                else:
+                    source = inst.object
+                    inst_key = f"{source.name_full}|{inst.persistent_id[0]}"
+            
+            if source in transformed_objects:
+                obj_key = source.name_full
+                if source.type == 'MESH':
+                    self.__object_translators[obj_key].xform_update(inst_key, inst.matrix_world)
+                elif source.type == 'LIGHT':
+                    self.__lamp_translators[obj_key].xform_update(inst_key, inst.matrix_world, self.main_assembly)
 
     # Project file export functions
     def write_project(self, filename):

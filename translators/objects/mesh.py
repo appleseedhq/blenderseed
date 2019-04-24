@@ -90,6 +90,9 @@ class MeshTranslator(Translator):
     def set_xform_step(self, time, inst_key, bl_matrix):
         self.__instances[inst_key].set_xform_step(time, bl_matrix)
 
+    def xform_update(self, inst_key, bl_matrix):
+        self.__instances[inst_key].xform_update(bl_matrix)
+
     def set_deform_key(self, time, depsgraph, key_times):
         if len(self.bl_obj.data.polygons) > 0:
             if not self.__deforming and self.__key_index > 0:
