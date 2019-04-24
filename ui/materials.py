@@ -52,11 +52,10 @@ class ASMATERIAL_PT_slots(bpy.types.Panel):
         space = context.space_data
 
         if ob:
-            is_sortable = (len(ob.material_slots) > 1)
-
-            rows = 1
-            if is_sortable:
-                rows = 4
+            is_sortable = len(ob.material_slots) > 1
+            rows = 3
+            if (is_sortable):
+                rows = 5
 
             row = layout.row()
 
@@ -66,7 +65,9 @@ class ASMATERIAL_PT_slots(bpy.types.Panel):
             col.operator("object.material_slot_add", icon='ADD', text="")
             col.operator("object.material_slot_remove", icon='REMOVE', text="")
 
-            # col.menu("MATERIAL_MT_specials", icon='DOWNARROW_HLT', text="")
+            col.separator()
+
+            col.menu("MATERIAL_MT_context_menu", icon='DOWNARROW_HLT', text="")
 
             if is_sortable:
                 col.separator()
@@ -74,36 +75,23 @@ class ASMATERIAL_PT_slots(bpy.types.Panel):
                 col.operator("object.material_slot_move", icon='TRIA_UP', text="").direction = 'UP'
                 col.operator("object.material_slot_move", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
+        row = layout.row()
+
+        if ob:
+            row.template_ID(ob, "active_material", new="material.new")
+
+            if slot:
+                icon_link = 'MESH_DATA' if slot.link == 'DATA' else 'OBJECT_DATA'
+                row.prop(slot, "link", icon=icon_link, icon_only=True)
+
             if ob.mode == 'EDIT':
                 row = layout.row(align=True)
                 row.operator("object.material_slot_assign", text="Assign")
                 row.operator("object.material_slot_select", text="Select")
                 row.operator("object.material_slot_deselect", text="Deselect")
 
-        split = layout.split(factor=0.65)
-
-        if ob:
-            row = split.row(align=True)
-            sub = row.split(align=True, factor=1 / (context.region.width * 0.015))
-            sub.prop_search(ob, "active_material", bpy.data, "materials", icon='MATERIAL', text="")
-            row = sub.row(align=True)
-            if ob.active_material:
-                row.prop(ob.active_material, "name", text="")
-                row.prop(ob.active_material, "use_fake_user", text="", toggle=True)  # :^)
-                text_new = ""
-            else:
-                text_new = "New"
-
-            row.operator("appleseed.new_mat", text=text_new, icon='ADD')
-
-            row = split.row()
-            if slot:
-                row.prop(slot, "link", text="")
-            else:
-                row.label()
         elif mat:
-            split.template_ID(space, "pin_id")
-            split.separator()
+            row.template_ID(space, "pin_id")
 
 
 class ASMATERIAL_PT_preview(bpy.types.Panel):
@@ -152,11 +140,6 @@ class ASMATERIAL_PT_shading(bpy.types.Panel):
         obj = context.object
         material = obj.active_material
         asr_mat = material.appleseed
-
-        if material.appleseed.osl_node_tree is None:
-            layout.operator('appleseed.add_osl_nodetree', text="Add appleseed Material Node", icon='NODETREE')
-        else:
-            layout.operator('appleseed.view_nodetree', text="View Nodetree", icon='NODETREE')
 
         layout.prop(asr_mat, "shader_lighting_samples", text="Lighting Samples")
 
