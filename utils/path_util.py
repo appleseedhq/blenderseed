@@ -30,28 +30,6 @@ import platform
 import sys
 
 
-def find_python_path():
-
-    if 'APPLESEED_PYTHON_PATH' in os.environ:
-        python_path = os.environ['APPLESEED_PYTHON_PATH']
-    else:
-        python_path = os.path.join(get_appleseed_parent_dir_path(), 'lib')
-
-    return python_path
-
-
-def load_appleseed_python_paths():
-    python_path = find_python_path()
-    if python_path != "":
-        sys.path.append(python_path)
-        print("[appleseed] Python path set to: {0}".format(python_path))
-
-        if platform.system() == 'Windows':
-            bin_dir = get_appleseed_bin_dir_path()
-            os.environ['PATH'] += os.pathsep + bin_dir
-            print("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
-
-
 def get_appleseed_bin_dir_path():
     if "APPLESEED_BIN_DIR" in os.environ:
         appleseed_bin_dir = os.environ['APPLESEED_BIN_DIR']
@@ -71,8 +49,16 @@ def get_appleseed_parent_dir_path():
     return appleseed_parent_dir
 
 
-def get_appleseed_tool_dir():
-    return os.path.join(get_appleseed_parent_dir_path(), 'bin')
+def load_appleseed_python_paths():
+    python_path = os.path.join(get_appleseed_parent_dir_path(), 'lib')
+    if python_path != "":
+        sys.path.append(python_path)
+        print("[appleseed] Python path set to: {0}".format(python_path))
+
+        if platform.system() == 'Windows':
+            bin_dir = get_appleseed_bin_dir_path()
+            os.environ['PATH'] += os.pathsep + bin_dir
+            print("[appleseed] Path to appleseed.dll is set to: {0}".format(bin_dir))
 
 
 def get_osl_search_paths():
