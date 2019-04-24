@@ -59,13 +59,11 @@ def register():
     from . import properties
     from . import operators
     from . import ui
-    from . import export
     from . import render  # This is needed
     from .utils import util
 
     properties.register()
     operators.register()
-    export.register()
     ui.register()
     render.register()
     bpy.app.handlers.load_post.append(util.update_project)
@@ -76,12 +74,10 @@ def unregister():
     from . import properties
     from . import operators
     from . import ui
-    from . import export
     from . import render
     from .utils import util
     render.unregister()
     ui.unregister()
-    export.unregister()
     operators.unregister()
     properties.unregister()
     preferences.unregister()
