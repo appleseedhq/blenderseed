@@ -221,12 +221,10 @@ class PackageBuilder(object):
         self.remove_leftovers()
         self.copy_appleseed_python()
         self.copy_binaries()
-        self.copy_dependencies()
         self.copy_schemas()
         self.copy_shaders()
         self.download_settings_files()
         self.remove_pyc_files()
-        self.post_process_package()
 
         if not self.no_release:
             self.deploy_blenderseed_to_stage()
