@@ -132,11 +132,6 @@ class SceneTranslator(object):
         self.__selected_only = selected_only
         self.__context = context
 
-        # Blender datablock lists.
-        self.__bl_object_datablocks = []
-        self.__bl_material_datablocks = []
-        self.__bl_nodetree_datablocks = []
-
         # Translators.
         self.__world_translator = None
         self.__camera_translator = None
@@ -195,7 +190,7 @@ class SceneTranslator(object):
         return[self.__lamp_translators,
                self.__object_translators,
                self.__material_translators,
-            #    self.__nodetree_translators,
+               #    self.__nodetree_translators,
                self.__texture_translators]
 
     def translate_scene(self):
@@ -217,11 +212,9 @@ class SceneTranslator(object):
 
         self.__create_camera_translator()
 
-        self.__bl_material_datablocks = self.__parse_material_datablocks()
+        material_blocks, object_bocks = self.__parse_datablocks()
 
-        self.__bl_object_datablocks = self.__parse_object_datablocks()
-
-        self.__create_translators()
+        self.__create_translators(material_blocks, object_bocks)
 
         self.__create_instancers()
 
@@ -293,11 +286,11 @@ class SceneTranslator(object):
     def update_scene(self, context):
         transformed_objects = []
         for obj in context.depsgraph.updates:
-            if not isinstance(obj.id, bpy.types.Scene):
-                if isinstance(obj.id, bpy.types.Material):
-                    mat_key = obj.id.name_full
-                    self.__material_translators[mat_key].interactive_update(context, self.main_assembly)
-        
+            print(obj.id.name)
+            if isinstance(obj.id, bpy.types.Material):
+                mat_key = obj.id.name_full
+                self.__material_translators[mat_key].interactive_update(context, self.main_assembly)
+
     # Project file export functions
     def write_project(self, filename):
         """
@@ -726,40 +719,16 @@ class SceneTranslator(object):
         for seg in range(0, samples):
             times.update({self.bl_scene.appleseed.shutter_open + (seg * segment_size)})
 
-    def __parse_material_datablocks(self):
-        """
-        Parses the material blocks present in the evaluated depsgraph and returns them in a list
-        :return: List of Blender material data blocks
-        """
-        logger.debug("Parsing Material Datablocks")
-
-        mat_blocks = []
-
-        for block in self.bl_depsgraph.ids:
-            if isinstance(block, bpy.types.Material):
-                mat_blocks.append(block)
-
-        return mat_blocks
-
-    def __parse_object_datablocks(self):
-        object_blocks = []
-
-        for obj in self.bl_depsgraph.ids:
-            if isinstance(obj, bpy.types.Object):
-                object_blocks.append(obj)
-
-        return object_blocks
-
-    def __create_translators(self):
+    def __create_translators(self, material_blocks, object_bocks):
         """
         Creates appleseed translators for all the 'real' object, lamps and materials in the scene
         :return: None
         """
-        for mat in self.__bl_material_datablocks:
+        for mat in material_blocks:
             mat_key = mat.name_full
             self.__material_translators[mat_key] = MaterialTranslator(mat, self.asset_handler)
 
-        for obj in self.__bl_object_datablocks:
+        for obj in object_bocks:
             obj_key = obj.name_full
             if obj.appleseed.object_export == "archive_assembly":
                 self.__object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
@@ -815,6 +784,24 @@ class SceneTranslator(object):
             translator = self.__object_translators[key]
             if len(translator.instances) == 0:
                 del self.__object_translators[key]
+
+    def __parse_datablocks(self):
+        """
+        Parses the blocks present in the evaluated depsgraph and returns them in a list
+        :return: Lists of Blender data blocks
+        """
+        logger.debug("Parsing Datablocks")
+
+        mat_blocks = []
+        object_blocks = []
+
+        for block in self.bl_depsgraph.ids:
+            if isinstance(block, bpy.types.Material):
+                mat_blocks.append(block)
+            elif isinstance(block, bpy.types.Object):
+                object_blocks.append(block)
+
+        return mat_blocks, object_blocks
 
     def __load_searchpaths(self):
         paths = self.as_project.get_search_paths()

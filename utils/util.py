@@ -28,11 +28,11 @@
 import datetime
 import os
 
-import appleseed as asr
 import bpy
 import bpy_extras
 from bpy.app.handlers import persistent
 
+import appleseed as asr
 from . import path_util, osl_utils
 from ..logger import get_logger
 
@@ -63,11 +63,10 @@ def safe_unregister_class(cls):
 
 
 def filter_params(params):
-    filter_list = []
+    filter_list = set()
     for p in params:
-        if p not in filter_list:
-            filter_list.append(p)
-    return filter_list
+        filter_list.update({p})
+    return list(filter_list)
 
 
 def realpath(path):
