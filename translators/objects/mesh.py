@@ -83,8 +83,9 @@ class MeshTranslator(Translator):
         self.__as_mesh_inst_params = self.__get_mesh_inst_params()
         self.__front_materials, self.__back_materials = self.__get_material_mappings()
 
-        for instance in self.__instances.values():
-            instance.create_entities(bl_scene)
+        if self.__export_mode != ProjectExportMode.PROJECT_EXPORT:
+            for instance in self.__instances.values():
+                instance.create_entities(bl_scene)
 
     def set_xform_step(self, time, inst_key, bl_matrix):
         self.__instances[inst_key].set_xform_step(time, bl_matrix)
@@ -226,18 +227,13 @@ class MeshTranslator(Translator):
 
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
-                if m.material.appleseed.osl_node_tree is not None:
-                    mat_key = m.material.name_full + "_mat"
-                    front_mats[f"slot-{i}"] = mat_key
-                else:
-                    front_mats[f"slot-{i}"] = "__default_material"
+                
+                mat_key = m.material.name_full + "_mat"
+                front_mats[f"slot-{i}"] = mat_key
         else:
             if len(material_slots) == 1:
-                if material_slots[0].material.appleseed.osl_node_tree is not None:
-                    mat_key = material_slots[0].material.name_full + "_mat"
-                    front_mats["default"] = mat_key
-                else:
-                    front_mats["default"] = "__default_material"
+                mat_key = material_slots[0].material.name_full + "_mat"
+                front_mats["default"] = mat_key
             else:
                 mesh_name = f"{self.appleseed_name}_obj"
                 logger.debug("Mesh %s has no materials, assigning default material instead", mesh_name)

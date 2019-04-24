@@ -27,6 +27,7 @@
 
 import appleseed as asr
 
+from .nodetree import NodeTreeTranslator
 from .translator import Translator
 from ..logger import get_logger
 
@@ -38,9 +39,10 @@ class MaterialTranslator(Translator):
     This class translates a Blender material data block into its associated appleseed entities (Material and Surface shader)
     """
 
-    def __init__(self, mat):
-        super().__init__(mat)
+    def __init__(self, mat, asset_handler):
+        super().__init__(mat, asset_handler)
 
+        self.__as_nodetree = None
         self.__as_mat_params = {}
         self.__as_mat = None
         self.__as_shader_params = {}
@@ -55,10 +57,13 @@ class MaterialTranslator(Translator):
 
     @property
     def bl_node_tree(self):
-        return self._bl_obj.appleseed.osl_node_tree
+        return self._bl_obj.node_tree
 
     def create_entities(self, bl_scene):
         as_mat_data = self.bl_mat.appleseed
+
+        self.__as_nodetree = NodeTreeTranslator(self.bl_mat.node_tree, self.asset_handler, self.appleseed_name)
+        self.__as_nodetree.create_entities(bl_scene)
 
         mat_name = f"{self.appleseed_name}_mat"
         surface_name = f"{self.appleseed_name}_surface"
@@ -93,6 +98,8 @@ class MaterialTranslator(Translator):
         self.__as_shader.set_parameters(self.__as_shader_params)
 
     def flush_entities(self, as_assembly, as_project):
+        self.__as_nodetree.flush_entities(as_assembly, as_project)
+
         shader_name = self.__as_shader.get_name()
         as_assembly.surface_shaders().insert(self.__as_shader)
         self.__as_shader = as_assembly.surface_shaders().get_by_name(shader_name)
@@ -111,6 +118,20 @@ class MaterialTranslator(Translator):
             as_assembly.volumes().insert(self.__as_volume)
             self.__as_volume = as_assembly.volumes().get_by_name(vol_name)
 
+    def interactive_update(self, context, as_assembly):
+        self.__as_nodetree.delete(as_assembly)
+
+        as_assembly.surface_shaders().remove(self.__as_shader)
+        as_assembly.materials().remove(self.__as_mat)
+
+        for color in self.__as_colors:
+                as_assembly.colors().remove(color)
+        
+        self.__as_colors = []
+
+        self.create_entities(context.depsgraph.scene)
+        self.flush_entities(as_assembly, None)        
+
     def __get_shader_params(self):
         as_mat_data = self.bl_mat.appleseed
         shader_params = {'lighting_samples': as_mat_data.shader_lighting_samples}
@@ -125,7 +146,7 @@ class MaterialTranslator(Translator):
 
         if self.bl_node_tree is not None and self.bl_mat.appleseed.mode == 'surface':
             nodetree_name = self.bl_node_tree.name_full
-            mat_params['osl_surface'] = f"{nodetree_name}_tree"
+            mat_params['osl_surface'] = f"{self.appleseed_name}_tree"
 
         return mat_params
 

@@ -42,8 +42,10 @@ class NodeTreeTranslator(Translator):
     This class translates a Blender node tree into an appleseed OSL shader group
     """
 
-    def __init__(self, node_tree, asset_handler):
+    def __init__(self, node_tree, asset_handler, mat_name):
         super().__init__(node_tree, asset_handler=asset_handler)
+
+        self.__mat_name = mat_name
 
         self.__as_shader_group = None
 
@@ -52,7 +54,7 @@ class NodeTreeTranslator(Translator):
         return self._bl_obj.nodes
 
     def create_entities(self, bl_scene):
-        tree_name = f"{self.appleseed_name}_tree"
+        tree_name = f"{self.__mat_name}_tree"
 
         self.__as_shader_group = asr.ShaderGroup(tree_name)
 
@@ -62,6 +64,9 @@ class NodeTreeTranslator(Translator):
         shader_groupname = self.__as_shader_group.get_name()
         as_assembly.shader_groups().insert(self.__as_shader_group)
         self.__as_shader_group = as_assembly.shader_groups().get_by_name(shader_groupname)
+
+    def delete(self, as_assembly):
+        as_assembly.shader_groups().remove(self.__as_shader_group)
 
     def __create_shadergroup(self, bl_scene):
         surface_shader = None

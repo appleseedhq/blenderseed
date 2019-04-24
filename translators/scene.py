@@ -195,7 +195,7 @@ class SceneTranslator(object):
         return[self.__lamp_translators,
                self.__object_translators,
                self.__material_translators,
-               self.__nodetree_translators,
+            #    self.__nodetree_translators,
                self.__texture_translators]
 
     def translate_scene(self):
@@ -218,8 +218,6 @@ class SceneTranslator(object):
         self.__create_camera_translator()
 
         self.__bl_material_datablocks = self.__parse_material_datablocks()
-
-        self.__bl_nodetree_datablocks = self.__parse_nodetree_datablocks()
 
         self.__bl_object_datablocks = self.__parse_object_datablocks()
 
@@ -738,25 +736,6 @@ class SceneTranslator(object):
 
         return mat_blocks
 
-    def __parse_nodetree_datablocks(self):
-        """
-        Parses the node group blocks present in the evaluated depsgraph and returns them in a list
-        :return: List of Blender node group data blocks
-        """
-        logger.debug("Parsing Nodetree Datablocks")
-
-        nodetree_blocks = []
-
-        for block in self.bl_depsgraph.ids:
-            if isinstance(block, bpy.types.Material):
-                if block.appleseed.osl_node_tree is not None and block.appleseed.mode == 'surface':
-                    nodetree_blocks.append(block.appleseed.osl_node_tree)
-            if isinstance(block, bpy.types.Light):
-                if block.appleseed.osl_node_tree is not None:
-                    nodetree_blocks.append(block.appleseed.osl_node_tree)
-
-        return nodetree_blocks
-
     def __parse_object_datablocks(self):
         object_blocks = []
 
@@ -773,11 +752,7 @@ class SceneTranslator(object):
         """
         for mat in self.__bl_material_datablocks:
             mat_key = mat.name_full
-            self.__material_translators[mat_key] = MaterialTranslator(mat)
-
-        for tree in self.__bl_nodetree_datablocks:
-            tree_key = tree.name_full
-            self.__nodetree_translators[tree_key] = NodeTreeTranslator(tree, self.asset_handler)
+            self.__material_translators[mat_key] = MaterialTranslator(mat, self.asset_handler)
 
         for obj in self.__bl_object_datablocks:
             obj_key = obj.name_full

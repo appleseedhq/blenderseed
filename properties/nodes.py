@@ -98,7 +98,7 @@ class AppleseedOSLNodeCategory(nodeitems_utils.NodeCategory):
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render.engine
-        return context.space_data.tree_type == 'AppleseedOSLNodeTree' and renderer == 'APPLESEED_RENDER'
+        return renderer == 'APPLESEED_RENDER' # and context.space_data.tree_type == 'AppleseedOSLNodeTree'
 
 
 def node_categories(osl_nodes):
@@ -129,14 +129,14 @@ def node_categories(osl_nodes):
             osl_other.append(node_item)
 
     appleseed_node_categories = [
-        AppleseedOSLNodeCategory("OSL_Surfaces", "Surface", items=osl_surface),
-        AppleseedOSLNodeCategory("OSL_Shaders", "Shader", items=osl_shaders),
-        AppleseedOSLNodeCategory("OSL_3D_Textures", "Texture3D", items=osl_3d_textures),
-        AppleseedOSLNodeCategory("OSL_2D_Textures", "Texture2D", items=osl_2d_textures),
-        AppleseedOSLNodeCategory("OSL_Color", "Color", items=osl_color),
-        AppleseedOSLNodeCategory("OSL_Utilities", "Utility", items=osl_utilities),
-        AppleseedOSLNodeCategory("OSL_Script", "Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptBaseNode")]),
-        AppleseedOSLNodeCategory("OSL_Other", "No Category", items=osl_other)]
+        AppleseedOSLNodeCategory("OSL_Surfaces", "appleseed-Surface", items=osl_surface),
+        AppleseedOSLNodeCategory("OSL_Shaders", "appleseed-Shader", items=osl_shaders),
+        AppleseedOSLNodeCategory("OSL_3D_Textures", "appleseed-Texture3D", items=osl_3d_textures),
+        AppleseedOSLNodeCategory("OSL_2D_Textures", "appleseed-Texture2D", items=osl_2d_textures),
+        AppleseedOSLNodeCategory("OSL_Color", "appleseed-Color", items=osl_color),
+        AppleseedOSLNodeCategory("OSL_Utilities", "appleseed-Utility", items=osl_utilities),
+        AppleseedOSLNodeCategory("OSL_Script", "appleseed-Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptBaseNode")]),
+        AppleseedOSLNodeCategory("OSL_Other", "appleseed-No Category", items=osl_other)]
 
     return appleseed_node_categories
 
@@ -147,7 +147,7 @@ classes = []
 
 
 def register():
-    util.safe_register_class(AppleseedOSLNodeTree)
+    # util.safe_register_class(AppleseedOSLNodeTree)
     util.safe_register_class(AppleseedOSLScriptBaseNode)
     node_list = osl_utils.read_osl_shaders()
     for node in node_list:
@@ -168,4 +168,4 @@ def unregister():
         util.safe_unregister_class(cls)
 
     util.safe_unregister_class(AppleseedOSLScriptBaseNode)
-    util.safe_unregister_class(AppleseedOSLNodeTree)
+    # util.safe_unregister_class(AppleseedOSLNodeTree)

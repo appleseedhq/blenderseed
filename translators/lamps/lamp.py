@@ -33,6 +33,7 @@ import mathutils
 import appleseed as asr
 
 from ..assethandlers import AssetType
+from ..nodetree import NodeTreeTranslator
 from ..translator import Translator
 from ...utils.path_util import get_osl_search_paths
 
@@ -63,11 +64,13 @@ class LampTranslator(Translator):
         else:
             mat_name = f"{self.appleseed_name}_mat"
 
-            shader_name = f"{self.appleseed_name}_tree" if as_lamp_data.osl_node_tree is None \
-                else f"{as_lamp_data.osl_node_tree.name_full}_tree"
+            shader_name = f"{self.appleseed_name}_tree"
 
-            if as_lamp_data.osl_node_tree is None:
+            if not self.bl_lamp.data.use_nodes:
                 self._as_area_lamp_shadergroup = self._set_shadergroup()
+            else:
+                self.__node_tree = NodeTreeTranslator(self.bl_lamp.data.node_tree, self._asset_handler, self.appleseed_name)
+                self.__node_tree.create_entities(bl_scene)
 
             self._as_area_lamp_material = asr.Material('osl_material',
                                                         mat_name,
@@ -92,6 +95,8 @@ class LampTranslator(Translator):
                 shadergroup_name = self._as_area_lamp_shadergroup.get_name()
                 as_assembly.shader_groups().insert(self._as_area_lamp_shadergroup)
                 self._as_area_lamp_shadergroup = as_assembly.shader_groups().get_by_name(shadergroup_name)
+            else:
+                self.__node_tree.flush_entities(as_assembly, None)
             
         for instancer in self.__instances.values():
             instancer.flush_entities(as_assembly)

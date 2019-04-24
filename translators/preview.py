@@ -190,10 +190,7 @@ class PreviewRenderer(object):
 
         self.__mat_name = f"{likely_material.name_full}_mat"
 
-        self.__mat_translator = MaterialTranslator(likely_material)
-
-        if likely_material.appleseed.osl_node_tree is not None:
-            self.__mat_tree_translator = NodeTreeTranslator(likely_material.appleseed.osl_node_tree, self.asset_handler)
+        self.__mat_translator = MaterialTranslator(likely_material, self.asset_handler)
 
     def __get_preview_material(self, scene):
         return scene.objects['preview_sphere'].material_slots[0].material
