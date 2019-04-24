@@ -291,8 +291,13 @@ class SceneTranslator(object):
         self.__camera_translator.set_xform_step(0.0)
 
     def update_scene(self, context):
-        pass
-
+        transformed_objects = []
+        for obj in context.depsgraph.updates:
+            if not isinstance(obj.id, bpy.types.Scene):
+                if isinstance(obj.id, bpy.types.Material):
+                    mat_key = obj.id.name_full
+                    self.__material_translators[mat_key].interactive_update(context, self.main_assembly)
+        
     # Project file export functions
     def write_project(self, filename):
         """

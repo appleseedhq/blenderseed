@@ -93,6 +93,9 @@ class InteractiveRendererController(BaseRendererController):
             pass
 
     def get_status(self):
-        if self.__engine.test_break():
+        try:
+            if not self.__engine.test_break():
+                return self._status
+        except Exception as e:
+            logger.debug("%s", e)
             return asr.IRenderControllerStatus.AbortRendering
-        return self._status

@@ -70,7 +70,9 @@ class LampInstanceTranslator(LampTranslator):
     def flush_entities(self, as_assembly):
         if self.bl_lamp.data.type != 'AREA':
             self.__as_lamp.set_transform(self._convert_matrix(self.__bl_matrix))
+            lamp_name = self.__as_lamp.get_name()
             as_assembly.lights().insert(self.__as_lamp)
+            self.__as_lamp = as_assembly.lights().get_by_name(lamp_name)
 
         else:
             mesh_name = f"{self.__inst_name}_mesh"
@@ -79,11 +81,11 @@ class LampInstanceTranslator(LampTranslator):
             instance_params = self._get_area_mesh_instance_params()
 
             self.__as_area_lamp_mesh_inst = asr.ObjectInstance(inst_name,
-                                                              instance_params,
-                                                              mesh_name,
-                                                              self._convert_area_matrix(self.__bl_matrix),
-                                                              {"default": mat_name}, {"default": "__null_material"})
-
+                                                               instance_params,
+                                                               mesh_name,
+                                                               self._convert_area_matrix(self.__bl_matrix),
+                                                               {"default": mat_name},
+                                                               {"default": "__null_material"})
 
             as_assembly.objects().insert(self.__as_area_lamp_mesh)
             self.__as_area_lamp_mesh = as_assembly.objects().get_by_name(mesh_name)

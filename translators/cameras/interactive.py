@@ -117,8 +117,6 @@ class InteractiveCameraTranslator(Translator):
         if model != self.__model:
             cam_model_update = True
 
-        print(f"cam params:{cam_param_update}, cam translate:{cam_translate_update}, cam_model:{cam_model_update}")
-
         return cam_param_update, cam_translate_update, cam_model_update
 
     def interactive_update(self, as_scene, cam_model_update):
@@ -161,12 +159,12 @@ class InteractiveCameraTranslator(Translator):
         self.__shift_y = None
 
         if view_cam_type == "ORTHO":
-            self.__zoom = 2
+            self.__zoom = 2.25
             self.__extent_base = self.__context.space_data.region_3d.view_distance * 32.0 / self.__lens
             self.__set_ortho_camera_params(aspect_ratio)
 
         elif view_cam_type == "PERSP":
-            self.__zoom = 2
+            self.__zoom = 2.25
             self.__set_persp_camera_params(aspect_ratio)
 
         elif view_cam_type == "CAMERA":

@@ -76,6 +76,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
     bl_idname = 'APPLESEED_RENDER'
     bl_label = 'appleseed'
     bl_use_preview = True
+    bl_use_shading_nodes = True
+    bl_use_shading_nodes_custom = False
+    bl_use_postprocess = True
 
     # True if we are doing interactive rendering.
     __interactive_session = False
@@ -126,10 +129,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 return
 
             # Disable material previews if we are doing an interactive render.
-            if not RenderAppleseed.__interactive_session:
-                level = 'error'
-                with SetAppleseedLogLevel(level):
-                    self.__render_material_preview(depsgraph.scene)
+            # if not RenderAppleseed.__interactive_session:
+            level = 'error'
+            with SetAppleseedLogLevel(level):
+                self.__render_material_preview(depsgraph.scene)
         else:
             level = depsgraph.scene.appleseed.log_level
             with SetAppleseedLogLevel(level):
@@ -361,17 +364,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Draw rendered image in Blender's viewport.
         """
 
-        width = int(context.region.width)
-        height = int(context.region.height)
-
-        bgl.glEnable(bgl.GL_BLEND)
-        bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
         self.bind_display_space_shader(context.depsgraph.scene)
-
-        self.__tile_callback.draw_pixels(0, 0, width, height)
-
+        self.__tile_callback.draw_pixels()
         self.unbind_display_space_shader()
-        bgl.glDisable(bgl.GL_BLEND)
 
     def __add_render_passes(self, scene):
         asr_scene_props = scene.appleseed
@@ -397,7 +392,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         if asr_scene_props.depth_aov:
             self.add_pass("Z Depth", 1, "Z")
         if asr_scene_props.pixel_time_aov:
-            self.add_pass("Pixel Time", 3, "RGB")
+            self.add_pass("Pixel Time", 1, "X")
         if asr_scene_props.invalid_samples_aov:
             self.add_pass("Invalid Samples", 3, "RGB")
         if asr_scene_props.pixel_sample_count_aov:

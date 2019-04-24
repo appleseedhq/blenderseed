@@ -58,4 +58,4 @@ class ObjectInstanceTranslator(Translator):
 
         ass_inst_name = self.__ass_inst.get_name()
         as_assembly.assembly_instances().insert(self.__ass_inst)
-        self.__ass_inst = as_assembly.assemblies().get_by_name(ass_inst_name)
+        self.__ass_inst = as_assembly.assembly_instances().get_by_name(ass_inst_name)
