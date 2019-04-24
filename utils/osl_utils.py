@@ -69,7 +69,10 @@ class AppleseedOSLNode(bpy.types.Node):
         for socket in self.inputs:
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
-                linked_node.traverse_tree(material_node)
+                if hasattr(linked_node, "traverse_tree"):
+                    linked_node.traverse_tree(material_node)
+                else:
+                    print(f"Node {linked_node.name} is not an appleseed node, stopping traversal")
         material_node.tree.append(self)
 
     def draw_buttons(self, context, layout):
