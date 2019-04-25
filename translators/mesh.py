@@ -336,7 +336,7 @@ class MeshTranslator(ObjectTranslator):
 
             uv_layer_pointer = active_uv.data[0].as_pointer()
 
-        asr.convert_bl_mesh(self.__mesh_object,
+        asr.convert_tessface_mesh(self.__mesh_object,
                             vertices_length,
                             vertex_pointer,
                             tessface_length,
@@ -359,7 +359,7 @@ class MeshTranslator(ObjectTranslator):
         vertex_pointer = me.vertices[0].as_pointer()
         vertices_length = len(me.vertices)
 
-        asr.convert_bl_vertex_pose(self.__mesh_object,
+        asr.convert_tessface_vertex_pose(self.__mesh_object,
                                    pose,
                                    vertices_length,
                                    vertex_pointer,
