@@ -628,7 +628,7 @@ class SceneTranslator(GroupTranslator):
                                   'path_tracing_rr_min_path_length': asr_scene_props.sppm_pt_rr_start,
                                   'photon_tracing_max_path_length': asr_scene_props.sppm_photon_max_length,
                                   'photon_tracing_rr_min_path_length': asr_scene_props.sppm_photon_rr_start}
-            if asr_scene_props.sppm_pt_max_ray_intensity != 0.0:
+            if not asr_scene_props.sppm_pt_max_ray_intensity_unlimited:
                 parameters['sppm']['path_tracing_max_ray_intensity'] = asr_scene_props.sppm_pt_max_ray_intensity
 
         if asr_scene_props.shading_override:

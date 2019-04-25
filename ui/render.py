@@ -310,9 +310,19 @@ class AppleseedLightingPanel(bpy.types.Panel, AppleseedRenderPanelBase):
 
             layout.label("Radiance Estimation")
 
+            split = layout.split(percentage=0.25, align=True)
+            col = split.column()
+            col.label(text="SPPM Max Ray Intensity")
+            split = split.split(percentage=0.33)
+            col = split.column()
+            col.prop(asr_scene_props, "sppm_pt_max_ray_intensity_unlimited", text="Unlimited", toggle=True)
+            split = split.split(percentage=1.0, align=True)
+            col = split.column()
+            col.enabled = not asr_scene_props.sppm_pt_max_ray_intensity_unlimited
+            col.prop(asr_scene_props, "sppm_pt_max_ray_intensity", text="")
+
             col = layout.column(align=True)
             col.prop(asr_scene_props, "sppm_pt_max_length", text="Max Bounces")
-            col.prop(asr_scene_props, "sppm_pt_max_ray_intensity", text="Max Ray Intensity")
             col.prop(asr_scene_props, "sppm_pt_rr_start", text="Russian Roulette Start Bounce")
             col.prop(asr_scene_props, "sppm_initial_radius", text="Initial Radius")
             col.prop(asr_scene_props, "sppm_max_per_estimate", text="Max Photons")

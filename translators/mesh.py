@@ -336,20 +336,20 @@ class MeshTranslator(ObjectTranslator):
 
             uv_layer_pointer = active_uv.data[0].as_pointer()
 
-        asr.convert_tessface_mesh(self.__mesh_object,
-                            vertices_length,
-                            vertex_pointer,
-                            tessface_length,
-                            tessface_pointer,
-                            uv_layer_pointer,
-                            do_normals,
-                            do_uvs)
+        asr.export_mesh_blender79(self.__mesh_object,
+                                  vertices_length,
+                                  vertex_pointer,
+                                  tessface_length,
+                                  tessface_pointer,
+                                  uv_layer_pointer,
+                                  do_normals,
+                                  do_uvs)
 
     def __set_mesh_key(self, me, key_index):
         pose = key_index - 1
 
         do_normals = self.bl_obj.data.appleseed.export_normals
-        
+
         if do_normals is True and not self.bl_obj.data.has_custom_normals:
             me.calc_normals()
             me.split_faces()
@@ -359,11 +359,11 @@ class MeshTranslator(ObjectTranslator):
         vertex_pointer = me.vertices[0].as_pointer()
         vertices_length = len(me.vertices)
 
-        asr.convert_tessface_vertex_pose(self.__mesh_object,
-                                   pose,
-                                   vertices_length,
-                                   vertex_pointer,
-                                   do_normals)
+        asr.export_mesh_blender79_pose(self.__mesh_object,
+                                       pose,
+                                       vertices_length,
+                                       vertex_pointer,
+                                       do_normals)
 
     def __write_mesh(self, mesh_name):
         # Compute tangents if needed.
