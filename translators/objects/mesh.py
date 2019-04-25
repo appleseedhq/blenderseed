@@ -319,16 +319,16 @@ class MeshTranslator(Translator):
 
         convert_timer = Timer()
 
-        asr.convert_looptri_mesh(self.__as_mesh,
-                                 loop_tris_length,
-                                 loop_tris_pointer,
-                                 loops_length,
-                                 loops_pointer,
-                                 polygons_pointer,
-                                 vert_pointer,
-                                 uv_layer_pointer,
-                                 do_normals,
-                                 do_uvs)
+        asr.export_mesh_blender80(self.__as_mesh,
+                                  loop_tris_length,
+                                  loop_tris_pointer,
+                                  loops_length,
+                                  loops_pointer,
+                                  polygons_pointer,
+                                  vert_pointer,
+                                  uv_layer_pointer,
+                                  do_normals,
+                                  do_uvs)
 
         convert_timer.stop()
         main_timer.stop()
@@ -353,13 +353,12 @@ class MeshTranslator(Translator):
         loop_length = len(me.loops)
         loops_pointer = me.loops[0].as_pointer()
 
-        asr.convert_looptri_vertex_pose(
-            self.__as_mesh,
-            pose,
-            loops_pointer,
-            loop_length,
-            vertex_pointer,
-            do_normals)
+        asr.export_mesh_blender80_pose(self.__as_mesh,
+                                       pose,
+                                       loops_pointer,
+                                       loop_length,
+                                       vertex_pointer,
+                                       do_normals)
 
     def __write_mesh(self, mesh_name):
             # Compute tangents if needed.
