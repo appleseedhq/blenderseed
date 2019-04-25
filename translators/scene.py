@@ -138,7 +138,6 @@ class SceneTranslator(object):
         self.__lamp_translators = {}
         self.__object_translators = {}
         self.__material_translators = {}
-        self.__nodetree_translators = {}
         self.__texture_translators = {}
 
         self.__project = None
@@ -190,7 +189,6 @@ class SceneTranslator(object):
         return[self.__lamp_translators,
                self.__object_translators,
                self.__material_translators,
-               #    self.__nodetree_translators,
                self.__texture_translators]
 
     def translate_scene(self):
