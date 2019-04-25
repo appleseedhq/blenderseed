@@ -83,15 +83,14 @@ class MeshTranslator(Translator):
         self.__as_mesh_inst_params = self.__get_mesh_inst_params()
         self.__front_materials, self.__back_materials = self.__get_material_mappings()
 
-        if self.__export_mode != ProjectExportMode.PROJECT_EXPORT:
-            for instance in self.__instances.values():
-                instance.create_entities(bl_scene)
-
     def set_xform_step(self, time, inst_key, bl_matrix):
-        self.__instances[inst_key].set_xform_step(time, bl_matrix)
+        self.__instances[inst_key].set_transform(time, self._convert_matrix(bl_matrix))
 
     def xform_update(self, inst_key, bl_matrix):
-        self.__instances[inst_key].xform_update(bl_matrix)
+        xform_seq = asr.TransformSequence()
+        xform_seq.set_transform(0.0, self._convert_matrix(bl_matrix))
+        xform_seq.optimize()
+        self.__instances[inst_key].set_transform_sequence(xform_seq)
 
     def set_deform_key(self, time, depsgraph, key_times):
         if len(self.bl_obj.data.polygons) > 0:
@@ -128,7 +127,7 @@ class MeshTranslator(Translator):
 
     def flush_entities(self, as_assembly, as_project):
         for instance in self.__instances.values():
-            instance.xform_seq.optimize()
+            instance.optimize()
 
         mesh_name = f"{self.appleseed_name}_obj"
 
@@ -157,7 +156,7 @@ class MeshTranslator(Translator):
             self.__has_assembly = True
         else:
             for instance in self.__instances.values():
-                xform_seq = instance.xform_seq
+                xform_seq = instance
             if xform_seq.size() > 1:
                 self.__has_assembly = True
 
@@ -182,8 +181,14 @@ class MeshTranslator(Translator):
             as_assembly.assemblies().insert(self.__ass)
             self.__ass = as_assembly.assemblies().get_by_name(ass_name)
 
-            for instance in self.__instances.values():
-                instance.flush_entities(as_assembly)
+            for key, transform_matrix in self.__instances.items():
+                ass_inst_name = f"{key}_ass_inst"
+                ass_inst = asr.AssemblyInstance(ass_inst_name,
+                                                {},
+                                                ass_name)
+                ass_inst.set_transform_sequence(transform_matrix)
+                as_assembly.assembly_instances().insert(ass_inst)
+                self.__instances[key] = as_assembly.assembly_instances().get_by_name(ass_inst_name)
 
         else:
             self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
@@ -199,8 +204,8 @@ class MeshTranslator(Translator):
             as_assembly.object_instances().insert(self.__as_mesh_inst)
             self.__as_mesh_inst = as_assembly.object_instances().get_by_name(self.appleseed_name)
 
-    def add_instance(self, key, instance):
-        self.__instances[key] = instance
+    def add_instance(self, key):
+        self.__instances[key] = asr.TransformSequence()
 
     def __get_mesh_inst_params(self):
         asr_obj_props = self.bl_obj.appleseed

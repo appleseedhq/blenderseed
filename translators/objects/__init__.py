@@ -26,5 +26,4 @@
 #
 
 from .mesh import MeshTranslator
-from .object_instancer import ObjectInstanceTranslator
 from .archive_assembly import ArchiveAssemblyTranslator

@@ -26,4 +26,3 @@
 #
 
 from .lamp import LampTranslator
-from .lamp_instance import LampInstanceTranslator

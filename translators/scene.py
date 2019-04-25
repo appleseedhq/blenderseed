@@ -33,10 +33,10 @@ import bpy
 
 from .assethandlers import AssetHandler, CopyAssetsAssetHandler
 from .cameras import InteractiveCameraTranslator, RenderCameraTranslator
-from .lamps import LampInstanceTranslator, LampTranslator
+from .lamps import LampTranslator
 from .material import MaterialTranslator
 from .nodetree import NodeTreeTranslator
-from .objects import ArchiveAssemblyTranslator, ObjectInstanceTranslator, MeshTranslator
+from .objects import ArchiveAssemblyTranslator, MeshTranslator
 from .textures import TextureTranslator
 from .utilites import ProjectExportMode
 from .world import WorldTranslator
@@ -286,6 +286,7 @@ class SceneTranslator(object):
     def update_scene(self, context):
         transformed_objects = []
         for obj in context.depsgraph.updates:
+            # print(obj.id.name_full)
             if isinstance(obj.id, bpy.types.Material):
                 mat_key = obj.id.name_full
                 self.__material_translators[mat_key].interactive_update(context, self.main_assembly)
@@ -794,11 +795,9 @@ class SceneTranslator(object):
                     inst_key = f"{source.name_full}|{inst.persistent_id[0]}"
 
                 if source.type == 'MESH' or source.appleseed.object_export == "archive_assembly":
-                    instance = ObjectInstanceTranslator(inst_key, source.name_full)
-                    self.__object_translators[source.name_full].add_instance(inst_key, instance)
+                    self.__object_translators[source.name_full].add_instance(inst_key)
                 elif source.type == 'LIGHT':
-                    instance = LampInstanceTranslator(source, self.asset_handler, inst_key, inst.matrix_world.copy())
-                    self.__lamp_translators[source.name_full].add_instance(inst_key, instance)
+                    self.__lamp_translators[source.name_full].add_instance(inst_key, inst.matrix_world.copy())
 
         for key in list(self.__object_translators.keys()):
             translator = self.__object_translators[key]

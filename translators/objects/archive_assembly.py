@@ -57,29 +57,35 @@ class ArchiveAssemblyTranslator(Translator):
 
         self.__ass = asr.Assembly("archive_assembly", ass_name, ass_options)
 
-        for instance in self.__instances.values():
-            instance.create_entities(bl_scene)
-
     def flush_entities(self, as_assembly, as_project):
         for instance in self.__instances.values():
-            instance.xform_seq.optimize()
+            instance.optimize()
 
         ass_name = f"{self.appleseed_name}_ass"
 
         as_assembly.assemblies().insert(self.__ass)
         self.__ass = as_assembly.assemblies().get_by_name(ass_name)
 
-        for instance in self.__instances.values():
-            instance.flush_entities(as_assembly)
+        for key, transform_matrix in self.__instances.items():
+            ass_inst_name = f"{key}_ass_inst"
+            ass_inst = asr.AssemblyInstance(ass_inst_name,
+                                            {},
+                                            ass_name)
+            ass_inst.set_transform_sequence(transform_matrix)
+            as_assembly.assembly_instances().insert(ass_inst)
+            self.__instances[key] = as_assembly.assembly_instances().get_by_name(ass_inst_name)
 
     def set_xform_step(self, time, inst_key, bl_matrix):
-        self.__instances[inst_key].set_xform_step(time, bl_matrix)
+        self.__instances[inst_key].set_set_transform(time, self._convert_matrix(bl_matrix))
 
     def xform_update(self, inst_key, bl_matrix):
-        self.__instances[inst_key].xform_update(bl_matrix)
+        xform_seq = asr.TransformSequence()
+        xform_seq.set_transform(0.0, self._convert_matrix(bl_matrix))
+        xform_seq.optimize()
+        self.__instances[inst_key].set_transform_sequence(xform_seq)
 
-    def add_instance(self, inst_key, instance):
-        self.__instances[inst_key] = instance
+    def add_instance(self, inst_key):
+        self.__instances[inst_key] = asr.TransformSequence()
 
     def set_deform_key(self, time, depsgraph, all_times):
         pass
