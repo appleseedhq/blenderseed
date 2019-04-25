@@ -50,7 +50,10 @@ def get_appleseed_parent_dir_path():
 
 
 def load_appleseed_python_paths():
-    python_path = os.path.join(get_appleseed_parent_dir_path(), 'lib')
+    if "APPLESEED_PYTHON_DIR" in os.environ:
+        python_path = os.environ['APPLESEED_PYTHON_DIR']
+    else:
+        python_path = os.path.join(get_appleseed_parent_dir_path(), 'lib')
     if python_path != "":
         sys.path.append(python_path)
         print("[appleseed] Python path set to: {0}".format(python_path))
