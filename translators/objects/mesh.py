@@ -73,7 +73,7 @@ class MeshTranslator(Translator):
 
     def create_entities(self, bl_scene):
         logger.debug("Creating translator for mesh %s", self.appleseed_name)
-        
+
         mesh_name = f"{self.appleseed_name}_obj"
 
         mesh_params = self.__get_mesh_params()
@@ -230,7 +230,7 @@ class MeshTranslator(Translator):
 
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
-                
+
                 mat_key = m.material.name_full + "_mat"
                 front_mats[f"slot-{i}"] = mat_key
         else:
@@ -314,16 +314,16 @@ class MeshTranslator(Translator):
 
         convert_timer = Timer()
 
-        asr.convert_bl_mesh(self.__as_mesh,
-                            loop_tris_length,
-                            loop_tris_pointer,
-                            loops_length,
-                            loops_pointer,
-                            polygons_pointer,
-                            vert_pointer,
-                            uv_layer_pointer,
-                            do_normals,
-                            do_uvs)
+        asr.convert_looptri_mesh(self.__as_mesh,
+                                 loop_tris_length,
+                                 loop_tris_pointer,
+                                 loops_length,
+                                 loops_pointer,
+                                 polygons_pointer,
+                                 vert_pointer,
+                                 uv_layer_pointer,
+                                 do_normals,
+                                 do_uvs)
 
         convert_timer.stop()
         main_timer.stop()
@@ -348,7 +348,7 @@ class MeshTranslator(Translator):
         loop_length = len(me.loops)
         loops_pointer = me.loops[0].as_pointer()
 
-        asr.convert_bl_vertex_pose(
+        asr.convert_looptri_vertex_pose(
             self.__as_mesh,
             pose,
             loops_pointer,
