@@ -225,6 +225,8 @@ class PackageBuilder(object):
         self.copy_shaders()
         self.download_settings_files()
         self.remove_pyc_files()
+        self.copy_dependencies()
+        self.post_process_package()
 
         if not self.no_release:
             self.deploy_blenderseed_to_stage()
