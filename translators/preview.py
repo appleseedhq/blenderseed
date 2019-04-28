@@ -155,8 +155,8 @@ class PreviewRenderer(object):
         plane = asr.MeshObjectReader.read([], "plane_obj", {'filename': os.path.join(preview_template_dir,
                                                                                      'material_preview_ground.binarymesh')})
         plane_inst = asr.ObjectInstance("plane", {}, "plane_obj.part_0", asr.Transformd(asr.Matrix4d.identity()),
-                                        {'default': "plane_mat"})
-        plane_mat = asr.Material("generic_material", "plane_mat", {'bsdf': "plane_bsdf", 'surface_shader': "base_shader"})
+                                        {'default': "plane_mat_1"})
+        plane_mat = asr.Material("generic_material", "plane_mat_1", {'bsdf': "plane_bsdf", 'surface_shader': "base_shader"})
         plane_bsdf = asr.BSDF("lambertian_brdf", "plane_bsdf", {'reflectance': "plane_tex"})
         plane_tex = asr.Texture("disk_texture_2d", "plane_tex_tex", {'filename': os.path.join(preview_template_dir,
                                                                                               "checker_texture.png"),
