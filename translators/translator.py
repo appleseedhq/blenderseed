@@ -1,4 +1,3 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
@@ -29,8 +28,8 @@
 import math
 
 import appleseed as asr
-
 from ..logger import get_logger
+
 logger = get_logger()
 
 
@@ -54,19 +53,22 @@ class Translator(object):
         return self._asset_handler
 
     # Entity translation.
-    def create_entities(self, bl_scene):
+    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
         """
         This function creates the parameter lists and appleseed entities that are being hosted by the translator
+        :param as_texture_translators:
+        :param textures_to_add:
         :param bl_scene: Blender scene
         :return: None
         """
 
         raise NotImplementedError()
 
-    def flush_entities(self, as_assembly):
+    def flush_entities(self, as_assembly, as_project):
         """
         This function flushes the appleseed entities into the appropriate location in the project file and then
         retrieves Python wrapped pointers to the entities for further editing if needed
+        :param as_project:
         :param as_assembly: The primary scene assembly for the appleseed project
         :return: None
         """

@@ -25,14 +25,9 @@
 # THE SOFTWARE.
 #
 
-import math
-
-import mathutils
-
 import appleseed as asr
-
-from ..translator import Translator
 from ..assethandlers import AssetType
+from ..translator import Translator
 from ...logger import get_logger
 
 logger = get_logger()
@@ -41,6 +36,7 @@ logger = get_logger()
 class ArchiveAssemblyTranslator(Translator):
 
     def __init__(self, archive_obj, asset_handler):
+        logger.debug("Creating translator for %s", archive_obj.name_full)
         super().__init__(archive_obj, asset_handler=asset_handler)
 
         self.__instances = {}
@@ -51,7 +47,8 @@ class ArchiveAssemblyTranslator(Translator):
     def instances(self):
         return self.__instances
 
-    def create_entities(self, bl_scene):
+    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
+        logger.debug("Creating entity for %s", self.appleseed_name)
         ass_name = f"{self.appleseed_name}_ass"
 
         file_path = self.asset_handler.process_path(self._bl_obj.appleseed.archive_path, AssetType.ARCHIVE_ASSET)
@@ -61,6 +58,7 @@ class ArchiveAssemblyTranslator(Translator):
         self.__ass = asr.Assembly("archive_assembly", ass_name, ass_options)
 
     def flush_entities(self, as_assembly, as_project):
+        logger.debug("Flushing entity for %s", self.appleseed_name)
         for instance in self.__instances.values():
             instance.optimize()
 
@@ -88,6 +86,7 @@ class ArchiveAssemblyTranslator(Translator):
         self.__instances.clear()
 
     def xform_update(self, inst_key, bl_matrix, as_assembly, as_scene):
+        logger.debug("Updating instances for %s", self.appleseed_name)
         xform_seq = asr.TransformSequence()
         xform_seq.set_transform(0.0, self._convert_matrix(bl_matrix))
         ass_name = f"{self.appleseed_name}_ass"
@@ -104,6 +103,7 @@ class ArchiveAssemblyTranslator(Translator):
             as_assembly.assembly_instances().remove(ass_inst)
 
     def add_instance(self, inst_key):
+        logger.debug("Adding instance to %s", self.appleseed_name)
         self.__instances[inst_key] = asr.TransformSequence()
 
     def set_deform_key(self, time, depsgraph, all_times):

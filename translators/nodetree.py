@@ -28,8 +28,8 @@
 import os
 
 import bpy
-import appleseed as asr
 
+import appleseed as asr
 from .assethandlers import AssetType
 from .translator import Translator
 from ..logger import get_logger

@@ -25,5 +25,5 @@
 # THE SOFTWARE.
 #
 
-from .scene import SceneTranslator
 from .preview import PreviewRenderer
+from .scene import SceneTranslator

@@ -25,22 +25,19 @@
 # THE SOFTWARE.
 #
 
-import os
 import sys
 import threading
 
 import bpy
-import bgl
 
 import appleseed as asr
-
-from .renderercontroller import FinalRendererController, InteractiveRendererController
 from .final_tilecallback import FinalTileCallback
+from .renderercontroller import FinalRendererController, InteractiveRendererController
 from ..logger import get_logger
 from ..translators.preview import PreviewRenderer
 from ..translators.scene import SceneTranslator
-from ..utils.util import safe_register_class, safe_unregister_class
 from ..utils.path_util import get_stdosl_render_paths
+from ..utils.util import safe_register_class, safe_unregister_class
 
 logger = get_logger()
 
@@ -125,7 +122,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
     def render(self, depsgraph):
         if self.is_preview:
-            if bpy.app.background: # Can this happen?
+            if bpy.app.background:  # Can this happen?
                 return
 
             # Disable material previews if we are doing an interactive render.
@@ -161,6 +158,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.__restart_interactive_render()
 
     def update_render_passes(self, scene=None, renderlayer=None):
+        logger.debug("Updating render passes")
         asr_scene_props = scene.appleseed
 
         if not self.is_preview:
@@ -245,10 +243,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         # Preconditions.
-        assert(self.__renderer is None)
-        assert(self.__renderer_controller is None)
-        assert(self.__tile_callback is None)
-        assert(self.__render_thread is None)
+        assert (self.__renderer is None)
+        assert (self.__renderer_controller is None)
+        assert (self.__tile_callback is None)
+        assert (self.__render_thread is None)
 
         self.__tile_callback = FinalTileCallback(self, scene)
 
@@ -283,11 +281,11 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         # Preconditions.
-        assert(self.__interactive_scene_translator is None)
-        assert(self.__renderer is None)
-        assert(self.__renderer_controller is None)
-        assert(self.__tile_callback is None)
-        assert(self.__render_thread is None)
+        assert (self.__interactive_scene_translator is None)
+        assert (self.__renderer is None)
+        assert (self.__renderer_controller is None)
+        assert (self.__tile_callback is None)
+        assert (self.__render_thread is None)
 
         logger.debug("Starting interactive rendering")
         self.__is_interactive = True
@@ -369,6 +367,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.unbind_display_space_shader()
 
     def __add_render_passes(self, scene):
+        logger.debug("Adding render passes")
         asr_scene_props = scene.appleseed
 
         if asr_scene_props.diffuse_aov:

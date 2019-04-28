@@ -27,7 +27,6 @@
 
 import math
 
-
 import appleseed as asr
 from .textures import TextureTranslator
 from .translator import Translator
@@ -43,6 +42,7 @@ class WorldTranslator(Translator):
 
     # Constructor.
     def __init__(self, world, asset_handler):
+        logger.debug("Creating world translator")
         super().__init__(world, asset_handler)
 
         self.__as_colors = []
@@ -60,7 +60,7 @@ class WorldTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
-        logger.debug("Creating world entity for world")
+        logger.debug("Creating world entity")
 
         as_world = self.bl_world.appleseed_sky
         self.__as_env_type = as_world.env_type
@@ -94,6 +94,7 @@ class WorldTranslator(Translator):
                                         {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
 
     def flush_entities(self, as_scene, as_assembly, as_project):
+        logger.debug("Flushing world entity")
         for index, color in enumerate(self.__as_colors):
             color_name = color.get_name()
             as_scene.colors().insert(color)
@@ -110,7 +111,8 @@ class WorldTranslator(Translator):
         as_scene.set_environment(self.__as_env)
 
     def update_world(self, context, as_scene, textures_to_add, as_texture_translators):
-        if self.__as_env_type != None:
+        logger.debug("Updating world entity")
+        if self.__as_env_type is not None:
             for color in self.__as_colors:
                 as_scene.colors().remove(color)
             self.__as_colors.clear()

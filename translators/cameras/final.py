@@ -25,14 +25,8 @@
 # THE SOFTWARE.
 #
 
-import math
-
-import bpy
-from mathutils import Matrix
-
 import appleseed as asr
 
-from ..assethandlers import AssetType
 from ..textures import TextureTranslator
 from ..translator import Translator
 from ...logger import get_logger
@@ -48,6 +42,7 @@ class RenderCameraTranslator(Translator):
     """
 
     def __init__(self, camera, asset_handler, engine):
+        logger.debug("Creating camera translator")
         super().__init__(camera, asset_handler)
 
         self.__as_camera = None
@@ -59,7 +54,7 @@ class RenderCameraTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
-        logger.debug("Creating camera entity for camera")
+        logger.debug("Creating camera entity")
 
         model = self.__get_model()
 
@@ -73,16 +68,15 @@ class RenderCameraTranslator(Translator):
         self.__xform_seq.set_transform(time, self._convert_matrix(self.__engine.camera_model_matrix(self.bl_camera)))
 
     def flush_entities(self, as_scene, as_assembly, as_project):
+        logger.debug("Flushing camera entity, num xform keys = %s", self.__xform_seq.size())
         self.__xform_seq.optimize()
-
-        logger.debug("Flushing camera entity for camera, num xform keys = %s", self.__xform_seq.size())
-
         self.__as_camera.set_transform_sequence(self.__xform_seq)
 
         as_scene.cameras().insert(self.__as_camera)
         self.__as_camera = as_scene.cameras().get_by_name("Camera")
 
     def remove_cam(self, as_scene):
+        logger.debug("Removing camera entity from scene")
         as_scene.cameras().remove(self.__as_camera)
 
     def __get_model(self):

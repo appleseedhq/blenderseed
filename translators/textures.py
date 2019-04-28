@@ -25,12 +25,13 @@
 # THE SOFTWARE.
 #
 
-import bpy
-
 import appleseed as asr
 
 from .assethandlers import AssetType
 from .translator import Translator
+from ..logger import get_logger
+
+logger = get_logger()
 
 
 class TextureTranslator(Translator):
@@ -40,6 +41,7 @@ class TextureTranslator(Translator):
     """
 
     def __init__(self, bl_texture, asset_handler=None):
+        logger.debug("Creating translator for %s", bl_texture.name_full)
         super().__init__(bl_texture, asset_handler=asset_handler)
 
         self.__as_tex = None
@@ -51,6 +53,7 @@ class TextureTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene):
+        logger.debug("Creating entity for %s", self.appleseed_name)
         tex_params = self.__get_tex_params()
         self.__as_tex = asr.Texture('disk_texture_2d',
                                     self.appleseed_name,
@@ -64,6 +67,7 @@ class TextureTranslator(Translator):
                                                  asr.Transformf(asr.Matrix4f.identity()))
 
     def flush_entities(self, as_assembly, as_project):
+        logger.debug("Flushing entity for %s", self.appleseed_name)
         scene = as_project.get_scene()
         tex_name = self.__as_tex.get_name()
         scene.textures().insert(self.__as_tex)

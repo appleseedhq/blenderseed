@@ -568,12 +568,13 @@ def generate_node(node, node_class):
 
 
 def read_osl_shaders():
-    '''
+    """
     Reads parameters from OSL .oso files using the ShaderQuery function that is built
     into the Python bindings for appleseed.  These parameters are used to create a dictionary
     of the shader parameters that is then added to a list.  This shader list is passed
     on to the oslnode.generate_node function.
-    '''
+    :return: List of parsed nodes
+    """
 
     nodes = []
 
@@ -603,9 +604,7 @@ def read_osl_shaders():
 
 
 def parse_shader(q, filename=None):
-    d = {}
-    d['inputs'] = []
-    d['outputs'] = []
+    d = {'inputs': [], 'outputs': []}
     shader_meta = q.get_metadata()
     if 'as_node_name' in shader_meta:
         d['name'] = shader_meta['as_node_name']['value']
@@ -626,11 +625,7 @@ def parse_shader(q, filename=None):
         param = q.get_param_info(x)
         if 'metadata' in param:
             metadata = param['metadata']
-        param_data = {}
-        param_data['name'] = param['name']
-        param_data['type'] = param['type']
-        param_data['connectable'] = True
-        param_data['hide_ui'] = param['validdefault'] is False
+        param_data = {'name': param['name'], 'type': param['type'], 'connectable': True, 'hide_ui': param['validdefault'] is False}
         if 'default' in param:
             param_data['default'] = param['default']
         if 'label' in metadata:

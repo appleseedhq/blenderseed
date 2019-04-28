@@ -29,8 +29,8 @@ import time
 from math import ceil
 
 import appleseed as asr
-from ..utils import util
 from ..logger import get_logger
+from ..utils import util
 
 logger = get_logger()
 

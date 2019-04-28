@@ -28,10 +28,8 @@
 import os
 
 import appleseed as asr
-
 from .assethandlers import AssetHandler
 from .material import MaterialTranslator
-from .nodetree import NodeTreeTranslator
 from ..utils import util
 
 
@@ -182,7 +180,6 @@ class PreviewRenderer(object):
         if self.__mat_tree_translator is not None:
             self.__mat_tree_translator.create_entities(scene)
             self.__mat_tree_translator.flush_entities(self.__main_assembly, self.__project)
-        
 
     def __generate_material(self, scene):
         # Collect objects and their materials in a object -> [materials] dictionary.

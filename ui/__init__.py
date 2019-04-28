@@ -27,7 +27,6 @@
 
 import bpy
 
-
 from . import camera
 from . import lamps
 from . import materials

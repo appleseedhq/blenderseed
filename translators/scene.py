@@ -28,16 +28,14 @@
 import math
 import os
 
-import appleseed as asr
 import bpy
 
+import appleseed as asr
 from .assethandlers import AssetHandler, CopyAssetsAssetHandler
 from .cameras import InteractiveCameraTranslator, RenderCameraTranslator
 from .lamps import LampTranslator
 from .material import MaterialTranslator
-from .nodetree import NodeTreeTranslator
 from .objects import ArchiveAssemblyTranslator, MeshTranslator
-from .textures import TextureTranslator
 from .utilites import ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
@@ -186,8 +184,8 @@ class SceneTranslator(object):
 
     @property
     def all_translators(self):
-        return[self.__lamp_translators,
-               self.__object_translators]
+        return [self.__lamp_translators,
+                self.__object_translators]
 
     def translate_scene(self):
         """
@@ -267,6 +265,10 @@ class SceneTranslator(object):
         """
         Update the viewport window during interactive rendering.  The viewport update is triggered
         automatically following a scene update, or when the check view function returns true on any of its checks.
+        :param view_update:
+        :param cam_param_update:
+        :param cam_model_update:
+        :return:
         """
 
         logger.debug("Begin view update")
@@ -280,6 +282,19 @@ class SceneTranslator(object):
         self.__camera_translator.set_xform_step(0.0)
 
     def update_scene(self, context):
+        """
+        This function checks an *impartial* list of updated datablocks that Blender provides
+        whenever some kind of scene update happens.  This list is incomplete (textures aren't flagged)
+        and there's no indication of when the number of instances changes or objects become hidden, deleted
+        or added.  In order to catch these kinds of events there is really no other choice than to delete and
+        recreate all the instances in the scene every time an update happens.  Which is dumb and a waste of
+        processing, but what else can you do?
+        :param context:
+        :return: None
+        """
+
+        logger.debug("Begin Scene Update")
+
         bl_material_blocks = []
         bl_object_blocks = []
         textures_to_add = {}
@@ -325,6 +340,7 @@ class SceneTranslator(object):
             self.__flush_entities(as_object_translators, as_material_translators, as_lamp_translators, textures_to_add)
 
         # Re-create instances for existing objects
+        logger.debug("Updating instances for existing objects")
         self.__update_instances()
 
         # Cleanup unused objects and lamps
@@ -560,6 +576,7 @@ class SceneTranslator(object):
 
     def __set_aovs(self, aovs):
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            logger.debug("Translating AOVs")
             asr_scene_props = self.bl_scene.appleseed
 
             if asr_scene_props.diffuse_aov:
@@ -630,6 +647,8 @@ class SceneTranslator(object):
                                                    stage.name,
                                                    params)
 
+            logger.debug("Adding AOV: %s", stage.name)
+
             self.__frame.post_processing_stages().insert(post_process)
 
     def __create_world_translator(self):
@@ -639,7 +658,7 @@ class SceneTranslator(object):
 
     def __create_camera_translator(self):
         camera = self.bl_scene.camera if self.bl_scene.camera is not None else None
-        logger.debug("Creating camera translator for active camera")
+
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             if camera is None:
                 self.bl_engine.report({'ERROR'}, "No camera in scene!")
@@ -653,12 +672,6 @@ class SceneTranslator(object):
                                                                    self.bl_engine,
                                                                    self.__context,
                                                                    camera)
-
-        if camera.data.appleseed.diaphragm_map is not None:
-            tex_id = camera.data.appleseed.diaphragm_map.name_full
-            if tex_id not in self.__texture_translators:
-                self.__texture_translators[tex_id] = TextureTranslator(camera.data.appleseed.diaphragm_map,
-                                                                       self.asset_handler)
 
     def __calc_motion(self, as_object_translators):
         """Calculates subframes for motion blur.  Each blur type can have its own segment count, so the final list
@@ -724,8 +737,14 @@ class SceneTranslator(object):
         self.bl_engine.frame_set(current_frame, subframe=0.0)
 
     def __calc_multiview_camera(self):
-        self.__camera_translator.remove_cam(self.as_scene)
+        """
+        This function is called only during final rendering of a scene that contains a stereoscopic camera.
+        The scene itself remains unchanged.
+        :return:
+        """
 
+        logger.debug("Updating stereoscopic camera")
+        self.__camera_translator.remove_cam(self.as_scene)
         self.__camera_translator.create_entities(self.bl_scene)
 
         cam_times = {0.0}
@@ -772,10 +791,12 @@ class SceneTranslator(object):
         as_material_translators = {}
         as_lamp_translators = {}
 
+        logger.debug("Creating material translators")
         for mat in material_blocks:
             mat_key = mat.name_full
             as_material_translators[mat_key] = MaterialTranslator(mat, self.asset_handler)
 
+        logger.debug("Creating object translators")
         for obj in object_bocks:
             obj_key = obj.name_full
             if obj.appleseed.object_export == "archive_assembly":
@@ -791,11 +812,11 @@ class SceneTranslator(object):
     def __create_instancers(self, as_object_translators, as_lamp_translators):
         """
         Creates translators for each mesh/lamp and instance of a lamp/object that was created via a particle system
-        or dupli item.  For final rendering all instances are placed in a single level dictionary in order to make
-        it easier to assign xform blur steps later on.
+        or dupli item.
         :return: None
         """
 
+        logger.debug("Creating instances")
         for inst in self.bl_depsgraph.object_instances:
             if inst.show_self:
                 if inst.is_instance:
@@ -814,9 +835,11 @@ class SceneTranslator(object):
         for key in list(as_object_translators.keys()):
             translator = as_object_translators[key]
             if len(translator.instances) == 0:
+                logger.debug("Object %s has no instances, deleting", key)
                 del as_object_translators[key]
 
     def __create_entities(self, as_object_translators, as_material_translators, as_lamp_translators, textures_to_add):
+        logger.debug("Creating entities")
         for obj in as_object_translators.values():
             obj.create_entities(self.bl_scene, textures_to_add, self.__texture_translators)
 
@@ -827,10 +850,12 @@ class SceneTranslator(object):
             mat.create_entities(self.bl_scene)
 
     def __create_texture_entities(self, textures_to_add):
+        logger.debug("Creating texture entities")
         for tex in textures_to_add.values():
             tex.create_entities(self.bl_scene)
 
     def __flush_entities(self, as_object_translators, as_material_translators, as_lamp_translators, textures_to_add):
+        logger.debug("Flushing entities")
         for key, obj in as_object_translators.items():
             obj.flush_entities(self.main_assembly, self.as_project)
             self.__object_translators[key] = obj
@@ -848,6 +873,12 @@ class SceneTranslator(object):
             self.__texture_translators[key] = tex
 
     def __update_instances(self):
+        """
+        Updates the list of instances for _existing items_ during interactive rendering.
+        :return:
+        """
+
+        logger.debug("Updating instances for existing translators")
         for obj_type in self.all_translators:
             for translator in obj_type.values():
                 translator.delete_instances(self.main_assembly, self.as_scene)
@@ -873,6 +904,7 @@ class SceneTranslator(object):
         Parses the blocks present in the evaluated depsgraph and returns them in a list
         :return: Lists of Blender data blocks
         """
+
         logger.debug("Parsing Datablocks")
 
         mat_blocks = []
@@ -886,6 +918,7 @@ class SceneTranslator(object):
         return mat_blocks, object_blocks
 
     def __load_searchpaths(self):
+        logger.debug("Loading searchpaths")
         paths = self.as_project.get_search_paths()
 
         paths.extend(path for path in self.asset_handler.searchpaths if path not in paths)

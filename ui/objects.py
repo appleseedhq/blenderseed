@@ -173,7 +173,6 @@ class ASOBJECT_PT_export_override(bpy.types.Panel):
         row.prop(asr_obj, "archive_path", text="Archive Path")
 
 
-
 classes = (
     ASOBJECT_PT_obj_flags,
     ASOBJECT_PT_obj_options,

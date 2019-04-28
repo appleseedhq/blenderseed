@@ -85,6 +85,12 @@ def realpath(path):
 
 @persistent
 def update_project(_):
+    """
+    This function automatically runs when a .blend file is opened.
+    :param _:
+    :return:
+    """
+
     # Compile all OSL Script nodes
     stdosl_path = path_util.get_stdosl_paths()
     compiler = asr.ShaderCompiler(stdosl_path)
@@ -135,6 +141,10 @@ def calc_film_dimensions(aspect_ratio, camera, zoom):
     the vertical size when it is below 1.  Other dimension is derived from aspect ratio.
 
     Much thanks to the Radeon ProRender plugin for clarifying this behavior
+    :param aspect_ratio:
+    :param camera:
+    :param zoom:
+    :return:
     """
 
     horizontal_fit = camera.sensor_fit == 'HORIZONTAL' or \
@@ -200,9 +210,9 @@ def is_object_deforming(ob):
 # ------------------------------------
 
 class Timer(object):
-    '''
+    """
     Simple timer for profiling operations.
-    '''
+    """
 
     def __init__(self):
         self.start()

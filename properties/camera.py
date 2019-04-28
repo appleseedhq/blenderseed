@@ -31,14 +31,13 @@ from ..utils import util
 
 
 class AppleseedCameraSettings(bpy.types.PropertyGroup):
-
     fisheye_projection_type: bpy.props.EnumProperty(name="fisheye_projection_type",
                                                     items=[
-                                                         ('none', "None", ""),
-                                                         ('equisolid_angle', "Equisolid Angle", ""),
-                                                         ('equidistant', "Equidistant", ""),
-                                                         ('stereographic', "Stereographic", ""),
-                                                         ('thoby', "Thoby", "")],
+                                                        ('none', "None", ""),
+                                                        ('equisolid_angle', "Equisolid Angle", ""),
+                                                        ('equidistant', "Equidistant", ""),
+                                                        ('stereographic', "Stereographic", ""),
+                                                        ('thoby', "Thoby", "")],
                                                     default='equisolid_angle')
 
     near_z: bpy.props.FloatProperty(name="near_z",

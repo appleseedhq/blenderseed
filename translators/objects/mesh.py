@@ -28,7 +28,6 @@
 import os
 
 import bpy
-import bmesh
 
 import appleseed as asr
 from ..textures import TextureTranslator
@@ -37,12 +36,12 @@ from ..utilites import ProjectExportMode
 from ...logger import get_logger
 from ...utils.util import is_object_deforming, Timer
 
-
 logger = get_logger()
 
 
 class MeshTranslator(Translator):
     def __init__(self, obj, export_mode, asset_handler):
+        logger.debug("Creating translator for %s", obj.name_full)
         super().__init__(obj, asset_handler=asset_handler)
         self.__export_mode = export_mode
         self.__instances = {}
@@ -73,7 +72,7 @@ class MeshTranslator(Translator):
         return self.__instances
 
     def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
-        logger.debug("Creating translator for mesh %s", self.appleseed_name)
+        logger.debug("Creating entity for %s", self.appleseed_name)
 
         mesh_name = f"{self.appleseed_name}_obj"
 
@@ -87,49 +86,6 @@ class MeshTranslator(Translator):
     def set_xform_step(self, time, inst_key, bl_matrix):
         self.__instances[inst_key].set_transform(time, self._convert_matrix(bl_matrix))
 
-    def update_object(self, context, as_assembly, textures_to_add, as_texture_translators):
-        mesh_name = self.__object_instance_mesh_name(f"{self.appleseed_name}_obj")
-
-        self.__as_mesh_inst_params = self.__get_mesh_inst_params()
-        self.__front_materials, self.__back_materials = self.__get_material_mappings()
-
-        self.__ass.object_instances().remove(self.__as_mesh_inst)
-
-        self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
-                                                 self.__as_mesh_inst_params,
-                                                 mesh_name,
-                                                 asr.Transformd(asr.Matrix4d().identity()),
-                                                 self.__front_materials,
-                                                 self.__back_materials)
-
-        self.__ass.object_instances().insert(self.__as_mesh_inst)
-        self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.appleseed_name)
-
-    def delete_instances(self, as_assembly, as_scene):
-        for ass_inst in self.__instances.values():
-            as_assembly.assembly_instances().remove(ass_inst)
-
-        self.__instances.clear()
-
-    def xform_update(self, inst_key, bl_matrix, as_assembly, as_scene):
-        xform_seq = asr.TransformSequence()
-        xform_seq.set_transform(0.0, self._convert_matrix(bl_matrix))
-        ass_name = f"{self.appleseed_name}_ass"
-        ass_inst_name = f"{inst_key}_ass_inst"
-        ass_inst = asr.AssemblyInstance(ass_inst_name,
-                                        {},
-                                        ass_name)
-        ass_inst.set_transform_sequence(xform_seq)
-        as_assembly.assembly_instances().insert(ass_inst)
-        self.__instances[inst_key] = as_assembly.assembly_instances().get_by_name(ass_inst_name)
-
-    def delete_object(self, as_assembly):
-        self.__ass.objects().remove(self.__as_mesh)
-        self.__ass.object_instances().remove(self.__as_mesh_inst)
-        as_assembly.assemblies().remove(self.__ass)
-        for ass_inst in self.__instances.values():
-            as_assembly.assembly_instances().remove(ass_inst)
-        
     def set_deform_key(self, time, depsgraph, key_times):
         if len(self.bl_obj.data.polygons) > 0:
             if not self.__deforming and self.__key_index > 0:
@@ -164,6 +120,7 @@ class MeshTranslator(Translator):
             self.__key_index += 1
 
     def flush_entities(self, as_assembly, as_project):
+        logger.debug("Flushing entity for %s", self.appleseed_name)
         for instance in self.__instances.values():
             instance.optimize()
 
@@ -195,8 +152,8 @@ class MeshTranslator(Translator):
         else:
             for instance in self.__instances.values():
                 xform_seq = instance
-            if xform_seq.size() > 1:
-                self.__has_assembly = True
+                if xform_seq.size() > 1:
+                    self.__has_assembly = True
 
         if self.__has_assembly:
             self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
@@ -242,7 +199,53 @@ class MeshTranslator(Translator):
             as_assembly.object_instances().insert(self.__as_mesh_inst)
             self.__as_mesh_inst = as_assembly.object_instances().get_by_name(self.appleseed_name)
 
+    def update_object(self, context, as_assembly, textures_to_add, as_texture_translators):
+        logger.debug("Updating translator for %s", self.appleseed_name)
+        mesh_name = self.__object_instance_mesh_name(f"{self.appleseed_name}_obj")
+
+        self.__as_mesh_inst_params = self.__get_mesh_inst_params()
+        self.__front_materials, self.__back_materials = self.__get_material_mappings()
+
+        self.__ass.object_instances().remove(self.__as_mesh_inst)
+
+        self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
+                                                 self.__as_mesh_inst_params,
+                                                 mesh_name,
+                                                 asr.Transformd(asr.Matrix4d().identity()),
+                                                 self.__front_materials,
+                                                 self.__back_materials)
+
+        self.__ass.object_instances().insert(self.__as_mesh_inst)
+        self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.appleseed_name)
+
+    def delete_instances(self, as_assembly, as_scene):
+        for ass_inst in self.__instances.values():
+            as_assembly.assembly_instances().remove(ass_inst)
+
+        self.__instances.clear()
+
+    def xform_update(self, inst_key, bl_matrix, as_assembly, as_scene):
+        logger.debug("Updating instances for %s", self.appleseed_name)
+        xform_seq = asr.TransformSequence()
+        xform_seq.set_transform(0.0, self._convert_matrix(bl_matrix))
+        ass_name = f"{self.appleseed_name}_ass"
+        ass_inst_name = f"{inst_key}_ass_inst"
+        ass_inst = asr.AssemblyInstance(ass_inst_name,
+                                        {},
+                                        ass_name)
+        ass_inst.set_transform_sequence(xform_seq)
+        as_assembly.assembly_instances().insert(ass_inst)
+        self.__instances[inst_key] = as_assembly.assembly_instances().get_by_name(ass_inst_name)
+
+    def delete_object(self, as_assembly):
+        self.__ass.objects().remove(self.__as_mesh)
+        self.__ass.object_instances().remove(self.__as_mesh_inst)
+        as_assembly.assemblies().remove(self.__ass)
+        for ass_inst in self.__instances.values():
+            as_assembly.assembly_instances().remove(ass_inst)
+
     def add_instance(self, key):
+        logger.debug("Adding instance to %s", self.appleseed_name)
         self.__instances[key] = asr.TransformSequence()
 
     def __get_mesh_inst_params(self):
@@ -404,7 +407,7 @@ class MeshTranslator(Translator):
                                        do_normals)
 
     def __write_mesh(self, mesh_name):
-            # Compute tangents if needed.
+        # Compute tangents if needed.
         if self.bl_obj.data.appleseed.smooth_tangents and self.bl_obj.data.appleseed.export_uvs:
             asr.compute_smooth_vertex_tangents(self.__as_mesh)
 

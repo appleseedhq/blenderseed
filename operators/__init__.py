@@ -147,9 +147,6 @@ class ASLAMP_OT_new_node_tree(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# Texture operators
-
-
 # Post processing operators
 
 
@@ -158,7 +155,7 @@ class ASPP_OT_add_pp(bpy.types.Operator):
     bl_description = "Add new Post Processing stage"
     bl_idname = "appleseed.add_pp_stage"
 
-    def invoke(self, context, event):
+    def execute(self, context):
         collection = context.scene.appleseed.post_processing_stages
         collection.add()
         num = len(collection)
@@ -172,7 +169,7 @@ class ASPP_OT_remove_PP(bpy.types.Operator):
     bl_description = "Remove Post Processing stage"
     bl_idname = "appleseed.remove_pp_stage"
 
-    def invoke(self, context, event):
+    def execute(self, context):
         scene = context.scene.appleseed
         collection = scene.post_processing_stages
         index = scene.post_processing_stages_index
@@ -198,7 +195,7 @@ class ASSSS_OT_add_sss_set(bpy.types.Operator):
     bl_description = "Add new SSS Set"
     bl_idname = "appleseed.add_sss_set"
 
-    def invoke(self, context, event):
+    def execute(self, context):
         world = context.scene.appleseed_sss_sets
         collection = world.sss_sets
 
@@ -216,7 +213,7 @@ class ASSSS_OT_remove_sss_set(bpy.types.Operator):
     bl_description = "Remove SSS Set"
     bl_idname = "appleseed.remove_sss_set"
 
-    def invoke(self, context, event):
+    def execute(self, context):
         world = context.scene.appleseed_sss_sets
         collection = world.sss_sets
         index = world.sss_sets_index

@@ -26,12 +26,11 @@
 #
 
 
+import os
+
 import bpy
 
-import os
-import subprocess
-
-from ..utils import path_util, util
+from ..utils import util
 
 
 class ASTEX_OT_convert_textures(bpy.types.Operator):
@@ -73,7 +72,7 @@ class ASTEX_OT_refresh_texture(bpy.types.Operator):
     bl_description = "Refresh textures for conversion"
     bl_idname = "appleseed.refresh_textures"
 
-    def invoke(self, context, event):
+    def execute(self, context):
         scene = context.scene
         collection = scene.appleseed.textures
 
@@ -111,7 +110,7 @@ class ASTES_OT_add_texture(bpy.types.Operator):
     bl_description = "Add new texture"
     bl_idname = "appleseed.add_texture"
 
-    def invoke(self, context, event):
+    def execute(self, context):
         scene = context.scene
         collection = scene.appleseed.textures
 
@@ -129,7 +128,7 @@ class ASTEX_OT_remove_texture(bpy.types.Operator):
     bl_description = "Remove texture"
     bl_idname = "appleseed.remove_texture"
 
-    def invoke(self, context, event):
+    def execute(self, context):
         scene = context.scene
         collection = scene.appleseed.textures
         index = scene.appleseed.textures_index

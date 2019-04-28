@@ -26,7 +26,9 @@
 #
 
 import bpy
+
 import appleseed as asr
+
 
 class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
     bl_idname = __package__

@@ -29,7 +29,6 @@
 import bpy
 
 import appleseed as asr
-
 from ..utils import path_util, osl_utils, util
 
 

@@ -27,12 +27,9 @@
 
 import math
 
-import bpy
 from mathutils import Matrix
 
 import appleseed as asr
-
-from ..assethandlers import AssetType
 from ..textures import TextureTranslator
 from ..translator import Translator
 from ...logger import get_logger
@@ -48,6 +45,7 @@ class InteractiveCameraTranslator(Translator):
     """
 
     def __init__(self, asset_handler, engine, context, camera=None):
+        logger.debug("Creating interactive camera translator")
         super().__init__(camera, asset_handler)
 
         self.__as_camera = None
@@ -64,7 +62,7 @@ class InteractiveCameraTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
-        logger.debug("Creating camera entity for camera")
+        logger.debug("Creating entity for camera")
 
         self.__view_cam_type = self.__context.region_data.view_perspective
 
@@ -78,7 +76,7 @@ class InteractiveCameraTranslator(Translator):
         self.__as_camera.transform_sequence().set_transform(time, self._convert_matrix(self.__matrix))
 
     def flush_entities(self, as_scene, as_assembly, as_project):
-        logger.debug("Flushing camera entity for camera, num xform keys = %s", self.__xform_seq.size())
+        logger.debug("Flushing camera entity, num xform keys = %s", self.__xform_seq.size())
 
         as_scene.cameras().insert(self.__as_camera)
         self.__as_camera = as_scene.cameras().get_by_name("Camera")
@@ -121,6 +119,7 @@ class InteractiveCameraTranslator(Translator):
         return cam_param_update, cam_translate_update, cam_model_update
 
     def update_camera(self, context, as_scene, cam_model_update, textures_to_add, as_texture_translators):
+        logger.debug("Updating camera entity")
         self.__context = context
         if cam_model_update:
             as_scene.cameras().remove(self.__as_camera)
