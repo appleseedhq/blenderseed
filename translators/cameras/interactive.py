@@ -33,6 +33,7 @@ from mathutils import Matrix
 import appleseed as asr
 
 from ..assethandlers import AssetType
+from ..textures import TextureTranslator
 from ..translator import Translator
 from ...logger import get_logger
 from ...utils import util
@@ -62,14 +63,14 @@ class InteractiveCameraTranslator(Translator):
     def bl_camera(self):
         return self._bl_obj
 
-    def create_entities(self, bl_scene):
+    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
         logger.debug("Creating camera entity for camera")
 
         self.__view_cam_type = self.__context.region_data.view_perspective
 
         self.__model = self.__get_model()
 
-        self.__get_cam_params(bl_scene)
+        self.__get_cam_params(bl_scene, textures_to_add, as_texture_translators)
 
         self.__as_camera = asr.Camera(self.__model, "Camera", self.__params)
 
@@ -105,7 +106,7 @@ class InteractiveCameraTranslator(Translator):
 
         self.__model = self.__get_model()
 
-        self.__get_cam_params(context.depsgraph.scene_eval)
+        self.__get_cam_params(context.depsgraph.scene_eval, None, None)
 
         if current_translation != self.__matrix:
             cam_translate_update = True
@@ -119,10 +120,11 @@ class InteractiveCameraTranslator(Translator):
 
         return cam_param_update, cam_translate_update, cam_model_update
 
-    def interactive_update(self, as_scene, cam_model_update):
+    def update_camera(self, context, as_scene, cam_model_update, textures_to_add, as_texture_translators):
+        self.__context = context
         if cam_model_update:
             as_scene.cameras().remove(self.__as_camera)
-            self.create_entities(self.__context.depsgraph.scene_eval)
+            self.create_entities(context.depsgraph.scene_eval, textures_to_add, as_texture_translators)
             self.flush_entities(as_scene, None, None)
         else:
             self.__as_camera.set_parameters(self.__params)
@@ -145,7 +147,7 @@ class InteractiveCameraTranslator(Translator):
 
         return model
 
-    def __get_cam_params(self, bl_scene):
+    def __get_cam_params(self, bl_scene, textures_to_add, as_texture_translators):
         view_cam_type = self.__context.region_data.view_perspective
         width = self.__context.region.width
         height = self.__context.region.height
@@ -170,7 +172,7 @@ class InteractiveCameraTranslator(Translator):
         elif view_cam_type == "CAMERA":
             # Borrowed from Cycles source code, since for something this nutty there's no reason to reinvent the wheel
             self.__zoom = 4 / ((math.sqrt(2) + self.__context.region_data.view_camera_zoom / 50) ** 2)
-            self.__set_view_camera_params(aspect_ratio)
+            self.__set_view_camera_params(aspect_ratio, textures_to_add, as_texture_translators)
 
     def __set_ortho_camera_params(self, aspect_ratio):
         self.__matrix = Matrix(self.__context.region_data.view_matrix).inverted()
@@ -195,7 +197,7 @@ class InteractiveCameraTranslator(Translator):
 
         self.__params = params
 
-    def __set_view_camera_params(self, aspect_ratio):
+    def __set_view_camera_params(self, aspect_ratio, textures_to_add, as_texture_translators):
         film_width, film_height = util.calc_film_dimensions(aspect_ratio, self.bl_camera.data, self.__zoom)
 
         offset = tuple(self.__context.region_data.view_camera_offset)
@@ -236,5 +238,15 @@ class InteractiveCameraTranslator(Translator):
                            'diaphragm_blades': self.bl_camera.data.appleseed.diaphragm_blades,
                            'diaphragm_tilt_angle': self.bl_camera.data.appleseed.diaphragm_angle,
                            'focal_distance': util.get_focal_distance(self.bl_camera)})
+
+            if textures_to_add is not None and as_texture_translators is not None:
+                if self.bl_camera.data.appleseed.diaphragm_map is not None:
+                    tex_id = self.bl_camera.data.appleseed.diaphragm_map.name_full
+                    if tex_id not in as_texture_translators:
+                        textures_to_add[tex_id] = TextureTranslator(self.bl_camera.data.appleseed.diaphragm_map,
+                                                                    self.asset_handler)
+                    tex_name = f"{self.bl_camera.data.appleseed.diaphragm_map.name_full}_inst"
+                    params.update({'diaphragm_map': tex_name})
+                    del params['diaphragm_blades']
 
         self.__params = params

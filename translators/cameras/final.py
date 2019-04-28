@@ -33,6 +33,7 @@ from mathutils import Matrix
 import appleseed as asr
 
 from ..assethandlers import AssetType
+from ..textures import TextureTranslator
 from ..translator import Translator
 from ...logger import get_logger
 from ...utils import util
@@ -45,26 +46,26 @@ class RenderCameraTranslator(Translator):
     This translator is responsible for translating the Blender camera into an appleseed
     camera object for final rendering.  This includes support for stereoscopic rendering.
     """
-    
+
     def __init__(self, camera, asset_handler, engine):
         super().__init__(camera, asset_handler)
 
         self.__as_camera = None
         self.__xform_seq = asr.TransformSequence()
         self.__engine = engine
-        
+
     @property
     def bl_camera(self):
         return self._bl_obj
 
-    def create_entities(self, bl_scene):
+    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
         logger.debug("Creating camera entity for camera")
 
         model = self.__get_model()
 
         self.__as_camera = asr.Camera(model, "Camera", {})
 
-        as_camera_params = self.__get_cam_params(bl_scene)
+        as_camera_params = self.__get_cam_params(bl_scene, textures_to_add, as_texture_translators)
 
         self.__as_camera.set_parameters(as_camera_params)
 
@@ -99,7 +100,7 @@ class RenderCameraTranslator(Translator):
 
         return model
 
-    def __get_cam_params(self, bl_scene):
+    def __get_cam_params(self, bl_scene, textures_to_add, as_texture_translators):
         camera = self.bl_camera.data
 
         aspect_ratio = util.get_frame_aspect_ratio(bl_scene)
@@ -112,7 +113,7 @@ class RenderCameraTranslator(Translator):
             cam_params = self.__base_camera_params(bl_scene, aspect_ratio, film_width, film_height)
 
         elif model == 'thinlens_camera':
-            cam_params = self.__thin_lens_camera_params(bl_scene, aspect_ratio, film_width, film_height)
+            cam_params = self.__thin_lens_camera_params(bl_scene, aspect_ratio, film_width, film_height, textures_to_add, as_texture_translators)
 
         elif model == 'spherical_camera':
             cam_params = self.__spherical_camera_params(bl_scene)
@@ -166,7 +167,7 @@ class RenderCameraTranslator(Translator):
 
         return cam_params
 
-    def __thin_lens_camera_params(self, bl_scene, aspect_ratio, film_width, film_height):
+    def __thin_lens_camera_params(self, bl_scene, aspect_ratio, film_width, film_height, textures_to_add, as_texture_translators):
         camera = self.bl_camera
 
         cam_params = self.__base_camera_params(bl_scene, aspect_ratio, film_width, film_height)
@@ -182,6 +183,10 @@ class RenderCameraTranslator(Translator):
             cam_params['autofocus_enabled'] = True
 
         if camera.data.appleseed.diaphragm_map is not None:
+            tex_id = camera.data.appleseed.diaphragm_map.name_full
+            if tex_id not in as_texture_translators:
+                textures_to_add[tex_id] = TextureTranslator(camera.data.appleseed.diaphragm_map,
+                                                            self.asset_handler)
             tex_name = f"{camera.data.appleseed.diaphragm_map.name_full}_inst"
             cam_params['diaphragm_map'] = tex_name
             del cam_params['diaphragm_blades']

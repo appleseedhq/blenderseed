@@ -31,6 +31,7 @@ import bpy
 import bmesh
 
 import appleseed as asr
+from ..textures import TextureTranslator
 from ..translator import Translator
 from ..utilites import ProjectExportMode
 from ...logger import get_logger
@@ -71,12 +72,12 @@ class MeshTranslator(Translator):
     def instances(self):
         return self.__instances
 
-    def create_entities(self, bl_scene):
+    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
         logger.debug("Creating translator for mesh %s", self.appleseed_name)
 
         mesh_name = f"{self.appleseed_name}_obj"
 
-        mesh_params = self.__get_mesh_params()
+        mesh_params = self.__get_mesh_params(textures_to_add, as_texture_translators)
 
         self.__as_mesh = asr.MeshObject(mesh_name, mesh_params)
 
@@ -86,12 +87,49 @@ class MeshTranslator(Translator):
     def set_xform_step(self, time, inst_key, bl_matrix):
         self.__instances[inst_key].set_transform(time, self._convert_matrix(bl_matrix))
 
-    def xform_update(self, inst_key, bl_matrix):
+    def update_object(self, context, as_assembly, textures_to_add, as_texture_translators):
+        mesh_name = self.__object_instance_mesh_name(f"{self.appleseed_name}_obj")
+
+        self.__as_mesh_inst_params = self.__get_mesh_inst_params()
+        self.__front_materials, self.__back_materials = self.__get_material_mappings()
+
+        self.__ass.object_instances().remove(self.__as_mesh_inst)
+
+        self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
+                                                 self.__as_mesh_inst_params,
+                                                 mesh_name,
+                                                 asr.Transformd(asr.Matrix4d().identity()),
+                                                 self.__front_materials,
+                                                 self.__back_materials)
+
+        self.__ass.object_instances().insert(self.__as_mesh_inst)
+        self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.appleseed_name)
+
+    def delete_instances(self, as_assembly, as_scene):
+        for ass_inst in self.__instances.values():
+            as_assembly.assembly_instances().remove(ass_inst)
+
+        self.__instances.clear()
+
+    def xform_update(self, inst_key, bl_matrix, as_assembly, as_scene):
         xform_seq = asr.TransformSequence()
         xform_seq.set_transform(0.0, self._convert_matrix(bl_matrix))
-        xform_seq.optimize()
-        self.__instances[inst_key].set_transform_sequence(xform_seq)
+        ass_name = f"{self.appleseed_name}_ass"
+        ass_inst_name = f"{inst_key}_ass_inst"
+        ass_inst = asr.AssemblyInstance(ass_inst_name,
+                                        {},
+                                        ass_name)
+        ass_inst.set_transform_sequence(xform_seq)
+        as_assembly.assembly_instances().insert(ass_inst)
+        self.__instances[inst_key] = as_assembly.assembly_instances().get_by_name(ass_inst_name)
 
+    def delete_object(self, as_assembly):
+        self.__ass.objects().remove(self.__as_mesh)
+        self.__ass.object_instances().remove(self.__as_mesh_inst)
+        as_assembly.assemblies().remove(self.__ass)
+        for ass_inst in self.__instances.values():
+            as_assembly.assembly_instances().remove(ass_inst)
+        
     def set_deform_key(self, time, depsgraph, key_times):
         if len(self.bl_obj.data.polygons) > 0:
             if not self.__deforming and self.__key_index > 0:
@@ -254,9 +292,14 @@ class MeshTranslator(Translator):
 
         return front_mats, rear_mats
 
-    def __get_mesh_params(self):
+    def __get_mesh_params(self, textures_to_add, as__texture_translators):
         params = {}
         if self.bl_obj.appleseed.object_alpha_texture is not None:
+            tex_id = self.bl_obj.appleseed.object_alpha_texture.name_full
+            if tex_id not in as__texture_translators:
+                textures_to_add[tex_id] = TextureTranslator(self.bl_obj.appleseed.object_alpha_texture,
+                                                            self.asset_handler)
+
             params['alpha_map'] = self.bl_obj.appleseed.object_alpha_texture.name_full + "_inst"
 
         return params

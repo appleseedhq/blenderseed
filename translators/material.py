@@ -118,19 +118,19 @@ class MaterialTranslator(Translator):
             as_assembly.volumes().insert(self.__as_volume)
             self.__as_volume = as_assembly.volumes().get_by_name(vol_name)
 
-    def interactive_update(self, context, as_assembly):
+    def update_material(self, context, as_assembly):
         self.__as_nodetree.delete(as_assembly)
 
         as_assembly.surface_shaders().remove(self.__as_shader)
         as_assembly.materials().remove(self.__as_mat)
 
         for color in self.__as_colors:
-                as_assembly.colors().remove(color)
+            as_assembly.colors().remove(color)
         
         self.__as_colors = []
 
         self.create_entities(context.depsgraph.scene)
-        self.flush_entities(as_assembly, None)        
+        self.flush_entities(as_assembly, None)
 
     def __get_shader_params(self):
         as_mat_data = self.bl_mat.appleseed

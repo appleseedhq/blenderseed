@@ -33,6 +33,9 @@ import appleseed as asr
 
 from ..translator import Translator
 from ..assethandlers import AssetType
+from ...logger import get_logger
+
+logger = get_logger()
 
 
 class ArchiveAssemblyTranslator(Translator):
@@ -76,13 +79,29 @@ class ArchiveAssemblyTranslator(Translator):
             self.__instances[key] = as_assembly.assembly_instances().get_by_name(ass_inst_name)
 
     def set_xform_step(self, time, inst_key, bl_matrix):
-        self.__instances[inst_key].set_set_transform(time, self._convert_matrix(bl_matrix))
+        self.__instances[inst_key].set_transform(time, self._convert_matrix(bl_matrix))
 
-    def xform_update(self, inst_key, bl_matrix):
+    def delete_instances(self, as_assembly, as_scene):
+        for ass_inst in self.__instances.values():
+            as_assembly.assembly_instances().remove(ass_inst)
+
+        self.__instances.clear()
+
+    def xform_update(self, inst_key, bl_matrix, as_assembly, as_scene):
         xform_seq = asr.TransformSequence()
         xform_seq.set_transform(0.0, self._convert_matrix(bl_matrix))
-        xform_seq.optimize()
-        self.__instances[inst_key].set_transform_sequence(xform_seq)
+        ass_name = f"{self.appleseed_name}_ass"
+        ass_inst_name = f"{inst_key}_ass_inst"
+        ass_inst = asr.AssemblyInstance(ass_inst_name,
+                                        {},
+                                        ass_name)
+        ass_inst.set_transform_sequence(xform_seq)
+        as_assembly.assembly_instances().insert(ass_inst)
+        self.__instances[inst_key] = as_assembly.assembly_instances().get_by_name(ass_inst_name)
+
+    def delete_object(self, as_assembly):
+        for ass_inst in self.__instances.values():
+            as_assembly.assembly_instances().remove(ass_inst)
 
     def add_instance(self, inst_key):
         self.__instances[inst_key] = asr.TransformSequence()

@@ -29,6 +29,7 @@ import math
 
 
 import appleseed as asr
+from .textures import TextureTranslator
 from .translator import Translator
 from ..logger import get_logger
 
@@ -53,16 +54,14 @@ class WorldTranslator(Translator):
 
         self.__as_edf_params = {}
 
-        self.__xform_seq = asr.TransformSequence()
-
     # Properties
     @property
     def bl_world(self):
         return self._bl_obj
 
-    def create_entities(self, bl_scene):
+    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
         logger.debug("Creating world entity for world")
-        
+
         as_world = self.bl_world.appleseed_sky
         self.__as_env_type = as_world.env_type
         if self.__as_env_type == 'sunsky':
@@ -70,18 +69,18 @@ class WorldTranslator(Translator):
 
         if self.__as_env_type == 'constant':
             self.__as_colors.append(asr.ColorEntity('horizon_radiance_color',
-                                                 {'color_space': 'linear_rgb'},
-                                                 self._convert_color(self.bl_world.horizon_color)))
+                                                    {'color_space': 'linear_rgb'},
+                                                    self._convert_color(self.bl_world.horizon_color)))
 
         elif self.__as_env_type in ('gradient', 'constant_hemisphere'):
             self.__as_colors.append(asr.ColorEntity('horizon_radiance_color',
-                                                 {'color_space': 'srgb'},
-                                                 self._convert_color(self.bl_world.horizon_color)))
+                                                    {'color_space': 'srgb'},
+                                                    self._convert_color(self.bl_world.horizon_color)))
             self.__as_colors.append(asr.ColorEntity('zenith_radiance_color',
-                                                 {'color_space': 'linear_rgb'},
-                                                 self._convert_color(self.bl_world.zenith_color)))
+                                                    {'color_space': 'linear_rgb'},
+                                                    self._convert_color(self.bl_world.zenith_color)))
 
-        self.__as_edf_params = self.__create_params()
+        self.__as_edf_params = self.__create_params(textures_to_add, as_texture_translators)
 
         self.__as_env_edf = asr.EnvironmentEDF(self.__as_env_type + "_environment_edf",
                                                "sky_edf",
@@ -93,9 +92,6 @@ class WorldTranslator(Translator):
 
         self.__as_env = asr.Environment("sky",
                                         {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
-
-    def set_transform(self, time):
-        self.__xform_seq.set_transform(time, self._convert_matrix(asr.Matrix4d.identity()))
 
     def flush_entities(self, as_scene, as_assembly, as_project):
         for index, color in enumerate(self.__as_colors):
@@ -113,6 +109,26 @@ class WorldTranslator(Translator):
 
         as_scene.set_environment(self.__as_env)
 
+    def update_world(self, context, as_scene, textures_to_add, as_texture_translators):
+        if self.__as_env_type != None:
+            for color in self.__as_colors:
+                as_scene.colors().remove(color)
+            self.__as_colors.clear()
+
+            as_scene.environment_edfs().remove(self.__as_env_edf)
+            as_scene.environment_shaders().remove(self.__as_env_shader)
+
+        self.__as_env_type = None
+        self.__as_env = None
+        self.__as_env_edf = None
+        self.__as_env_shader = None
+
+        if self.bl_world.appleseed_sky.env_type == 'none':
+            as_scene.set_environment(asr.Environment("sky_empty", {}))
+        else:
+            self.create_entities(context.depsgraph.scene, textures_to_add, as_texture_translators)
+            self.flush_entities(as_scene, None, None)
+
     # Internal methods.
     def _convert_matrix(self, m):
         as_world = self.bl_world.appleseed_sky
@@ -122,17 +138,21 @@ class WorldTranslator(Translator):
 
         return m
 
-    def __create_params(self):
+    def __create_params(self, textures_to_add, as_texture_translators):
         as_world = self.bl_world.appleseed_sky
+        tex_id = as_world.env_tex.name_full
+        if tex_id not in as_texture_translators:
+            textures_to_add[tex_id] = TextureTranslator(as_world.env_tex,
+                                                        self.asset_handler)
 
         if self.__as_env_type == 'latlong_map':
-            tex_name = f"{as_world.env_tex.name}_inst"
+            tex_name = f"{as_world.env_tex.name_full}_inst"
             params = {'radiance': tex_name,
                       'radiance_multiplier': as_world.env_tex_mult,
                       'exposure': as_world.env_exposure}
 
         elif self.__as_env_type == 'mirrorball_map':
-            tex_name = f"{as_world.env_tex.name}_inst"
+            tex_name = f"{as_world.env_tex.name_full}_inst"
             params = {'radiance': tex_name,
                       'exposure': as_world.env_exposure,
                       'radiance_multiplier': as_world.env_tex_mult}
