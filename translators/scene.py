@@ -745,7 +745,7 @@ class SceneTranslator(object):
 
         logger.debug("Updating stereoscopic camera")
         self.__camera_translator.remove_cam(self.as_scene)
-        self.__camera_translator.create_entities(self.bl_scene)
+        self.__camera_translator.create_entities(self.bl_scene, None, None)
 
         cam_times = {0.0}
 
