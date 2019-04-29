@@ -295,7 +295,8 @@ class AppleseedRemovePostProcess(bpy.types.Operator):
             index = num - 1
         if index < 0:
             index = 0
-            scene.post_processing_stages_index = index
+
+        scene.post_processing_stages_index = index
 
         return {'FINISHED'}
 
