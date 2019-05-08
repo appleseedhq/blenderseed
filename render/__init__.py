@@ -227,14 +227,18 @@ class RenderAppleseed(bpy.types.RenderEngine):
             scene_translator = SceneTranslator.create_final_render_translator(self, depsgraph)
             self.update_stats("appleseed Rendering: Translating scene", "")
 
-            scene_translator.translate_scene()
-
             if depsgraph.scene.render.use_multiview and len(depsgraph.scene.render.views) > 1:
-                for view in depsgraph.scene.render.views:
+                self.active_view_set(depsgraph.scene.render.views[0].name)
+
+                scene_translator.translate_scene()
+                self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+
+                for view in depsgraph.scene.render.views[1:]:
                     self.active_view_set(view.name)
                     scene_translator.update_multiview_camera()
                     self.__start_final_render(depsgraph.scene, scene_translator.as_project)
             else:
+                scene_translator.translate_scene()
                 self.__start_final_render(depsgraph.scene, scene_translator.as_project)
 
     def __start_final_render(self, scene, project):
