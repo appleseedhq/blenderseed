@@ -98,7 +98,7 @@ class AppleseedOSLNodeCategory(nodeitems_utils.NodeCategory):
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render.engine
-        return renderer == 'APPLESEED_RENDER'  # and context.space_data.tree_type == 'AppleseedOSLNodeTree'
+        return renderer == 'APPLESEED_RENDER' and context.space_data.tree_type == 'ShaderNodeTree'
 
 
 def node_categories(osl_nodes):
