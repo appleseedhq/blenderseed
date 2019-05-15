@@ -429,11 +429,6 @@ class SceneTranslator(object):
 
         lighting_engine = asr_scene_props.lighting_engine if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER else 'pt'
 
-        if self.__context:
-            number_of_pixels = int(self.__context.region.width) * int(self.__context.region.height) * asr_scene_props.interactive_max_samples
-        else:
-            number_of_pixels = -1
-
         tile_renderer = 'adaptive' if asr_scene_props.pixel_sampler == 'adaptive' else 'generic'
         pixel_renderer = '' if asr_scene_props.pixel_sampler == 'adaptive' else 'uniform'
 
@@ -450,7 +445,7 @@ class SceneTranslator(object):
                       'tile_renderer': tile_renderer,
                       'passes': asr_scene_props.renderer_passes,
                       'generic_frame_renderer': {'tile_ordering': asr_scene_props.tile_ordering},
-                      'progressive_frame_renderer': {'max_samples': number_of_pixels,
+                      'progressive_frame_renderer': {'max_average_spp': asr_scene_props.interactive_max_samples,
                                                      'max_fps': asr_scene_props.interactive_max_fps},
                       'light_sampler': {'algorithm': asr_scene_props.light_sampler,
                                         'enable_light_importance_sampling': asr_scene_props.enable_light_importance_sampling},
@@ -458,7 +453,9 @@ class SceneTranslator(object):
 
         if self.export_mode != ProjectExportMode.PROJECT_EXPORT:
             if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
-                render_threads = -2
+                # The thread count is this low due to the possibility of quad view being used, 
+                # which generates 4 independent render engines (one for each panel)
+                render_threads = 1
             else:
                 render_threads = asr_scene_props.threads if not asr_scene_props.threads_auto else 'auto'
             parameters['rendering_threads'] = render_threads
