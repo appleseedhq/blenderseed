@@ -93,6 +93,8 @@ class WorldTranslator(Translator):
         self.__as_env = asr.Environment("sky",
                                         {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
 
+        self.__as_env_edf.transform_sequence().set_transform(0.0, asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
+
     def flush_entities(self, as_scene, as_assembly, as_project):
         logger.debug("Flushing world entity")
         for index, color in enumerate(self.__as_colors):
