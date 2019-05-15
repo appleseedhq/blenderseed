@@ -148,12 +148,23 @@ class FinalTileCallback(asr.ITileCallback):
         if len(frame.aovs()) > 0:
             self.__engine.update_result(result)
             for aov in frame.aovs():
-                if aov.get_model() not in ("cryptomatte_object_aov", "cryptomatte_material_aov"):
+                model = aov.get_model()
+                if model not in ("cryptomatte_object_aov", "cryptomatte_material_aov"):
                     image = aov.get_image()
-                    pix = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+                    pixel_buffer = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
                     layer = result.layers[0].passes.find_by_name(self.__map_aovs(aov.get_name()), render_view)
-                    layer.rect = pix
+                    layer.rect = pixel_buffer
                     self.__engine.update_result(result)
+                else:
+                    image = aov.get_crypto_image()
+                    pixel_buffer = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+                    crypto_pixels = self.__process_crypto_pixels(pixel_buffer)
+
+                    for i, pixels in enumerate(crypto_pixels):
+                        layer = result.layers[0].passes.find_by_name(f"{self.__map_aovs(model)}0{i}", render_view)
+                        layer.rect = pixels
+                        self.__engine.update_result(result)
+
         self.__engine.end_result(result)
 
         # Update progress bar.
@@ -174,13 +185,25 @@ class FinalTileCallback(asr.ITileCallback):
 
         floats = tile.get_storage()
 
-        pix = []
+        pixel_buffer = []
         for y in range(take_y - 1, -1, -1):
             start_pix = (skip_y + y) * tile_w + skip_x
             end_pix = start_pix + take_x
-            pix.extend(floats[p * tile_c:p * tile_c + tile_c] for p in range(start_pix, end_pix))
+            pixel_buffer.extend(floats[p * tile_c:p * tile_c + tile_c] for p in range(start_pix, end_pix))
 
-        return pix
+        return pixel_buffer
+
+    def __process_crypto_pixels(self, pixel_buffer):
+        layer_1_pixels = []
+        layer_2_pixels = []
+        layer_3_pixels = []
+
+        for pixel in pixel_buffer:
+            layer_1_pixels.append(pixel[3:7])
+            layer_2_pixels.append(pixel[7:11])
+            layer_3_pixels.append(pixel[11:])
+
+        return [layer_1_pixels, layer_2_pixels, layer_3_pixels]
 
     @staticmethod
     def __format_seconds_to_hhmmss(seconds):
@@ -211,6 +234,8 @@ class FinalTileCallback(asr.ITileCallback):
                        'pixel_sample_count': "Pixel Sample Count",
                        'pixel_variation': "Pixel Variation",
                        'npr_shading': "NPR Shading",
-                       'npr_contour': "NPR Contour"}
+                       'npr_contour': "NPR Contour",
+                       'cryptomatte_object_aov': "CryptoObject",
+                       'cryptomatte_material_aov': "CryptoMaterial"}
 
         return aov_mapping[aov_name]

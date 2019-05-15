@@ -200,6 +200,16 @@ class RenderAppleseed(bpy.types.RenderEngine):
             if asr_scene_props.pixel_variation_aov:
                 self.register_pass(scene, renderlayer, "Pixel Variation", 3, "RGB", "VECTOR")
 
+            # Cryptomatte AOVs
+            if asr_scene_props.cryptomatte_object_aov:
+                self.register_pass(scene, renderlayer, "CryptoObject00", 4, "RGBA", 'COLOR')
+                self.register_pass(scene, renderlayer, "CryptoObject01", 4, "RGBA", 'COLOR')
+                self.register_pass(scene, renderlayer, "CryptoObject02", 4, "RGBA", 'COLOR')
+            if asr_scene_props.cryptomatte_material_aov:
+                self.register_pass(scene, renderlayer, "CryptoMaterial00", 4, "RGBA", 'COLOR')
+                self.register_pass(scene, renderlayer, "CryptoMaterial01", 4, "RGBA", 'COLOR')
+                self.register_pass(scene, renderlayer, "CryptoMaterial02", 4, "RGBA", 'COLOR')
+
     #
     # Internal methods.
     #
@@ -410,6 +420,16 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.add_pass("NPR Shading", 4, "RGBA")
         if asr_scene_props.npr_contour_aov:
             self.add_pass("NPR Contour", 4, "RGBA")
+
+        # Cryptomatte AOVs
+        if asr_scene_props.cryptomatte_object_aov:
+            self.add_pass("CryptoObject00", 4, "RGBA")
+            self.add_pass("CryptoObject01", 4, "RGBA")
+            self.add_pass("CryptoObject02", 4, "RGBA")
+        if asr_scene_props.cryptomatte_material_aov:
+            self.add_pass("CryptoMaterial00", 4, "RGBA")
+            self.add_pass("CryptoMaterial01", 4, "RGBA")
+            self.add_pass("CryptoMaterial02", 4, "RGBA")
 
 
 def register():
