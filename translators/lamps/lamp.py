@@ -79,10 +79,10 @@ class LampTranslator(Translator):
                 self.__as_lamp_params = self._get_sun_lamp_params()
 
         else:
-            shape_params = self._get_area_mesh_params()
+            primitive, shape_params = self._get_area_mesh_params()
             mesh_name = f"{self.appleseed_name}_mesh"
 
-            self.__as_area_lamp_mesh = asr.create_primitive_mesh(mesh_name, shape_params)
+            self.__as_area_lamp = asr.Object(primitive, mesh_name, shape_params)
 
             mat_name = f"{self.appleseed_name}_mat"
 
@@ -119,8 +119,8 @@ class LampTranslator(Translator):
             as_assembly.materials().insert(self._as_area_lamp_material)
             self._as_area_lamp_material = as_assembly.materials().get_by_name(mat_name)
 
-            as_assembly.objects().insert(self.__as_area_lamp_mesh)
-            self.__as_area_lamp_mesh = as_assembly.objects().get_by_name(mesh_name)
+            as_assembly.objects().insert(self.__as_area_lamp)
+            self.__as_area_lamp = as_assembly.objects().get_by_name(mesh_name)
 
             if self._as_area_lamp_shadergroup is not None:
                 shadergroup_name = self._as_area_lamp_shadergroup.get_name()
@@ -150,7 +150,7 @@ class LampTranslator(Translator):
                 as_assembly.lights().remove(lamp)
         else:
             as_assembly.materials().remove(self._as_area_lamp_material)
-            as_assembly.objects().remove(self.__as_area_lamp_mesh)
+            as_assembly.objects().remove(self.__as_area_lamp)
             if self._as_area_lamp_shadergroup is not None:
                 as_assembly.shader_groups().remove(self._as_area_lamp_shadergroup)
                 self._as_area_lamp_shadergroup = None
@@ -203,7 +203,7 @@ class LampTranslator(Translator):
                 as_assembly.lights().remove(lamp)
         else:
             as_assembly.materials().remove(self._as_area_lamp_material)
-            as_assembly.objects().remove(self.__as_area_lamp_mesh)
+            as_assembly.objects().remove(self.__as_area_lamp)
             if self._as_area_lamp_shadergroup is not None:
                 as_assembly.shader_groups().remove(self._as_area_lamp_shadergroup)
             else:
@@ -302,21 +302,21 @@ class LampTranslator(Translator):
         lamp_data = self.bl_lamp.data
         as_lamp_data = lamp_data.appleseed
 
-        shape_params = {'primitive': as_lamp_data.area_shape}
+        primitive = as_lamp_data.area_shape
 
-        if as_lamp_data.area_shape == 'grid':
+        shape_params = dict()
+
+        if primitive == 'rectangle_object':
             shape_params['width'] = lamp_data.size
             shape_params['height'] = lamp_data.size_y
 
-        elif as_lamp_data.area_shape == 'disk':
+        elif primitive == 'disk_object':
             shape_params['radius'] = self.bl_lamp.data.size / 2
 
         else:
             shape_params['radius'] = self.bl_lamp.data.size / 2
-            shape_params['resolution_u'] = 4
-            shape_params['resolution_v'] = 4
 
-        return shape_params
+        return primitive, shape_params
 
     def _get_area_mesh_instance_params(self):
         lamp_data = self.bl_lamp.data
