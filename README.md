@@ -16,6 +16,8 @@ blenderseed includes support for the following features of appleseed:
 * Particle / instance motion blur
 * Instancing (dupliverts / duplifaces)
 * BSDF materials
+* Volumetric material
+* BSSDF materials
 * OSL shading
 * Normal / bump mapping
 * Alpha mapping
