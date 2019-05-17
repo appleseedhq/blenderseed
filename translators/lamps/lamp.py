@@ -162,7 +162,7 @@ class LampTranslator(Translator):
 
         self.__instances.clear()
 
-        self.create_entities(context.depsgraph.scene, textures_to_add, as_texture_translators)
+        self.create_entities(context.evaluated_depsgraph_get().scene, textures_to_add, as_texture_translators)
         self.flush_entities(as_assembly, None)
 
     def delete_instances(self, as_assembly, as_scene):

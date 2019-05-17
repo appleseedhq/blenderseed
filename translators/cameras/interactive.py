@@ -104,7 +104,7 @@ class InteractiveCameraTranslator(Translator):
 
         self.__model = self.__get_model()
 
-        self.__get_cam_params(context.depsgraph.scene_eval, None, None)
+        self.__get_cam_params(context.evaluated_depsgraph_get().scene_eval, None, None)
 
         if current_translation != self.__matrix:
             cam_translate_update = True

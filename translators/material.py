@@ -133,7 +133,7 @@ class MaterialTranslator(Translator):
 
         self.__as_colors = []
 
-        self.create_entities(context.depsgraph.scene)
+        self.create_entities(context.evaluated_depsgraph_get().scene)
         self.flush_entities(as_assembly, None)
 
     def __get_shader_params(self):

@@ -100,7 +100,7 @@ class SceneTranslator(object):
                    asset_handler=asset_handler)
 
     @classmethod
-    def create_interactive_render_translator(cls, engine, context):
+    def create_interactive_render_translator(cls, engine, context, depsgraph):
         """
         Create a scene translator to export the scene to an in memory appleseed project
         optimized for quick interactive edits.
@@ -111,7 +111,7 @@ class SceneTranslator(object):
         asset_handler = AssetHandler()
 
         return cls(engine=engine,
-                   depsgraph=context.depsgraph,
+                   depsgraph=depsgraph,
                    export_mode=ProjectExportMode.INTERACTIVE_RENDER,
                    selected_only=False,
                    context=context,
@@ -242,13 +242,14 @@ class SceneTranslator(object):
         self.__calc_multiview_camera()
 
     # Interactive mode functions
-    def check_view(self, context):
+    def check_view(self, context, depsgraph):
         """
         Check the viewport to see if it has changed camera position or window size.
         For whatever reason, these changes do not trigger an update request so we must check things manually.
         """
         view_update = False
         self.__context = context
+        self.__depsgraph = depsgraph
         cam_param_update, cam_translate_update, cam_model_update = self.__camera_translator.check_view(context)
 
         # Check if the frame needs to be updated
@@ -281,7 +282,7 @@ class SceneTranslator(object):
 
         self.__camera_translator.set_xform_step(0.0)
 
-    def update_scene(self, context):
+    def update_scene(self, context, depsgraph):
         """
         This function checks an *impartial* list of updated datablocks that Blender provides
         whenever some kind of scene update happens.  This list is incomplete (textures aren't flagged)
@@ -299,7 +300,7 @@ class SceneTranslator(object):
         bl_object_blocks = []
         textures_to_add = {}
 
-        for obj in context.depsgraph.updates:
+        for obj in depsgraph.updates:
             if isinstance(obj.id, bpy.types.World):
                 if self.__world_translator is not None:
                     self.__world_translator.update_world(context, self.as_scene, textures_to_add, self.__texture_translators)
@@ -344,7 +345,7 @@ class SceneTranslator(object):
         self.__update_instances()
 
         # Cleanup unused objects and lamps
-        used_objects = [x.name_full for x in bpy.data.objects]
+        used_objects = [x.name_full for x in depsgraph.ids if isinstance(x, bpy.types.Object)]
 
         for obj_key in list(self.__object_translators.keys()):
             if obj_key not in used_objects:
@@ -455,7 +456,7 @@ class SceneTranslator(object):
             if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
                 # The thread count is this low due to the possibility of quad view being used, 
                 # which generates 4 independent render engines (one for each panel)
-                render_threads = 1
+                render_threads = 2
             else:
                 render_threads = asr_scene_props.threads if not asr_scene_props.threads_auto else 'auto'
             parameters['rendering_threads'] = render_threads
@@ -907,10 +908,11 @@ class SceneTranslator(object):
         mat_blocks = []
         object_blocks = []
 
-        for mat in bpy.data.materials:
-            mat_blocks.append(mat)
-        for obj in bpy.data.objects:
-            object_blocks.append(obj)
+        for id in self.bl_depsgraph.ids:
+            if isinstance(id, bpy.types.Material):
+                mat_blocks.append(id)
+            if isinstance(id, bpy.types.Object):
+                object_blocks.append(id)
 
         return mat_blocks, object_blocks
 

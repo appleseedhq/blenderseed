@@ -94,7 +94,7 @@ class MeshTranslator(Translator):
 
             mesh_name = f"{self.appleseed_name}_obj"
 
-            me = self.__create_bl_render_mesh(depsgraph)
+            me = self.__create_bl_render_mesh()
 
             if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
                 # Write a mesh file for the mesh key.
@@ -307,9 +307,8 @@ class MeshTranslator(Translator):
 
         return params
 
-    def __create_bl_render_mesh(self, depsgraph):
-        me = self._bl_obj.to_mesh(depsgraph,
-                                  apply_modifiers=True)
+    def __create_bl_render_mesh(self):
+        me = self._bl_obj.to_mesh()
 
         return me
 

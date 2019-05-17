@@ -136,20 +136,20 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 self.__add_render_passes(depsgraph.scene)
                 self.__render_final(depsgraph)
 
-    def view_update(self, context):
+    def view_update(self, context, depsgraph):
         if self.__interactive_scene_translator is None:
-            self.__start_interactive_render(context)
+            self.__start_interactive_render(context, depsgraph)
         else:
             self.__pause_rendering()
             logger.debug("Updating scene")
-            self.__interactive_scene_translator.update_scene(context)
+            self.__interactive_scene_translator.update_scene(context, depsgraph)
             self.__restart_interactive_render()
 
-    def view_draw(self, context):
+    def view_draw(self, context, depsgraph):
         self.__draw_pixels(context)
 
         # Check if view has changed.
-        view_update, cam_param_update, cam_translate_update, cam_model_update = self.__interactive_scene_translator.check_view(context)
+        view_update, cam_param_update, cam_translate_update, cam_model_update = self.__interactive_scene_translator.check_view(context, depsgraph)
 
         if view_update or cam_param_update or cam_translate_update or cam_model_update:
             self.__pause_rendering()
@@ -289,7 +289,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__stop_rendering()
 
-    def __start_interactive_render(self, context):
+    def __start_interactive_render(self, context, depsgraph):
         """
         Start an interactive rendering session.
         """
@@ -307,7 +307,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         logger.debug("Translating scene for interactive rendering")
 
-        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(self, context)
+        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(self, context, depsgraph)
         self.__interactive_scene_translator.translate_scene()
 
         self.__camera = self.__interactive_scene_translator.camera_translator
@@ -376,7 +376,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Draw rendered image in Blender's viewport.
         """
 
-        self.bind_display_space_shader(context.depsgraph.scene)
+        self.bind_display_space_shader(context.evaluated_depsgraph_get().scene)
         self.__tile_callback.draw_pixels()
         self.unbind_display_space_shader()
 
