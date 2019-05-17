@@ -26,14 +26,28 @@
 #
 
 import bpy
-from bpy.types import NodeTree
-from nodeitems_utils import NodeItem, NodeCategory, register_node_categories, unregister_node_categories
+import nodeitems_utils
 
-from ...utils import util
+from ..utils import util, osl_utils
 
 
-class AppleseedOSLNodeTree(NodeTree):
-    """Class for appleseed node tree"""
+class AppleseedOSLScriptBaseNode(osl_utils.AppleseedOSLScriptNode):
+    bl_idname = "AppleseedOSLScriptBaseNode"
+    bl_label = "OSL Script Base"
+    bl_icon = "NODE"
+    bl_width_default = 240.0
+
+    node_type = "osl_script"
+
+    script: bpy.props.PointerProperty(name="script",
+                                      type=bpy.types.Text)
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "script", text="")
+        layout.operator('appleseed.compile_osl_script', text="Create Parameters")
+
+
+class AppleseedOSLNodeTree(bpy.types.NodeTree):
 
     bl_idname = 'AppleseedOSLNodeTree'
     bl_label = 'appleseed OSL Node Tree'
@@ -46,7 +60,7 @@ class AppleseedOSLNodeTree(NodeTree):
         """
         obj = context.active_object
 
-        if obj and obj.type not in {"LAMP", "CAMERA"}:
+        if obj and obj.type not in {"LIGHT", "CAMERA"}:
             mat = obj.active_material
 
             if mat:
@@ -56,7 +70,7 @@ class AppleseedOSLNodeTree(NodeTree):
                 if node_tree:
                     return node_tree, mat, mat
 
-        elif obj and obj.type == "LAMP":
+        elif obj and obj.type == "LIGHT":
             node_tree = obj.data.appleseed.osl_node_tree
 
             if node_tree:
@@ -69,57 +83,19 @@ class AppleseedOSLNodeTree(NodeTree):
         renderer = context.scene.render.engine
         return renderer == 'APPLESEED_RENDER'
 
-    # This following code is required to avoid a max recursion error when Blender checks for node updates
     def update(self):
-        self.refresh = True
+        if hasattr(bpy.context, "material"):
+            bpy.context.material.preview_render_type = bpy.context.material.preview_render_type
 
-    def acknowledge_connection(self, context):
-        while self.refresh:
-            self.refresh = False
-            break
-
-    refresh = bpy.props.BoolProperty(name='Links Changed', default=False, update=acknowledge_connection)
-
-
-class AppleseedNode(object):
-    """Base class for appleseed nodes"""
-
-    @classmethod
-    def poll(cls, context):
-        renderer = context.scene.render.engine
-        return context.bl_idname == "AppleseedNodeTree" and renderer == 'APPLESEED_RENDER'
-
-    def get_node_name(self):
-        """Return the node's name, including appended pointer"""
-        return util.join_names_underscore(self.name, str(self.as_pointer()))
-
-    def traverse_tree(self, material_node):
-        """Iterate inputs and traverse the tree backward if any inputs are connected
-
-        Nodes are added to a list attribute of the material output node
-        """
-        for socket in self.inputs:
-            if socket.is_linked:
-                linked_node = socket.links[0].from_node
-                linked_node.traverse_tree(material_node)
-        material_node.tree.append(self)
-
-
-class AppleseedOSLNodeCategory(NodeCategory):
-    """Node category for extending the Add menu, toolbar panels and search operator
-
-    Base class for node categories
+class AppleseedOSLNodeCategory(nodeitems_utils.NodeCategory):
+    """
+    Node category for extending the Add menu, toolbar panels and search operator
     """
 
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render.engine
-        return context.space_data.tree_type == 'AppleseedOSLNodeTree' and renderer == 'APPLESEED_RENDER'
-
-    """
-    appleseed node categories
-    Format: (identifier, label, items list)
-    """
+        return renderer == 'APPLESEED_RENDER' and context.space_data.tree_type == 'ShaderNodeTree'
 
 
 def node_categories(osl_nodes):
@@ -132,7 +108,7 @@ def node_categories(osl_nodes):
     osl_other = []
 
     for node in osl_nodes:
-        node_item = NodeItem(node[0])
+        node_item = nodeitems_utils.NodeItem(node[0])
         node_category = node[1]
         if node_category == 'shader':
             osl_shaders.append(node_item)
@@ -150,36 +126,43 @@ def node_categories(osl_nodes):
             osl_other.append(node_item)
 
     appleseed_node_categories = [
-        AppleseedOSLNodeCategory("OSL_Surfaces", "Surface", items=osl_surface),
-        AppleseedOSLNodeCategory("OSL_Shaders", "Shader", items=osl_shaders),
-        AppleseedOSLNodeCategory("OSL_3D_Textures", "Texture3D", items=osl_3d_textures),
-        AppleseedOSLNodeCategory("OSL_2D_Textures", "Texture2D", items=osl_2d_textures),
-        AppleseedOSLNodeCategory("OSL_Color", "Color", items=osl_color),
-        AppleseedOSLNodeCategory("OSL_Utilities", "Utility", items=osl_utilities),
-        AppleseedOSLNodeCategory("OSL_Other", "No Category", items=osl_other)
-    ]
+        AppleseedOSLNodeCategory("OSL_Surfaces", "appleseed-Surface", items=osl_surface),
+        AppleseedOSLNodeCategory("OSL_Shaders", "appleseed-Shader", items=osl_shaders),
+        AppleseedOSLNodeCategory("OSL_3D_Textures", "appleseed-Texture3D", items=osl_3d_textures),
+        AppleseedOSLNodeCategory("OSL_2D_Textures", "appleseed-Texture2D", items=osl_2d_textures),
+        AppleseedOSLNodeCategory("OSL_Color", "appleseed-Color", items=osl_color),
+        AppleseedOSLNodeCategory("OSL_Utilities", "appleseed-Utility", items=osl_utilities),
+        AppleseedOSLNodeCategory("OSL_Script", "appleseed-Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptBaseNode")]),
+        AppleseedOSLNodeCategory("OSL_Other", "appleseed-No Category", items=osl_other)]
 
     return appleseed_node_categories
 
 
-# Load the modules after classes have been created.
-from . import oslnode
-
 osl_node_names = []
+
+classes = []
 
 
 def register():
-    util.safe_register_class(AppleseedOSLNodeTree)
-    node_list = util.read_osl_shaders()
+    # util.safe_register_class(AppleseedOSLNodeTree)
+    util.safe_register_class(AppleseedOSLScriptBaseNode)
+    node_list = osl_utils.read_osl_shaders()
     for node in node_list:
-        try:
-            node_name, node_category = oslnode.generate_node(node)
-            osl_node_names.append([node_name, node_category])
-        except:
-            pass
-    register_node_categories("APPLESEED", node_categories(osl_node_names))
+        node_name, node_category, node_classes = osl_utils.generate_node(node, osl_utils.AppleseedOSLNode)
+        classes.extend(node_classes)
+        osl_node_names.append([node_name, node_category])
+
+    for cls in classes:
+        util.safe_register_class(cls)
+
+    nodeitems_utils.register_node_categories("APPLESEED", node_categories(osl_node_names))
 
 
 def unregister():
-    unregister_node_categories("APPLESEED")
-    util.safe_unregister_class(AppleseedOSLNodeTree)
+    nodeitems_utils.unregister_node_categories("APPLESEED")
+
+    for cls in reversed(classes):
+        util.safe_unregister_class(cls)
+
+    util.safe_unregister_class(AppleseedOSLScriptBaseNode)
+    # util.safe_unregister_class(AppleseedOSLNodeTree)

@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2014-2019 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,18 +25,18 @@
 # THE SOFTWARE.
 #
 
-import os
 import sys
 import threading
 
 import bpy
 
 import appleseed as asr
+from .final_tilecallback import FinalTileCallback
 from .renderercontroller import FinalRendererController, InteractiveRendererController
-from .tilecallbacks import FinalTileCallback
 from ..logger import get_logger
 from ..translators.preview import PreviewRenderer
 from ..translators.scene import SceneTranslator
+from ..utils.path_util import get_stdosl_render_paths
 from ..utils.util import safe_register_class, safe_unregister_class
 
 logger = get_logger()
@@ -73,6 +73,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
     bl_idname = 'APPLESEED_RENDER'
     bl_label = 'appleseed'
     bl_use_preview = True
+    bl_use_shading_nodes = True
+    bl_use_shading_nodes_custom = False
+    bl_use_postprocess = True
 
     # True if we are doing interactive rendering.
     __interactive_session = False
@@ -99,7 +102,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
     #
 
     def __del__(self):
-        self.__stop_rendering()
+        try:
+            self.__stop_rendering()
+        except:
+            pass
 
         # Sometimes __is_interactive does not exist, not sure why.
         try:
@@ -114,44 +120,45 @@ class RenderAppleseed(bpy.types.RenderEngine):
     # RenderEngine methods.
     #
 
-    def render(self, scene):
+    def render(self, depsgraph):
         if self.is_preview:
-            if bpy.app.background: # Can this happen?
+            if bpy.app.background:  # Can this happen?
                 return
 
             # Disable material previews if we are doing an interactive render.
-            if not RenderAppleseed.__interactive_session:
-                level = 'error'
-                with SetAppleseedLogLevel(level):
-                    self.__render_material_preview(scene)
-        else:
-            level = scene.appleseed.log_level
+            # if not RenderAppleseed.__interactive_session:
+            level = 'error'
             with SetAppleseedLogLevel(level):
-                self.__add_render_passes(scene)
-                self.__render_final(scene)
+                self.__render_material_preview(depsgraph.scene)
+        else:
+            level = depsgraph.scene.appleseed.log_level
+            with SetAppleseedLogLevel(level):
+                self.__add_render_passes(depsgraph.scene)
+                self.__render_final(depsgraph)
 
-    def view_update(self, context):
+    def view_update(self, context, depsgraph):
         if self.__interactive_scene_translator is None:
-            self.__start_interactive_render(context)
+            self.__start_interactive_render(context, depsgraph)
         else:
             self.__pause_rendering()
             logger.debug("Updating scene")
-            self.__interactive_scene_translator.update_scene(context.scene, context)
+            self.__interactive_scene_translator.update_scene(context, depsgraph)
             self.__restart_interactive_render()
 
-    def view_draw(self, context):
+    def view_draw(self, context, depsgraph):
         self.__draw_pixels(context)
 
         # Check if view has changed.
-        view_update, cam_param_update, cam_translate_update = self.__interactive_scene_translator.check_view(context)
+        view_update, cam_param_update, cam_translate_update, cam_model_update = self.__interactive_scene_translator.check_view(context, depsgraph)
 
-        if view_update or cam_param_update or cam_translate_update:
+        if view_update or cam_param_update or cam_translate_update or cam_model_update:
             self.__pause_rendering()
             logger.debug("Updating view")
-            self.__interactive_scene_translator.update_view(view_update, cam_param_update)
+            self.__interactive_scene_translator.update_view(view_update, cam_param_update, cam_model_update)
             self.__restart_interactive_render()
 
     def update_render_passes(self, scene=None, renderlayer=None):
+        logger.debug("Updating render passes")
         asr_scene_props = scene.appleseed
 
         if not self.is_preview:
@@ -195,6 +202,16 @@ class RenderAppleseed(bpy.types.RenderEngine):
             if asr_scene_props.pixel_variation_aov:
                 self.register_pass(scene, renderlayer, "Pixel Variation", 3, "RGB", "VECTOR")
 
+            # Cryptomatte AOVs
+            if asr_scene_props.cryptomatte_object_aov:
+                self.register_pass(scene, renderlayer, "CryptoObject00", 4, "RGBA", 'COLOR')
+                self.register_pass(scene, renderlayer, "CryptoObject01", 4, "RGBA", 'COLOR')
+                self.register_pass(scene, renderlayer, "CryptoObject02", 4, "RGBA", 'COLOR')
+            if asr_scene_props.cryptomatte_material_aov:
+                self.register_pass(scene, renderlayer, "CryptoMaterial00", 4, "RGBA", 'COLOR')
+                self.register_pass(scene, renderlayer, "CryptoMaterial01", 4, "RGBA", 'COLOR')
+                self.register_pass(scene, renderlayer, "CryptoMaterial02", 4, "RGBA", 'COLOR')
+
     #
     # Internal methods.
     #
@@ -209,16 +226,32 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__start_final_render(scene, material_preview_renderer.as_project)
 
-    def __render_final(self, scene):
+    def __render_final(self, depsgraph):
         """
         Export and render the scene.
         """
 
-        scene_translator = SceneTranslator.create_final_render_translator(scene)
-        self.update_stats("appleseed Rendering: Translating scene", "")
-        scene_translator.translate_scene()
+        if depsgraph.scene.appleseed.scene_export_mode == 'export_only':
+            scene_translator = SceneTranslator.create_project_export_translator(self, depsgraph)
+            scene_translator.translate_scene()
+            scene_translator.write_project(depsgraph.scene.appleseed.export_path)
+        else:
+            scene_translator = SceneTranslator.create_final_render_translator(self, depsgraph)
+            self.update_stats("appleseed Rendering: Translating scene", "")
 
-        self.__start_final_render(scene, scene_translator.as_project)
+            if depsgraph.scene.render.use_multiview and len(depsgraph.scene.render.views) > 1:
+                self.active_view_set(depsgraph.scene.render.views[0].name)
+
+                scene_translator.translate_scene()
+                self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+
+                for view in depsgraph.scene.render.views[1:]:
+                    self.active_view_set(view.name)
+                    scene_translator.update_multiview_camera()
+                    self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+            else:
+                scene_translator.translate_scene()
+                self.__start_final_render(depsgraph.scene, scene_translator.as_project)
 
     def __start_final_render(self, scene, project):
         """
@@ -226,10 +259,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         # Preconditions.
-        assert(self.__renderer is None)
-        assert(self.__renderer_controller is None)
-        assert(self.__tile_callback is None)
-        assert(self.__render_thread is None)
+        assert (self.__renderer is None)
+        assert (self.__renderer_controller is None)
+        assert (self.__tile_callback is None)
+        assert (self.__render_thread is None)
 
         self.__tile_callback = FinalTileCallback(self, scene)
 
@@ -237,7 +270,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__renderer = asr.MasterRenderer(project,
                                              project.configurations()['final'].get_inherited_parameters(),
-                                             [],
+                                             [get_stdosl_render_paths()],
                                              self.__renderer_controller,
                                              self.__tile_callback)
 
@@ -256,22 +289,19 @@ class RenderAppleseed(bpy.types.RenderEngine):
         # Cleanup.
         asr.global_logger().remove_target(log_target)
 
-        if scene.appleseed.denoise_mode == 'write_outputs':
-            project.get_frame().write_main_image(os.path.join(scene.appleseed.denoise_output_dir, "output.exr"))
-
         self.__stop_rendering()
 
-    def __start_interactive_render(self, context):
+    def __start_interactive_render(self, context, depsgraph):
         """
         Start an interactive rendering session.
         """
 
         # Preconditions.
-        assert(self.__interactive_scene_translator is None)
-        assert(self.__renderer is None)
-        assert(self.__renderer_controller is None)
-        assert(self.__tile_callback is None)
-        assert(self.__render_thread is None)
+        assert (self.__interactive_scene_translator is None)
+        assert (self.__renderer is None)
+        assert (self.__renderer_controller is None)
+        assert (self.__tile_callback is None)
+        assert (self.__render_thread is None)
 
         logger.debug("Starting interactive rendering")
         self.__is_interactive = True
@@ -279,19 +309,19 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         logger.debug("Translating scene for interactive rendering")
 
-        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(context)
+        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(self, context, depsgraph)
         self.__interactive_scene_translator.translate_scene()
 
         self.__camera = self.__interactive_scene_translator.camera_translator
 
         project = self.__interactive_scene_translator.as_project
 
-        self.__renderer_controller = InteractiveRendererController(self.__camera)
+        self.__renderer_controller = InteractiveRendererController(self, self.__camera)
         self.__tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
 
         self.__renderer = asr.MasterRenderer(project,
                                              project.configurations()['interactive'].get_inherited_parameters(),
-                                             [],
+                                             [get_stdosl_render_paths()],
                                              self.__renderer_controller,
                                              self.__tile_callback)
 
@@ -348,11 +378,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Draw rendered image in Blender's viewport.
         """
 
-        self.bind_display_space_shader(context.scene)
+        self.bind_display_space_shader(context.evaluated_depsgraph_get().scene)
         self.__tile_callback.draw_pixels()
         self.unbind_display_space_shader()
 
     def __add_render_passes(self, scene):
+        logger.debug("Adding render passes")
         asr_scene_props = scene.appleseed
 
         if asr_scene_props.screen_space_velocity_aov:
@@ -393,6 +424,16 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.add_pass("NPR Shading", 4, "RGBA")
         if asr_scene_props.npr_contour_aov:
             self.add_pass("NPR Contour", 4, "RGBA")
+
+        # Cryptomatte AOVs
+        if asr_scene_props.cryptomatte_object_aov:
+            self.add_pass("CryptoObject00", 4, "RGBA")
+            self.add_pass("CryptoObject01", 4, "RGBA")
+            self.add_pass("CryptoObject02", 4, "RGBA")
+        if asr_scene_props.cryptomatte_material_aov:
+            self.add_pass("CryptoMaterial00", 4, "RGBA")
+            self.add_pass("CryptoMaterial01", 4, "RGBA")
+            self.add_pass("CryptoMaterial02", 4, "RGBA")
 
 
 def register():

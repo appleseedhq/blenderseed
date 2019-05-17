@@ -27,6 +27,8 @@
 
 import bpy
 
+import appleseed as asr
+
 
 class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
     bl_idname = __package__
@@ -36,27 +38,26 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
 
         set_logger_level(self.log_level)
 
-    log_level = bpy.props.EnumProperty(name="log_level",
-                                       items=[('debug', "Debug", ""),
-                                              ('warning', "Warning", ""),
-                                              ('error', "Error", ""),
-                                              ('critical', "Critical", "")],
-                                       default='error',
-                                       update=update_logger)
+    log_level: bpy.props.EnumProperty(name="log_level",
+                                      items=[('debug', "Debug", ""),
+                                             ('warning', "Warning", ""),
+                                             ('error', "Error", ""),
+                                             ('critical', "Critical", "")],
+                                      default='error',
+                                      update=update_logger)
 
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "log_level", text="Log Level")
         layout.separator()
         layout.label(text="appleseed Library Versions:")
-        import appleseed as asr
         box = layout.box()
         box.label(text=asr.get_synthetic_version_string())
 
         lib_info = asr.get_third_parties_versions()
         for key in lib_info:
             box = layout.box()
-            box.label(text="%s: %s" % (key, lib_info [key]))
+            box.label(text="%s: %s" % (key, lib_info[key]))
 
 
 def register():

@@ -31,136 +31,134 @@ from ..utils import util
 
 
 class AppleseedSSSSetsProps(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(name="SSS Set Name",
-                                    default="")
+    name: bpy.props.StringProperty(name="SSS Set Name",
+                                   default="")
 
 
 class AppleseedSSSSets(bpy.types.PropertyGroup):
-    sss_sets = bpy.props.CollectionProperty(type=AppleseedSSSSetsProps,
-                                            name="appleseed SSS Sets",
-                                            description="")
+    sss_sets: bpy.props.CollectionProperty(type=AppleseedSSSSetsProps,
+                                           name="appleseed SSS Sets",
+                                           description="")
 
-    sss_sets_index = bpy.props.IntProperty(name="layer_index",
-                                           description="",
-                                           default=0)
+    sss_sets_index: bpy.props.IntProperty(name="layer_index",
+                                          description="",
+                                          default=0)
 
 
 class AppleseedSkySettings(bpy.types.PropertyGroup):
-    env_type = bpy.props.EnumProperty(name="Environment Type",
-                                      items=[("constant", "Constant", "Use constant color for sky", "", 1),
-                                             ("gradient", "Gradient", "Use sky color gradient", "", 2),
-                                             ("latlong_map", "HDRI Environment", "Use HDRI map texture", "", 3),
-                                             ("mirrorball_map", "Mirror Ball", "Use mirror ball texture", "", 4),
-                                             ("none", "None", "", "", 7),
-                                             ("sunsky", "Physical Sky", "", "", 5),
-                                             ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere", "", 6)],
-                                      description="Select environment type",
-                                      default="none")
+    env_type: bpy.props.EnumProperty(name="Environment Type",
+                                     items=[("constant", "Constant", "Use constant color for sky", "", 1),
+                                            ("gradient", "Gradient", "Use sky color gradient", "", 2),
+                                            ("latlong_map", "HDRI Environment", "Use HDRI map texture", "", 3),
+                                            ("mirrorball_map", "Mirror Ball", "Use mirror ball texture", "", 4),
+                                            ("none", "None", "", "", 7),
+                                            ("sunsky", "Physical Sky", "", "", 5),
+                                            ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere", "", 6)],
+                                     description="Select environment type",
+                                     default="none")
 
-    sun_model = bpy.props.EnumProperty(name="Sky Model",
-                                       items=[('hosek', "Hosek-Wilkie", "Hosek-Wilkie physical sun/sky model")],
-                                       description="Physical sun/sky model",
-                                       default='hosek')
+    sun_model: bpy.props.EnumProperty(name="Sky Model",
+                                      items=[('hosek', "Hosek-Wilkie", "Hosek-Wilkie physical sun/sky model")],
+                                      description="Physical sun/sky model",
+                                      default='hosek')
 
-    sun_theta = bpy.props.FloatProperty(name="sun_theta",
-                                        description="Sun polar (vertical) angle in degrees",
-                                        default=0.0,
-                                        min=-180,
-                                        max=180)
+    sun_theta: bpy.props.FloatProperty(name="sun_theta",
+                                       description="Sun polar (vertical) angle in degrees",
+                                       default=0.0,
+                                       min=-180,
+                                       max=180)
 
-    sun_phi = bpy.props.FloatProperty(name="sun_phi",
-                                      description="Sun azimuthal (horizontal) angle in degrees",
-                                      default=0.0,
-                                      min=-180,
-                                      max=180)
+    sun_phi: bpy.props.FloatProperty(name="sun_phi",
+                                     description="Sun azimuthal (horizontal) angle in degrees",
+                                     default=0.0,
+                                     min=-180,
+                                     max=180)
 
-    turbidity = bpy.props.FloatProperty(name="turbidity",
-                                        description='',
-                                        default=4.0,
-                                        min=0.0,
-                                        max=10.0)
+    turbidity: bpy.props.FloatProperty(name="turbidity",
+                                       description='',
+                                       default=4.0,
+                                       min=0.0,
+                                       max=10.0)
 
-    turbidity_multiplier = bpy.props.FloatProperty(name="turbidity_multiplier",
-                                                   description='',
-                                                   default=2.0,
-                                                   min=0,
-                                                   max=10.0)
+    turbidity_multiplier: bpy.props.FloatProperty(name="turbidity_multiplier",
+                                                  description='',
+                                                  default=2.0,
+                                                  min=0,
+                                                  max=10.0)
 
-    luminance_multiplier = bpy.props.FloatProperty(name="luminance_multiplier",
+    luminance_multiplier: bpy.props.FloatProperty(name="luminance_multiplier",
+                                                  description='',
+                                                  default=1.0,
+                                                  min=0.0)
+
+    luminance_gamma: bpy.props.FloatProperty(name="luminance_gamma",
+                                             description='',
+                                             default=1.0,
+                                             min=0.0)
+
+    saturation_multiplier: bpy.props.FloatProperty(name="saturation_multiplier",
                                                    description='',
                                                    default=1.0,
                                                    min=0.0)
 
-    luminance_gamma = bpy.props.FloatProperty(name="luminance_gamma",
-                                              description='',
-                                              default=1.0,
-                                              min=0.0)
+    horizon_shift: bpy.props.FloatProperty(name="horizon_shift",
+                                           description='',
+                                           default=0.0,
+                                           min=-2.0,
+                                           max=2.0)
 
-    saturation_multiplier = bpy.props.FloatProperty(name="saturation_multiplier",
-                                                    description='',
-                                                    default=1.0,
-                                                    min=0.0)
+    ground_albedo: bpy.props.FloatProperty(name="ground_albedo",
+                                           description='',
+                                           default=0.3,
+                                           min=0.0,
+                                           max=1.0)
 
-    horizon_shift = bpy.props.FloatProperty(name="horizon_shift",
-                                            description='',
+    env_tex_mult: bpy.props.FloatProperty(name="env_tex_mult",
+                                          description="",
+                                          default=1)
+
+    env_tex: bpy.props.PointerProperty(name="env_tex",
+                                       type=bpy.types.Image)
+
+    horizontal_shift: bpy.props.FloatProperty(name="horizontal_shift",
+                                              description="Environment texture horizontal shift in degrees",
+                                              default=0.0,
+                                              min=-360.0,
+                                              max=360.0)
+
+    vertical_shift: bpy.props.FloatProperty(name="vertical_shift",
+                                            description="Environment texture vertical shift in degrees",
                                             default=0.0,
-                                            min=-2.0,
-                                            max=2.0)
+                                            min=-180.0,
+                                            max=180.0)
 
-    ground_albedo = bpy.props.FloatProperty(name="ground_albedo",
-                                            description='',
-                                            default=0.3,
-                                            min=0.0,
-                                            max=1.0)
+    env_alpha: bpy.props.FloatProperty(name="env_alpha",
+                                       description="Alpha value of the environment",
+                                       default=1.0,
+                                       min=0.0,
+                                       max=1.0)
 
-    env_tex_mult = bpy.props.FloatProperty(name="env_tex_mult",
-                                           description="",
-                                           default=1)
+    env_exposure: bpy.props.FloatProperty(name="env_exposure",
+                                          description="Environment exposure",
+                                          default=0.0)
 
-    env_tex_colorspace = bpy.props.EnumProperty(name="env_tex_colorspace",
-                                                description="Color space of input texture",
-                                                items=[
-                                                    ('srgb', "sRGB", ""),
-                                                    ('linear_rgb', "Linear RGB", ""),
-                                                    ('ciexyz', "CIE XYZ", "")],
-                                                default='linear_rgb')
+    env_exposure_multiplier: bpy.props.FloatProperty(name="env_exposure_multiplier",
+                                                     description="",
+                                                     default=1.0,
+                                                     soft_min=-64.0,
+                                                     soft_max=64.0)
 
-    env_tex = bpy.props.PointerProperty(name="env_tex",
-                                        type=bpy.types.Image)
 
-    horizontal_shift = bpy.props.FloatProperty(name="horizontal_shift",
-                                               description="Environment texture horizontal shift in degrees",
-                                               default=0.0,
-                                               min=-360.0,
-                                               max=360.0)
-
-    vertical_shift = bpy.props.FloatProperty(name="vertical_shift",
-                                             description="Environment texture vertical shift in degrees",
-                                             default=0.0,
-                                             min=-180.0,
-                                             max=180.0)
-
-    env_alpha = bpy.props.FloatProperty(name="env_alpha",
-                                        description="Alpha value of the environment",
-                                        default=1.0,
-                                        min=0.0,
-                                        max=1.0)
-
-    env_exposure = bpy.props.FloatProperty(name="env_exposure",
-                                           description="Environment exposure",
-                                           default=0.0)
-
-    env_exposure_multiplier = bpy.props.FloatProperty(name="env_exposure_multiplier",
-                                                      description="",
-                                                      default=1.0,
-                                                      soft_min=-64.0,
-                                                      soft_max=64.0)
+classes = (
+    AppleseedSSSSetsProps,
+    AppleseedSSSSets,
+    AppleseedSkySettings
+)
 
 
 def register():
-    util.safe_register_class(AppleseedSSSSetsProps)
-    util.safe_register_class(AppleseedSSSSets)
-    util.safe_register_class(AppleseedSkySettings)
+    for cls in classes:
+        util.safe_register_class(cls)
     bpy.types.Scene.appleseed_sss_sets = bpy.props.PointerProperty(type=AppleseedSSSSets)
     bpy.types.World.appleseed_sky = bpy.props.PointerProperty(type=AppleseedSkySettings)
 
@@ -168,6 +166,5 @@ def register():
 def unregister():
     del bpy.types.World.appleseed_sky
     del bpy.types.Scene.appleseed_sss_sets
-    util.safe_unregister_class(AppleseedSkySettings)
-    util.safe_unregister_class(AppleseedSSSSets)
-    util.safe_unregister_class(AppleseedSSSSetsProps)
+    for cls in reversed(classes):
+        util.safe_unregister_class(cls)

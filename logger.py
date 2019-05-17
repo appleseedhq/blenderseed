@@ -45,7 +45,7 @@ def get_logger():
 
         __logger.addHandler(logging.StreamHandler())
 
-        log_level = bpy.context.user_preferences.addons['blenderseed'].preferences.log_level
+        log_level = bpy.context.preferences.addons['blenderseed'].preferences.log_level
 
         __logger.setLevel(__mapping[log_level])
 
