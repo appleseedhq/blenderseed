@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2014-2019 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,122 +29,6 @@ import bpy
 
 from . import osl_ops, texture_ops
 from ..utils import util
-
-
-# Material operators
-
-
-class ASMAT_OT_new_mat(bpy.types.Operator):
-    bl_label = "New Material"
-    bl_description = "Add a new appleseed material"
-    bl_idname = "appleseed.new_mat"
-
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        return obj
-
-    def execute(self, context):
-        mat_name = "Material"
-        obj = context.object
-        dupli_node_tree = None
-        if context.object.active_material is not None and context.object.active_material.appleseed.osl_node_tree is not None:
-            mat_name = context.object.active_material.name
-            dupli_node_tree = context.object.active_material.appleseed.osl_node_tree.copy()
-
-        mat = bpy.data.materials.new(name=mat_name)
-
-        if obj.material_slots:
-            obj.material_slots[obj.active_material_index].material = mat
-        else:
-            obj.data.materials.append(mat)
-
-        if dupli_node_tree is not None:
-            dupli_node_tree.name = context.object.active_material.name
-            context.object.active_material.appleseed.osl_node_tree = dupli_node_tree
-        else:
-            bpy.ops.appleseed.add_osl_nodetree()
-
-        return {'FINISHED'}
-
-
-class ASMAT_OT_new_node_tree(bpy.types.Operator):
-    """
-    appleseed material node tree generator.
-    """
-
-    bl_idname = "appleseed.add_osl_nodetree"
-    bl_label = "Add appleseed OSL Material Node Tree"
-    bl_description = "Create an appleseed OSL material node tree and link it to the current material"
-
-    def execute(self, context):
-        material = context.object.active_material
-        nodetree = bpy.data.node_groups.new(material.name, 'AppleseedOSLNodeTree')
-        nodetree.use_fake_user = True
-        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
-        surface.location = (0, 0)
-        disney_node = nodetree.nodes.new('AppleseedasDisneyMaterialNode')
-        disney_node.location = (-300, 0)
-        nodetree.links.new(disney_node.outputs[0], surface.inputs[0])
-        material.appleseed.osl_node_tree = nodetree
-        return {'FINISHED'}
-
-
-class ASMAT_OT_view_nodetree(bpy.types.Operator):
-    bl_label = "View OSL Nodetree"
-    bl_description = "View the node tree attached to this material"
-    bl_idname = "appleseed.view_nodetree"
-
-    def execute(self, context):
-        node_tree = None
-        ob = context.active_object if hasattr(context, "active_object") else None
-        if ob:
-            if ob.type == 'LAMP':
-                if ob.data.type == 'AREA':
-                    lamp = ob.data.appleseed
-                    node_tree = lamp.osl_node_tree
-                else:
-                    return {"CANCELLED"}
-            elif ob.type == 'MESH':
-                mat = ob.active_material
-
-                if mat:
-                    node_tree = mat.appleseed.osl_node_tree
-            else:
-                return {"CANCELLED"}
-
-        if node_tree is not None:
-            for area in context.screen.areas:
-                if area.type == "NODE_EDITOR":
-                    for space in area.spaces:
-                        if space.type == "NODE_EDITOR":
-                            space.tree_type = "AppleseedOSLNodeTree"
-                            space.node_tree = node_tree
-                            return {"FINISHED"}
-
-        return {"CANCELLED"}
-
-
-class ASLAMP_OT_new_node_tree(bpy.types.Operator):
-    """
-    appleseed lamp node tree generator.
-    """
-
-    bl_idname = "appleseed.add_lap_osl_nodetree"
-    bl_label = "Add appleseed OSL Material Node Tree"
-    bl_description = "Create an appleseed OSL material node tree and link it to the current lamp"
-
-    def execute(self, context):
-        lamp = context.object.data
-        nodetree = bpy.data.node_groups.new('%s' % lamp.name, 'AppleseedOSLNodeTree')
-        nodetree.use_fake_user = True
-        surface = nodetree.nodes.new('AppleseedasClosure2SurfaceNode')
-        surface.location = (0, 0)
-        area_lamp_node = nodetree.nodes.new('AppleseedasAreaLightNode')
-        area_lamp_node.location = (-300, 0)
-        nodetree.links.new(area_lamp_node.outputs[0], surface.inputs[0])
-        lamp.appleseed.osl_node_tree = nodetree
-        return {'FINISHED'}
 
 
 # Post processing operators
@@ -231,10 +115,6 @@ class ASSSS_OT_remove_sss_set(bpy.types.Operator):
 
 
 classes = (
-    ASMAT_OT_new_mat,
-    ASMAT_OT_view_nodetree,
-    ASMAT_OT_new_node_tree,
-    ASLAMP_OT_new_node_tree,
     ASPP_OT_add_pp,
     ASPP_OT_remove_PP,
     ASSSS_OT_add_sss_set,
