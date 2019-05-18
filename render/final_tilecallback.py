@@ -36,6 +36,10 @@ logger = get_logger()
 
 
 class FinalTileCallback(asr.ITileCallback):
+    """
+    The TileCallback is responsible for sending the results of the render back to Blender
+    """
+
     def __init__(self, engine, scene):
         super().__init__()
 
@@ -99,7 +103,8 @@ class FinalTileCallback(asr.ITileCallback):
         """
         Processes the tile data as it finished
         """
-        # logger.debug("Finished tile %s %s", tile_x, tile_y)
+
+        logger.debug("Finished tile %s %s", tile_x, tile_y)
 
         image = frame.image()
 
@@ -141,9 +146,19 @@ class FinalTileCallback(asr.ITileCallback):
 
         # Update image.
         render_view = self.__engine.active_view_get()
-        result = self.__engine.begin_result(x0, y0, take_x, take_y, view=render_view)
+        result = self.__engine.begin_result(x0,
+                                            y0,
+                                            take_x,
+                                            take_y,
+                                            view=render_view)
         layer = result.layers[0].passes.find_by_name("Combined", render_view)
-        pix = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+        pix = self.__get_pixels(image,
+                                tile_x,
+                                tile_y,
+                                take_x,
+                                take_y,
+                                skip_x,
+                                skip_y)
         layer.rect = pix
         if len(frame.aovs()) > 0:
             self.__engine.update_result(result)
@@ -151,13 +166,25 @@ class FinalTileCallback(asr.ITileCallback):
                 model = aov.get_model()
                 if model not in ("cryptomatte_object_aov", "cryptomatte_material_aov"):
                     image = aov.get_image()
-                    pixel_buffer = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+                    pixel_buffer = self.__get_pixels(image,
+                                                     tile_x,
+                                                     tile_y,
+                                                     take_x,
+                                                     take_y,
+                                                     skip_x,
+                                                     skip_y)
                     layer = result.layers[0].passes.find_by_name(self.__map_aovs(aov.get_name()), render_view)
                     layer.rect = pixel_buffer
                     self.__engine.update_result(result)
                 else:
-                    image = aov.get_crypto_image()
-                    pixel_buffer = self.__get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y)
+                    image = aov.get_cryptomatte_image()
+                    pixel_buffer = self.__get_pixels(image,
+                                                     tile_x,
+                                                     tile_y,
+                                                     take_x,
+                                                     take_y,
+                                                     skip_x,
+                                                     skip_y)
                     crypto_pixels = self.__process_crypto_pixels(pixel_buffer)
 
                     for i, pixels in enumerate(crypto_pixels):
@@ -176,9 +203,14 @@ class FinalTileCallback(asr.ITileCallback):
         remaining_seconds = (self.__total_pixels - self.__rendered_pixels) * seconds_per_pixel
         self.__rendered_tiles += 1
         self.__render_stats = ["appleseed Rendering: Pass %i of %i, Tile %i of %i completed" %
-                               (self.__pass_number, self.__total_passes, self.__rendered_tiles, self.__total_tiles), "Time Remaining: {0}".format(self.__format_seconds_to_hhmmss(remaining_seconds))]
+                               (self.__pass_number,
+                                self.__total_passes,
+                                self.__rendered_tiles,
+                                self.__total_tiles),
+                               "Time Remaining: {0}".format(self.__format_seconds_to_hhmmss(remaining_seconds))]
 
-    def __get_pixels(self, image, tile_x, tile_y, take_x, take_y, skip_x, skip_y):
+    @staticmethod
+    def __get_pixels(image, tile_x, tile_y, take_x, take_y, skip_x, skip_y):
         tile = image.tile(tile_x, tile_y)
         tile_w = tile.get_width()
         tile_c = tile.get_channel_count()
@@ -193,10 +225,11 @@ class FinalTileCallback(asr.ITileCallback):
 
         return pixel_buffer
 
-    def __process_crypto_pixels(self, pixel_buffer):
-        layer_1_pixels = []
-        layer_2_pixels = []
-        layer_3_pixels = []
+    @staticmethod
+    def __process_crypto_pixels(pixel_buffer):
+        layer_1_pixels = list()
+        layer_2_pixels = list()
+        layer_3_pixels = list()
 
         for pixel in pixel_buffer:
             layer_1_pixels.append(pixel[3:7])

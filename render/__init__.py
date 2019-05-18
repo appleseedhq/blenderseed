@@ -146,15 +146,20 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.__restart_interactive_render()
 
     def view_draw(self, context, depsgraph):
-        self.__draw_pixels(context)
+        self.__draw_pixels(context, depsgraph)
 
         # Check if view has changed.
-        view_update, cam_param_update, cam_translate_update, cam_model_update = self.__interactive_scene_translator.check_view(context, depsgraph)
+        view_update, cam_param_update, cam_translate_update, cam_model_update = self.__interactive_scene_translator.check_view(context,
+                                                                                                                               depsgraph)
 
         if view_update or cam_param_update or cam_translate_update or cam_model_update:
             self.__pause_rendering()
             logger.debug("Updating view")
-            self.__interactive_scene_translator.update_view(view_update, cam_param_update, cam_model_update)
+            self.__interactive_scene_translator.update_view(context,
+                                                            depsgraph,
+                                                            view_update,
+                                                            cam_param_update,
+                                                            cam_model_update)
             self.__restart_interactive_render()
 
     def update_render_passes(self, scene=None, renderlayer=None):
@@ -232,26 +237,31 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         if depsgraph.scene.appleseed.scene_export_mode == 'export_only':
-            scene_translator = SceneTranslator.create_project_export_translator(self, depsgraph)
+            scene_translator = SceneTranslator.create_project_export_translator(self,
+                                                                                depsgraph)
             scene_translator.translate_scene()
             scene_translator.write_project(depsgraph.scene.appleseed.export_path)
         else:
-            scene_translator = SceneTranslator.create_final_render_translator(self, depsgraph)
+            scene_translator = SceneTranslator.create_final_render_translator(self,
+                                                                              depsgraph)
             self.update_stats("appleseed Rendering: Translating scene", "")
 
             if depsgraph.scene.render.use_multiview and len(depsgraph.scene.render.views) > 1:
                 self.active_view_set(depsgraph.scene.render.views[0].name)
 
                 scene_translator.translate_scene()
-                self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+                self.__start_final_render(depsgraph.scene,
+                                          scene_translator.as_project)
 
                 for view in depsgraph.scene.render.views[1:]:
                     self.active_view_set(view.name)
                     scene_translator.update_multiview_camera()
-                    self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+                    self.__start_final_render(depsgraph.scene,
+                                              scene_translator.as_project)
             else:
                 scene_translator.translate_scene()
-                self.__start_final_render(depsgraph.scene, scene_translator.as_project)
+                self.__start_final_render(depsgraph.scene,
+                                          scene_translator.as_project)
 
     def __start_final_render(self, scene, project):
         """
@@ -266,7 +276,8 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__tile_callback = FinalTileCallback(self, scene)
 
-        self.__renderer_controller = FinalRendererController(self, self.__tile_callback)
+        self.__renderer_controller = FinalRendererController(self,
+                                                             self.__tile_callback)
 
         self.__renderer = asr.MasterRenderer(project,
                                              project.configurations()['final'].get_inherited_parameters(),
@@ -309,7 +320,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         logger.debug("Translating scene for interactive rendering")
 
-        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(self, context, depsgraph)
+        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(self,
+                                                                                                   context,
+                                                                                                   depsgraph)
         self.__interactive_scene_translator.translate_scene()
 
         self.__camera = self.__interactive_scene_translator.camera_translator
@@ -373,12 +386,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.__renderer_controller = None
         self.__tile_callback = None
 
-    def __draw_pixels(self, context):
+    def __draw_pixels(self, context, depsgraph):
         """
         Draw rendered image in Blender's viewport.
         """
 
-        self.bind_display_space_shader(context.evaluated_depsgraph_get().scene)
+        self.bind_display_space_shader(depsgraph.scene_eval)
         self.__tile_callback.draw_pixels()
         self.unbind_display_space_shader()
 
