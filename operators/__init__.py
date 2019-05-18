@@ -34,7 +34,7 @@ from ..utils import util
 # Post processing operators
 
 
-class ASPP_OT_add_pp(bpy.types.Operator):
+class ASPP_OT_add_postproc_stage(bpy.types.Operator):
     bl_label = "Add Stage"
     bl_description = "Add new Post Processing stage"
     bl_idname = "appleseed.add_pp_stage"
@@ -48,7 +48,7 @@ class ASPP_OT_add_pp(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ASPP_OT_remove_PP(bpy.types.Operator):
+class ASPP_OT_remove_postproc_stage(bpy.types.Operator):
     bl_label = "Remove Stage"
     bl_description = "Remove Post Processing stage"
     bl_idname = "appleseed.remove_pp_stage"
@@ -74,7 +74,9 @@ class ASPP_OT_remove_PP(bpy.types.Operator):
 
 
 class ASSSS_OT_add_sss_set(bpy.types.Operator):
-    """Operator for adding SSS sets"""
+    """
+    Operator for adding SSS sets
+    """
 
     bl_label = "Add Set"
     bl_description = "Add new SSS Set"
@@ -92,7 +94,9 @@ class ASSSS_OT_add_sss_set(bpy.types.Operator):
 
 
 class ASSSS_OT_remove_sss_set(bpy.types.Operator):
-    """Operator for removing SSS sets"""
+    """
+    Operator for removing SSS sets
+    """
 
     bl_label = "Remove Set"
     bl_description = "Remove SSS Set"
@@ -115,8 +119,8 @@ class ASSSS_OT_remove_sss_set(bpy.types.Operator):
 
 
 classes = (
-    ASPP_OT_add_pp,
-    ASPP_OT_remove_PP,
+    ASPP_OT_add_postproc_stage,
+    ASPP_OT_remove_postproc_stage,
     ASSSS_OT_add_sss_set,
     ASSSS_OT_remove_sss_set
 )

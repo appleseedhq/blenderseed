@@ -37,12 +37,12 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
     bl_label = "Compile OSL Script Node Parameters"
 
     def execute(self, context):
-        temp_values = {}
-        input_connections = {}
-        output_connections = {}
+        temp_values = dict()
+        input_connections = dict()
+        output_connections = dict()
 
         material = context.object.active_material
-        node_tree = material.appleseed.osl_node_tree
+        node_tree = material.node_tree
         node = node_tree.nodes.active
         location = node.location
         width = node.width
@@ -51,9 +51,9 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
         # Save existing connections and parameters
         for key, value in node.items():
             temp_values[key] = value
-        for input in node.inputs:
-            if input.is_linked:
-                input_connections[input.bl_idname] = input.links[0].from_socket
+        for input_iter in node.inputs:
+            if input_iter.is_linked:
+                input_connections[input_iter.bl_idname] = input_iter.links[0].from_socket
         for output in node.outputs:
             if output.is_linked:
                 outputs = []
@@ -63,7 +63,8 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
 
         stdosl_path = path_util.get_stdosl_paths()
         compiler = asr.ShaderCompiler(stdosl_path)
-        osl_bytecode = osl_utils.compile_osl_bytecode(compiler, script)
+        osl_bytecode = osl_utils.compile_osl_bytecode(compiler,
+                                                      script)
 
         if osl_bytecode is not None:
             q = asr.ShaderQuery()
@@ -71,7 +72,8 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
 
             node_data = osl_utils.parse_shader(q)
 
-            node_name, node_category, node_classes = osl_utils.generate_node(node_data, osl_utils.AppleseedOSLScriptNode)
+            node_name, node_category, node_classes = osl_utils.generate_node(node_data,
+                                                                             osl_utils.AppleseedOSLScriptNode)
 
             for cls in reversed(node.classes):
                 util.safe_unregister_class(cls)
@@ -98,14 +100,16 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
                         output_socket_class = output
                 if output_socket_class:
                     for output_connection in sockets:
-                        node_tree.links.new(output_socket_class, output_connection)
+                        node_tree.links.new(output_socket_class,
+                                            output_connection)
             for connection, sockets in input_connections.items():
                 for in_socket in new_node.inputs:
                     if in_socket.bl_idname == connection:
                         input_socket_class = in_socket
                 if input_socket_class:
                     for input_connection in sockets:
-                        node_tree.links.new(input_socket_class, input_connection)
+                        node_tree.links.new(input_socket_class,
+                                            input_connection)
 
         else:
             self.report({'ERROR'}, "OSL script did not compile!")
