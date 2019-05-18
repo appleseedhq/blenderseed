@@ -4,3 +4,4 @@ docs/_build/
 *blend1
 appleseed/*
 /.idea/*
+/.vscode/*
