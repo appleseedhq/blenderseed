@@ -67,15 +67,15 @@ class ASWORLD_PT_world(bpy.types.Panel):
                 layout.prop(asr_sky_props, "ground_albedo", text="Ground Albedo")
 
         elif asr_sky_props.env_type == "gradient":
-            layout.prop(scene.world, "horizon_color", text="Horizon Radiance")
-            layout.prop(scene.world, "zenith_color", text="Zenith Radiance")
+            layout.prop(asr_sky_props, "horizon_color", text="Horizon Radiance")
+            layout.prop(asr_sky_props, "zenith_color", text="Zenith Radiance")
 
         elif asr_sky_props.env_type == "constant":
-            layout.prop(scene.world, "horizon_color", text="Radiance")
+            layout.prop(asr_sky_props, "horizon_color", text="Radiance")
 
         elif asr_sky_props.env_type == "constant_hemisphere":
-            layout.prop(scene.world, "zenith_color", text="Upper Radiance")
-            layout.prop(scene.world, "horizon_color", text="Lower Radiance")
+            layout.prop(asr_sky_props, "zenith_color", text="Upper Radiance")
+            layout.prop(asr_sky_props, "horizon_color", text="Lower Radiance")
 
         elif asr_sky_props.env_type == "mirrorball_map":
             col = layout.column(align=True)

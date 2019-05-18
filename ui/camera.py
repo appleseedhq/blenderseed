@@ -148,7 +148,11 @@ class ASCAMERA_PT_dof(bpy.types.Panel):
     def poll(cls, context):
         renderer = context.scene.render
         is_context = renderer.engine == 'APPLESEED_RENDER' and context.active_object.type == 'CAMERA'
-        is_model = context.active_object.data.type == 'PERSP' or (context.active_object.data.type == 'PANO' and context.active_object.data.appleseed.fisheye_projection_type is not 'none')
+        if hasattr(context.active_object.data, "type"):
+            is_model = context.active_object.data.type == 'PERSP' or (context.active_object.data.type == 'PANO' \
+                and context.active_object.data.appleseed.fisheye_projection_type is not 'none')
+        else:
+            is_model = False
         return  is_context and is_model
 
     def draw_header(self, context):
@@ -161,17 +165,18 @@ class ASCAMERA_PT_dof(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True
         scene = context.scene
+        cam = scene.camera
         asr_cam_props = scene.camera.data.appleseed
 
         layout.active = asr_cam_props.enable_dof
         layout.prop(asr_cam_props, "enable_autofocus", text="Enable Autofocus")
         col = layout.column()
-        col.active = not context.active_object.data.appleseed.enable_autofocus
+        col.active = not asr_cam_props.enable_autofocus
         row = col.row()
-        row.active = context.active_object.data.dof_object is None
-        row.prop(context.active_object.data, "dof_distance", text="Focal Distance")
+        row.active = cam.data.dof_object is None
+        row.prop(cam.data, "dof_distance", text="Focal Distance")
         row = col.row()
-        row.prop(context.active_object.data, "dof_object", text='Focus on Object')
+        row.prop(cam.data, "dof_object", text='Focus on Object')
         layout.prop(asr_cam_props, "f_number", text="F-Number")
         layout.prop(asr_cam_props, "diaphragm_blades", text="Blades")
         layout.prop(asr_cam_props, "diaphragm_angle", text="Tilt Angle")

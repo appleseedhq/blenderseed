@@ -123,7 +123,7 @@ class ASLAMP_PT_lamp(bpy.types.Panel):
         if lamp_data.type == 'AREA':
             layout.prop(asr_lamp, "area_shape", expand=True, text="Shape")
             col = layout.column(align=True)
-            if asr_lamp.area_shape == 'grid':
+            if asr_lamp.area_shape == 'rectangle_object':
                 col.prop(lamp_data, "size", text="Size X")
                 col.prop(lamp_data, "size_y", text="Size Y")
             else:
