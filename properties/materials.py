@@ -110,10 +110,6 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                                    max=1.0,
                                                    update=refresh_preview)
 
-    # Nodes
-    osl_node_tree: bpy.props.PointerProperty(name="OSL Node Tree",
-                                             type=bpy.types.NodeTree)
-
 
 def register():
     util.safe_register_class(AppleseedMatProps)

@@ -148,6 +148,18 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                      soft_min=-64.0,
                                                      soft_max=64.0)
 
+    horizon_color: bpy.props.FloatVectorProperty(name="horizon_color",
+                                                 subtype='COLOR',
+                                                 default=(0.3, 0.3, 0.3),
+                                                 min=0.0,
+                                                 max=1.0,)
+
+    zenith_color: bpy.props.FloatVectorProperty(name="zenith_color",
+                                                subtype='COLOR',
+                                                default=(0.1, 0.1, 0.1),
+                                                min=0.0,
+                                                max=1.0,)
+
 
 classes = (
     AppleseedSSSSetsProps,

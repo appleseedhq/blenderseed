@@ -47,46 +47,6 @@ class AppleseedOSLScriptBaseNode(osl_utils.AppleseedOSLScriptNode):
         layout.operator('appleseed.compile_osl_script', text="Create Parameters")
 
 
-class AppleseedOSLNodeTree(bpy.types.NodeTree):
-
-    bl_idname = 'AppleseedOSLNodeTree'
-    bl_label = 'appleseed OSL Node Tree'
-    bl_icon = 'MATERIAL'
-
-    @classmethod
-    def get_from_context(cls, context):
-        """
-        Switches the displayed node tree when user selects object/material
-        """
-        obj = context.active_object
-
-        if obj and obj.type not in {"LIGHT", "CAMERA"}:
-            mat = obj.active_material
-
-            if mat:
-                # ID pointer
-                node_tree = mat.appleseed.osl_node_tree
-
-                if node_tree:
-                    return node_tree, mat, mat
-
-        elif obj and obj.type == "LIGHT":
-            node_tree = obj.data.appleseed.osl_node_tree
-
-            if node_tree:
-                return node_tree, None, None
-
-        return None, None, None
-
-    @classmethod
-    def poll(cls, context):
-        renderer = context.scene.render.engine
-        return renderer == 'APPLESEED_RENDER'
-
-    def update(self):
-        if hasattr(bpy.context, "material"):
-            bpy.context.material.preview_render_type = bpy.context.material.preview_render_type
-
 class AppleseedOSLNodeCategory(nodeitems_utils.NodeCategory):
     """
     Node category for extending the Add menu, toolbar panels and search operator
@@ -144,7 +104,6 @@ classes = []
 
 
 def register():
-    # util.safe_register_class(AppleseedOSLNodeTree)
     util.safe_register_class(AppleseedOSLScriptBaseNode)
     node_list = osl_utils.read_osl_shaders()
     for node in node_list:
@@ -165,4 +124,3 @@ def unregister():
         util.safe_unregister_class(cls)
 
     util.safe_unregister_class(AppleseedOSLScriptBaseNode)
-    # util.safe_unregister_class(AppleseedOSLNodeTree)
