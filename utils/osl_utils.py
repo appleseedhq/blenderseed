@@ -91,6 +91,8 @@ class AppleseedOSLNode(bpy.types.Node):
                         param_section = x['section']
                 if x['name'] in self.filepaths:
                     layout.template_ID_preview(self, x['name'], open="image.open")
+                    image = getattr(self, (x['name']))
+                    layout.prop(image, "filepath", text="Filepath")
                 else:
                     label_text = x['label']
                     if x['type'] in ('color', 'vector', 'float[2]'):
@@ -161,6 +163,8 @@ class AppleseedOSLScriptNode(bpy.types.Node):
                             param_section = x['section']
                     if x['name'] in self.filepaths:
                         layout.template_ID_preview(self, x['name'], open="image.open")
+                        image = getattr(self, (x['name']))
+                        layout.prop(image, "filepath", text="Filepath")
                     else:
                         label_text = x['label']
                         if x['type'] in ('color', 'vector', 'float[2]'):
