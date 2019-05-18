@@ -63,10 +63,12 @@ def safe_unregister_class(cls):
 
 
 def filter_params(params):
-    filter_list = set()
+    filter_list = list()
     for p in params:
-        filter_list.update({p})
-    return list(filter_list)
+        if p not in filter_list:
+            filter_list.append(p)
+    
+    return filter_list
 
 
 def realpath(path):
@@ -96,13 +98,15 @@ def update_project(_):
     compiler = asr.ShaderCompiler(stdosl_path)
     q = asr.ShaderQuery()
     for script in bpy.data.texts:
-        osl_bytecode = osl_utils.compile_osl_bytecode(compiler, script)
+        osl_bytecode = osl_utils.compile_osl_bytecode(compiler,
+                                                      script)
         if osl_bytecode is not None:
             q.open_bytecode(osl_bytecode)
 
             node_data = osl_utils.parse_shader(q)
 
-            node_name, node_category, node_classes = osl_utils.generate_node(node_data, osl_utils.AppleseedOSLScriptNode)
+            node_name, node_category, node_classes = osl_utils.generate_node(node_data,
+                                                                             osl_utils.AppleseedOSLScriptNode)
 
             for cls in node_classes:
                 safe_register_class(cls)
@@ -166,7 +170,9 @@ def calc_film_dimensions(aspect_ratio, camera, zoom):
 def find_autofocus_point(scene):
     cam = scene.camera
     co = scene.cursor_location
-    co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
+    co_2d = bpy_extras.object_utils.world_to_camera_view(scene,
+                                                         cam,
+                                                         co)
     y = 1 - co_2d.y
 
     return co_2d.x, y
