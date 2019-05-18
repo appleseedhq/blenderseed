@@ -269,6 +269,11 @@ class PackageBuilder(object):
         shaders_dir = os.path.join(self.settings.root_dir, "appleseed", "shaders")
         safe_make_directory(shaders_dir)
 
+        osl_headers = ("stdosl.h", "oslutil.h", "as_osl_extensions.h")
+
+        for header in osl_headers:
+            shutil.copy(os.path.join(self.settings.appleseed_shaders_path, header), shaders_dir)
+
         self.__do_copy_shaders(os.path.join(self.settings.appleseed_shaders_path, "appleseed"), shaders_dir)
         self.__do_copy_shaders(os.path.join(self.settings.appleseed_shaders_path, "blenderseed"), shaders_dir)
 
