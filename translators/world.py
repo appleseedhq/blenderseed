@@ -70,15 +70,15 @@ class WorldTranslator(Translator):
         if self.__as_env_type == 'constant':
             self.__as_colors.append(asr.ColorEntity('horizon_radiance_color',
                                                     {'color_space': 'linear_rgb'},
-                                                    self._convert_color(self.bl_world.horizon_color)))
+                                                    self._convert_color(as_world.horizon_color)))
 
         elif self.__as_env_type in ('gradient', 'constant_hemisphere'):
             self.__as_colors.append(asr.ColorEntity('horizon_radiance_color',
                                                     {'color_space': 'srgb'},
-                                                    self._convert_color(self.bl_world.horizon_color)))
+                                                    self._convert_color(as_world.horizon_color)))
             self.__as_colors.append(asr.ColorEntity('zenith_radiance_color',
                                                     {'color_space': 'linear_rgb'},
-                                                    self._convert_color(self.bl_world.zenith_color)))
+                                                    self._convert_color(as_world.zenith_color)))
 
         self.__as_edf_params = self.__create_params(textures_to_add, as_texture_translators)
 
@@ -93,7 +93,8 @@ class WorldTranslator(Translator):
         self.__as_env = asr.Environment("sky",
                                         {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
 
-        self.__as_env_edf.transform_sequence().set_transform(0.0, asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
+        self.__as_env_edf.transform_sequence().set_transform(0.0,
+                                                             asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
 
     def flush_entities(self, as_scene, as_assembly, as_project):
         logger.debug("Flushing world entity")
@@ -112,7 +113,7 @@ class WorldTranslator(Translator):
 
         as_scene.set_environment(self.__as_env)
 
-    def update_world(self, context, as_scene, textures_to_add, as_texture_translators):
+    def update_world(self, context, depsgraph, as_scene, textures_to_add, as_texture_translators):
         logger.debug("Updating world entity")
         if self.__as_env_type is not None:
             for color in self.__as_colors:
@@ -130,7 +131,7 @@ class WorldTranslator(Translator):
         if self.bl_world.appleseed_sky.env_type == 'none':
             as_scene.set_environment(asr.Environment("sky_empty", {}))
         else:
-            self.create_entities(context.depsgraph.scene, textures_to_add, as_texture_translators)
+            self.create_entities(depsgraph.scene_eval, textures_to_add, as_texture_translators)
             self.flush_entities(as_scene, None, None)
 
     # Internal methods.
@@ -144,10 +145,11 @@ class WorldTranslator(Translator):
 
     def __create_params(self, textures_to_add, as_texture_translators):
         as_world = self.bl_world.appleseed_sky
-        tex_id = as_world.env_tex.name_full
-        if tex_id not in as_texture_translators:
-            textures_to_add[tex_id] = TextureTranslator(as_world.env_tex,
-                                                        self.asset_handler)
+        if as_world.env_tex is not None:
+            tex_id = as_world.env_tex.name_full
+            if tex_id not in as_texture_translators:
+                textures_to_add[tex_id] = TextureTranslator(as_world.env_tex,
+                                                            self.asset_handler)
 
         if self.__as_env_type == 'latlong_map':
             tex_name = f"{as_world.env_tex.name_full}_inst"

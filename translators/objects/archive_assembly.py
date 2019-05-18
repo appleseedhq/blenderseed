@@ -51,7 +51,8 @@ class ArchiveAssemblyTranslator(Translator):
         logger.debug("Creating entity for %s", self.appleseed_name)
         ass_name = f"{self.appleseed_name}_ass"
 
-        file_path = self.asset_handler.process_path(self._bl_obj.appleseed.archive_path, AssetType.ARCHIVE_ASSET)
+        file_path = self.asset_handler.process_path(self._bl_obj.appleseed.archive_path,
+                                                    AssetType.ARCHIVE_ASSET)
 
         ass_options = {'filename': file_path}
 
@@ -84,6 +85,9 @@ class ArchiveAssemblyTranslator(Translator):
             as_assembly.assembly_instances().remove(ass_inst)
 
         self.__instances.clear()
+
+    def update_object(self, context, depsgraph, as_assembly, textures_to_add, as_texture_translators):
+        pass
 
     def xform_update(self, inst_key, bl_matrix, as_assembly, as_scene):
         logger.debug("Updating instances for %s", self.appleseed_name)

@@ -58,7 +58,7 @@ class SceneTranslator(object):
         Create a scene translator to export the scene to an appleseed project on disk.
         """
 
-        project_dir = os.path.dirname(depsgraph.scene.appleseed.export_path)
+        project_dir = os.path.dirname(depsgraph.scene_eval.appleseed.export_path)
 
         logger.debug("Creating texture and geometry directories in %s", project_dir)
 
@@ -71,9 +71,9 @@ class SceneTranslator(object):
         if not os.path.exists(textures_dir):
             os.makedirs(textures_dir)
 
-        logger.debug("Creating project export scene translator, filename: %s", depsgraph.scene.appleseed.export_path)
+        logger.debug("Creating project export scene translator, filename: %s", depsgraph.scene_eval.appleseed.export_path)
 
-        asset_handler = CopyAssetsAssetHandler(project_dir, geometry_dir, textures_dir)
+        asset_handler = CopyAssetsAssetHandler(project_dir, geometry_dir, textures_dir, depsgraph)
 
         return cls(engine=engine,
                    depsgraph=depsgraph,
@@ -90,7 +90,7 @@ class SceneTranslator(object):
 
         logger.debug("Creating final render scene translator")
 
-        asset_handler = AssetHandler()
+        asset_handler = AssetHandler(depsgraph)
 
         return cls(engine=engine,
                    depsgraph=depsgraph,
@@ -108,7 +108,7 @@ class SceneTranslator(object):
 
         logger.debug("Creating interactive render scene translator")
 
-        asset_handler = AssetHandler()
+        asset_handler = AssetHandler(depsgraph)
 
         return cls(engine=engine,
                    depsgraph=depsgraph,
@@ -200,7 +200,7 @@ class SceneTranslator(object):
         self.__create_project()
 
         self.__translate_render_settings()
-        self.__translate_frame()
+        self.__translate_frame(self.__context)
 
         self.__create_world_translator()
 
@@ -209,28 +209,44 @@ class SceneTranslator(object):
         textures_to_add = {}
 
         if self.__world_translator is not None:
-            self.__world_translator.create_entities(self.bl_scene, textures_to_add, self.__texture_translators)
+            self.__world_translator.create_entities(self.bl_scene,
+                                                    textures_to_add,
+                                                    self.__texture_translators)
 
-        self.__camera_translator.create_entities(self.bl_scene, textures_to_add, self.__texture_translators)
+        self.__camera_translator.create_entities(self.bl_scene,
+                                                 textures_to_add,
+                                                 self.__texture_translators)
 
         bl_material_blocks, bl_object_blocks = self.__parse_datablocks()
 
-        as_object_translators, as_material_translators, as_lamp_translators = self.__create_translators(bl_material_blocks, bl_object_blocks)
+        as_object_translators, as_material_translators, as_lamp_translators = self.__create_translators(bl_material_blocks,
+                                                                                                        bl_object_blocks)
 
-        self.__create_instancers(as_object_translators, as_lamp_translators)
+        self.__create_instancers(as_object_translators,
+                                 as_lamp_translators)
 
-        self.__create_entities(as_object_translators, as_material_translators, as_lamp_translators, textures_to_add)
+        self.__create_entities(as_object_translators,
+                               as_material_translators,
+                               as_lamp_translators,
+                               textures_to_add)
 
         self.__create_texture_entities(textures_to_add)
 
         self.__calc_motion(as_object_translators)
 
-        self.__flush_entities(as_object_translators, as_material_translators, as_lamp_translators, textures_to_add)
+        self.__flush_entities(as_object_translators,
+                              as_material_translators,
+                              as_lamp_translators,
+                              textures_to_add)
 
         if self.__world_translator is not None:
-            self.__world_translator.flush_entities(self.as_scene, self.main_assembly, self.as_project)
+            self.__world_translator.flush_entities(self.as_scene,
+                                                   self.main_assembly,
+                                                   self.as_project)
 
-        self.__camera_translator.flush_entities(self.as_scene, self.main_assembly, self.as_project)
+        self.__camera_translator.flush_entities(self.as_scene,
+                                                self.main_assembly,
+                                                self.as_project)
 
         self.__load_searchpaths()
 
@@ -248,9 +264,8 @@ class SceneTranslator(object):
         For whatever reason, these changes do not trigger an update request so we must check things manually.
         """
         view_update = False
-        self.__context = context
-        self.__depsgraph = depsgraph
-        cam_param_update, cam_translate_update, cam_model_update = self.__camera_translator.check_view(context)
+        cam_param_update, cam_translate_update, cam_model_update = self.__camera_translator.check_view(context,
+                                                                                                       depsgraph)
 
         # Check if the frame needs to be updated
         width = int(self.__context.region.width)
@@ -262,7 +277,7 @@ class SceneTranslator(object):
 
         return view_update, cam_param_update, cam_translate_update, cam_model_update
 
-    def update_view(self, view_update, cam_param_update, cam_model_update):
+    def update_view(self, context, depsgraph, view_update, cam_param_update, cam_model_update):
         """
         Update the viewport window during interactive rendering.  The viewport update is triggered
         automatically following a scene update, or when the check view function returns true on any of its checks.
@@ -275,12 +290,17 @@ class SceneTranslator(object):
         logger.debug("Begin view update")
 
         if cam_param_update or cam_model_update:
-            self.__camera_translator.update_camera(self.__context, self.as_scene, cam_model_update, None, None)
+            self.__camera_translator.update_camera(context,
+                                                   depsgraph,
+                                                   self.as_scene,
+                                                   cam_model_update,
+                                                   None,
+                                                   None)
 
         if view_update:
-            self.__translate_frame()
+            self.__translate_frame(context)
 
-        self.__camera_translator.set_xform_step(0.0)
+        self.__camera_translator.set_xform_step(0.0, )
 
     def update_scene(self, context, depsgraph):
         """
@@ -296,25 +316,40 @@ class SceneTranslator(object):
 
         logger.debug("Begin Scene Update")
 
-        bl_material_blocks = []
-        bl_object_blocks = []
-        textures_to_add = {}
+        bl_material_blocks = list()
+        bl_object_blocks = list()
+        textures_to_add = dict()
 
         for obj in depsgraph.updates:
             if isinstance(obj.id, bpy.types.World):
                 if self.__world_translator is not None:
-                    self.__world_translator.update_world(context, self.as_scene, textures_to_add, self.__texture_translators)
+                    self.__world_translator.update_world(context,
+                                                         depsgraph,
+                                                         self.as_scene,
+                                                         textures_to_add,
+                                                         self.__texture_translators)
                 else:
                     self.__create_world_translator()
                     if self.__world_translator is not None:
-                        self.__world_translator.create_entities(self.bl_scene, textures_to_add, self.__texture_translators)
-                        self.__world_translator.flush_entities(self.as_scene, self.main_assembly, self.as_project)
+                        self.__world_translator.create_entities(depsgraph.scene_eval,
+                                                                textures_to_add,
+                                                                self.__texture_translators)
+                        self.__world_translator.flush_entities(self.as_scene,
+                                                               self.main_assembly,
+                                                               self.as_project)
             elif isinstance(obj.id, bpy.types.Camera):
-                self.__camera_translator.update_camera(context, self.as_scene, True, textures_to_add, self.__texture_translators)
+                self.__camera_translator.update_camera(context,
+                                                       depsgraph,
+                                                       self.as_scene,
+                                                       True,
+                                                       textures_to_add,
+                                                       self.__texture_translators)
             elif isinstance(obj.id, bpy.types.Material):
                 mat_key = obj.id.name_full
                 if mat_key in self.__material_translators:
-                    self.__material_translators[mat_key].update_material(context, self.main_assembly)
+                    self.__material_translators[mat_key].update_material(context,
+                                                                         depsgraph,
+                                                                         self.main_assembly)
                 else:
                     bl_material_blocks.append(obj.id)
             elif isinstance(obj.id, bpy.types.Object):
@@ -323,22 +358,38 @@ class SceneTranslator(object):
                     if obj_key not in self.__object_translators:
                         bl_object_blocks.append(obj.id)
                     else:
-                        self.__object_translators[obj_key].update_object(context, self.main_assembly, textures_to_add, self.__texture_translators)
+                        self.__object_translators[obj_key].update_object(context,
+                                                                         depsgraph,
+                                                                         self.main_assembly,
+                                                                         textures_to_add,
+                                                                         self.__texture_translators)
                 elif obj.id.type == 'LIGHT':
                     if obj_key not in self.__lamp_translators:
                         bl_object_blocks.append(obj.id)
                     else:
-                        self.__lamp_translators[obj_key].update_lamp(context, self.main_assembly, textures_to_add, self.__texture_translators)
+                        self.__lamp_translators[obj_key].update_lamp(context,
+                                                                     depsgraph,
+                                                                     self.main_assembly,
+                                                                     textures_to_add,
+                                                                     self.__texture_translators)
 
         # Create any new objects or materials
         if bl_material_blocks == [] or bl_object_blocks == []:
-            as_object_translators, as_material_translators, as_lamp_translators = self.__create_translators(bl_material_blocks, bl_object_blocks)
+            as_object_translators, as_material_translators, as_lamp_translators = self.__create_translators(bl_material_blocks,
+                                                                                                            bl_object_blocks)
 
-            self.__create_entities(as_object_translators, as_material_translators, as_lamp_translators, textures_to_add)
-            self.__create_instancers(as_object_translators, as_lamp_translators)
+            self.__create_entities(as_object_translators,
+                                   as_material_translators,
+                                   as_lamp_translators,
+                                   textures_to_add)
+            self.__create_instancers(as_object_translators,
+                                     as_lamp_translators)
             self.__create_texture_entities(textures_to_add)
             self.__calc_motion(as_object_translators)
-            self.__flush_entities(as_object_translators, as_material_translators, as_lamp_translators, textures_to_add)
+            self.__flush_entities(as_object_translators,
+                                  as_material_translators,
+                                  as_lamp_translators,
+                                  textures_to_add)
 
         # Re-create instances for existing objects
         logger.debug("Updating instances for existing objects")
@@ -354,7 +405,8 @@ class SceneTranslator(object):
 
         for lamp_key in list(self.__lamp_translators.keys()):
             if lamp_key not in used_objects:
-                self.__lamp_translators[lamp_key].delete_lamp(self.as_scene, self.main_assembly)
+                self.__lamp_translators[lamp_key].delete_lamp(self.as_scene,
+                                                              self.main_assembly)
                 del self.__lamp_translators[lamp_key]
 
     # Project file export functions
@@ -392,7 +444,9 @@ class SceneTranslator(object):
         self.__main_assembly = self.__project.get_scene().assemblies()["assembly"]
 
         # Instance the main assembly.
-        assembly_inst = asr.AssemblyInstance("assembly_inst", {}, "assembly")
+        assembly_inst = asr.AssemblyInstance("assembly_inst",
+                                             {},
+                                             "assembly")
         assembly_inst.transform_sequence().set_transform(0.0, asr.Transformd(asr.Matrix4d.identity()))
         self.__project.get_scene().assembly_instances().insert(assembly_inst)
 
@@ -403,8 +457,12 @@ class SceneTranslator(object):
     def __create_default_material(self):
         logger.debug("Creating default material")
 
-        surface_shader = asr.SurfaceShader("diagnostic_surface_shader", "__default_surface_shader", {'mode': 'facing_ratio'})
-        material = asr.Material('generic_material', "__default_material", {'surface_shader': '__default_surface_shader'})
+        surface_shader = asr.SurfaceShader("diagnostic_surface_shader",
+                                           "__default_surface_shader",
+                                           {'mode': 'facing_ratio'})
+        material = asr.Material('generic_material',
+                                "__default_material",
+                                {'surface_shader': '__default_surface_shader'})
 
         self.__main_assembly.surface_shaders().insert(surface_shader)
         self.__main_assembly.materials().insert(material)
@@ -412,7 +470,9 @@ class SceneTranslator(object):
     def __create_null_material(self):
         logger.debug("Creating null material")
 
-        material = asr.Material('generic_material', "__null_material", {})
+        material = asr.Material('generic_material',
+                                "__null_material",
+                                {})
         self.__main_assembly.materials().insert(material)
 
     def __translate_render_settings(self):
@@ -454,7 +514,7 @@ class SceneTranslator(object):
 
         if self.export_mode != ProjectExportMode.PROJECT_EXPORT:
             if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
-                # The thread count is this low due to the possibility of quad view being used, 
+                # The thread count is this low due to the possibility of quad view being used,
                 # which generates 4 independent render engines (one for each panel)
                 render_threads = 2
             else:
@@ -508,7 +568,7 @@ class SceneTranslator(object):
         parameters['lighting_engine'] = 'pt'
         conf_interactive.set_parameters(parameters)
 
-    def __translate_frame(self):
+    def __translate_frame(self, context):
         """
         Convert image related settings (resolution, crop windows, AOVs, ...) to appleseed.
         """
@@ -517,9 +577,9 @@ class SceneTranslator(object):
 
         asr_scene_props = self.bl_scene.appleseed
         scale = self.bl_scene.render.resolution_percentage / 100.0
-        if self.__context:
-            width = int(self.__context.region.width)
-            height = int(self.__context.region.height)
+        if context is not None:
+            width = int(context.region.width)
+            height = int(context.region.height)
             self.__viewport_resolution = [width, height]
         else:
             width = int(self.bl_scene.render.resolution_x * scale)
@@ -550,12 +610,12 @@ class SceneTranslator(object):
             max_y = height - int(self.bl_scene.render.border_min_y * height) - 1
             self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
-        elif self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and self.__context.space_data.use_render_border \
-                and self.__context.region_data.view_perspective in ('ORTHO', 'PERSP'):
-            min_x = int(self.__context.space_data.render_border_min_x * width)
-            max_x = int(self.__context.space_data.render_border_max_x * width) - 1
-            min_y = height - int(self.__context.space_data.render_border_max_y * height)
-            max_y = height - int(self.__context.space_data.render_border_min_y * height) - 1
+        elif self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and context.space_data.use_render_border \
+                and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
+            min_x = int(context.space_data.render_border_min_x * width)
+            max_x = int(context.space_data.render_border_max_x * width) - 1
+            min_y = height - int(context.space_data.render_border_max_y * height)
+            max_y = height - int(context.space_data.render_border_min_y * height) - 1
             self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
         aovs = asr.AOVContainer()
@@ -605,7 +665,7 @@ class SceneTranslator(object):
             if asr_scene_props.pixel_time_aov:
                 aovs.insert(asr.AOV('pixel_time_aov', {}))
             if asr_scene_props.pixel_variation_aov:
-                aovs.insert(asr.AOV('pixel_variation_aov', {}))  
+                aovs.insert(asr.AOV('pixel_variation_aov', {}))
             if asr_scene_props.position_aov:
                 aovs.insert(asr.AOV('position_aov', {}))
             if asr_scene_props.screen_space_velocity_aov:
@@ -709,7 +769,7 @@ class SceneTranslator(object):
             logger.debug("Processing transforms for frame %s", self.bl_scene.frame_current)
 
             if time in cam_times:
-                self.__camera_translator.set_xform_step(time)
+                self.__camera_translator.set_xform_step(time, )
 
             if time in xform_times:
                 for inst in self.bl_depsgraph.object_instances:
@@ -729,7 +789,9 @@ class SceneTranslator(object):
 
             if time in deform_times:
                 for translator in as_object_translators.values():
-                    translator.set_deform_key(time, self.bl_depsgraph, all_times)
+                    translator.set_deform_key(time,
+                                              self.bl_depsgraph,
+                                              all_times)
 
         self.bl_engine.frame_set(current_frame, subframe=0.0)
 
@@ -742,13 +804,17 @@ class SceneTranslator(object):
 
         logger.debug("Updating stereoscopic camera")
         self.__camera_translator.remove_cam(self.as_scene)
-        self.__camera_translator.create_entities(self.bl_scene, None, None)
+        self.__camera_translator.create_entities(self.bl_scene,
+                                                 None,
+                                                 None)
 
         cam_times = {0.0}
 
         if self.bl_scene.appleseed.enable_camera_blur:
             shutter_length = self.bl_scene.appleseed.shutter_close - self.bl_scene.appleseed.shutter_open
-            self.__get_subframes(shutter_length, self.bl_scene.appleseed.camera_blur_samples, cam_times)
+            self.__get_subframes(shutter_length,
+                                 self.bl_scene.appleseed.camera_blur_samples,
+                                 cam_times)
 
         all_times = sorted(list(cam_times))
 
@@ -759,16 +825,20 @@ class SceneTranslator(object):
             int_frame = math.floor(new_frame)
             subframe = new_frame - int_frame
 
-            self.bl_engine.frame_set(int_frame, subframe=subframe)
+            self.bl_engine.frame_set(int_frame,
+                                     subframe=subframe)
 
             logger.debug("Processing transforms for frame %s", self.bl_scene.frame_current)
 
             if time in cam_times:
-                self.__camera_translator.set_xform_step(time)
+                self.__camera_translator.set_xform_step(time, )
 
-        self.bl_engine.frame_set(current_frame, subframe=0.0)
+        self.bl_engine.frame_set(current_frame,
+                                 subframe=0.0)
 
-        self.__camera_translator.flush_entities(self.as_scene, self.main_assembly, self.as_project)
+        self.__camera_translator.flush_entities(self.as_scene,
+                                                self.main_assembly,
+                                                self.as_project)
 
     def __get_subframes(self, shutter_length, samples, times):
         assert samples > 1
@@ -791,18 +861,23 @@ class SceneTranslator(object):
         logger.debug("Creating material translators")
         for mat in material_blocks:
             mat_key = mat.name_full
-            as_material_translators[mat_key] = MaterialTranslator(mat, self.asset_handler)
+            as_material_translators[mat_key] = MaterialTranslator(mat,
+                                                                  self.asset_handler)
 
         logger.debug("Creating object translators")
         for obj in object_bocks:
             obj_key = obj.name_full
             if obj.appleseed.object_export == "archive_assembly":
-                as_object_translators[obj_key] = ArchiveAssemblyTranslator(obj, self.asset_handler)
+                as_object_translators[obj_key] = ArchiveAssemblyTranslator(obj,
+                                                                           self.asset_handler)
             elif obj.type == 'MESH':
-                as_object_translators[obj_key] = MeshTranslator(obj, self.export_mode, self.asset_handler)
+                as_object_translators[obj_key] = MeshTranslator(obj,
+                                                                self.export_mode,
+                                                                self.asset_handler)
 
             elif obj.type == 'LIGHT':
-                as_lamp_translators[obj_key] = LampTranslator(obj, self.asset_handler)
+                as_lamp_translators[obj_key] = LampTranslator(obj,
+                                                              self.asset_handler)
 
         return as_object_translators, as_material_translators, as_lamp_translators
 
@@ -827,7 +902,8 @@ class SceneTranslator(object):
                 if (source.type == 'MESH' or source.appleseed.object_export == "archive_assembly") and source.name_full in as_object_translators:
                     as_object_translators[source.name_full].add_instance(inst_key)
                 elif source.type == 'LIGHT' and source.name_full in as_lamp_translators:
-                    as_lamp_translators[source.name_full].add_instance(inst_key, inst.matrix_world.copy())
+                    as_lamp_translators[source.name_full].add_instance(inst_key,
+                                                                       inst.matrix_world.copy())
 
         for key in list(as_object_translators.keys()):
             translator = as_object_translators[key]
@@ -838,10 +914,14 @@ class SceneTranslator(object):
     def __create_entities(self, as_object_translators, as_material_translators, as_lamp_translators, textures_to_add):
         logger.debug("Creating entities")
         for obj in as_object_translators.values():
-            obj.create_entities(self.bl_scene, textures_to_add, self.__texture_translators)
+            obj.create_entities(self.bl_scene,
+                                textures_to_add,
+                                self.__texture_translators)
 
         for light in as_lamp_translators.values():
-            light.create_entities(self.bl_scene, textures_to_add, self.__texture_translators)
+            light.create_entities(self.bl_scene,
+                                  textures_to_add,
+                                  self.__texture_translators)
 
         for mat in as_material_translators.values():
             mat.create_entities(self.bl_scene)
@@ -854,19 +934,23 @@ class SceneTranslator(object):
     def __flush_entities(self, as_object_translators, as_material_translators, as_lamp_translators, textures_to_add):
         logger.debug("Flushing entities")
         for key, obj in as_object_translators.items():
-            obj.flush_entities(self.main_assembly, self.as_project)
+            obj.flush_entities(self.main_assembly,
+                               self.as_project)
             self.__object_translators[key] = obj
 
         for key, light in as_lamp_translators.items():
-            light.flush_entities(self.main_assembly, self.as_project)
+            light.flush_entities(self.main_assembly,
+                                 self.as_project)
             self.__lamp_translators[key] = light
 
         for key, mat in as_material_translators.items():
-            mat.flush_entities(self.main_assembly, self.as_project)
+            mat.flush_entities(self.main_assembly,
+                               self.as_project)
             self.__material_translators[key] = mat
 
         for key, tex in textures_to_add.items():
-            tex.flush_entities(self.main_assembly, self.as_project)
+            tex.flush_entities(self.main_assembly,
+                               self.as_project)
             self.__texture_translators[key] = tex
 
     def __update_instances(self):
@@ -878,7 +962,8 @@ class SceneTranslator(object):
         logger.debug("Updating instances for existing translators")
         for obj_type in self.all_translators:
             for translator in obj_type.values():
-                translator.delete_instances(self.main_assembly, self.as_scene)
+                translator.delete_instances(self.main_assembly,
+                                            self.as_scene)
 
         for inst in self.bl_depsgraph.object_instances:
             if inst.show_self:
@@ -891,10 +976,16 @@ class SceneTranslator(object):
                     inst_key = f"{source.name_full}|{inst.persistent_id[0]}"
 
                 if (source.type == 'MESH' or source.appleseed.object_export == "archive_assembly") and source.name_full in self.__object_translators.keys():
-                    self.__object_translators[source.name_full].xform_update(inst_key, inst.matrix_world.copy(), self.main_assembly, self.as_scene)
+                    self.__object_translators[source.name_full].xform_update(inst_key,
+                                                                             inst.matrix_world.copy(),
+                                                                             self.main_assembly,
+                                                                             self.as_scene)
 
                 if source.type == 'LIGHT' and source.name_full in self.__lamp_translators.keys():
-                    self.__lamp_translators[source.name_full].xform_update(inst_key, inst.matrix_world, self.main_assembly, self.as_scene)
+                    self.__lamp_translators[source.name_full].xform_update(inst_key,
+                                                                           inst.matrix_world,
+                                                                           self.main_assembly,
+                                                                           self.as_scene)
 
     def __parse_datablocks(self):
         """
@@ -907,11 +998,13 @@ class SceneTranslator(object):
         mat_blocks = []
         object_blocks = []
 
-        for id in self.bl_depsgraph.ids:
-            if isinstance(id, bpy.types.Material):
-                mat_blocks.append(id)
-            if isinstance(id, bpy.types.Object):
-                object_blocks.append(id)
+        for mat in bpy.data.materials:
+            mat_blocks.append(mat)
+
+        for obj in bpy.data.objects:
+            bl_obj = obj.evaluated_get(self.bl_depsgraph)
+            if (bl_obj.type == 'MESH' and len(bl_obj.data.polygons) > 0) or bl_obj.type in ('LIGHT', 'EMPTY'):
+                object_blocks.append(bl_obj)
 
         return mat_blocks, object_blocks
 

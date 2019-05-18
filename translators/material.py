@@ -64,8 +64,11 @@ class MaterialTranslator(Translator):
         logger.debug("Creating entity for %s", self.appleseed_name)
         as_mat_data = self.bl_mat.appleseed
 
-        self.__as_nodetree = NodeTreeTranslator(self.bl_mat.node_tree, self.asset_handler, self.appleseed_name)
-        self.__as_nodetree.create_entities(bl_scene)
+        if self.bl_mat.node_tree is not None:
+            self.__as_nodetree = NodeTreeTranslator(self.bl_mat.node_tree,
+                                                    self.asset_handler,
+                                                    self.appleseed_name)
+            self.__as_nodetree.create_entities(bl_scene)
 
         mat_name = f"{self.appleseed_name}_mat"
         surface_name = f"{self.appleseed_name}_surface"
@@ -92,8 +95,12 @@ class MaterialTranslator(Translator):
                                                     {'color_space': 'linear_rgb'},
                                                     self._convert_color(as_mat_data.volume_scattering)))
 
-            self.__as_mat = asr.Material('generic_material', mat_name, {})
-            self.__as_volume = asr.Volume('generic_volume', vol_name, {})
+            self.__as_mat = asr.Material('generic_material',
+                                         mat_name,
+                                         {})
+            self.__as_volume = asr.Volume('generic_volume',
+                                          vol_name,
+                                          {})
             self.__as_volume.set_parameters(self.__as_volume_params)
 
         self.__as_mat.set_parameters(self.__as_mat_params)
@@ -101,7 +108,9 @@ class MaterialTranslator(Translator):
 
     def flush_entities(self, as_assembly, as_project):
         logger.debug("Flushing entity for %s", self.appleseed_name)
-        self.__as_nodetree.flush_entities(as_assembly, as_project)
+
+        if self.__as_nodetree is not None:
+            self.__as_nodetree.flush_entities(as_assembly, as_project)
 
         shader_name = self.__as_shader.get_name()
         as_assembly.surface_shaders().insert(self.__as_shader)
@@ -121,9 +130,11 @@ class MaterialTranslator(Translator):
             as_assembly.volumes().insert(self.__as_volume)
             self.__as_volume = as_assembly.volumes().get_by_name(vol_name)
 
-    def update_material(self, context, as_assembly):
+    def update_material(self, context, depsgraph, as_assembly):
         logger.debug("Updating translator for %s", self.appleseed_name)
-        self.__as_nodetree.delete(as_assembly)
+
+        if self.__as_nodetree is not None:
+            self.__as_nodetree.delete(as_assembly)
 
         as_assembly.surface_shaders().remove(self.__as_shader)
         as_assembly.materials().remove(self.__as_mat)
@@ -133,7 +144,7 @@ class MaterialTranslator(Translator):
 
         self.__as_colors = []
 
-        self.create_entities(context.evaluated_depsgraph_get().scene)
+        self.create_entities(depsgraph.scene_eval)
         self.flush_entities(as_assembly, None)
 
     def __get_shader_params(self):

@@ -81,7 +81,7 @@ class InteractiveCameraTranslator(Translator):
         as_scene.cameras().insert(self.__as_camera)
         self.__as_camera = as_scene.cameras().get_by_name("Camera")
 
-    def check_view(self, context):
+    def check_view(self, context, depsgraph):
         """
         This function only needs to test for matrix changes and viewport lens/zoom changes.  All other camera
         changes are captured by a scene update
@@ -104,7 +104,9 @@ class InteractiveCameraTranslator(Translator):
 
         self.__model = self.__get_model()
 
-        self.__get_cam_params(context.evaluated_depsgraph_get().scene_eval, None, None)
+        self.__get_cam_params(depsgraph.scene_eval,
+                              None,
+                              None)
 
         if current_translation != self.__matrix:
             cam_translate_update = True
@@ -118,12 +120,14 @@ class InteractiveCameraTranslator(Translator):
 
         return cam_param_update, cam_translate_update, cam_model_update
 
-    def update_camera(self, context, as_scene, cam_model_update, textures_to_add, as_texture_translators):
+    def update_camera(self, context, depsgraph, as_scene, cam_model_update, textures_to_add, as_texture_translators):
         logger.debug("Updating camera entity")
         self.__context = context
         if cam_model_update:
             as_scene.cameras().remove(self.__as_camera)
-            self.create_entities(context.depsgraph.scene_eval, textures_to_add, as_texture_translators)
+            self.create_entities(depsgraph.scene_eval,
+                                 textures_to_add,
+                                 as_texture_translators)
             self.flush_entities(as_scene, None, None)
         else:
             self.__as_camera.set_parameters(self.__params)
@@ -171,7 +175,9 @@ class InteractiveCameraTranslator(Translator):
         elif view_cam_type == "CAMERA":
             # Borrowed from Cycles source code, since for something this nutty there's no reason to reinvent the wheel
             self.__zoom = 4 / ((math.sqrt(2) + self.__context.region_data.view_camera_zoom / 50) ** 2)
-            self.__set_view_camera_params(aspect_ratio, textures_to_add, as_texture_translators)
+            self.__set_view_camera_params(aspect_ratio,
+                                          textures_to_add,
+                                          as_texture_translators)
 
     def __set_ortho_camera_params(self, aspect_ratio):
         self.__matrix = Matrix(self.__context.region_data.view_matrix).inverted()
@@ -197,7 +203,9 @@ class InteractiveCameraTranslator(Translator):
         self.__params = params
 
     def __set_view_camera_params(self, aspect_ratio, textures_to_add, as_texture_translators):
-        film_width, film_height = util.calc_film_dimensions(aspect_ratio, self.bl_camera.data, self.__zoom)
+        film_width, film_height = util.calc_film_dimensions(aspect_ratio,
+                                                            self.bl_camera.data,
+                                                            self.__zoom)
 
         offset = tuple(self.__context.region_data.view_camera_offset)
 

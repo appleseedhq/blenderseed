@@ -60,12 +60,15 @@ class RenderCameraTranslator(Translator):
 
         self.__as_camera = asr.Camera(model, "Camera", {})
 
-        as_camera_params = self.__get_cam_params(bl_scene, textures_to_add, as_texture_translators)
+        as_camera_params = self.__get_cam_params(bl_scene,
+                                                 textures_to_add,
+                                                 as_texture_translators)
 
         self.__as_camera.set_parameters(as_camera_params)
 
     def set_xform_step(self, time):
-        self.__xform_seq.set_transform(time, self._convert_matrix(self.__engine.camera_model_matrix(self.bl_camera)))
+        self.__xform_seq.set_transform(time,
+                                       self._convert_matrix(self.__engine.camera_model_matrix(self.bl_camera)))
 
     def flush_entities(self, as_scene, as_assembly, as_project):
         logger.debug("Flushing camera entity, num xform keys = %s", self.__xform_seq.size())
@@ -99,24 +102,38 @@ class RenderCameraTranslator(Translator):
 
         aspect_ratio = util.get_frame_aspect_ratio(bl_scene)
 
-        film_width, film_height = util.calc_film_dimensions(aspect_ratio, camera, 1)
+        film_width, film_height = util.calc_film_dimensions(aspect_ratio,
+                                                            camera,
+                                                            1)
 
         model = self.__as_camera.get_model()
 
         if model == 'pinhole_camera':
-            cam_params = self.__base_camera_params(bl_scene, aspect_ratio, film_width, film_height)
+            cam_params = self.__base_camera_params(bl_scene,
+                                                   aspect_ratio,
+                                                   film_width,
+                                                   film_height)
 
         elif model == 'thinlens_camera':
-            cam_params = self.__thin_lens_camera_params(bl_scene, aspect_ratio, film_width, film_height, textures_to_add, as_texture_translators)
+            cam_params = self.__thin_lens_camera_params(bl_scene,
+                                                        aspect_ratio,
+                                                        film_width,
+                                                        film_height,
+                                                        textures_to_add,
+                                                        as_texture_translators)
 
         elif model == 'spherical_camera':
             cam_params = self.__spherical_camera_params(bl_scene)
 
         elif model == 'fisheyelens_camera':
-            cam_params = self.__fisheye_camera_params(bl_scene, aspect_ratio, film_width, film_height)
+            cam_params = self.__fisheye_camera_params(bl_scene,
+                                                      aspect_ratio,
+                                                      film_width,
+                                                      film_height)
 
         else:
-            cam_params = self.__ortho_camera_params(bl_scene, aspect_ratio)
+            cam_params = self.__ortho_camera_params(bl_scene,
+                                                    aspect_ratio)
 
         return cam_params
 
@@ -164,7 +181,10 @@ class RenderCameraTranslator(Translator):
     def __thin_lens_camera_params(self, bl_scene, aspect_ratio, film_width, film_height, textures_to_add, as_texture_translators):
         camera = self.bl_camera
 
-        cam_params = self.__base_camera_params(bl_scene, aspect_ratio, film_width, film_height)
+        cam_params = self.__base_camera_params(bl_scene,
+                                               aspect_ratio,
+                                               film_width,
+                                               film_height)
         cam_params.update({'f_stop': camera.data.appleseed.f_number,
                            'autofocus_enabled': False,
                            'diaphragm_blades': camera.data.appleseed.diaphragm_blades,
@@ -190,7 +210,10 @@ class RenderCameraTranslator(Translator):
     def __fisheye_camera_params(self, scene, aspect_ratio, film_width, film_height):
         camera = self.bl_camera
 
-        cam_params = self.__base_camera_params(scene, aspect_ratio, film_width, film_height)
+        cam_params = self.__base_camera_params(scene,
+                                               aspect_ratio,
+                                               film_width,
+                                               film_height)
 
         cam_params.update({'projection_type': camera.data.appleseed.fisheye_projection_type})
 

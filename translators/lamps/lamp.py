@@ -46,13 +46,18 @@ class LampTranslator(Translator):
         logger.debug("Creating light translator for %s", bl_lamp.name_full)
         super().__init__(bl_lamp, asset_handler=asset_handler)
 
-        self.__matrices = {}
-        self.__instances = {}
+        self.__lamp_model = None
+        self.__as_lamp_params = None
+        self.__as_area_lamp = None
+
+        self.__matrices = dict()
+        self.__instances = dict()
 
         self._as_lamp_radiance = None
 
         self._as_area_lamp_material = None
         self._as_area_lamp_shadergroup = None
+        self.__node_tree = None
 
     @property
     def bl_lamp(self):
@@ -67,12 +72,15 @@ class LampTranslator(Translator):
         if self.bl_lamp.data.type != 'AREA':
             radiance = self._convert_color(as_lamp_data.radiance)
             lamp_radiance_name = f"{self.appleseed_name}_radiance"
-            self._as_lamp_radiance = asr.ColorEntity(lamp_radiance_name, {'color_space': 'linear_rgb'}, radiance)
+            self._as_lamp_radiance = asr.ColorEntity(lamp_radiance_name,
+                                                     {'color_space': 'linear_rgb'},
+                                                     radiance)
 
             if self.__lamp_model == 'point_light':
                 self.__as_lamp_params = self._get_point_lamp_params()
             if self.__lamp_model == 'spot_light':
-                self.__as_lamp_params = self._get_spot_lamp_params(textures_to_add, as_texture_translators)
+                self.__as_lamp_params = self._get_spot_lamp_params(textures_to_add,
+                                                                   as_texture_translators)
             if self.__lamp_model == 'directional_light':
                 self.__as_lamp_params = self._get_directional_lamp_params()
             if self.__lamp_model == 'sun_light':
@@ -142,7 +150,7 @@ class LampTranslator(Translator):
                 as_assembly.object_instances().insert(as_area_lamp_mesh_inst)
                 self.__instances[key] = as_assembly.object_instances().get_by_name(inst_name)
 
-    def update_lamp(self, context, as_assembly, textures_to_add, as_texture_translators):
+    def update_lamp(self, context, depsgraph, as_assembly, textures_to_add, as_texture_translators):
         logger.debug("Updating light translator for %s", self.bl_lamp.name_full)
         if self.__lamp_model != 'area_lamp':
             as_assembly.colors().remove(self._as_lamp_radiance)
@@ -162,7 +170,7 @@ class LampTranslator(Translator):
 
         self.__instances.clear()
 
-        self.create_entities(context.evaluated_depsgraph_get().scene, textures_to_add, as_texture_translators)
+        self.create_entities(depsgraph.scene_eval, textures_to_add, as_texture_translators)
         self.flush_entities(as_assembly, None)
 
     def delete_instances(self, as_assembly, as_scene):

@@ -31,6 +31,8 @@ from enum import Enum
 
 import bpy
 
+from ..utils.path_util import get_osl_search_paths
+
 
 class AssetType(Enum):
     TEXTURE_ASSET = 1
@@ -44,8 +46,9 @@ class AssetHandler(object):
     format for rendering
     """
 
-    def __init__(self):
-        self._searchpaths = []
+    def __init__(self, depsgraph):
+        self._searchpaths = get_osl_search_paths()
+        self._depsgraph = depsgraph
 
     @property
     def searchpaths(self):
@@ -56,19 +59,37 @@ class AssetHandler(object):
 
     def process_path(self, filename, asset_type, sub_texture=False):
         file = bpy.path.abspath(filename)
+
+        if '%' in file:
+            file = self._convert_frame_number(file)
+
         if asset_type == AssetType.SHADER_ASSET:
             dir_name, file_name = os.path.split(file)
             self._searchpaths.append(dir_name)
             file = os.path.splitext(file_name)[0]
+
         if asset_type == AssetType.TEXTURE_ASSET and sub_texture:
             base_filename = os.path.splitext(file)[0]
             file = "{0}.tx".format(base_filename)
+
         if asset_type == AssetType.ARCHIVE_ASSET:
             archive_dir, archive = os.path.split(file)
             self._searchpaths.append(archive_dir)
             file = archive
 
         return file
+
+    def _convert_frame_number(self, file):
+        base_filename, ext = os.path.splitext(file)
+        index_1 = base_filename.find("%")
+        pre_string = base_filename[:index_1]
+        post_string = base_filename[index_1 + 1:]
+        number_of_zeroes = int(post_string[:-1])
+        current_frame = str(self._depsgraph.scene_eval.frame_current)
+        for zero in range(number_of_zeroes - len(current_frame)):
+            current_frame = f"0{current_frame}"
+
+        return f"{pre_string}{current_frame}{ext}"
 
 
 class CopyAssetsAssetHandler(AssetHandler):
@@ -77,8 +98,8 @@ class CopyAssetsAssetHandler(AssetHandler):
     format for exported scene files.  It also copies texture assets into the correct output folder
     """
 
-    def __init__(self, export_dir, geometry_dir, textures_dir):
-        super(CopyAssetsAssetHandler, self).__init__()
+    def __init__(self, export_dir, geometry_dir, textures_dir, depsgraph):
+        super(CopyAssetsAssetHandler, self).__init__(depsgraph)
         self.__export_dir = export_dir
         self.__geometry_dir = geometry_dir
         self.__textures_dir = textures_dir
@@ -97,6 +118,8 @@ class CopyAssetsAssetHandler(AssetHandler):
 
     def process_path(self, blend_path, asset_type, sub_texture=False):
         original_path = bpy.path.abspath(blend_path)
+        if '%' in original_path:
+            original_path = self._convert_frame_number(original_path)
         original_dir, filename = os.path.split(original_path)
 
         if asset_type == AssetType.TEXTURE_ASSET:
