@@ -29,6 +29,7 @@
 import bpy
 
 import appleseed as asr
+from ..properties.nodes import AppleseedOSLScriptNode
 from ..utils import path_util, osl_utils, util
 
 
@@ -73,7 +74,7 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
             node_data = osl_utils.parse_shader(q)
 
             node_name, node_category, node_classes = osl_utils.generate_node(node_data,
-                                                                             osl_utils.AppleseedOSLScriptNode)
+                                                                             AppleseedOSLScriptNode)
 
             for cls in reversed(node.classes):
                 util.safe_unregister_class(cls)

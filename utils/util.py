@@ -35,6 +35,7 @@ from bpy.app.handlers import persistent
 import appleseed as asr
 from . import path_util, osl_utils
 from ..logger import get_logger
+from ..properties.nodes import AppleseedOSLScriptNode
 
 logger = get_logger()
 
@@ -106,7 +107,7 @@ def update_project(_):
             node_data = osl_utils.parse_shader(q)
 
             node_name, node_category, node_classes = osl_utils.generate_node(node_data,
-                                                                             osl_utils.AppleseedOSLScriptNode)
+                                                                             AppleseedOSLScriptNode)
 
             for cls in node_classes:
                 safe_register_class(cls)
