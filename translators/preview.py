@@ -38,10 +38,10 @@ class PreviewRenderer(object):
     This class handles creating a small scene used to preview Blender materials
     """
 
-    def __init__(self):
+    def __init__(self, depsgraph):
         self.__project = None
 
-        self.__asset_handler = AssetHandler()
+        self.__asset_handler = AssetHandler(depsgraph)
         self.__mat_tree_translator = None
 
     @property

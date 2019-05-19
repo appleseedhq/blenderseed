@@ -129,7 +129,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             # if not RenderAppleseed.__interactive_session:
             level = 'error'
             with SetAppleseedLogLevel(level):
-                self.__render_material_preview(depsgraph.scene)
+                self.__render_material_preview(depsgraph)
         else:
             level = depsgraph.scene.appleseed.log_level
             with SetAppleseedLogLevel(level):
@@ -221,15 +221,15 @@ class RenderAppleseed(bpy.types.RenderEngine):
     # Internal methods.
     #
 
-    def __render_material_preview(self, scene):
+    def __render_material_preview(self, depsgraph):
         """
         Export and render the material preview scene.
         """
 
-        material_preview_renderer = PreviewRenderer()
-        material_preview_renderer.translate_preview(scene)
+        material_preview_renderer = PreviewRenderer(depsgraph)
+        material_preview_renderer.translate_preview(depsgraph.scene_eval)
 
-        self.__start_final_render(scene, material_preview_renderer.as_project)
+        self.__start_final_render(depsgraph.scene_eval, material_preview_renderer.as_project)
 
     def __render_final(self, depsgraph):
         """
