@@ -239,10 +239,6 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
 
     # Sampling.
 
-    decorrelate_pixels: bpy.props.BoolProperty(name="decorrelate_pixels",
-                                               description='Avoid correlation patterns at the expense of slightly more sampling noise',
-                                               default=True)
-
     tile_size: bpy.props.IntProperty(name="tile_size",
                                      description="Set the width of the render tile",
                                      default=64,

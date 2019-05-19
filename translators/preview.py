@@ -231,7 +231,6 @@ class PreviewRenderer(object):
         parameters = {"lighting_engine": "pt",
                       'rendering_threads': -1,
                       "pt": {"dl_light_samples": 4,
-                             "decorrelate_pixels": True,
                              "enable_ibl": True,
                              "ibl_env_samples": 1,
                              "clamp_roughness": True,

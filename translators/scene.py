@@ -493,8 +493,7 @@ class SceneTranslator(object):
         tile_renderer = 'adaptive' if asr_scene_props.pixel_sampler == 'adaptive' else 'generic'
         pixel_renderer = '' if asr_scene_props.pixel_sampler == 'adaptive' else 'uniform'
 
-        parameters = {'uniform_pixel_renderer': {'decorrelate_pixels': True if asr_scene_props.decorrelate_pixels else False,
-                                                 'force_antialiasing': True if asr_scene_props.force_aa else False,
+        parameters = {'uniform_pixel_renderer': {'force_antialiasing': True if asr_scene_props.force_aa else False,
                                                  'samples': asr_scene_props.samples},
                       'adaptive_tile_renderer': {'min_samples': asr_scene_props.adaptive_min_samples,
                                                  'noise_threshold': asr_scene_props.adaptive_noise_threshold,
