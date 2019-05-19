@@ -88,7 +88,7 @@ class ASSSS_OT_add_sss_set(bpy.types.Operator):
 
         collection.add()
         num = len(collection)
-        collection[num - 1].name = "SSS Set " + str(num)
+        collection[num - 1].name = f"SSS Set {num}"
 
         return {'FINISHED'}
 

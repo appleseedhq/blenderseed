@@ -272,8 +272,8 @@ class MeshTranslator(Translator):
 
         material_slots = self.bl_obj.material_slots
 
-        front_mats = {}
-        rear_mats = {}
+        front_mats = dict()
+        rear_mats = dict()
 
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
@@ -433,7 +433,7 @@ class MeshTranslator(Translator):
         logger.debug("Computed mesh signature for object %s, hash: %s", self.appleseed_name, bl_hash)
 
         # Save the mesh filename for later use.
-        mesh_filename = str(bl_hash) + ".binarymesh"
+        mesh_filename = f"{bl_hash}.binarymesh"
         self.__mesh_filenames.append(mesh_filename)
 
         # Write the binarymesh file.

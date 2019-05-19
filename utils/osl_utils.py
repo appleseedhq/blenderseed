@@ -93,17 +93,17 @@ def generate_node(node, node_class):
                 linked_node.traverse_tree(self)
         return util.filter_params(self.tree)
 
-    node_classes = []
-    parameter_types = {}
-    filepaths = []
+    node_classes = list()
+    parameter_types = dict()
+    filepaths = list()
     name = node['name']
     category = node['category']
     input_params = node['inputs']
     output_sockets = node['outputs']
     url_reference = node['url']
 
-    socket_input_names = []
-    socket_output_names = []
+    socket_input_names = list()
+    socket_output_names = list()
 
     # create output socket classes
     for out_socket in output_sockets:
@@ -208,9 +208,9 @@ def generate_node(node, node_class):
     ntype.socket_input_names = socket_input_names
     ntype.socket_output_names = socket_output_names
 
-    ntype.__annotations__ = {}
+    ntype.__annotations__ = dict()
 
-    socket_ui_props = []
+    socket_ui_props = list()
 
     for param in input_params:
         keys = param.keys()
@@ -378,7 +378,7 @@ def generate_node(node, node_class):
     ntype.draw_label = draw_label
     if category == 'surface':
         ntype.traverse_tree = traverse_tree
-        ntype.tree = []
+        ntype.tree = list()
         ntype.node_type = 'osl_surface'
 
     node_classes.append(ntype)
@@ -395,7 +395,7 @@ def read_osl_shaders():
     :return: List of parsed nodes
     """
 
-    nodes = []
+    nodes = list()
 
     if not path_util.get_appleseed_bin_dir_path():
         logger.warning("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
@@ -423,7 +423,8 @@ def read_osl_shaders():
 
 
 def parse_shader(q, filename=None):
-    d = {'inputs': [], 'outputs': []}
+    d = {'inputs': list(),
+         'outputs': list()}
     shader_meta = q.get_metadata()
     if 'as_node_name' in shader_meta:
         d['name'] = shader_meta['as_node_name']['value']
@@ -440,7 +441,7 @@ def parse_shader(q, filename=None):
         d['category'] = 'other'
     num_of_params = q.get_num_params()
     for x in range(0, num_of_params):
-        metadata = {}
+        metadata = dict()
         param = q.get_param_info(x)
         if 'metadata' in param:
             metadata = param['metadata']
@@ -488,9 +489,3 @@ def compile_osl_bytecode(compiler, script_block):
         code.close()
 
     return compiler.compile_buffer(source_code)
-
-def register():
-    pass
-
-def unregister():
-    pass

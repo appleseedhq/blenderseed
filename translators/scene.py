@@ -56,6 +56,9 @@ class SceneTranslator(object):
     def create_project_export_translator(cls, engine, depsgraph):
         """
         Create a scene translator to export the scene to an appleseed project on disk.
+        :param engine:
+        :param depsgraph:
+        :return:
         """
 
         project_dir = os.path.dirname(depsgraph.scene_eval.appleseed.export_path)
@@ -86,6 +89,9 @@ class SceneTranslator(object):
     def create_final_render_translator(cls, engine, depsgraph):
         """
         Create a scene translator to export the scene to an in memory appleseed project.
+        :param engine:
+        :param depsgraph:
+        :return:
         """
 
         logger.debug("Creating final render scene translator")
@@ -104,6 +110,10 @@ class SceneTranslator(object):
         """
         Create a scene translator to export the scene to an in memory appleseed project
         optimized for quick interactive edits.
+        :param engine:
+        :param context:
+        :param depsgraph:
+        :return:
         """
 
         logger.debug("Creating interactive render scene translator")
@@ -121,6 +131,12 @@ class SceneTranslator(object):
         """
         Constructor. Do not use it to create instances of this class.
         Use the @classmethods instead.
+        :param engine:
+        :param depsgraph:
+        :param export_mode:
+        :param selected_only:
+        :param context:
+        :param asset_handler:
         """
 
         self.__engine = engine
@@ -133,10 +149,10 @@ class SceneTranslator(object):
         # Translators.
         self.__world_translator = None
         self.__camera_translator = None
-        self.__lamp_translators = {}
-        self.__object_translators = {}
-        self.__material_translators = {}
-        self.__texture_translators = {}
+        self.__lamp_translators = dict()
+        self.__object_translators = dict()
+        self.__material_translators = dict()
+        self.__texture_translators = dict()
 
         self.__project = None
         self.__frame = None
@@ -262,7 +278,11 @@ class SceneTranslator(object):
         """
         Check the viewport to see if it has changed camera position or window size.
         For whatever reason, these changes do not trigger an update request so we must check things manually.
+        :param context:
+        :param depsgraph:
+        :return:
         """
+
         view_update = False
         cam_param_update, cam_translate_update, cam_model_update = self.__camera_translator.check_view(context,
                                                                                                        depsgraph)
@@ -281,10 +301,11 @@ class SceneTranslator(object):
         """
         Update the viewport window during interactive rendering.  The viewport update is triggered
         automatically following a scene update, or when the check view function returns true on any of its checks.
+        :param context:
+        :param depsgraph:
         :param view_update:
         :param cam_param_update:
         :param cam_model_update:
-        :return:
         """
 
         logger.debug("Begin view update")
@@ -300,7 +321,7 @@ class SceneTranslator(object):
         if view_update:
             self.__translate_frame(context)
 
-        self.__camera_translator.set_xform_step(0.0, )
+        self.__camera_translator.set_xform_step(0.0)
 
     def update_scene(self, context, depsgraph):
         """
@@ -311,6 +332,7 @@ class SceneTranslator(object):
         recreate all the instances in the scene every time an update happens.  Which is dumb and a waste of
         processing, but what else can you do?
         :param context:
+        :param depsgraph:
         :return: None
         """
 
@@ -413,6 +435,7 @@ class SceneTranslator(object):
     def write_project(self, filename):
         """
         Write the appleseed project out to disk.
+        :param filename:
         """
 
         asr.ProjectFileWriter().write(
@@ -570,6 +593,7 @@ class SceneTranslator(object):
     def __translate_frame(self, context):
         """
         Convert image related settings (resolution, crop windows, AOVs, ...) to appleseed.
+        :param context:
         """
 
         logger.debug("Translating frame")
@@ -633,6 +657,12 @@ class SceneTranslator(object):
             self.__set_post_process()
 
     def __set_aovs(self, aovs):
+        """
+        If an AOV is activated for export, place it inside the provided AOV container.
+        :param aovs:
+        :return:
+        """
+
         if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             logger.debug("Translating AOVs")
             asr_scene_props = self.bl_scene.appleseed
@@ -730,10 +760,13 @@ class SceneTranslator(object):
                                                                    camera)
 
     def __calc_motion(self, as_object_translators):
-        """Calculates subframes for motion blur.  Each blur type can have its own segment count, so the final list
+        """
+        Calculates subframes for motion blur.  Each blur type can have its own segment count, so the final list
         created has every transform time needed.  This way we only have to move the frame set point (with the associated
         depsgraph recalculation) one time.
+        :param as_object_translators:
         """
+
         cam_times = {0.0}
         xform_times = {0.0}
         deform_times = {0.0}
@@ -850,12 +883,14 @@ class SceneTranslator(object):
     def __create_translators(self, material_blocks, object_bocks):
         """
         Creates appleseed translators for all the 'real' object, lamps and materials in the scene
+        :param material_blocks:
+        :param object_bocks:
         :return: Lists of appleseed translators
         """
 
-        as_object_translators = {}
-        as_material_translators = {}
-        as_lamp_translators = {}
+        as_object_translators = dict()
+        as_material_translators = dict()
+        as_lamp_translators = dict()
 
         logger.debug("Creating material translators")
         for mat in material_blocks:
@@ -884,7 +919,8 @@ class SceneTranslator(object):
         """
         Creates translators for each mesh/lamp and instance of a lamp/object that was created via a particle system
         or dupli item.
-        :return: None
+        :param as_object_translators:
+        :param as_lamp_translators:
         """
 
         logger.debug("Creating instances")
@@ -955,7 +991,6 @@ class SceneTranslator(object):
     def __update_instances(self):
         """
         Updates the list of instances for _existing items_ during interactive rendering.
-        :return:
         """
 
         logger.debug("Updating instances for existing translators")
@@ -994,8 +1029,8 @@ class SceneTranslator(object):
 
         logger.debug("Parsing Datablocks")
 
-        mat_blocks = []
-        object_blocks = []
+        mat_blocks = list()
+        object_blocks = list()
 
         for mat in bpy.data.materials:
             mat_blocks.append(mat)

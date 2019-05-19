@@ -49,15 +49,15 @@ class ASTEX_OT_convert_textures(bpy.types.Operator):
             filename = bpy.path.abspath(tex.name.filepath)
             if textures.tex_output_use_cust_dir:
                 tex_name = os.path.basename(filename).split('.')[0]
-                out_path = os.path.join(textures.tex_output_dir, '{0}.tx'.format(tex_name))
+                out_path = os.path.join(textures.tex_output_dir, f"{tex_name}.tx")
             else:
-                out_path = filename.split('.')[0] + ".tx"
+                out_path = f"{filename.split('.')[0]}.tx"
 
             import appleseed as asr
 
             asr.oiio_make_texture(filename, out_path, tex.input_space, tex.output_depth)
 
-            subbed_filename = "{0}.tx".format(os.path.splitext(filename)[0])
+            subbed_filename = f"{os.path.splitext(filename)[0]}.tx"
             bpy.ops.image.open(filepath=subbed_filename)
 
         return {'FINISHED'}
@@ -78,7 +78,7 @@ class ASTEX_OT_refresh_texture(bpy.types.Operator):
 
         existing_textures = [x.name for x in collection]
 
-        scene_textures = []
+        scene_textures = list()
 
         for tree in bpy.data.node_groups:
             for node in tree.nodes:

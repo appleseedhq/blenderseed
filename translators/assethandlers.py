@@ -70,7 +70,7 @@ class AssetHandler(object):
 
         if asset_type == AssetType.TEXTURE_ASSET and sub_texture:
             base_filename = os.path.splitext(file)[0]
-            file = "{0}.tx".format(base_filename)
+            file = f"{base_filename}.tx"
 
         if asset_type == AssetType.ARCHIVE_ASSET:
             archive_dir, archive = os.path.split(file)
@@ -125,7 +125,7 @@ class CopyAssetsAssetHandler(AssetHandler):
         if asset_type == AssetType.TEXTURE_ASSET:
             if sub_texture:
                 base_filename = os.path.splitext(filename)[0]
-                filename = "{0}.tx".format(base_filename)
+                filename = f"{base_filename}.tx"
 
             dest_dir = self.textures_dir
             dest_file = os.path.join(dest_dir, filename)

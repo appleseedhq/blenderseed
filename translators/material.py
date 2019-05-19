@@ -142,7 +142,7 @@ class MaterialTranslator(Translator):
         for color in self.__as_colors:
             as_assembly.colors().remove(color)
 
-        self.__as_colors = []
+        self.__as_colors = list()
 
         self.create_entities(depsgraph.scene_eval)
         self.flush_entities(as_assembly, None)
