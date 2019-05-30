@@ -61,14 +61,6 @@ class ASCAMERA_PT_lens(bpy.types.Panel):
                 col.prop(cam, "angle")
             col.prop(cam, "lens_unit")
 
-        elif cam.type == "PANO":
-            col.prop(asr_cam_props, "fisheye_projection_type", text="Fisheye Projection")
-            if cam.lens_unit == 'MILLIMETERS':
-                col.prop(cam, "lens")
-            elif cam.lens_unit == 'FOV':
-                col.prop(cam, "angle")
-            col.prop(cam, "lens_unit")
-
         elif cam.type == 'ORTHO':
             col.prop(cam, "ortho_scale")
 
@@ -173,10 +165,10 @@ class ASCAMERA_PT_dof(bpy.types.Panel):
         col = layout.column()
         col.active = not asr_cam_props.enable_autofocus
         row = col.row()
-        row.active = cam.data.dof_object is None
-        row.prop(cam.data, "dof_distance", text="Focal Distance")
+        row.active = cam.data.dof.focus_object is None
+        row.prop(cam.data.dof, "focus_distance", text="Focal Distance")
         row = col.row()
-        row.prop(cam.data, "dof_object", text='Focus on Object')
+        row.prop(cam.data.dof, "focus_object", text='Focus on Object')
         layout.prop(asr_cam_props, "f_number", text="F-Number")
         layout.prop(asr_cam_props, "diaphragm_blades", text="Blades")
         layout.prop(asr_cam_props, "diaphragm_angle", text="Tilt Angle")
