@@ -133,7 +133,7 @@ class AppleseedOSLNode(bpy.types.Node):
                 self.outputs.new(socket[0], socket[1])
 
 
-class AppleseedOSLScriptNode(bpy.types.Node):
+class AppleseedOSLScriptNode(AppleseedOSLNode):
     bl_idname = "AppleseedOSLScriptNode"
     bl_label = "OSL Script"
     bl_icon = "NODE"
