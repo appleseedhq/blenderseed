@@ -330,7 +330,10 @@ class LampTranslator(Translator):
         lamp_data = self.bl_lamp.data
         as_lamp_data = lamp_data.appleseed
 
-        lamp_inst_params = {'visibility': {'camera': False}} if not as_lamp_data.area_visibility else {}
+        lamp_inst_params = {'visibility': {'shadow': False}}
+
+        if not as_lamp_data.area_visibility:
+            lamp_inst_params['visibility']['camera'] = False
 
         return lamp_inst_params
 
