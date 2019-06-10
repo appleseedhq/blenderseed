@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2019 Jonathan Dent, The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,18 +28,21 @@
 import os
 
 import appleseed as asr
-
 from .assethandlers import AssetHandler
-from .materials import MaterialTranslator
+from .material import MaterialTranslator
 from ..utils import util
 
 
 class PreviewRenderer(object):
+    """
+    This class handles creating a small scene used to preview Blender materials
+    """
 
-    def __init__(self):
+    def __init__(self, depsgraph):
         self.__project = None
 
-        self.__asset_handler = AssetHandler()
+        self.__asset_handler = AssetHandler(depsgraph)
+        self.__mat_tree_translator = None
 
     @property
     def as_project(self):
@@ -50,9 +53,9 @@ class PreviewRenderer(object):
         return self.__asset_handler
 
     def translate_preview(self, scene):
-        self.__create_preview_scene(scene)
-
         self.__generate_material(scene)
+
+        self.__create_preview_scene(scene)
 
         self.__create_material(scene)
 
@@ -61,19 +64,6 @@ class PreviewRenderer(object):
         self.__set_searchpaths()
 
         self.__set_frame(scene)
-
-    def update_preview(self, scene):
-        likely_material = self.__get_preview_material(scene)
-        self.__mat_translator.update(likely_material, self.__main_assembly, scene)
-
-        as_scene = self.__project.get_scene()
-        camera = as_scene.cameras().get_by_name("preview_camera")
-        as_scene.cameras().remove(camera)
-
-        self.__create_config()
-        self.__create_camera(scene)
-        self.__set_frame(scene)
-        self.__set_searchpaths()
 
     def __create_preview_scene(self, scene):
         """This function creates the scene that is used to render material previews.  It consists of:
@@ -144,76 +134,95 @@ class PreviewRenderer(object):
                                     -0.508287250995636, 0.8611875772476196, 0.0, 0.0,
                                     0.0, 0.0, 1.0, 0.0,
                                     0.0, 0.0, 0.0, 1.0])
-        lamp_inst = asr.ObjectInstance("lamp", {}, "lamp_obj.part_0", asr.Transformd(lamp_matrix),
-                                       {'default': "lamp_mat"}, {'default': "lamp_mat"})
-        lamp_mat = asr.Material("generic_material", "lamp_mat", {'edf': "lamp_edf", 'surface_shader': "base_shader"})
-        lamp_edf = asr.EDF("diffuse_edf", "lamp_edf", {'radiance': 7})
+        lamp_inst = asr.ObjectInstance("lamp",
+                                       {},
+                                       "lamp_obj.part_0",
+                                       asr.Transformd(lamp_matrix),
+                                       {'default': "lamp_mat"},
+                                       {'default': "lamp_mat"})
+        lamp_mat = asr.Material("generic_material",
+                                "lamp_mat",
+                                {'edf': "lamp_edf", 'surface_shader': "base_shader"})
+        lamp_edf = asr.EDF("diffuse_edf",
+                           "lamp_edf",
+                           {'radiance': 7})
         return lamp, lamp_edf, lamp_inst, lamp_mat
 
     def __create_sphere(self, preview_template_dir):
         # Define the sphere preview object.
         sphere = asr.MeshObjectReader.read(self.__project.get_search_paths(), "sphere_obj",
                                            {'filename': os.path.join(preview_template_dir, 'material_preview_sphere.binarymesh')})
-        sphere_inst = asr.ObjectInstance("sphere", {}, "sphere_obj.part_0", asr.Transformd(asr.Matrix4d.identity()),
-                                         {'default': "preview_mat"}, {'default': "preview_mat"})
+        sphere_inst = asr.ObjectInstance("sphere",
+                                         {},
+                                         "sphere_obj.part_0",
+                                         asr.Transformd(asr.Matrix4d.identity()),
+                                         {'default': self.__mat_name},
+                                         {'default': self.__mat_name})
         return sphere, sphere_inst
 
-    def __create_backdrop(self, preview_template_dir):
+    @staticmethod
+    def __create_backdrop(preview_template_dir):
         # Define the background plane
-        plane = asr.MeshObjectReader.read([], "plane_obj", {'filename': os.path.join(preview_template_dir,
-                                                                                     'material_preview_ground.binarymesh')})
-        plane_inst = asr.ObjectInstance("plane", {}, "plane_obj.part_0", asr.Transformd(asr.Matrix4d.identity()),
-                                        {'default': "plane_mat"})
-        plane_mat = asr.Material("generic_material", "plane_mat", {'bsdf': "plane_bsdf", 'surface_shader': "base_shader"})
-        plane_bsdf = asr.BSDF("lambertian_brdf", "plane_bsdf", {'reflectance': "plane_tex"})
-        plane_tex = asr.Texture("disk_texture_2d", "plane_tex_tex", {'filename': os.path.join(preview_template_dir,
-                                                                                              "checker_texture.png"),
-                                                                     'color_space': 'srgb'}, [])
-        plane_tex_inst = asr.TextureInstance("plane_tex", {}, "plane_tex_tex", asr.Transformf(asr.Matrix4f.identity()))
+        plane = asr.MeshObjectReader.read([],
+                                          "plane_obj",
+                                          {'filename': os.path.join(preview_template_dir,
+                                                                    'material_preview_ground.binarymesh')})
+        plane_inst = asr.ObjectInstance("plane",
+                                        {},
+                                        "plane_obj.part_0",
+                                        asr.Transformd(asr.Matrix4d.identity()),
+                                        {'default': "plane_mat_1"})
+        plane_mat = asr.Material("generic_material",
+                                 "plane_mat_1",
+                                 {'bsdf': "plane_bsdf", 'surface_shader': "base_shader"})
+        plane_bsdf = asr.BSDF("lambertian_brdf",
+                              "plane_bsdf",
+                              {'reflectance': "plane_tex"})
+        plane_tex = asr.Texture("disk_texture_2d",
+                                "plane_tex_tex",
+                                {'filename': os.path.join(preview_template_dir,
+                                                          "checker_texture.png"),
+                                 'color_space': 'srgb'},
+                                [])
+        plane_tex_inst = asr.TextureInstance("plane_tex",
+                                             {},
+                                             "plane_tex_tex",
+                                             asr.Transformf(asr.Matrix4f.identity()))
         return plane, plane_bsdf, plane_inst, plane_mat, plane_tex, plane_tex_inst
 
     def __create_camera(self, scene):
         # Define the render camera
-        camera = asr.Camera('pinhole_camera', "preview_camera", {"film_width": 0.032,
-                                                                 "focal_length": 0.035,
-                                                                 "aspect_ratio": util.get_frame_aspect_ratio(scene)})
+        camera = asr.Camera('pinhole_camera',
+                            "preview_camera",
+                            {"film_width": 0.032, "focal_length": 0.035, "aspect_ratio": util.get_frame_aspect_ratio(scene)})
         camera_matrix = asr.Matrix4d([1.0, 0.0, 0.0, -0.03582507744431496,
                                       0.0, -4.371138828673793e-08, -1.0, -2.135615587234497,
                                       0.0, 1.0, -4.371138828673793e-08, 0.5015512704849243,
                                       0.0, 0.0, 0.0, 1.0])
-        camera.transform_sequence().set_transform(0.0, asr.Transformd(camera_matrix))
+        camera.transform_sequence().set_transform(0.0,
+                                                  asr.Transformd(camera_matrix))
         self.__project.get_scene().cameras().insert(camera)
 
     def __create_material(self, scene):
         self.__mat_translator.create_entities(scene)
-        self.__mat_translator.flush_entities(self.__main_assembly)
+        self.__mat_translator.flush_entities(self.__main_assembly,
+                                             self.__project)
+        if self.__mat_tree_translator is not None:
+            self.__mat_tree_translator.create_entities(scene)
+            self.__mat_tree_translator.flush_entities(self.__main_assembly,
+                                                      self.__project)
 
     def __generate_material(self, scene):
         # Collect objects and their materials in a object -> [materials] dictionary.
         likely_material = self.__get_preview_material(scene)
 
-        self.__mat_translator = MaterialTranslator(likely_material, self.asset_handler, preview=True)
+        self.__mat_name = f"{likely_material.name_full}_mat"
+
+        self.__mat_translator = MaterialTranslator(likely_material,
+                                                   self.asset_handler)
 
     def __get_preview_material(self, scene):
-        objects_materials = {}
-        for obj in (obj for obj in scene.objects if obj.is_visible(scene) and not obj.hide_render):
-            for mat in util.get_instance_materials(obj):
-                if mat is not None:
-                    if obj.name not in objects_materials.keys():
-                        objects_materials[obj] = []
-                    objects_materials[obj].append(mat)
-
-        # Find objects that are likely to be the preview objects.
-        preview_objects = [o for o in objects_materials.keys() if o.name.startswith('preview')]
-        if not preview_objects:
-            return
-
-        # Find the materials attached to the likely preview object.
-        likely_material = objects_materials[preview_objects[0]]
-        if not likely_material:
-            return
-
-        return likely_material[0]
+        return scene.objects['preview_sphere'].material_slots[0].material
 
     def __create_config(self):
         conf_final = self.as_project.configurations()['final']
@@ -222,7 +231,6 @@ class PreviewRenderer(object):
         parameters = {"lighting_engine": "pt",
                       'rendering_threads': -1,
                       "pt": {"dl_light_samples": 4,
-                             "decorrelate_pixels": True,
                              "enable_ibl": True,
                              "ibl_env_samples": 1,
                              "clamp_roughness": True,

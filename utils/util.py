@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2014-2019 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +26,16 @@
 #
 
 import datetime
-import multiprocessing
 import os
 
 import bpy
-from bpy.app.handlers import persistent
 import bpy_extras
+from bpy.app.handlers import persistent
 
-from . import path_util
+import appleseed as asr
+from . import path_util, osl_utils
 from ..logger import get_logger
+from ..properties.nodes import AppleseedOSLScriptNode
 
 logger = get_logger()
 
@@ -57,128 +58,17 @@ def safe_unregister_class(cls):
         logger.error("[appleseed] ERROR: Failed to unregister class {0}: {1}".format(cls, e))
 
 
-def read_osl_shaders():
-    '''
-    Reads parameters from OSL .oso files using the ShaderQuery function that is built
-    into the Python bindings for appleseed.  These parameters are used to create a dictionary
-    of the shader parameters that is then added to a list.  This shader list is passed
-    on to the oslnode.generate_node function.
-    '''
-
-    nodes = []
-
-    if not path_util.get_appleseed_bin_dir_path():
-        logger.warning("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
-        return nodes
-
-    shader_directories = path_util.get_osl_search_paths()
-
-    import appleseed as asr
-
-    q = asr.ShaderQuery()
-
-    logger.debug("[appleseed] Parsing OSL shaders...")
-
-    for shader_dir in shader_directories:
-        if os.path.isdir(shader_dir):
-            logger.debug("[appleseed] Searching {0} for OSO files...".format(shader_dir))
-            for file in os.listdir(shader_dir):
-                if file.endswith(".oso"):
-                    logger.debug("[appleseed] Reading {0}...".format(file))
-                    d = {}
-                    filename = os.path.join(shader_dir, file)
-                    q.open(filename)
-                    d['inputs'] = []
-                    d['outputs'] = []
-                    shader_meta = q.get_metadata()
-                    if 'as_node_name' in shader_meta:
-                        d['name'] = shader_meta['as_node_name']['value']
-                    else:
-                        d['name'] = q.get_shader_name()
-                    d['filename'] = filename
-                    if 'URL' in shader_meta:
-                        d['url'] = shader_meta['URL']['value']
-                    else:
-                        d['url'] = ''
-                    if 'as_category' in shader_meta:
-                        d['category'] = shader_meta['as_category']['value']
-                    else:
-                        d['category'] = 'other'
-                    num_of_params = q.get_num_params()
-                    for x in range(0, num_of_params):
-                        metadata = {}
-                        param = q.get_param_info(x)
-                        if 'metadata' in param:
-                            metadata = param['metadata']
-                        param_data = {}
-                        param_data['name'] = param['name']
-                        param_data['type'] = param['type']
-                        param_data['connectable'] = True
-                        param_data['hide_ui'] = param['validdefault'] is False
-                        if 'default' in param:
-                            param_data['default'] = param['default']
-                        if 'label' in metadata:
-                            param_data['label'] = metadata['label']['value']
-                        if 'widget' in metadata:
-                            param_data['widget'] = metadata['widget']['value']
-                            if param_data['widget'] == 'null':
-                                param_data['hide_ui'] = True
-                        if 'page' in metadata:
-                            param_data['section'] = metadata['page']['value']
-                        if 'min' in metadata:
-                            param_data['min'] = metadata['min']['value']
-                        if 'max' in metadata:
-                            param_data['max'] = metadata['max']['value']
-                        if 'softmin' in metadata:
-                            param_data['softmin'] = metadata['softmin']['value']
-                        if 'softmax' in metadata:
-                            param_data['softmax'] = metadata['softmax']['value']
-                        if 'help' in metadata:
-                            param_data['help'] = metadata['help']['value']
-                        if 'options' in metadata:
-                            param_data['options'] = metadata['options']['value'].split(" = ")[-1].replace("\"", "").split("|")
-                        if 'as_blender_input_socket' in metadata:
-                            param_data['connectable'] = False if metadata['as_blender_input_socket']['value'] == 0.0 else True
-
-                        if param['isoutput'] is True:
-                            d['outputs'].append(param_data)
-                        else:
-                            d['inputs'].append(param_data)
-
-                    nodes.append(d)
-
-    logger.debug("[appleseed] OSL parsing complete.")
-
-    return nodes
-
-
 # ------------------------------------
 # Generic utilities and settings.
 # ------------------------------------
 
-sep = os.sep
-
-# Add-on directory.
-for addon_path in bpy.utils.script_paths("addons"):
-    if "blenderseed" in os.listdir(addon_path):
-        addon_dir = os.path.join(addon_path, "blenderseed")
-
-thread_count = multiprocessing.cpu_count()
-
-
-def strip_spaces(name):
-    return '_'.join(name.split(' '))
-
-
-def join_names_underscore(name1, name2):
-    return '_'.join((strip_spaces(name1), strip_spaces(name2)))
-
 
 def filter_params(params):
-    filter_list = []
+    filter_list = list()
     for p in params:
         if p not in filter_list:
             filter_list.append(p)
+    
     return filter_list
 
 
@@ -195,28 +85,37 @@ def realpath(path):
 
     return path
 
+
 @persistent
 def update_project(_):
-    # Update shader trees to new node ui
-    for node_group in bpy.data.node_groups:
-            for node in node_group.nodes:
-                for socket in node.inputs:
-                    if hasattr(socket, "socket_value"):
-                        current_value = socket.socket_value
-                        default_value = socket.socket_default_value
-                        if current_value != default_value:
-                            logger.debug("Updating shader tree %s, Node: %s, Parameter: %s", node_group.name, node.name, socket.socket_osl_id)
-                            setattr(node, socket.socket_osl_id, current_value)
-                            setattr(socket, "socket_value", default_value)
+    """
+    This function automatically runs when a .blend file is opened.
+    :param _:
+    :return:
+    """
+
+    # Compile all OSL Script nodes
+    stdosl_path = path_util.get_stdosl_paths()
+    compiler = asr.ShaderCompiler(stdosl_path)
+    q = asr.ShaderQuery()
+    for script in bpy.data.texts:
+        osl_bytecode = osl_utils.compile_osl_bytecode(compiler,
+                                                      script)
+        if osl_bytecode is not None:
+            q.open_bytecode(osl_bytecode)
+
+            node_data = osl_utils.parse_shader(q)
+
+            node_name, node_category, node_classes = osl_utils.generate_node(node_data,
+                                                                             AppleseedOSLScriptNode)
+
+            for cls in node_classes:
+                safe_register_class(cls)
+
 
 # ------------------------------------
 # Scene export utilities.
 # ------------------------------------
-
-def inscenelayer(obj, scene):
-    for i in range(len(obj.layers)):
-        if obj.layers[i] and scene.layers[i]:
-            return True
 
 
 def get_render_resolution(scene):
@@ -247,6 +146,10 @@ def calc_film_dimensions(aspect_ratio, camera, zoom):
     the vertical size when it is below 1.  Other dimension is derived from aspect ratio.
 
     Much thanks to the Radeon ProRender plugin for clarifying this behavior
+    :param aspect_ratio:
+    :param camera:
+    :param zoom:
+    :return:
     """
 
     horizontal_fit = camera.sensor_fit == 'HORIZONTAL' or \
@@ -268,18 +171,21 @@ def calc_film_dimensions(aspect_ratio, camera, zoom):
 def find_autofocus_point(scene):
     cam = scene.camera
     co = scene.cursor_location
-    co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, co)
+    co_2d = bpy_extras.object_utils.world_to_camera_view(scene,
+                                                         cam,
+                                                         co)
     y = 1 - co_2d.y
 
     return co_2d.x, y
 
+
 def get_focal_distance(camera):
-    if camera.data.dof_object is not None:
+    if camera.data.dof.focus_object is not None:
         cam_location = camera.matrix_world.to_translation()
-        cam_target_location = bpy.data.objects[camera.data.dof_object.name].matrix_world.to_translation()
+        cam_target_location = bpy.data.objects[camera.data.dof.focus_object.name].matrix_world.to_translation()
         focal_distance = (cam_target_location - cam_location).magnitude
     else:
-        focal_distance = camera.data.dof_distance
+        focal_distance = camera.data.dof.focus_distance
 
     return focal_distance
 
@@ -287,19 +193,6 @@ def get_focal_distance(camera):
 # ------------------------------------
 # Object / instance utilities.
 # ------------------------------------
-
-
-def get_instance_materials(ob):
-    obmats = []
-    # Grab materials attached to object instances ...
-    if hasattr(ob, 'material_slots'):
-        for ms in ob.material_slots:
-            obmats.append(ms.material)
-    # ... and to the object's mesh data
-    if hasattr(ob.data, 'materials'):
-        for m in ob.data.materials:
-            obmats.append(m)
-    return obmats
 
 
 def is_object_deforming(ob):
@@ -324,9 +217,9 @@ def is_object_deforming(ob):
 # ------------------------------------
 
 class Timer(object):
-    '''
+    """
     Simple timer for profiling operations.
-    '''
+    """
 
     def __init__(self):
         self.start()

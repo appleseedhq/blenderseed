@@ -5,7 +5,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2014-2019 The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,10 +31,11 @@ from . import world
 from . import objects
 from . import materials
 from . import meshes
+from . import nodes
 from . import camera
 from . import nodes
-from . import particles
 from . import lamps
+from . import texture
 
 
 def register():
@@ -45,17 +46,17 @@ def register():
     materials.register()
     meshes.register()
     camera.register()
-    particles.register()
     lamps.register()
+    texture.register()
 
 
 def unregister():
+    texture.unregister()
     lamps.unregister()
-    particles.unregister()
-    nodes.unregister()
     camera.unregister()
     meshes.unregister()
     materials.unregister()
     objects.unregister()
     world.unregister()
     scene.unregister()
+    nodes.unregister()

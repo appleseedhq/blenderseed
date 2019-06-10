@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2018 Esteban Tovagliari.
+# Copyright (c) 2019 Esteban Tovagliari, The appleseedhq Organization.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -79,9 +79,10 @@ class FinalRendererController(BaseRendererController):
 
 
 class InteractiveRendererController(BaseRendererController):
-    def __init__(self, camera):
+    def __init__(self, engine, camera):
         super(InteractiveRendererController, self).__init__()
 
+        self.__engine = engine
         self.__camera = camera
 
     def on_frame_begin(self):
@@ -92,4 +93,9 @@ class InteractiveRendererController(BaseRendererController):
             pass
 
     def get_status(self):
-        return self._status
+        try:
+            if not self.__engine.test_break():
+                return self._status
+        except Exception as e:
+            logger.debug("%s", e)
+            return asr.IRenderControllerStatus.AbortRendering

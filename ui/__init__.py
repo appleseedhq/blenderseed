@@ -27,7 +27,6 @@
 
 import bpy
 
-
 from . import camera
 from . import lamps
 from . import materials
@@ -113,7 +112,6 @@ def register():
     meshes.register()
     camera.register()
     objects.register()
-    #    particles.register()
     lamps.register()
 
     for panel in get_panels():
@@ -126,7 +124,6 @@ def unregister():
             panel.COMPAT_ENGINES.remove('APPLESEED_RENDER')
 
     lamps.unregister()
-    #    particles.unregister()
     objects.unregister()
     camera.unregister()
     meshes.unregister()
