@@ -43,12 +43,13 @@ logger = get_logger()
 
 
 class RenderThread(threading.Thread):
-    def __init__(self, renderer):
+    def __init__(self, renderer, render_controller):
         super(RenderThread, self).__init__()
         self.__renderer = renderer
+        self.__renderer_controller = render_controller
 
     def run(self):
-        self.__renderer.render()
+        self.__renderer.render(self.__renderer_controller)
 
 
 class SetAppleseedLogLevel(object):
@@ -238,10 +239,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.__renderer = asr.MasterRenderer(project,
                                              project.configurations()['final'].get_inherited_parameters(),
                                              [],
-                                             self.__renderer_controller,
                                              self.__tile_callback)
 
-        self.__render_thread = RenderThread(self.__renderer)
+        self.__render_thread = RenderThread(self.__renderer, self.__renderer_controller)
 
         # While debugging, log to the console. This should be configurable.
         log_target = asr.ConsoleLogTarget(sys.stderr)
@@ -292,7 +292,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.__renderer = asr.MasterRenderer(project,
                                              project.configurations()['interactive'].get_inherited_parameters(),
                                              [],
-                                             self.__renderer_controller,
                                              self.__tile_callback)
 
         self.__restart_interactive_render()
@@ -304,7 +303,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         logger.debug("Start rendering")
         self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
-        self.__render_thread = RenderThread(self.__renderer)
+        self.__render_thread = RenderThread(self.__renderer, self.__renderer_controller)
         self.__render_thread.start()
 
     def __pause_rendering(self):
