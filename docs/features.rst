@@ -1,19 +1,18 @@
 Features
 ========
 
-New in 1.0
+New in 2.0
 ----------
 
-    * Completely redesigned export and render stage.  It now uses the appleseed.python bindings (no more random export files in odd places)
-    * Interactive rendering
-    * Adaptive image sampling
-    * Full OSL materials
-    * Area lamps
-    * Support for linked objects and groups
-    * Archive assemblies
-    * Post processing stages
-    * The appleseed renderer is now bundled directly with blenderseed (no more configuration woes)
-    * Adjustable number of motion segments for camera, object, and deformation blur
+    * Blender 2.8 support
+    * Dynamic OSL script node
+    * Texture converter uses internal function (no more need for maketx)
+    * Animated textures
+    * Native Cryptomatte integration
+    * Area lamps use new analytic shapes instead of meshes
+    * Mesh export is now handled through C++, leading to a 10x reduction in export times
+    * Can add and delete objects in viewport render model
+    * Stereoscopic rendering support
 
 Supported Features
 ------------------
@@ -35,5 +34,5 @@ Supported Features
 Planned Features
 --------------------
 
-    * Dynamic OSL script node
     * OSL volume rendering (once appleseed supports it)
+    * Light path visualization

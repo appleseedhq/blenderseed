@@ -30,7 +30,7 @@ table.citation {
 }
 
 .footer>.container>p:last-child:after {
-    content: ' © Copyright 2017-2018 The appleseedhq Organization';
+    content: ' © Copyright 2017-2019 The appleseedhq Organization';
     visibility: visible;
 }
 
