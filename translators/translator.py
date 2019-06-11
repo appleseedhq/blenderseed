@@ -1,11 +1,10 @@
-
 #
 # This source file is part of appleseed.
 # Visit http://appleseedhq.net/ for additional information and resources.
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2019 Jonathan Dent, The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,47 +25,12 @@
 # THE SOFTWARE.
 #
 
-import appleseed as asr
 import math
 
-from enum import Enum
-
+import appleseed as asr
 from ..logger import get_logger
+
 logger = get_logger()
-
-
-class ProjectExportMode(Enum):
-    FINAL_RENDER = 1
-    INTERACTIVE_RENDER = 2
-    PROJECT_EXPORT = 3
-
-
-class ObjectKey(object):
-    '''
-    Class used to uniquely identify blender objects.
-    '''
-
-    def __init__(self, obj):
-        self.__name = obj.name
-        self.__library_name = None
-
-        if obj.library:
-            self.__library_name = obj.library.name
-
-    def __hash__(self):
-        return hash((self.__name, self.__library_name))
-
-    def __eq__(self, other):
-        return (self.__name, self.__library_name) == (other.__name, other.__library_name)
-
-    def __ne__(self, other):
-        return not(self == other)
-
-    def __str__(self):
-        if self.__library_name:
-            return self.__library_name + "|" + self.__name
-
-        return self.__name
 
 
 class Translator(object):
@@ -74,55 +38,106 @@ class Translator(object):
     Base class for translators that convert Blender objects to appleseed Entities.
     """
 
-    #
     # Constructor.
-    #
-
-    def __init__(self, obj, asset_handler):
+    def __init__(self, obj, asset_handler=None):
         self._bl_obj = obj
-        if self._bl_obj is not None:
-            self._obj_key = ObjectKey(obj)
         self._asset_handler = asset_handler
 
-    #
     # Properties.
-    #
-
     @property
     def appleseed_name(self):
-        return str(self._obj_key)
+        return self._bl_obj.name_full
 
     @property
     def asset_handler(self):
         return self._asset_handler
 
-    #
     # Entity translation.
-    #
-
-    def create_entities(self, scene):
-        """todo: document me..."""
+    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
+        """
+        This function creates the parameter lists and appleseed entities that are being hosted by the translator.
+        :param as_texture_translators:
+        :param textures_to_add:
+        :param bl_scene: Blender scene
+        :return: None
+        """
 
         raise NotImplementedError()
 
-    def flush_entities(self, project, assembly):
-        """todo: document me..."""
+    def set_xform_step(self, time, inst_key, bl_matrix):
+        """
+        This function adds a transform step to the matrix ID'ed by the inst_key.
+        :param time:
+        :param inst_key:
+        :param bl_matrix:
+        :return:
+        """
 
         raise NotImplementedError()
 
-    #
-    # Utility methods.
-    #
-
-    def _reset(self, obj):
+    def flush_entities(self, as_assembly, as_project):
         """
-        This exists in order to reset the basic data on the translator when doing an interactive render update.
-        This is necessary when the name of an object or material changes.
+        This function flushes the appleseed entities into the appropriate location in the project file and then
+        retrieves Python wrapped pointers to the entities for further editing if needed.
+        :param as_project:
+        :param as_assembly: The primary scene assembly for the appleseed project
+        :return: None
         """
 
-        self._bl_obj = obj
-        if self._bl_obj:
-            self._obj_key = ObjectKey(obj)
+        raise NotImplementedError()
+
+    def update_object(self, context, as_assembly, textures_to_add, as_texture_translators):
+        """
+        This function deletes and then recreates an appleseed entity when the corresponding Blender object is updated.
+        :param context:
+        :param as_assembly:
+        :param textures_to_add:
+        :param as_texture_translators:
+        :return:
+        """
+
+        raise NotImplementedError()
+
+    def delete_instances(self, as_assembly, as_scene):
+        """
+        Deletes all the object instances in the scene.
+        :param as_assembly:
+        :param as_scene:
+        :return:
+        """
+
+        raise NotImplementedError()
+
+    def xform_update(self, inst_key, bl_matrix, as_assembly, as_scene):
+        """
+        During interactive rendering, this function recreates and then flushes a new instance for
+        an existing translator.
+        :param inst_key:
+        :param bl_matrix:
+        :param as_assembly:
+        :param as_scene:
+        :return:
+        """
+
+        raise NotImplementedError()
+
+    def delete_object(self, as_assembly):
+        """
+        Deletes all the associated entities created by a translator.
+        :param as_assembly:
+        :return:
+        """
+
+        raise NotImplementedError()
+
+    def add_instance(self, key):
+        """
+        Adds a new instance to a translator.
+        :param key:
+        :return:
+        """
+
+        raise NotImplementedError()
 
     @staticmethod
     def _convert_matrix(m):
@@ -139,6 +154,8 @@ class Translator(object):
         The only difference between the coordinate systems of Blender and appleseed is the up vector:
         in Blender, up is Z+; in appleseed, up is Y+.  So we need to add a -90 degree rotation along the x
         axis to translate.
+        :param m: Input Blender object matrix
+        :return: appleseed transform of the modified matrix
         """
 
         matrix = asr.Matrix4d([m[0][0], m[0][1], m[0][2], m[0][3],
@@ -154,30 +171,9 @@ class Translator(object):
 
     @staticmethod
     def _convert_color(color):
-        """Convert a Blender color to a Python list."""
-
+        """
+        Convert a Blender color to a Python list
+        :param color: Blender FloatVectorProperty with color information
+        :return: List of extracted RGB values
+        """
         return [color[0], color[1], color[2]]
-
-    @staticmethod
-    def _insert_entity_with_unique_name(container, entity, name):
-        """
-        Insert an appleseed entity into a container with an unique name.
-        Returns the new entity name.
-        """
-
-        if container.get_by_name(name) == None:
-            entity.set_name(name)
-            container.insert(entity)
-            return name
-
-        i = 2
-        fmt = name + "_%d"
-
-        while True:
-            new_name = fmt % i
-            i += 1
-
-            if container.get_by_name(new_name) == None:
-                entity.set_name(new_name)
-                container.insert(entity)
-                return new_name

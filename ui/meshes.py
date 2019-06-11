@@ -4,7 +4,7 @@
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2014-2018 The appleseedhq Organization
+# Copyright (c) 2019 Jonathan Dent, The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ import bpy
 from ..utils import util
 
 
-class AppleseedObjExportPanel(bpy.types.Panel):
+class ASMESH_PT_export(bpy.types.Panel):
     bl_label = "appleseed Export"
     COMPAT_ENGINES = {'APPLESEED_RENDER'}
     bl_space_type = "PROPERTIES"
@@ -44,6 +44,7 @@ class AppleseedObjExportPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
         asr_obj = context.object.data.appleseed
         layout.prop(asr_obj, "export_normals", text="Export Normals")
         layout.prop(asr_obj, "export_uvs", text="Export UVs")
@@ -51,8 +52,8 @@ class AppleseedObjExportPanel(bpy.types.Panel):
 
 
 def register():
-    util.safe_register_class(AppleseedObjExportPanel)
+    util.safe_register_class(ASMESH_PT_export)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedObjExportPanel)
+    util.safe_unregister_class(ASMESH_PT_export)

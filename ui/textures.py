@@ -1,11 +1,10 @@
-
 #
 # This source file is part of appleseed.
 # Visit https://appleseedhq.net/ for additional information and resources.
 #
 # This software is released under the MIT license.
 #
-# Copyright (c) 2018 Jonathan Dent, The appleseedhq Organization
+# Copyright (c) 2019 Jonathan Dent, The appleseedhq Organization
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +26,11 @@
 #
 
 import bpy
+
 from ..utils import util
 
 
-class AppleseedTextureContext(bpy.types.Panel):
+class ASTEXTURE_PT_context(bpy.types.Panel):
     bl_context = "texture"
     bl_label = "Texture Context"
     bl_region_type = 'WINDOW'
@@ -45,13 +45,12 @@ class AppleseedTextureContext(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
         tex = context.texture
         space = context.space_data
         pin_id = space.pin_id
         use_pin_id = space.use_pin_id
         user = context.texture_user
-
-        space.use_limited_texture_context = False
 
         if not (use_pin_id and isinstance(pin_id, bpy.types.Texture)):
             pin_id = None
@@ -62,7 +61,7 @@ class AppleseedTextureContext(bpy.types.Panel):
         if user or pin_id:
             layout.separator()
 
-            split = layout.split(percentage=0.65)
+            split = layout.split(factor=0.65)
             col = split.column()
 
             if pin_id:
@@ -72,14 +71,14 @@ class AppleseedTextureContext(bpy.types.Panel):
                 col.template_ID(user, propname, new="texture.new")
 
             if tex:
-                split = layout.split(percentage=0.2)
+                split = layout.split(factor=0.2)
                 split.label(text="Type:")
                 split.prop(tex, "type", text="")
 
 
 def register():
-    util.safe_register_class(AppleseedTextureContext)
+    util.safe_register_class(ASTEXTURE_PT_context)
 
 
 def unregister():
-    util.safe_unregister_class(AppleseedTextureContext)
+    util.safe_unregister_class(ASTEXTURE_PT_context)
