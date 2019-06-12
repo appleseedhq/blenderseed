@@ -116,14 +116,6 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                         min=-360,
                                         max=360)
 
-    # Area lamp specific parameters.
-    area_shape: bpy.props.EnumProperty(name="area_shape",
-                                       description="",
-                                       items=[('rectangle_object', "Rectangle", ""),
-                                              ('disk_object', "Disk", ""),
-                                              ('sphere_object', "Sphere", "")],
-                                       default='rectangle_object')
-
     area_color: bpy.props.FloatVectorProperty(name="area_color",
                                               description="Color of area lamp",
                                               subtype='COLOR',
