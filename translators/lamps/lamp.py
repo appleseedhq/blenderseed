@@ -87,10 +87,10 @@ class LampTranslator(Translator):
                 self.__as_lamp_params = self._get_sun_lamp_params()
 
         else:
-            primitive, shape_params = self._get_area_mesh_params()
+            shape_params = self._get_area_mesh_params()
             mesh_name = f"{self.appleseed_name}_mesh"
 
-            self.__as_area_lamp = asr.Object(primitive, mesh_name, shape_params)
+            self.__as_area_lamp = asr.create_primitive_mesh(mesh_name, shape_params)
 
             mat_name = f"{self.appleseed_name}_mat"
 
@@ -308,23 +308,30 @@ class LampTranslator(Translator):
 
     def _get_area_mesh_params(self):
         lamp_data = self.bl_lamp.data
-        as_lamp_data = lamp_data.appleseed
 
-        primitive = as_lamp_data.area_shape
+        primitive = lamp_data.shape
 
         shape_params = dict()
 
-        if primitive == 'rectangle_object':
+        if primitive == 'RECTANGLE':
+            shape_params['primitive'] = "grid"
+            shape_params['resolution_u'] = 1
+            shape_params['resolution_v'] = 1
             shape_params['width'] = lamp_data.size
             shape_params['height'] = lamp_data.size_y
 
-        elif primitive == 'disk_object':
+        elif primitive == 'DISK':
+            shape_params['primitive'] = "disk"
             shape_params['radius'] = self.bl_lamp.data.size / 2
 
-        else:
-            shape_params['radius'] = self.bl_lamp.data.size / 2
+        elif primitive == 'SQUARE':
+            shape_params['primitive'] = "grid"
+            shape_params['resolution_u'] = 1
+            shape_params['resolution_v'] = 1
+            shape_params['width'] = lamp_data.size
+            shape_params['height'] = lamp_data.size
 
-        return primitive, shape_params
+        return shape_params
 
     def _get_area_mesh_instance_params(self):
         lamp_data = self.bl_lamp.data

@@ -121,9 +121,11 @@ class ASLAMP_PT_lamp(bpy.types.Panel):
                 layout.prop(asr_lamp, "importance_multiplier", text="Importance Multiplier")
 
         if lamp_data.type == 'AREA':
-            layout.prop(asr_lamp, "area_shape", expand=True, text="Shape")
+            layout.prop_enum(lamp_data, "shape", "RECTANGLE", text="Rectangle")
+            layout.prop_enum(lamp_data, "shape", "SQUARE", text="Square")
+            layout.prop_enum(lamp_data, "shape", "DISK", text="Disk")
             col = layout.column(align=True)
-            if asr_lamp.area_shape == 'rectangle_object':
+            if lamp_data.shape == 'RECTANGLE':
                 col.prop(lamp_data, "size", text="Size X")
                 col.prop(lamp_data, "size_y", text="Size Y")
             else:
