@@ -626,6 +626,15 @@ class SceneTranslator(object):
             'denoise_scales': asr_scene_props.denoise_scales,
             'mark_invalid_pixels': asr_scene_props.mark_invalid_pixels}
 
+        aovs = asr.AOVContainer()
+        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
+            aovs = self.__set_aovs(aovs)
+
+        # Create and set the frame in the project.
+        self.__frame = asr.Frame("beauty",
+                                 frame_params,
+                                 aovs)
+
         if self.bl_scene.render.use_border and self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             min_x = int(self.bl_scene.render.border_min_x * width)
             max_x = int(self.bl_scene.render.border_max_x * width) - 1
@@ -640,15 +649,6 @@ class SceneTranslator(object):
             min_y = height - int(context.space_data.render_border_max_y * height)
             max_y = height - int(context.space_data.render_border_min_y * height) - 1
             self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
-
-        aovs = asr.AOVContainer()
-        if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            aovs = self.__set_aovs(aovs)
-
-        # Create and set the frame in the project.
-        self.__frame = asr.Frame("beauty",
-                                 frame_params,
-                                 aovs)
 
         self.__project.set_frame(self.__frame)
         self.__frame = self.as_project.get_frame()
