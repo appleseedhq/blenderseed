@@ -30,6 +30,7 @@ import os
 
 import bpy
 
+from ..properties.nodes import AppleseedOSLNode
 from ..utils import util
 
 
@@ -80,16 +81,18 @@ class ASTEX_OT_refresh_texture(bpy.types.Operator):
 
         scene_textures = list()
 
-        for tree in bpy.data.node_groups:
-            for node in tree.nodes:
-                for param in node.filepaths:
-                    texture_block = getattr(node, param)
-                    if texture_block not in scene_textures:
-                        scene_textures.append(texture_block)
-                        if texture_block not in existing_textures:
-                            collection.add()
-                            num = len(collection)
-                            collection[num - 1].name = texture_block
+        for mat in bpy.data.materials:
+            if mat.node_tree is not None:
+                for node in mat.node_tree.nodes:
+                    if isinstance(node, AppleseedOSLNode):
+                        for param in node.filepaths:
+                            texture_block = getattr(node, param)
+                            if texture_block not in scene_textures:
+                                scene_textures.append(texture_block)
+                                if texture_block not in existing_textures:
+                                    collection.add()
+                                    num = len(collection)
+                                    collection[num - 1].name = texture_block
 
         texture_index = len(collection) - 1
         while texture_index > -1:
