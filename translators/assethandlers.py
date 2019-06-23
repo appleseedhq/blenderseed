@@ -50,6 +50,8 @@ class AssetHandler(object):
         self._searchpaths = get_osl_search_paths()
         self._depsgraph = depsgraph
 
+        self._searchpaths.extend(x.file_path for x in bpy.context.preferences.addons['blenderseed'].preferences.search_paths)
+
     @property
     def searchpaths(self):
         return self._searchpaths

@@ -286,9 +286,7 @@ def node_categories(osl_nodes):
 
 osl_node_names = []
 
-classes = [
-    AppleseedOSLScriptBaseNode
-]
+classes = [AppleseedOSLScriptBaseNode]
 
 
 def register():

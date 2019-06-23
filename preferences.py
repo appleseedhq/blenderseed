@@ -25,9 +25,73 @@
 # THE SOFTWARE.
 #
 
+import os
+
 import bpy
+from nodeitems_utils import NodeItem, unregister_node_categories, register_node_categories, _node_categories
 
 import appleseed as asr
+
+osl_custom_nodes = list()
+
+
+def update_searchpath(self, context):
+    from .properties.nodes import AppleseedOSLNode, AppleseedOSLNodeCategory
+    from .utils import osl_utils, util
+    from .utils.osl_utils import parse_shader
+
+    index = context.preferences.addons['blenderseed'].preferences.path_index
+    path = context.preferences.addons['blenderseed'].preferences.search_paths[index].file_path
+
+    q = asr.ShaderQuery()
+
+    from .logger import get_logger
+    logger = get_logger()
+
+    logger.debug("[appleseed] Parsing OSL shaders...")
+
+    nodes = list()
+
+    if os.path.isdir(path):
+        logger.debug("[appleseed] Searching {0} for OSO files...".format(path))
+        for file in os.listdir(path):
+            if file.endswith(".oso"):
+                logger.debug("[appleseed] Reading {0}...".format(file))
+                filename = os.path.join(path, file)
+                q.open(filename)
+                nodes.append(parse_shader(q, filename=filename))
+
+    for node in nodes:
+        node_name, node_category, node_classes = osl_utils.generate_node(node,
+                                                                         AppleseedOSLNode)
+
+        for cls in node_classes:
+            util.safe_register_class(cls)
+
+        osl_custom_nodes.append(NodeItem(node_name))
+
+    if "APPLESEED_CUSTOM" in _node_categories.keys():
+        unregister_node_categories("APPLESEED_CUSTOM")
+
+    custom_nodes = [AppleseedOSLNodeCategory("OSL_Custom", "appleseed-Custom", items=osl_custom_nodes)]
+
+    register_node_categories("APPLESEED_CUSTOM", custom_nodes)
+
+
+class AppleseedSearchPath(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(name="name")
+
+    file_path: bpy.props.StringProperty(name="file_path",
+                                        subtype="DIR_PATH",
+                                        update=update_searchpath)
+
+
+class ASS_UL_SearchPathList(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        search_path = item.name
+        if 'DEFAULT' in self.layout_type:
+            layout.label(text=search_path, translate=False, icon_value=icon)
 
 
 class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
@@ -46,10 +110,31 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
                                       default='error',
                                       update=update_logger)
 
+    search_paths: bpy.props.CollectionProperty(type=AppleseedSearchPath,
+                                               name="search_paths")
+
+    path_index: bpy.props.IntProperty(name="path_index",
+                                      description="",
+                                      default=0)
+
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "log_level", text="Log Level")
         layout.separator()
+
+        layout.label(text="Resource Search Paths")
+        row = layout.row()
+        row.template_list("ASS_UL_SearchPathList", "", self,
+                          "search_paths", self, "path_index", rows=1, maxrows=16, type="DEFAULT")
+
+        row = layout.row(align=True)
+        row.operator("appleseed.add_searchpath", text="Add Path", icon="ADD")
+        row.operator("appleseed.remove_searchpath", text="Remove Path", icon="REMOVE")
+
+        if self.search_paths:
+            current_set = self.search_paths[self.path_index]
+            layout.prop(current_set, "file_path", text="Filepath")
+
         layout.label(text="appleseed Library Versions:")
         box = layout.box()
         box.label(text=asr.get_synthetic_version_string())
@@ -60,9 +145,16 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
             box.label(text="%s: %s" % (key, lib_info[key]))
 
 
+classes = (AppleseedSearchPath,
+           ASS_UL_SearchPathList,
+           AppleseedPreferencesPanel)
+
+
 def register():
-    bpy.utils.register_class(AppleseedPreferencesPanel)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedPreferencesPanel)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
