@@ -120,7 +120,7 @@ class ASSSS_OT_remove_sss_set(bpy.types.Operator):
 
 class ASSPREF_OT_add_search_path(bpy.types.Operator):
     """
-    Operator for adding searchpaths
+    Operator for adding search paths
     """
 
     bl_label = "Add Search Path"
@@ -139,7 +139,7 @@ class ASSPREF_OT_add_search_path(bpy.types.Operator):
 
 class ASSPREF_OT_remove_search_path(bpy.types.Operator):
     """
-    Operator for removing searchpaths
+    Operator for removing search paths
     """
 
     bl_label = "Remove Search Path"

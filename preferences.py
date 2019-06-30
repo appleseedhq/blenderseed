@@ -96,7 +96,7 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
         global path_added
 
         if path_added is True:
-            layout.label(text="Restart Blender to load new search path!", icon="ERROR")
+            layout.label(text="Changes to search paths will take effect upon restarting Blender", icon="ERROR")
 
         layout.separator()
         layout.label(text="appleseed Library Versions:")
