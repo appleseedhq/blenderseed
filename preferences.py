@@ -25,65 +25,23 @@
 # THE SOFTWARE.
 #
 
-import os
-
 import bpy
-from nodeitems_utils import NodeItem, unregister_node_categories, register_node_categories, _node_categories
 
 import appleseed as asr
 
-osl_custom_nodes = list()
+path_added = False
 
 
-def update_searchpath(self, context):
-    from .properties.nodes import AppleseedOSLNode, AppleseedOSLNodeCategory
-    from .utils import osl_utils, util
-    from .utils.osl_utils import parse_shader
+def updated_path(self, context):
+    global path_added
 
-    index = context.preferences.addons['blenderseed'].preferences.path_index
-    path = context.preferences.addons['blenderseed'].preferences.search_paths[index].file_path
-
-    q = asr.ShaderQuery()
-
-    from .logger import get_logger
-    logger = get_logger()
-
-    logger.debug("[appleseed] Parsing OSL shaders...")
-
-    nodes = list()
-
-    if os.path.isdir(path):
-        logger.debug("[appleseed] Searching {0} for OSO files...".format(path))
-        for file in os.listdir(path):
-            if file.endswith(".oso"):
-                logger.debug("[appleseed] Reading {0}...".format(file))
-                filename = os.path.join(path, file)
-                q.open(filename)
-                nodes.append(parse_shader(q, filename=filename))
-
-    for node in nodes:
-        node_name, node_category, node_classes = osl_utils.generate_node(node,
-                                                                         AppleseedOSLNode)
-
-        for cls in node_classes:
-            util.safe_register_class(cls)
-
-        osl_custom_nodes.append(NodeItem(node_name))
-
-    if "APPLESEED_CUSTOM" in _node_categories.keys():
-        unregister_node_categories("APPLESEED_CUSTOM")
-
-    custom_nodes = [AppleseedOSLNodeCategory("OSL_Custom", "appleseed-Custom", items=osl_custom_nodes)]
-
-    register_node_categories("APPLESEED_CUSTOM", custom_nodes)
+    path_added = True
 
 
 class AppleseedSearchPath(bpy.types.PropertyGroup):
-    name: bpy.props.StringProperty(name="name")
-
-    file_path: bpy.props.StringProperty(name="file_path",
-                                        subtype="DIR_PATH",
-                                        update=update_searchpath)
+    name: bpy.props.StringProperty(name="name",
+                                   subtype="DIR_PATH",
+                                   update=updated_path)
 
 
 class ASS_UL_SearchPathList(bpy.types.UIList):
@@ -128,13 +86,19 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
                           "search_paths", self, "path_index", rows=1, maxrows=16, type="DEFAULT")
 
         row = layout.row(align=True)
-        row.operator("appleseed.add_searchpath", text="Add Path", icon="ADD")
-        row.operator("appleseed.remove_searchpath", text="Remove Path", icon="REMOVE")
+        row.operator("appleseed.add_search_path", text="Add Search Path", icon="ADD")
+        row.operator("appleseed.remove_search_path", text="Remove Search Path", icon="REMOVE")
 
         if self.search_paths:
             current_set = self.search_paths[self.path_index]
-            layout.prop(current_set, "file_path", text="Filepath")
+            layout.prop(current_set, "name", text="Filepath")
 
+        global path_added
+
+        if path_added is True:
+            layout.label(text="Restart Blender to load new search path!", icon="ERROR")
+
+        layout.separator()
         layout.label(text="appleseed Library Versions:")
         box = layout.box()
         box.label(text=asr.get_synthetic_version_string())

@@ -118,33 +118,33 @@ class ASSSS_OT_remove_sss_set(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ASSPREF_OT_add_searchpath(bpy.types.Operator):
+class ASSPREF_OT_add_search_path(bpy.types.Operator):
     """
     Operator for adding searchpaths
     """
 
-    bl_label = "Add Set"
-    bl_description = "Add new searchpath"
-    bl_idname = "appleseed.add_searchpath"
+    bl_label = "Add Search Path"
+    bl_description = "Add new search path"
+    bl_idname = "appleseed.add_search_path"
 
     def execute(self, context):
         collection = context.preferences.addons['blenderseed'].preferences.search_paths
 
         collection.add()
         num = len(collection)
-        collection[num - 1].name = f"Searchpath {num}"
+        collection[num - 1].name = f"{num}"
 
         return {'FINISHED'}
 
 
-class ASSPREF_OT_remove_searchpath(bpy.types.Operator):
+class ASSPREF_OT_remove_search_path(bpy.types.Operator):
     """
     Operator for removing searchpaths
     """
 
-    bl_label = "Remove Set"
-    bl_description = "Remove searchpath"
-    bl_idname = "appleseed.remove_searchpath"
+    bl_label = "Remove Search Path"
+    bl_description = "Remove search_path"
+    bl_idname = "appleseed.remove_search_path"
 
     def execute(self, context):
         collection = context.preferences.addons['blenderseed'].preferences.search_paths
@@ -163,8 +163,8 @@ class ASSPREF_OT_remove_searchpath(bpy.types.Operator):
 
 classes = (ASPP_OT_add_postproc_stage,
            ASPP_OT_remove_postproc_stage,
-           ASSPREF_OT_add_searchpath,
-           ASSPREF_OT_remove_searchpath,
+           ASSPREF_OT_add_search_path,
+           ASSPREF_OT_remove_search_path,
            ASSSS_OT_add_sss_set,
            ASSSS_OT_remove_sss_set)
 

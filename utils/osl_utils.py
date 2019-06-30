@@ -397,10 +397,6 @@ def read_osl_shaders():
 
     nodes = list()
 
-    if not path_util.get_appleseed_bin_dir_path():
-        logger.warning("[appleseed] WARNING: Path to appleseed's binary directory not set: rendering and OSL features will not be available.")
-        return nodes
-
     shader_directories = path_util.get_osl_search_paths()
 
     q = asr.ShaderQuery()

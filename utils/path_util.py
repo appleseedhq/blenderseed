@@ -29,6 +29,8 @@ import os
 import platform
 import sys
 
+import bpy
+
 
 def get_appleseed_bin_dir_path():
     if "APPLESEED_BIN_DIR" in os.environ:
@@ -75,6 +77,8 @@ def get_osl_search_paths():
     # Add environment paths.
     if "APPLESEED_SEARCHPATH" in os.environ:
         shader_directories.extend(os.environ["APPLESEED_SEARCHPATH"].split(os.path.pathsep))
+
+    shader_directories.extend(x.name for x in bpy.context.preferences.addons['blenderseed'].preferences.search_paths)
 
     # Remove duplicated paths.
     tmp = set(shader_directories)
