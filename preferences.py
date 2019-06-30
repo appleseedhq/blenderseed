@@ -29,6 +29,28 @@ import bpy
 
 import appleseed as asr
 
+path_added = False
+
+
+def updated_path(self, context):
+    global path_added
+
+    path_added = True
+
+
+class AppleseedSearchPath(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(name="name",
+                                   subtype="DIR_PATH",
+                                   update=updated_path)
+
+
+class ASS_UL_SearchPathList(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        search_path = item.name
+        if 'DEFAULT' in self.layout_type:
+            layout.label(text=search_path, translate=False, icon_value=icon)
+
 
 class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
     bl_idname = __package__
@@ -46,9 +68,36 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
                                       default='error',
                                       update=update_logger)
 
+    search_paths: bpy.props.CollectionProperty(type=AppleseedSearchPath,
+                                               name="search_paths")
+
+    path_index: bpy.props.IntProperty(name="path_index",
+                                      description="",
+                                      default=0)
+
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "log_level", text="Log Level")
+        layout.separator()
+
+        layout.label(text="Resource Search Paths")
+        row = layout.row()
+        row.template_list("ASS_UL_SearchPathList", "", self,
+                          "search_paths", self, "path_index", rows=1, maxrows=16, type="DEFAULT")
+
+        row = layout.row(align=True)
+        row.operator("appleseed.add_search_path", text="Add Search Path", icon="ADD")
+        row.operator("appleseed.remove_search_path", text="Remove Search Path", icon="REMOVE")
+
+        if self.search_paths:
+            current_set = self.search_paths[self.path_index]
+            layout.prop(current_set, "name", text="Filepath")
+
+        global path_added
+
+        if path_added is True:
+            layout.label(text="Changes to search paths will take effect upon restarting Blender", icon="ERROR")
+
         layout.separator()
         layout.label(text="appleseed Library Versions:")
         box = layout.box()
@@ -60,9 +109,16 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
             box.label(text="%s: %s" % (key, lib_info[key]))
 
 
+classes = (AppleseedSearchPath,
+           ASS_UL_SearchPathList,
+           AppleseedPreferencesPanel)
+
+
 def register():
-    bpy.utils.register_class(AppleseedPreferencesPanel)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
 
 def unregister():
-    bpy.utils.unregister_class(AppleseedPreferencesPanel)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)

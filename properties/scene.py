@@ -170,7 +170,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                            name="appleseed Texture",
                                            description="")
 
-    textures_index: bpy.props.IntProperty(name="layer_index",
+    textures_index: bpy.props.IntProperty(name="textures_index",
                                           description="",
                                           default=0)
 
