@@ -3,8 +3,11 @@
 Installation
 ============
 
+Version
+    As of version 2.0, blenderseed is intended to be used with Blender 2.8.  We do have a maintenance branch for the Blender 2.79 exporter, but it is not actively developed and will likely be missing features that are present in the main branch.
+
 Download
-	Download the .zip file of the latest `blenderseed release <https://github.com/appleseedhq/blenderseed/releases>`_ for your platform and Blender version. appleseed itself is bundled with the addon, so no additional downloads are needed.  Note that the 2.79 version **requires** Blender 2.79 or later.  It will not work with earlier versions.
+	Download the .zip file of the latest `blenderseed release <https://github.com/appleseedhq/blenderseed/releases>`_ for your platform and Blender version. appleseed itself is bundled with the addon, so no additional downloads are needed.  Please note that the 2.79 version **requires** Blender 2.79 or later.  It will not work with earlier versions.
 
 Install
 	From within Blender, open the User Preferences (usual hotkey is Ctrl+Alt+U) and navigate to the Addons tab. Click the button that says "Install From File". Using the file dialog, select the .zip file you downloaded, and click "Install From File..."
@@ -19,6 +22,9 @@ Configure
 	Save your user preferences.
 
 	Select "appleseed" from the render dropdown selector.
+
+Adding Additional Search Paths
+    New in 2.0 is the ability to add resource search paths in the addon preferences panel.  If a path is added here, the addon will prompt you to restart Blender for the change to take effect.  When the reload occurs the new search path will be parsed for OSL shaders.
 
 Using Development Versions of blenderseed
 	If you want access to cutting edge features, you can also download directly from the master branch (or any other visible branches).  Any downloads will have a suffix of *'-branch name'* that needs to be removed before it will work.  Be aware that new or under development features may require an up to date build of appleseed itself, and this is not included with direct branch downloads. [#f1]_ [#f2]_

@@ -12,6 +12,7 @@ New in 2.0
     * Mesh export is now handled through C++, leading to a 10x reduction in export times
     * Can add and delete objects in viewport render model
     * Stereoscopic rendering support
+    * Search paths for shaders can be added in the preferences menu
 
 Supported Features
 ------------------
