@@ -10,7 +10,7 @@ New in 2.0
     * Animated textures
     * Native Cryptomatte integration
     * Mesh export is now handled through C++, leading to a 10x reduction in export times
-    * Can add and delete objects in viewport render model
+    * Support for adding and deleting objects in viewport render model
     * Stereoscopic rendering support
     * Search paths for shaders can be added in the preferences menu
 
