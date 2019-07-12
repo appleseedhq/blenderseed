@@ -8,7 +8,6 @@ Render Panel
 .. toctree::
     :maxdepth: 1
 
-    render
     denoiser
     system
     sampling

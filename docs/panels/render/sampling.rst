@@ -1,7 +1,11 @@
 Sampling
 ========
 
-.. image:: /_static/screenshots/render_panels/sampling.JPG   
+.. image:: /_static/screenshots/render_panels/sampling.JPG
+
+|
+
+.. image:: /_static/screenshots/render_panels/sampling_2.JPG   
 
 |
 

@@ -19,8 +19,6 @@ The texture converter is a utility for converting traditional image formats (JPE
 	This scans the texture files that are used in the scene and adds them to the list.  Entries will not be duplicated if they already exists.  Entries will also be removed if they are no longer being used in the scene.
 - Convert Textures:
 	This launches maketx and converts all the textures in the list to .tx versions (if they haven't already been converted).
-- Delete Unused .tx Files:
-	This will delete any converted .tx files that are no longer being used in the scene (if a node is deleted for instance).
 - Use Converted Textures:
 	This tells blenderseed to substitute texture paths with the .tx version during export and rendering.
 - Use Custom Output Directory:

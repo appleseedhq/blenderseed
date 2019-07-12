@@ -9,11 +9,11 @@ What is it?
 
 How does it work with appleseed?
 --------------------------------
-	Since the beginning appleseed has had its own native shading system (henceforth the ‘internal' system).  While this system works well enough, it was limited to defining material surfaces and optionally assigning UV mapped textures to them.  That was it.  It couldn’t do any kind of procedural patterns, coordinate manipulation, fancy BSDF mixing, or any of the other utility functions that were needed for a production renderer.  Instead of expanding the BIS system with these features, the decision was made to integrate OSL instead, as it is fully capable of all these features and is developed and hosted by a major visual effects company.  As of the current release (1.0), the internal shading system is no longer exposed in blenderseed, with the exception of the volumetric shader (as this is not yet supported by OSL).
+	Since the beginning appleseed has had its own native shading system (henceforth the ‘internal' system).  While this system works well enough, it was limited to defining material surfaces and optionally assigning UV mapped textures to them.  That was it.  It couldn’t do any kind of procedural patterns, coordinate manipulation, fancy BSDF mixing, or any of the other utility functions that were needed for a production renderer.  Instead of expanding the BIS system with these features, the decision was made to integrate OSL instead, as it is fully capable of all these features and is developed and hosted by a major visual effects company.
 
 How do I use it in blenderseed?
 -------------------------------
-	OSL is available in conjunction with the node editor in Blender.  When a material is created, by default it will add an OSL node tree and link to it.  If you have an open node editor it will automatically update to show the active material tree.  You can add nodes to the editor using Shift+A.  You can add nodes from the different categories to build up your material, but always make sure the final node is an as_closure2surface node, as that is required to export the material properly.
+	OSL is available in conjunction with the node editor in Blender.  You can add nodes from the different appleseed categories to build up your material, but always make sure the final node is an as_closure2surface node, as that is required to export the material properly.
 
 Where does the OSL shading system get the nodes from?
 -----------------------------------------------------
@@ -33,5 +33,10 @@ Can I use OSL shaders from third parties?
 
 Can I write my own shaders?
 ---------------------------
-	Absolutely.  OSL shaders can be written in any text editor and compiled into .oso files using the oslc utility that’s included with appleseed.  Once you've compiled the shader, you can put it into the "shaders" directory or add the folder name to the APPLESEED_SEARCHPATH environment variable.
+	Absolutely.  There are two ways to use custom OSL shaders in blenderseed: parsing a pre-compiled OSL shader (the same thing that happens to the included appleseed shaders), or typing the code into a Blender text block and then having that block dynamically compiled at render time.  If you choose to use a pre-compiled shader, it can be parsed by Blender using three different methods:
+
+        - Add the shader to the existing 'shader' directory in the blenderseed folder.
+        - Add the shader directory to the 'APPLESEED_SEARCH_PATH' environment variable.
+        - Add the shader directory to the searchpaths in blenderseed's preferences panel.
+
 	If you choose to write your own OSL shader, there are several formatting rules and :ref:`metadata<label_osl_metadata>` tags that should be used in order to properly build the node’s UI and category.
