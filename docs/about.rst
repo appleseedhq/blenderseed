@@ -11,7 +11,6 @@ The original appleseed integration into blender was written by François Beaune 
         - João Marcos Mororo Costa
         - Herbert Crepaz
         - Joel Daniels
-        - Jonathan Dent
         - Petra Gospodnetic
         - Luke Kliber
         - Kevin Masson

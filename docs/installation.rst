@@ -7,7 +7,7 @@ Version
     As of version 2.0, blenderseed is intended to be used with Blender 2.8.  We do have a maintenance branch for the Blender 2.79 exporter, but it is not actively developed and will likely be missing features that are present in the main branch.
 
 Download
-	Download the .zip file of the latest `blenderseed release <https://github.com/appleseedhq/blenderseed/releases>`_ for your platform and Blender version. appleseed itself is bundled with the addon, so no additional downloads are needed.  Please note that the 2.79 version **requires** Blender 2.79 or later.  It will not work with earlier versions.
+	Download the .zip file of the latest `blenderseed release <https://github.com/appleseedhq/blenderseed/releases>`_ for your platform and Blender version. appleseed itself is bundled with the addon, so no additional downloads are needed.  Please note that the 2.79 version **requires** Blender 2.79b or later.  It will not work with earlier versions.
 
 Install
 	From within Blender, open the User Preferences (usual hotkey is Ctrl+Alt+U) and navigate to the Addons tab. Click the button that says "Install From File". Using the file dialog, select the .zip file you downloaded, and click "Install From File..."
@@ -41,4 +41,4 @@ Using Development Versions of appleseed
 .. rubric:: Footnotes:
 
 .. [#f1] If you are compiling applessed for use with blenderseed, you will need to compile appleseed with the Python 3 bindings enabled.  Please see the `build instructions <https://github.com/appleseedhq/appleseed/wiki/Building-appleseed>`_.
-.. [#f2] You must also compile with the same version of Python 3 that is used by your Blender install.  Blender 2.79 uses Python 3.5.  2.8 uses Python 3.7.
+.. [#f2] You must also compile with the same version of Python 3 that is used by your Blender install.  Blender 2.79b official uses Python 3.5.  Everything after that (including Blender 2.8) uses Python 3.7.
