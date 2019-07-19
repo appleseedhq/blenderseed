@@ -5,14 +5,14 @@ New in 2.0
 ----------
 
     * Blender 2.8 support
-    * Dynamic OSL script node
+    * Dynamic OSL script node (2.8 only)
     * Texture converter is friendlier
     * Animated textures
-    * Native Cryptomatte integration
+    * Native Cryptomatte integration (2.8 only)
     * Mesh export is now handled through C++, leading to a 10x reduction in export times
-    * Support for adding and deleting objects in viewport render model
-    * Stereoscopic rendering support
-    * Search paths for custom shaders can be added in the preferences menu
+    * Support for adding and deleting objects in viewport render model (2.8 only)
+    * Stereoscopic rendering support (2.8 only)
+    * Search paths for custom shaders can be added in the preferences menu (2.8 only)
 
 Supported Features
 ------------------

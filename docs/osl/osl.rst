@@ -21,11 +21,11 @@ Where does the OSL shading system get the nodes from?
 
 Textures with OSL
 -----------------
-	OSL can directly load most image formats (JPEG, PNG, TIFF).  However, this is not the best practice for using it.  Full sized textures take up a lot of memory in the render, and in many cases objects will not be sufficiently large enough in the output frame to justify the memory space used for high resolution, detailed images.  The solution is to create a .tx file using maketx, a utility that ships with appleseed.  Maketx will take an input image and produce a tiled, mipmapped version that is far more efficient when used with OSL.  This is due to a few different features: for one the tiling allows appleseed to only load the sections of the image that are visible.  Second the mipmapping allows appleseed to load in the appropriate resolution of the texture depending on how large the object is in the output frame. These two features not only reduce the memory requirement for textures, they also speed up the render.
+	OSL can directly load most image formats (JPEG, PNG, TIFF).  However, this is not the best practice for using it.  Full sized textures take up a lot of memory in the render, and in many cases objects will not be sufficiently large enough in the output frame to justify the memory space used for high resolution, detailed images.  The solution is to create a .tx file using OSL's built in texture converter.  This will take an input image and produce a tiled, mipmapped version that is far more efficient when used with OSL.  This is due to a few different features: for one the tiling allows appleseed to only load the sections of the image that are visible.  Second the mipmapping allows appleseed to load in the appropriate resolution of the texture depending on how large the object is in the output frame. These two features not only reduce the memory requirement for textures, they also speed up the render.
 
 How do I convert textures?
 --------------------------
-	Textures can be converted to .tx files using the :ref:`texture converter<label_tex_conv>` panel in the material tab.
+	Textures can be converted to .tx files using the :ref:`texture converter<label_tex_conv>` panel in the World tab.
 
 Can I use OSL shaders from third parties?
 -----------------------------------------
