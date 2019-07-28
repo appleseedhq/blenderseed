@@ -440,7 +440,7 @@ class SceneTranslator(object):
 
         asr.ProjectFileWriter().write(
             self.as_project,
-            filename,
+            bpy.path.abspath(filename),
             asr.ProjectFileWriterOptions.OmitWritingGeometryFiles | asr.ProjectFileWriterOptions.OmitHandlingAssetFiles)
 
     # Internal methods.
