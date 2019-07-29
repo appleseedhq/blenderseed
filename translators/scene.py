@@ -667,6 +667,8 @@ class SceneTranslator(object):
             logger.debug("Translating AOVs")
             asr_scene_props = self.bl_scene.appleseed
 
+            if asr_scene_props.albedo_aov:
+                aovs.insert(asr.AOV('albedo_aov', {}))
             if asr_scene_props.diffuse_aov:
                 aovs.insert(asr.AOV('diffuse_aov', {}))
             if asr_scene_props.direct_diffuse_aov:
