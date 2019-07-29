@@ -248,11 +248,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                          description="Pixel filter to use",
                                          items=[('blackman-harris', "Blackman-Harris", "Blackman-Harris"),
                                                 ('box', "Box", "Box"),
-                                                ('catmull', "Catmull-Rom Spline", "Catmull-Rom Spline"),
-                                                ('bspline', "Cubic B-spline", "Cubic B-spline"),
                                                 ('gaussian', "Gaussian", "Gaussian"),
-                                                ('lanczos', "Lanczos", "Lanczos"),
-                                                ('mitchell', "Mitchell-Netravali", "Mitchell-Netravali"),
                                                 ('triangle', "Triangle", "Triangle")],
                                          default='blackman-harris')
 
