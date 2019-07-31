@@ -344,6 +344,48 @@ class AppleseedRemoveSssSet(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class ASSPREF_OT_add_search_path(bpy.types.Operator):
+    """
+    Operator for adding search paths
+    """
+
+    bl_label = "Add Search Path"
+    bl_description = "Add new search path"
+    bl_idname = "appleseed.add_search_path"
+
+    def execute(self, context):
+        collection = context.user_preferences.addons['blenderseed'].preferences.search_paths
+
+        collection.add()
+        num = len(collection)
+        collection[num - 1].name = str(num)
+
+        return {'FINISHED'}
+
+
+class ASSPREF_OT_remove_search_path(bpy.types.Operator):
+    """
+    Operator for removing search paths
+    """
+
+    bl_label = "Remove Search Path"
+    bl_description = "Remove search_path"
+    bl_idname = "appleseed.remove_search_path"
+
+    def execute(self, context):
+        collection = context.user_preferences.addons['blenderseed'].preferences.search_paths
+        index = context.user_preferences.addons['blenderseed'].preferences.path_index
+
+        collection.remove(index)
+        num = len(collection)
+        if index >= num:
+            index = num - 1
+        if index < 0:
+            index = 0
+        context.user_preferences.addons['blenderseed'].preferences.path_index = index
+
+        return {'FINISHED'}
+
 
 def register():
     util.safe_register_class(AppleseedNewMat)
@@ -358,9 +400,13 @@ def register():
     util.safe_register_class(AppleseedRemovePostProcess)
     util.safe_register_class(AppleseedAddSssSet)
     util.safe_register_class(AppleseedRemoveSssSet)
+    util.safe_register_class(ASSPREF_OT_add_search_path)
+    util.safe_register_class(ASSPREF_OT_remove_search_path)
 
 
 def unregister():
+    util.safe_unregister_class(ASSPREF_OT_remove_search_path)
+    util.safe_unregister_class(ASSPREF_OT_add_search_path)
     util.safe_unregister_class(AppleseedRemoveSssSet)
     util.safe_unregister_class(AppleseedAddSssSet)
     util.safe_unregister_class(AppleseedRemovePostProcess)

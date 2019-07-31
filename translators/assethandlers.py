@@ -41,7 +41,7 @@ class AssetType(Enum):
 class AssetHandler(object):
 
     def __init__(self):
-        self._searchpaths = []
+        self._searchpaths = [x.name for x in bpy.context.user_preferences.addons['blenderseed'].preferences.search_paths]
 
     @property
     def searchpaths(self):
