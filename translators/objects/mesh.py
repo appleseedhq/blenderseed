@@ -83,8 +83,9 @@ class MeshTranslator(Translator):
         self.__front_materials, self.__back_materials = self.__get_material_mappings()
 
     def set_xform_step(self, time, inst_key, bl_matrix):
-        self.__instances[inst_key].set_transform(time,
-                                                 self._convert_matrix(bl_matrix))
+        if inst_key in self.__instances.keys():
+            self.__instances[inst_key].set_transform(time,
+                               self._convert_matrix(bl_matrix))
 
     def set_deform_key(self, time, depsgraph, key_times):
         if not self.__deforming and self.__key_index > 0:
