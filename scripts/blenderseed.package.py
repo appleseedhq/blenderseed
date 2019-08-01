@@ -170,9 +170,7 @@ class Settings:
         print("  Path to appleseed libraries:     " + self.appleseed_lib_path)
         print("  Path to appleseed shaders:       " + self.appleseed_shaders_path)
         print("  Path to appleseed schemas:       " + self.appleseed_schemas_path)
-        print("  Path to appleseed settings:      " + self.appleseed_settings_path)
         print("  Path to appleseed.python:        " + self.appleseed_python_path)
-        print("  Path to maketx:                  " + self.maketx_path)
         print("  Output directory:                " + self.output_dir)
         print("")
 
@@ -186,9 +184,7 @@ class Settings:
         self.appleseed_lib_path = os.path.expandvars(self.__get_required(tree, "appleseed_lib_path"))
         self.appleseed_shaders_path = os.path.expandvars(self.__get_required(tree, "appleseed_shaders_path"))
         self.appleseed_schemas_path = os.path.expandvars(self.__get_required(tree, "appleseed_schemas_path"))
-        self.appleseed_settings_path = os.path.expandvars(self.__get_required(tree, "appleseed_settings_path"))
         self.appleseed_python_path = os.path.expandvars(self.__get_required(tree, "appleseed_python_path"))
-        self.maketx_path = os.path.expandvars(self.__get_required(tree, "maketx_path"))
         self.output_dir = os.path.expandvars(self.__get_required(tree, "output_dir"))
 
     def __get_required(self, tree, key):
@@ -221,11 +217,11 @@ class PackageBuilder(object):
         self.remove_leftovers()
         self.copy_appleseed_python()
         self.copy_binaries()
-        self.copy_dependencies()
         self.copy_schemas()
         self.copy_shaders()
         self.download_settings_files()
         self.remove_pyc_files()
+        self.copy_dependencies()
         self.post_process_package()
 
         if not self.no_release:
@@ -249,11 +245,6 @@ class PackageBuilder(object):
         # Copy appleseed.python.
         dir_util.copy_tree(self.settings.appleseed_python_path, lib_dir)
 
-        # Remove _appleseedpython.so (Python 2) since blenderseed only needs _appleseedpython3.so (Python 3).
-        # TODO: implement properly.
-        safe_delete_file(os.path.join(lib_dir, "appleseed", "_appleseedpython.so"))
-        safe_delete_file(os.path.join(lib_dir, "appleseed", "_appleseedpython.pyd"))
-
     def copy_binaries(self):
         progress("Copying binaries to root directory")
 
@@ -264,9 +255,6 @@ class PackageBuilder(object):
         # Copy appleseed binaries.
         for bin in [exe("appleseed.cli")]:
             shutil.copy(os.path.join(self.settings.appleseed_bin_path, bin), bin_dir)
-
-        # Copy maketx.
-        shutil.copy(exe(self.settings.maketx_path), bin_dir)
 
     def copy_schemas(self):
         progress("Copying schemas to root directory")
@@ -304,7 +292,7 @@ class PackageBuilder(object):
 
     def remove_pyc_files(self):
         progress("Removing pyc files from root directory")
-        for root, dirs, files in os.walk(os.path.join(self.settings.root_dir, "appleseed", "lib")):
+        for root, dirs, files in os.walk(os.path.join(self.settings.root_dir, "appleseed")):
             for f in files:
                 if f.endswith(".pyc"):
                     safe_delete_file(os.path.join(root, f))
@@ -318,7 +306,7 @@ class PackageBuilder(object):
 
         safe_delete_directory_recursively("blenderseed", "__pycache__")
 
-        for subdirectory in [".git", ".idea", "archives", "docs", "scripts", "tests"]:
+        for subdirectory in [".git", ".idea", "archives", "docs", "scripts", "tests", ".idea", ".vscode"]:
             safe_delete_directory(os.path.join("blenderseed", subdirectory))
 
         for file in [".gitignore", "README.md"]:
