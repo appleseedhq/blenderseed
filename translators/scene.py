@@ -39,7 +39,7 @@ from .objects import ArchiveAssemblyTranslator, MeshTranslator
 from .utilites import ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
-from ..utils.util import Timer, get_frame_aspect_ratio
+from ..utils.util import Timer, calc_film_aspect_ratio
 
 logger = get_logger()
 
@@ -655,19 +655,20 @@ class SceneTranslator(object):
             I basically threw every parameter combination I could think of together 
             until the result looked right.
             """
-            zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50)** 2) 
+
+            zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50)** 2)
             frame_aspect_ratio = width / height
-            camera_aspect_ratio = get_frame_aspect_ratio(self.bl_scene)
+            camera_aspect_ratio = calc_film_aspect_ratio(self.bl_scene)
             if frame_aspect_ratio > 1:
                 camera_width = width / zoom
                 camera_height = camera_width / camera_aspect_ratio
             else:
                 camera_height = height / (zoom * camera_aspect_ratio)
                 camera_width = camera_height * camera_aspect_ratio
-            
-            view_offset = tuple(context.region_data.view_camera_offset)
-            view_shift_x = ((view_offset[0] * 2) / zoom) * width
-            view_shift_y = ((view_offset[1] * 2) / zoom) * height
+
+            view_offset_x, view_offset_y = context.region_data.view_camera_offset
+            view_shift_x = ((view_offset_x * 2) / zoom) * width
+            view_shift_y = ((view_offset_y * 2) / zoom) * height
             window_shift_x = (width - camera_width) / 2
             window_shift_y = (height - camera_height) / 2
 

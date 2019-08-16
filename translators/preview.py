@@ -194,7 +194,7 @@ class PreviewRenderer(object):
         # Define the render camera
         camera = asr.Camera('pinhole_camera',
                             "preview_camera",
-                            {"film_width": 0.032, "focal_length": 0.035, "aspect_ratio": util.get_frame_aspect_ratio(scene)})
+                            {"film_width": 0.032, "focal_length": 0.035, "aspect_ratio": util.calc_film_aspect_ratio(scene)})
         camera_matrix = asr.Matrix4d([1.0, 0.0, 0.0, -0.03582507744431496,
                                       0.0, -4.371138828673793e-08, -1.0, -2.135615587234497,
                                       0.0, 1.0, -4.371138828673793e-08, 0.5015512704849243,
