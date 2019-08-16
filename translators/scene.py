@@ -39,7 +39,7 @@ from .objects import ArchiveAssemblyTranslator, MeshTranslator
 from .utilites import ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
-from ..utils.util import Timer
+from ..utils.util import Timer, calc_film_aspect_ratio
 
 logger = get_logger()
 
@@ -642,13 +642,42 @@ class SceneTranslator(object):
             max_y = height - int(self.bl_scene.render.border_min_y * height) - 1
             self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
-        elif self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and context.space_data.use_render_border \
-                and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
+        elif self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and context.space_data.use_render_border and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
             min_x = int(context.space_data.render_border_min_x * width)
             max_x = int(context.space_data.render_border_max_x * width) - 1
             min_y = height - int(context.space_data.render_border_max_y * height)
             max_y = height - int(context.space_data.render_border_min_y * height) - 1
             self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
+
+        elif self.export_mode == ProjectExportMode.INTERACTIVE_RENDER and self.bl_scene.render.use_border and context.region_data.view_perspective == 'CAMERA':
+            """
+            I can't explain how the following code produces the correct render window.
+            I basically threw every parameter combination I could think of together 
+            until the result looked right.
+            """
+
+            zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50)** 2)
+            frame_aspect_ratio = width / height
+            camera_aspect_ratio = calc_film_aspect_ratio(self.bl_scene)
+            if frame_aspect_ratio > 1:
+                camera_width = width / zoom
+                camera_height = camera_width / camera_aspect_ratio
+            else:
+                camera_height = height / (zoom * camera_aspect_ratio)
+                camera_width = camera_height * camera_aspect_ratio
+
+            view_offset_x, view_offset_y = context.region_data.view_camera_offset
+            view_shift_x = ((view_offset_x * 2) / zoom) * width
+            view_shift_y = ((view_offset_y * 2) / zoom) * height
+            window_shift_x = (width - camera_width) / 2
+            window_shift_y = (height - camera_height) / 2
+
+            window_x_min = int(camera_width * self.bl_scene.render.border_min_x + window_shift_x - view_shift_x)
+            window_x_max = int(camera_width * self.bl_scene.render.border_max_x + window_shift_x - view_shift_x)
+            window_y_min = height - int(camera_height * self.bl_scene.render.border_max_y + window_shift_y - view_shift_y)
+            window_y_max = height - int(camera_height * self.bl_scene.render.border_min_y + window_shift_y - view_shift_y)
+
+            self.__frame.set_crop_window([window_x_min, window_y_min, window_x_max, window_y_max])
 
         self.__project.set_frame(self.__frame)
         self.__frame = self.as_project.get_frame()

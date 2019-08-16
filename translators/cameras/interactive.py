@@ -226,7 +226,7 @@ class InteractiveCameraTranslator(Translator):
                 params['film_height'] = params.pop('film_width')
 
         else:
-            aspect_ratio = util.get_frame_aspect_ratio(self.__context.scene)
+            aspect_ratio = util.calc_film_aspect_ratio(self.__context.scene)
             params = {'focal_length': self.bl_camera.data.lens / 1000,
                       'aspect_ratio': aspect_ratio,
                       'shift_x': self.__shift_x,

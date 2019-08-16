@@ -125,7 +125,7 @@ def get_render_resolution(scene):
     return width, height
 
 
-def get_frame_aspect_ratio(scene):
+def calc_film_aspect_ratio(scene):
     render = scene.render
     scale = render.resolution_percentage / 100.0
     width = int(render.resolution_x * scale)

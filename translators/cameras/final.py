@@ -100,7 +100,7 @@ class RenderCameraTranslator(Translator):
     def __get_cam_params(self, bl_scene, textures_to_add, as_texture_translators):
         camera = self.bl_camera.data
 
-        aspect_ratio = util.get_frame_aspect_ratio(bl_scene)
+        aspect_ratio = util.calc_film_aspect_ratio(bl_scene)
 
         film_width, film_height = util.calc_film_dimensions(aspect_ratio,
                                                             camera,
