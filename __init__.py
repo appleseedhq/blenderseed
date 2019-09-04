@@ -28,7 +28,7 @@
 bl_info = {
     "name": "appleseed",
     "author": "The appleseedhq Organization",
-    "version": (1, 0, 0),
+    "version": (2, 0, 0),
     "blender": (2, 7, 9),
     "location": "Info Header (Render Engine Menu)",
     "description": "appleseed Render Engine",
