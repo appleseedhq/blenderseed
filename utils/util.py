@@ -112,6 +112,9 @@ def update_project(_):
             for cls in node_classes:
                 safe_register_class(cls)
 
+        else:
+            logger.debug(f"appleseed: Shader {script.name} did not compile")
+
 
 # ------------------------------------
 # Scene export utilities.
