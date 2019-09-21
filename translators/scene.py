@@ -536,9 +536,7 @@ class SceneTranslator(object):
 
         if self.export_mode != ProjectExportMode.PROJECT_EXPORT:
             if self.export_mode == ProjectExportMode.INTERACTIVE_RENDER:
-                # The thread count is this low due to the possibility of quad view being used,
-                # which generates 4 independent render engines (one for each panel)
-                render_threads = 2
+                render_threads = -1
             else:
                 render_threads = asr_scene_props.threads if not asr_scene_props.threads_auto else 'auto'
             parameters['rendering_threads'] = render_threads
