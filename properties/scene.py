@@ -303,6 +303,9 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     interactive_max_samples: bpy.props.IntProperty(name="interactive_max_samples",
                                                    default=-1)
 
+    interactive_max_time: bpy.props.IntProperty(name="interactive_max_time",
+                                                default=60)
+
     force_aa: bpy.props.BoolProperty(name="force_aa",
                                      description="When using 1 sample/pixel and Force Anti-Aliasing is disabled, samples are placed at the center of pixels",
                                      default=True)

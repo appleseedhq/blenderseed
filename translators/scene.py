@@ -529,7 +529,8 @@ class SceneTranslator(object):
                       'passes': asr_scene_props.renderer_passes,
                       'generic_frame_renderer': {'tile_ordering': asr_scene_props.tile_ordering},
                       'progressive_frame_renderer': {'max_average_spp': asr_scene_props.interactive_max_samples,
-                                                     'max_fps': asr_scene_props.interactive_max_fps},
+                                                     'max_fps': asr_scene_props.interactive_max_fps,
+                                                     'time_limit': asr_scene_props.interactive_max_time},
                       'light_sampler': {'algorithm': asr_scene_props.light_sampler,
                                         'enable_light_importance_sampling': asr_scene_props.enable_light_importance_sampling},
                       'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}
