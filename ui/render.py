@@ -186,6 +186,7 @@ class ASRENDER_PT_sampling_interactive(bpy.types.Panel, ASRENDER_PT_base):
         col = layout.column(align=True)
         col.prop(asr_scene_props, "interactive_max_fps", text="FPS")
         col.prop(asr_scene_props, "interactive_max_samples", text="Max Samples")
+        col.prop(asr_scene_props, "interactive_max_time", text="Max Time in Seconds")
 
 
 class ASRENDER_PT_sampling_filter(bpy.types.Panel, ASRENDER_PT_base):
