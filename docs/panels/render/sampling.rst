@@ -28,6 +28,7 @@ Sampling
 - Interactive Render
     - FPS: The maximum framerate of the interactive render session.
     - Max Samples: The number of samples taken before rendering halts in interactive mode.
+    - Max Time in Seconds: The length of time the interactive render will run in seconds before pausing.
 
 - Tile Pattern
     - Pattern: The order in which tiles are selected during rendering.  Pick anything other that random.
