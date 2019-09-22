@@ -278,14 +278,14 @@ class MeshTranslator(Translator):
 
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
-                if m.material is not None and m.material.use_nodes is True:
+                if m.material is not None and m.material.use_nodes:
                     mat_key = m.material.name_full + "_mat"
                 else:
                     mat_key = "__default_material"
                 front_mats[f"slot-{i}"] = mat_key
         else:
             if len(material_slots) == 1:
-                if material_slots[0].material is not None and material_slots[0].material.use_nodes is True:
+                if material_slots[0].material is not None and material_slots[0].material.use_nodes:
                     mat_key = material_slots[0].material.name_full + "_mat"
                 else:
                     mat_key = "__default_material"
