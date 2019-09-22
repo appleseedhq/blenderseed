@@ -676,6 +676,27 @@ class SceneTranslator(object):
             window_y_min = height - int(camera_height * self.bl_scene.render.border_max_y + window_shift_y - view_shift_y)
             window_y_max = height - int(camera_height * self.bl_scene.render.border_min_y + window_shift_y - view_shift_y)
 
+            #Check for coordinates outside the render window
+            if window_x_min < 0:
+                window_x_min = 0
+            elif window_x_min > width:
+                window_x_min = width
+
+            if window_x_max < 0:
+                window_x_max = 0
+            elif window_x_max > width:
+                window_x_max = width
+
+            if window_y_min < 0:
+                window_y_min = 0
+            elif window_y_min > height:
+                window_y_min = height
+
+            if window_y_max < 0:
+                window_y_max = 0
+            elif window_y_max > height:
+                window_y_max = height
+
             self.__frame.set_crop_window([window_x_min, window_y_min, window_x_max, window_y_max])
 
         self.__project.set_frame(self.__frame)
