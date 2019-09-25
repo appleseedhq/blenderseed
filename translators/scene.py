@@ -39,7 +39,7 @@ from .objects import ArchiveAssemblyTranslator, MeshTranslator
 from .utilites import ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
-from ..utils.util import Timer, calc_film_aspect_ratio
+from ..utils.util import Timer, calc_film_aspect_ratio, clamp_value
 
 logger = get_logger()
 
@@ -676,26 +676,11 @@ class SceneTranslator(object):
             window_y_min = height - int(camera_height * self.bl_scene.render.border_max_y + window_shift_y - view_shift_y)
             window_y_max = height - int(camera_height * self.bl_scene.render.border_min_y + window_shift_y - view_shift_y)
 
-            #Check for coordinates outside the render window
-            if window_x_min < 0:
-                window_x_min = 0
-            elif window_x_min > width:
-                window_x_min = width
-
-            if window_x_max < 0:
-                window_x_max = 0
-            elif window_x_max > width:
-                window_x_max = width
-
-            if window_y_min < 0:
-                window_y_min = 0
-            elif window_y_min > height:
-                window_y_min = height
-
-            if window_y_max < 0:
-                window_y_max = 0
-            elif window_y_max > height:
-                window_y_max = height
+            # Check for coordinates outside the render window.
+            window_x_min = clamp_value(window_x_min, 0, width - 1)
+            window_x_max = clamp_value(window_x_max, 0, width - 1)
+            window_y_min = clamp_value(window_y_min, 0, height - 1)
+            window_y_max = clamp_value(window_y_max, 0, height - 1)
 
             self.__frame.set_crop_window([window_x_min, window_y_min, window_x_max, window_y_max])
 
