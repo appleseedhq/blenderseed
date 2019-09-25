@@ -62,6 +62,9 @@ def safe_unregister_class(cls):
 # Generic utilities and settings.
 # ------------------------------------
 
+def clamp_value(n, smallest, largest):
+    return max(smallest, min(n, largest))
+
 
 def filter_params(params):
     filter_list = list()
