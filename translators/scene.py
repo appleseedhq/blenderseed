@@ -39,7 +39,7 @@ from .objects import ArchiveAssemblyTranslator, MeshTranslator
 from .utilites import ProjectExportMode
 from .world import WorldTranslator
 from ..logger import get_logger
-from ..utils.util import Timer, calc_film_aspect_ratio, clamp_value
+from ..utils.util import Timer, calc_film_aspect_ratio, clamp_value, realpath
 
 logger = get_logger()
 
@@ -514,7 +514,11 @@ class SceneTranslator(object):
         lighting_engine = asr_scene_props.lighting_engine if self.export_mode != ProjectExportMode.INTERACTIVE_RENDER else 'pt'
 
         tile_renderer = 'adaptive' if asr_scene_props.pixel_sampler == 'adaptive' else 'generic'
-        pixel_renderer = '' if asr_scene_props.pixel_sampler == 'adaptive' else 'uniform'
+
+        pixel_render_mapping = {'uniform': 'uniform',
+                                'adaptive': '',
+                                'texture': 'texture'}
+        pixel_renderer = pixel_render_mapping[asr_scene_props.pixel_sampler]
 
         parameters = {'uniform_pixel_renderer': {'force_antialiasing': True if asr_scene_props.force_aa else False,
                                                  'samples': asr_scene_props.samples},
@@ -522,6 +526,9 @@ class SceneTranslator(object):
                                                  'noise_threshold': asr_scene_props.adaptive_noise_threshold,
                                                  'batch_size': asr_scene_props.adaptive_batch_size,
                                                  'max_samples': asr_scene_props.adaptive_max_samples},
+                      'texture_controlled_pixel_renderer': {'min_samples': asr_scene_props.adaptive_min_samples,
+                                                            'max_samples': asr_scene_props.adaptive_max_samples,
+                                                            'file_path': realpath(asr_scene_props.texture_sampler_filepath)},
                       'use_embree': asr_scene_props.use_embree,
                       'pixel_renderer': pixel_renderer,
                       'lighting_engine': lighting_engine,

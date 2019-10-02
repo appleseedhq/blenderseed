@@ -167,8 +167,14 @@ class ASRENDER_PT_sampling_sampler(bpy.types.Panel, ASRENDER_PT_base):
             col = layout.column(align=True)
             col.prop(asr_scene_props, "adaptive_noise_threshold", text="Noise Threshold")
             col.prop(asr_scene_props, "adaptive_min_samples", text="Min Samples")
-        else:
+        elif asr_scene_props.pixel_sampler == 'uniform':
             col.prop(asr_scene_props, "samples", text="Samples")
+        else:
+            col = layout.column(align=True)
+            col.prop(asr_scene_props, "texture_sampler_filepath", text="Texture Path")
+            col = layout.column(align=True)
+            col.prop(asr_scene_props, "adaptive_max_samples", text="Max Samples")
+            col.prop(asr_scene_props, "adaptive_min_samples", text="Min Samples")
 
 
 class ASRENDER_PT_sampling_interactive(bpy.types.Panel, ASRENDER_PT_base):
