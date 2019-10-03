@@ -261,8 +261,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     pixel_sampler: bpy.props.EnumProperty(name="Pixel Sampler",
                                           description="Sampler",
                                           items=[('uniform', "Uniform", "Uniform"),
-                                                 ('adaptive', "Adaptive", "Adaptive")],
+                                                 ('adaptive', "Adaptive", "Adaptive"),
+                                                 ('texture', "Texture-Based", "Texture-Based Sampling")],
                                           default='uniform')
+
+    texture_sampler_filepath: bpy.props.StringProperty(name="texture_sampler_filepath",
+                                                       subtype='FILE_PATH')
 
     adaptive_batch_size: bpy.props.IntProperty(name="adaptive_batch_size",
                                                description="The number of samples taken in between noise level evaluations",
