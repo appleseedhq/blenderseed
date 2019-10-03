@@ -262,7 +262,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                           description="Sampler",
                                           items=[('uniform', "Uniform", "Uniform"),
                                                  ('adaptive', "Adaptive", "Adaptive"),
-                                                 ('texture', "Texture Based", "Texture based sampling")],
+                                                 ('texture', "Texture-Based", "Texture-Based Sampling")],
                                           default='uniform')
 
     texture_sampler_filepath: bpy.props.StringProperty(name="texture_sampler_filepath",

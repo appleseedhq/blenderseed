@@ -173,8 +173,8 @@ class ASRENDER_PT_sampling_sampler(bpy.types.Panel, ASRENDER_PT_base):
             col = layout.column(align=True)
             col.prop(asr_scene_props, "texture_sampler_filepath", text="Texture Path")
             col = layout.column(align=True)
-            col.prop(asr_scene_props, "adaptive_max_samples", text="Max Samples")
             col.prop(asr_scene_props, "adaptive_min_samples", text="Min Samples")
+            col.prop(asr_scene_props, "adaptive_max_samples", text="Max Samples")
 
 
 class ASRENDER_PT_sampling_interactive(bpy.types.Panel, ASRENDER_PT_base):
