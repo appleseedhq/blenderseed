@@ -9,9 +9,14 @@ Sampling
 
 |
 
+.. image:: /_static/screenshots/render_panels/sampling_3.JPG   
+
+|
+
 - Sampler
     - Uniform: Every pixel is sampled the same number of times.
     - Adaptive: Sampling is based on whether or not a tile has reached a certain noise threshold.
+    - Texture-Based: Sampling is weighted by a black and white image map that is overlaid on the render window.  Black areas sample less, white areas sample more.
 
 - Passes
     The number of times the sampler will loop over all the pixels in the image. [#f1]_ [#f2]_
@@ -24,6 +29,11 @@ Sampling
     - Max Samples: The total number of samples that can be taken per pixel per pass.
     - Noise Threshold: The level of noise that is acceptable in the final image.  A pixel will render until it hits this limit or the max samples.
     - Uniform Samples: The number of uniform samples that are taken before adaptive sampling kicks in.  This is necessary to ake sure fine details are captured in the image before noise evaluations start.
+
+- Texture-Based Sampler
+    - Texture Path: This is the location of the texture that will be used to guide sample counts.
+    - Min Samples: The number of samples taken for black areas of the guiding map.
+    - Max Samples: The number of samples taken in white areas of the guide image.
 
 - Interactive Render
     - FPS: The maximum framerate of the interactive render session.
