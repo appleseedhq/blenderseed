@@ -54,7 +54,7 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
 
     radiance_multiplier: bpy.props.FloatProperty(name="radiance_multiplier",
                                                  description="Multiplier of lamp intensity",
-                                                 default=1,
+                                                 default=25,
                                                  min=0,
                                                  soft_max=10)
 
