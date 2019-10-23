@@ -88,8 +88,11 @@ class NodeTreeTranslator(Translator):
             parameters = {}
             parameter_types = node.parameter_types
 
-            for key, parameter in node.items():
+            node_items = node.keys()
+
+            for key in node_items:
                 if key in parameter_types:
+                    parameter = getattr(node, key)
                     parameter_value = parameter_types[key]
 
                     if key in node.filepaths:
@@ -104,7 +107,7 @@ class NodeTreeTranslator(Translator):
                         parameter = " ".join(map(str, parameter))
                     if parameter_value == 'float[2]':
                         parameter_value = 'float[]'
-                    parameters[key] = parameter_value + " " + str(parameter)
+                    parameters[key] = parameter_value + " " + str(parameter)                    
 
             if node.node_type == 'osl':
                 shader_file_name = self.asset_handler.process_path(node.file_name,
