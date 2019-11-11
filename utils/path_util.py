@@ -81,10 +81,10 @@ def get_osl_search_paths():
     shader_directories.extend(x.name for x in bpy.context.preferences.addons['blenderseed'].preferences.search_paths)
 
     # Remove duplicated paths.
-    tmp = set(shader_directories)
-    shader_directories = list(tmp)
+    shader_directories_sorted = list()
+    shader_directories_sorted.extend(x for x in shader_directories if x not in shader_directories_sorted)
 
-    return shader_directories
+    return shader_directories_sorted
 
 
 def get_stdosl_paths():
