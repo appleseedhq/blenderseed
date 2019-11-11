@@ -103,17 +103,6 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
                                              description="SSS set",
                                              default="")
 
-    object_ray_bias_method: bpy.props.EnumProperty(name="object_ray_bias_method",
-                                                   items=[
-                                                       ('none', "No Ray Bias", ""),
-                                                       ('normal', "Shift Along Surface Normal", ""),
-                                                       ('incoming_direction', "Shift Along Incoming Direction", ""),
-                                                       ('outgoing_direction', "Shift Along Outgoing Direction", "")],
-                                                   default='none')
-
-    object_ray_bias_distance: bpy.props.FloatProperty(name="object_ray_bias_distance",
-                                                      default=0.0)
-
     use_deformation_blur: bpy.props.BoolProperty(name="use_deformation_blur",
                                                  default=True)
 
