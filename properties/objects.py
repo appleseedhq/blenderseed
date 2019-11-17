@@ -83,6 +83,11 @@ class AppleseedObjSettings(bpy.types.PropertyGroup):
     double_sided: bpy.props.BoolProperty(name="double_sided",
                                          default=True)
 
+    shadow_terminator_correction: bpy.props.FloatProperty(name="shadow_terminator_correction",
+                                                          default=0.0,
+                                                          min=0.0,
+                                                          max=0.5)
+
     photon_target: bpy.props.BoolProperty(name="photon_target",
                                           default=False)
 

@@ -260,6 +260,7 @@ class MeshTranslator(Translator):
                                                  'specular': asr_obj_props.specular_visible,
                                                  'transparency': asr_obj_props.transparency_visible},
                                   'medium_priority': asr_obj_props.medium_priority,
+                                  'shadow_terminator_correction': asr_obj_props.shadow_terminator_correction,
                                   'photon_target': asr_obj_props.photon_target}
 
         if asr_obj_props.object_sss_set != "":
