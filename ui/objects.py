@@ -68,7 +68,7 @@ class ASOBJECT_PT_obj_options(bpy.types.Panel):
         layout.prop(asr_obj, "double_sided", text="Double Sided Shading")
         layout.prop(asr_obj, "photon_target", text="SPPM Photon Target")
         layout.prop(asr_obj, "medium_priority", text="Nested Glass Priority")
-        layout.prop(asr_obj, "shadow_terminator_correction", text="Shadow Terminator Correction")
+        layout.prop(asr_obj, "shadow_terminator_correction", text="Shadow Terminator Fix")
         layout.prop_search(asr_obj, "object_sss_set", sss_lists, "sss_sets", text="SSS Set")
 
 
