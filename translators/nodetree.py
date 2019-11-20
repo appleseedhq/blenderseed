@@ -77,6 +77,16 @@ class NodeTreeTranslator(Translator):
                     surface_shader = node
                     self.__shader_list = surface_shader.traverse_tree()
                     break
+            # Replaces a Cycles material node behind the scenes
+            elif node.name in ('Light Output', 'Material Output'):
+                if node.inputs[0].is_linked:
+                    node_connection = node.inputs[0].links[0].from_socket
+                    replacement_node = self.bl_nodes.new('AppleseedasClosure2SurfaceNode')
+                    self._bl_obj.links.new(node_connection, replacement_node.inputs[0])
+                    self.bl_nodes.remove(node)
+                    surface_shader = replacement_node
+                    self.__shader_list = surface_shader.traverse_tree()
+                    break
 
         if surface_shader is None:
             logger.debug("No surface shader for %s", self.__as_shader_group.get_name())
