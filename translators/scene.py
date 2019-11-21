@@ -437,10 +437,12 @@ class SceneTranslator(object):
         Write the appleseed project out to disk.
         :param filename:
         """
+        
+        filename = bpy.path.ensure_ext(bpy.path.abspath(filename), '.appleseed')
 
         asr.ProjectFileWriter().write(
             self.as_project,
-            bpy.path.abspath(filename),
+            filename,
             asr.ProjectFileWriterOptions.OmitWritingGeometryFiles | asr.ProjectFileWriterOptions.OmitHandlingAssetFiles)
 
     # Internal methods.

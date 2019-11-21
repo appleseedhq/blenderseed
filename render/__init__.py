@@ -238,10 +238,13 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         if depsgraph.scene.appleseed.scene_export_mode == 'export_only':
-            scene_translator = SceneTranslator.create_project_export_translator(self,
-                                                                                depsgraph)
-            scene_translator.translate_scene()
-            scene_translator.write_project(depsgraph.scene.appleseed.export_path)
+            if depsgraph.scene.appleseed.export_path != "":
+                scene_translator = SceneTranslator.create_project_export_translator(self,
+                                                                                    depsgraph)
+                scene_translator.translate_scene()
+                scene_translator.write_project(depsgraph.scene.appleseed.export_path)
+            else:
+                self.error_set("appleseed: Export path not set!")
         else:
             scene_translator = SceneTranslator.create_final_render_translator(self,
                                                                               depsgraph)
