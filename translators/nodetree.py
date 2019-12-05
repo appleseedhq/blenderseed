@@ -102,22 +102,23 @@ class NodeTreeTranslator(Translator):
 
             for key in node_items:
                 if key in parameter_types:
-                    parameter = getattr(node, key)
-                    parameter_value = parameter_types[key]
+                    parameter_value = getattr(node, key)
+                    parameter_type = parameter_types[key]
 
                     if key in node.filepaths:
                         sub_texture = bl_scene.appleseed.sub_textures
-                        parameter = self.asset_handler.process_path(parameter.filepath,
-                                                                    AssetType.TEXTURE_ASSET, sub_texture)
+                        parameter_value = self.asset_handler.process_path(parameter_value.filepath,
+                                                                          AssetType.TEXTURE_ASSET, sub_texture)
 
-                    if parameter_value == "int checkbox":
-                        parameter_value = "int"
-                        parameter = int(parameter)
-                    if parameter_value in ('color', 'vector', 'normal'):
-                        parameter = " ".join(map(str, parameter))
-                    if parameter_value == 'float[2]':
-                        parameter_value = 'float[]'
-                    parameters[key] = parameter_value + " " + str(parameter)                    
+                    if parameter_type == "int checkbox":
+                        parameter_type = "int"
+                        parameter_value = int(parameter_value)
+                    elif parameter_type in ('color', 'vector', 'normal', 'float[2]'):
+                        parameter_value = " ".join(map(str, parameter_value))
+                        if parameter_type == 'float[2]':
+                            parameter_type = 'float[]'
+
+                    parameters[key] = parameter_type + " " + str(parameter_value) 
 
             if node.node_type == 'osl':
                 shader_file_name = self.asset_handler.process_path(node.file_name,
