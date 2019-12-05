@@ -94,21 +94,24 @@ class AppleseedOSLNode(bpy.types.Node):
                     image = getattr(self, (x['name']))
                     layout.prop(image, "filepath", text="Filepath")
                 else:
-                    label_text = x['label']
-                    if x['type'] in ('color', 'vector', 'float[2]'):
-                        layout.label(text="%s:" % x['label'])
-                        label_text = ""
-                    if hasattr(self, "%s_use_node" % x['label']):
-                        split_percentage = 1 - (150 / context.region.width)
-                        split = layout.split(factor=split_percentage, align=True)
-                        split.enabled = not self.inputs[socket_number].is_linked
-                        col = split.column(align=True)
-                        col.prop(self, x['name'], text=label_text)
-                        col = split.column(align=True)
-                        col.prop(self, "%s_use_node" % x['label'], text="", toggle=True, icon='NODETREE')
-                        socket_number += 1
-                    else:
-                        layout.prop(self, x['name'], text=label_text)
+                    if getattr(self, param_section):
+                        label_text = x['label']
+                        if x['type'] in ('color', 'vector', 'float[2]'):
+                            layout.label(text="%s:" % x['label'])
+                            label_text = ""
+                        if hasattr(self, "%s_use_node" % x['label']):
+                            split_percentage = 1 - (150 / context.region.width)
+                            split = layout.split(factor=split_percentage, align=True)
+                            split.enabled = not self.inputs[socket_number].is_linked
+                            col = split.column(align=True)
+                            col.prop(self, x['name'], text=label_text)
+                            col = split.column(align=True)
+                            col.prop(self, "%s_use_node" % x['label'], text="", toggle=True, icon='NODETREE')
+                            socket_number += 1
+                        else:
+                            layout.prop(self, x['name'], text=label_text)
+            else:
+                socket_number += 1
 
     def draw_buttons_ext(self, context, layout):
         for x in self.input_params:
@@ -130,7 +133,7 @@ class AppleseedOSLNode(bpy.types.Node):
         if self.socket_input_names:
             for socket in self.socket_input_names:
                 input = self.inputs.new(socket['socket_name'], socket['socket_label'])
-                if (socket['connectable'] is True and socket['hide_ui'] is False) or socket['connectable'] is False:
+                if socket['hide_ui'] is False:
                     input.hide = True
         if self.socket_output_names:
             for socket in self.socket_output_names:
@@ -181,6 +184,8 @@ class AppleseedOSLScriptNode(AppleseedOSLNode):
                             socket_number += 1
                         else:
                             layout.prop(self, x['name'], text=label_text)
+                else:
+                    socket_number += 1
 
     def draw_buttons_ext(self, context, layout):
         if hasattr(self, "input_params"):
@@ -203,7 +208,7 @@ class AppleseedOSLScriptNode(AppleseedOSLNode):
         if hasattr(self, "socket_input_names"):
             for socket in self.socket_input_names:
                 input = self.inputs.new(socket['socket_name'], socket['socket_label'])
-                if (socket['connectable'] is True and socket['hide_ui'] is False) or socket['connectable'] is False:
+                if socket['hide_ui'] is False:
                     input.hide = True
         if hasattr(self, "socket_output_names"):
             for socket in self.socket_output_names:
