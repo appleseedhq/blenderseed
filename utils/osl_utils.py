@@ -147,16 +147,15 @@ def generate_node(node, node_class):
 
         socket_output_names.append([socket_name, socket_label])
 
-    # create input params
+    # create input socket classes
     for param in input_params:
         keys = param.keys()
 
-        connectable = False
         hide_ui = False
 
-        if param['connectable'] is True:
-            connectable = True
-
+        if not param['connectable']:
+            continue
+        
         if param['hide_ui'] is True:
             hide_ui = True
 
@@ -202,7 +201,7 @@ def generate_node(node, node_class):
 
         node_classes.append(stype)
 
-        socket_input_names.append({'socket_name': socket_name, 'socket_label': socket_label, 'connectable': connectable, 'hide_ui': hide_ui})
+        socket_input_names.append({'socket_name': socket_name, 'socket_label': socket_label, 'hide_ui': hide_ui})
 
     # create node class
     node_name = "Appleseed{0}Node".format(name)
