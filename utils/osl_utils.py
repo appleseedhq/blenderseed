@@ -93,7 +93,10 @@ def generate_node(node, node_class):
         for socket in self.inputs:
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
-                linked_node.traverse_tree(self)
+                if hasattr(linked_node, "traverse_tree"):
+                    linked_node.traverse_tree(self)
+                else:
+                    logger.error(f"Node {linked_node.name} is not an appleseed node, stopping traversal")
         return util.filter_params(self.tree)
 
     node_classes = list()
