@@ -53,6 +53,9 @@ def generate_node(node, node_class):
     def draw_closure_color(self, context, node):
         return 0.0, 0.8, 0.0, 1.0
 
+    def draw_default_color(self, context, node):
+        return 1.0, 1.0, 1.0, 1.0
+
     def draw_vector_color(self, context, node):
         return 0.67, 0.45, 1.0, 1.0
 
@@ -134,6 +137,8 @@ def generate_node(node, node_class):
             stype.draw_color = draw_point_color
         elif socket_type == 'float[2]':
             stype.draw_color = draw_uv_color
+        else:
+            stype.draw_color = draw_default_color
 
         node_classes.append(stype)
 
