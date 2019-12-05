@@ -272,14 +272,14 @@ def node_categories(osl_nodes):
             osl_other.append(node_item)
 
     appleseed_node_categories = [
-        AppleseedOSLNodeCategory("OSL_Surfaces", "appleseed-Surface", items=osl_surface),
-        AppleseedOSLNodeCategory("OSL_Shaders", "appleseed-Shader", items=osl_shaders),
-        AppleseedOSLNodeCategory("OSL_3D_Textures", "appleseed-Texture3D", items=osl_3d_textures),
-        AppleseedOSLNodeCategory("OSL_2D_Textures", "appleseed-Texture2D", items=osl_2d_textures),
-        AppleseedOSLNodeCategory("OSL_Color", "appleseed-Color", items=osl_color),
-        AppleseedOSLNodeCategory("OSL_Utilities", "appleseed-Utility", items=osl_utilities),
-        AppleseedOSLNodeCategory("OSL_Script", "appleseed-Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptBaseNode")]),
-        AppleseedOSLNodeCategory("OSL_Other", "appleseed-No Category", items=osl_other)]
+        AppleseedOSLNodeCategory("OSL_Surfaces", "appleseed - Surface", items=osl_surface),
+        AppleseedOSLNodeCategory("OSL_Shaders", "appleseed - Shader", items=osl_shaders),
+        AppleseedOSLNodeCategory("OSL_3D_Textures", "appleseed - Texture3D", items=osl_3d_textures),
+        AppleseedOSLNodeCategory("OSL_2D_Textures", "appleseed - Texture2D", items=osl_2d_textures),
+        AppleseedOSLNodeCategory("OSL_Color", "appleseed - Color", items=osl_color),
+        AppleseedOSLNodeCategory("OSL_Utilities", "appleseed - Utility", items=osl_utilities),
+        AppleseedOSLNodeCategory("OSL_Script", "appleseed - Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptBaseNode")]),
+        AppleseedOSLNodeCategory("OSL_Other", "appleseed - No Category", items=osl_other)]
 
     return appleseed_node_categories
 
