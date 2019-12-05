@@ -219,6 +219,8 @@ def generate_node(node, node_class):
 
     socket_ui_props = list()
 
+    param_section = str()
+
     for param in input_params:
         keys = param.keys()
         widget = ""
@@ -226,6 +228,12 @@ def generate_node(node, node_class):
         maximum = None
         soft_minimum = None
         soft_maximum = None
+
+        if param['section'] is not None:
+            if param['section'] != param_section:
+                param_section = param['section']
+                ntype.__annotations__[param_section] = bpy.props.BoolProperty(name=param_section,
+                                                                              default=False)
 
         if param['connectable'] is False and param['hide_ui'] is True:
             continue
@@ -457,8 +465,7 @@ def parse_shader(q, filename=None):
             param_data['widget'] = metadata['widget']['value']
             if param_data['widget'] == 'null':
                 param_data['hide_ui'] = True
-        if 'page' in metadata:
-            param_data['section'] = metadata['page']['value']
+        param_data['section'] = metadata['page']['value'] if 'page' in metadata else None
         if 'min' in metadata:
             param_data['min'] = metadata['min']['value']
         if 'max' in metadata:

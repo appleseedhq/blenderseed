@@ -31,6 +31,8 @@ import nodeitems_utils
 from ..logger import get_logger
 from ..utils import osl_utils, util
 
+from ..__init__ import preview_collections
+
 logger = get_logger()
 
 
@@ -76,8 +78,13 @@ class AppleseedOSLNode(bpy.types.Node):
         material_node.tree.append(self)
 
     def draw_buttons(self, context, layout):
+        pcoll = preview_collections["main"]
+
+        my_icon = pcoll["as_icon"]
+
         if self.url_reference != '':
-            layout.operator("wm.url_open", text="Node Reference").url = self.url_reference
+            layout.operator("wm.url_open", text="Node Reference", icon_value=my_icon.icon_id).url = self.url_reference
+            
         layout.separator()
         socket_number = 0
         param_section = ""
@@ -87,8 +94,9 @@ class AppleseedOSLNode(bpy.types.Node):
                     continue
                 if 'section' in x.keys():
                     if x['section'] != param_section:
-                        layout.label(text=x['section'], icon='DOT')
                         param_section = x['section']
+                        icon = 'DISCLOSURE_TRI_DOWN' if getattr(self, param_section) else 'DISCLOSURE_TRI_RIGHT'
+                        layout.prop(self, param_section, text=param_section, icon=icon, emboss=False)
                 if x['name'] in self.filepaths:
                     layout.template_ID_preview(self, x['name'], open="image.open")
                     image = getattr(self, (x['name']))
@@ -162,8 +170,9 @@ class AppleseedOSLScriptNode(AppleseedOSLNode):
                         continue
                     if 'section' in x.keys():
                         if x['section'] != param_section:
-                            layout.label(text=x['section'], icon='DOT')
                             param_section = x['section']
+                            icon = 'DISCLOSURE_TRI_DOWN' if getattr(self, param_section) else 'DISCLOSURE_TRI_RIGHT'
+                            layout.prop(self, param_section, text=param_section, icon=icon, emboss=False)
                     if x['name'] in self.filepaths:
                         layout.template_ID_preview(self, x['name'], open="image.open")
                         image = getattr(self, (x['name']))
@@ -300,8 +309,20 @@ osl_node_names = []
 
 classes = [AppleseedOSLScriptBaseNode]
 
+preview_collections = {}
+
 
 def register():
+    import bpy.utils.previews
+    import os
+    pcoll = bpy.utils.previews.new()
+    my_icons_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "icons")
+
+    # load a preview thumbnail of a file and store in the previews collection
+    pcoll.load("as_icon", os.path.join(my_icons_dir, "appleseed32.png"), 'IMAGE')
+
+    preview_collections["main"] = pcoll
+
     node_list = osl_utils.read_osl_shaders()
     for node in node_list:
         node_name, node_category, node_classes = osl_utils.generate_node(node, AppleseedOSLNode)
