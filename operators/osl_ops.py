@@ -49,71 +49,76 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
         width = node.width
         script = node.script
 
-        # Save existing connections and parameters
-        for key, value in node.items():
-            temp_values[key] = value
-        for input_iter in node.inputs:
-            if input_iter.is_linked:
-                input_connections[input_iter.bl_idname] = input_iter.links[0].from_socket
-        for output in node.outputs:
-            if output.is_linked:
-                outputs = []
-                for link in output.links:
-                    outputs.append(link.to_socket)
-                output_connections[output.bl_idname] = outputs
+        if node.script is not None:
+            # Save existing connections and parameters
+            for key, value in node.items():
+                temp_values[key] = value
+            for input_iter in node.inputs:
+                if input_iter.is_linked:
+                    input_connections[input_iter.bl_idname] = input_iter.links[0].from_socket
+            for output in node.outputs:
+                if output.is_linked:
+                    outputs = []
+                    for link in output.links:
+                        outputs.append(link.to_socket)
+                    output_connections[output.bl_idname] = outputs
 
-        stdosl_path = path_util.get_stdosl_paths()
-        compiler = asr.ShaderCompiler(stdosl_path)
-        osl_bytecode = osl_utils.compile_osl_bytecode(compiler,
-                                                      script)
+            stdosl_path = path_util.get_stdosl_paths()
+            compiler = asr.ShaderCompiler(stdosl_path)
+            osl_bytecode = osl_utils.compile_osl_bytecode(compiler,
+                                                          script)
 
-        if osl_bytecode is not None:
-            q = asr.ShaderQuery()
-            q.open_bytecode(osl_bytecode)
+            if osl_bytecode is not None:
+                q = asr.ShaderQuery()
+                q.open_bytecode(osl_bytecode)
 
-            node_data = osl_utils.parse_shader(q)
+                node_data = osl_utils.parse_shader(q)
 
-            node_name, node_category, node_classes = osl_utils.generate_node(node_data,
-                                                                             AppleseedOSLScriptNode)
+                node_name, node_category, node_classes = osl_utils.generate_node(node_data,
+                                                                                 AppleseedOSLScriptNode)
 
-            for cls in reversed(node.classes):
-                util.safe_unregister_class(cls)
+                for cls in reversed(node.classes):
+                    util.safe_unregister_class(cls)
 
-            for cls in node_classes:
-                util.safe_register_class(cls)
+                for cls in node_classes:
+                    util.safe_register_class(cls)
 
-            node_tree.nodes.remove(node)
-            new_node = node_tree.nodes.new(node_name)
-            new_node.location = location
-            new_node.width = width
-            new_node.classes.extend(node_classes)
-            setattr(new_node, "node_type", "osl_script")
+                node_tree.nodes.remove(node)
+                new_node = node_tree.nodes.new(node_name)
+                new_node.location = location
+                new_node.width = width
+                new_node.classes.extend(node_classes)
+                setattr(new_node, "node_type", "osl_script")
 
-            # Copy variables to new node
-            for variable, value in temp_values.items():
-                if variable in dir(new_node):
-                    setattr(new_node, variable, value)
+                # Copy variables to new node
+                for variable, value in temp_values.items():
+                    if variable in dir(new_node):
+                        setattr(new_node, variable, value)
 
-            # Recreate node connections
-            for connection, sockets in output_connections.items():
-                for output in new_node.outputs:
-                    if output.bl_idname == connection:
-                        output_socket_class = output
-                if output_socket_class:
-                    for output_connection in sockets:
-                        node_tree.links.new(output_socket_class,
-                                            output_connection)
-            for connection, sockets in input_connections.items():
-                for in_socket in new_node.inputs:
-                    if in_socket.bl_idname == connection:
-                        input_socket_class = in_socket
-                if input_socket_class:
-                    for input_connection in sockets:
-                        node_tree.links.new(input_socket_class,
-                                            input_connection)
+                # Recreate node connections
+                for connection, sockets in output_connections.items():
+                    for output in new_node.outputs:
+                        if output.bl_idname == connection:
+                            output_socket_class = output
+                    if output_socket_class:
+                        for output_connection in sockets:
+                            node_tree.links.new(output_socket_class,
+                                                output_connection)
+                for connection, sockets in input_connections.items():
+                    for in_socket in new_node.inputs:
+                        if in_socket.bl_idname == connection:
+                            input_socket_class = in_socket
+                    if input_socket_class:
+                        for input_connection in sockets:
+                            node_tree.links.new(input_socket_class,
+                                                input_connection)
+
+            else:
+                self.report(
+                    {'ERROR'}, "appleseed - OSL script did not compile!")
 
         else:
-            self.report({'ERROR'}, "OSL script did not compile!")
+            self.report({'ERROR'}, "appleseed - No OSL script selected!")
 
         return {'FINISHED'}
 
