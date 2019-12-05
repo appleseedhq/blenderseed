@@ -43,7 +43,7 @@ import urllib
 # Constants.
 #--------------------------------------------------------------------------------------------------
 
-DEFAULT_TOOL_FILEPATH = "C:\\Program Files\\Blender Foundation\\Blender\\blender.exe" if os.name == "nt" else "./blender"
+DEFAULT_TOOL_FILEPATH = "C:\\Program Files\\Blender Foundation\\Blender 2.81\\blender.exe" if os.name == "nt" else "./blender"
 
 BLENDER_BASE_ARGS = ""
 
