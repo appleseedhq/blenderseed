@@ -93,7 +93,7 @@ class AppleseedOSLNode(bpy.types.Node):
                 if 'hide_ui' in x.keys() and x['hide_ui'] is True:
                     continue
                 if 'section' in x.keys():
-                    if x['section'] != param_section:
+                    if x['section'] != param_section and x['section'] is not None:
                         param_section = x['section']
                         icon = 'DISCLOSURE_TRI_DOWN' if getattr(self, param_section) else 'DISCLOSURE_TRI_RIGHT'
                         layout.prop(self, param_section, text=param_section, icon=icon, emboss=False)
@@ -169,7 +169,7 @@ class AppleseedOSLScriptNode(AppleseedOSLNode):
                     if 'hide_ui' in x.keys() and x['hide_ui'] is True:
                         continue
                     if 'section' in x.keys():
-                        if x['section'] != param_section:
+                        if x['section'] != param_section and x['section'] is not None:
                             param_section = x['section']
                             icon = 'DISCLOSURE_TRI_DOWN' if getattr(self, param_section) else 'DISCLOSURE_TRI_RIGHT'
                             layout.prop(self, param_section, text=param_section, icon=icon, emboss=False)
