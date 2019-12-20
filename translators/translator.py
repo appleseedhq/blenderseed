@@ -43,101 +43,14 @@ class Translator(object):
         self._bl_obj = obj
         self._asset_handler = asset_handler
 
-    # Properties.
-    @property
-    def appleseed_name(self):
-        return self._bl_obj.name_full
+        self._instance_lib = asr.BlTransformLibrary()
 
     @property
-    def asset_handler(self):
-        return self._asset_handler
+    def instances_size(self):
+        return self._instance_lib.get_size()
 
-    # Entity translation.
-    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
-        """
-        This function creates the parameter lists and appleseed entities that are being hosted by the translator.
-        :param as_texture_translators:
-        :param textures_to_add:
-        :param bl_scene: Blender scene
-        :return: None
-        """
-
-        raise NotImplementedError()
-
-    def set_xform_step(self, time, inst_key, bl_matrix):
-        """
-        This function adds a transform step to the matrix ID'ed by the inst_key.
-        :param time:
-        :param inst_key:
-        :param bl_matrix:
-        :return:
-        """
-
-        raise NotImplementedError()
-
-    def flush_entities(self, as_assembly, as_project):
-        """
-        This function flushes the appleseed entities into the appropriate location in the project file and then
-        retrieves Python wrapped pointers to the entities for further editing if needed.
-        :param as_project:
-        :param as_assembly: The primary scene assembly for the appleseed project
-        :return: None
-        """
-
-        raise NotImplementedError()
-
-    def update_object(self, context, as_assembly, textures_to_add, as_texture_translators):
-        """
-        This function deletes and then recreates an appleseed entity when the corresponding Blender object is updated.
-        :param context:
-        :param as_assembly:
-        :param textures_to_add:
-        :param as_texture_translators:
-        :return:
-        """
-
-        raise NotImplementedError()
-
-    def delete_instances(self, as_assembly, as_scene):
-        """
-        Deletes all the object instances in the scene.
-        :param as_assembly:
-        :param as_scene:
-        :return:
-        """
-
-        raise NotImplementedError()
-
-    def xform_update(self, inst_key, bl_matrix, as_assembly, as_scene):
-        """
-        During interactive rendering, this function recreates and then flushes a new instance for
-        an existing translator.
-        :param inst_key:
-        :param bl_matrix:
-        :param as_assembly:
-        :param as_scene:
-        :return:
-        """
-
-        raise NotImplementedError()
-
-    def delete_object(self, as_assembly):
-        """
-        Deletes all the associated entities created by a translator.
-        :param as_assembly:
-        :return:
-        """
-
-        raise NotImplementedError()
-
-    def add_instance(self, key):
-        """
-        Adds a new instance to a translator.
-        :param key:
-        :return:
-        """
-
-        raise NotImplementedError()
+    def add_instance_step(self, instance_id, bl_matrix):
+        raise NotImplementedError
 
     @staticmethod
     def _convert_matrix(m):
