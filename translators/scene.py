@@ -199,14 +199,14 @@ class SceneTranslator(object):
 
         for mat in bpy.data.materials:
             logger.debug("appleseed: Creating material translator for %s", mat.name_full)
-            materials_to_add[mat] = MaterialTranslator(self.__asset_handler)
+            materials_to_add[mat] = MaterialTranslator(mat, self.__asset_handler)
 
         for tex in bpy.data.textures:
             logger.debug("appleseed: Creating texture translator for %s", tex.name_full)
-            textures_to_add[tex] = TextureTranslator(self.__asset_handler)
+            textures_to_add[tex] = TextureTranslator(tex, self.__asset_handler)
 
         # Create camera, world, material and texture entities
-        self.__as_camera_translator.create_entities(depsgraph.scene_eval, context)
+        self.__as_camera_translator.create_entities(depsgraph.scene_eval, context, engine)
         self.__as_world_translator.create_entities(depsgraph.scene_eval)
 
         for obj, trans in materials_to_add.items():
@@ -217,7 +217,7 @@ class SceneTranslator(object):
             trans.create_entities(depsgraph.scene_eval)
 
         # Set initial position of all objects and lamps
-        self.__calc_initial_positions(depsgraph, objects_to_add, lights_to_add)
+        self.__calc_initial_positions(depsgraph, engine, objects_to_add, lights_to_add)
 
         # Remove unused translators
         for translator in list(objects_to_add.keys()):
@@ -238,18 +238,19 @@ class SceneTranslator(object):
             self.__calc_motion_steps(depsgraph, engine, objects_to_add)
 
         # Flush entities
+        as_scene = self.__project.get_scene()
         for obj, trans in objects_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
-            trans.flush_entities(self.__main_assembly, self.__project)
+            trans.flush_entities(as_scene, self.__main_assembly, self.__project)
         for obj, trans in lights_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
-            trans.flush_entities(self.__main_assembly, self.__project)
+            trans.flush_entities(as_scene, self.__main_assembly, self.__project)
         for obj, trans in materials_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
-            trans.flush_entities(self.__main_assembly, self.__project)
+            trans.flush_entities(as_scene, self.__main_assembly, self.__project)
         for obj, trans in textures_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
-            trans.flush_entities(self.__main_assembly, self.__project)
+            trans.flush_entities(as_scene, self.__main_assembly, self.__project)
 
         # Transfer temp translators to main list
         for bl_obj, translator in objects_to_add.items():
@@ -265,6 +266,17 @@ class SceneTranslator(object):
 
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
+
+    def update_multiview_camera(self):
+        pass
+
+    def write_project(self, export_path):
+        filename = bpy.path.ensure_ext(bpy.path.abspath(export_path), '.appleseed')
+
+        asr.ProjectFileWriter().write(
+            self.__project,
+            filename,
+            asr.ProjectFileWriterOptions.OmitWritingGeometryFiles | asr.ProjectFileWriterOptions.OmitHandlingAssetFiles)
 
     # Internal methods.
     def __create_project(self, depsgraph):
@@ -627,10 +639,10 @@ class SceneTranslator(object):
 
         self.__project.set_search_paths(paths)
 
-    def __calc_initial_positions(self, depsgraph, objects_to_add, lights_to_add):
+    def __calc_initial_positions(self, depsgraph, engine, objects_to_add, lights_to_add):
         logger.debug("Setting intial object positions for frame %s", depsgraph.scene_eval.frame_current)
 
-        self.__as_camera_translator.add_cam_xform(0.0)
+        self.__as_camera_translator.add_cam_xform(engine, 0.0)
 
         for inst in depsgraph.object_instances:
             if inst.show_self:
@@ -653,7 +665,7 @@ class SceneTranslator(object):
             engine.frame_set(int_frame, subframe=subframe)
 
             if time in self.__cam_times:
-                self.__as_camera_translator.add_cam_xform(time)
+                self.__as_camera_translator.add_cam_xform(engine, time)
             
             if time in self.__xform_times:
                 for inst in depsgraph.object_instances:
