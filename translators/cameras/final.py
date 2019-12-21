@@ -40,11 +40,156 @@ class RenderCameraTranslator(Translator):
         logger.debug("Creating camera translator")
         super().__init__(cam, asset_handler)
 
-    def create_entities(self, bl_scene, context=None):
-        pass
+        self.__as_camera = None
+        self.__xform_seq = asr.TransformSequence()
 
-    def flush_entities(self, as_main_assembly, as_project):
-        pass
+        self.__cam_model = None
 
-    def add_cam_xform(self, time):
-        pass
+    @property
+    def bl_camera(self):
+        return self._bl_obj
+
+    def create_entities(self, bl_scene, context=None, engine=None):
+        logger.debug("Creating camera entity")
+
+        self.__cam_model = self.__get_model()
+
+        self.__as_camera = asr.Camera(self.__cam_model, "Camera", {})
+
+        self.__as_cam_params = self.__get_cam_params(bl_scene, engine)
+
+    def flush_entities(self, as_scene, as_main_assembly, as_project):
+        logger.debug("Flushing camera entity, num xform keys = %s", self.__xform_seq.size())
+        self.__xform_seq.optimize()
+        self.__as_camera.set_transform_sequence(self.__xform_seq)
+
+        as_scene.cameras().insert(self.__as_camera)
+        self.__as_camera = as_scene.cameras().get_by_name("Camera")
+
+    def add_cam_xform(self, engine, time):
+        self.__xform_seq.set_transform(
+            time,
+            self._convert_matrix(engine.camera_model_matrix(self.bl_camera)))
+
+    # Internal methods
+    def __get_model(self):
+        cam_mapping = {'PERSP': 'pinhole_camera',
+                       'ORTHO': 'orthographic_camera',
+                       'PANO': 'spherical_camera'}
+
+        model = cam_mapping[self.bl_camera.data.type]
+
+        if model == 'spherical_camera' and not self.bl_camera.data.appleseed.fisheye_projection_type == 'none':
+            model = 'fisheyelens_camera'
+
+        if model == 'pinhole_camera' and self.bl_camera.data.appleseed.enable_dof:
+            model = 'thinlens_camera'
+
+        return model
+
+    def __get_cam_params(self, bl_scene, engine):
+        camera = self.bl_camera.data
+
+        aspect_ratio = util.calc_film_aspect_ratio(bl_scene)
+
+        film_width, film_height = util.calc_film_dimensions(aspect_ratio, camera, 1)
+
+        model = self.__as_camera.get_model()
+
+        if model == 'pinhole_camera':
+            cam_params = self.__base_camera_params(bl_scene, engine, aspect_ratio, film_width, film_height)
+
+        elif model == 'thinlens_camera':
+            cam_params = self.__thin_lens_camera_params(bl_scene, engine, aspect_ratio, film_width, film_height)
+
+        elif model == 'spherical_camera':
+            cam_params = self.__spherical_camera_params(bl_scene)
+
+        elif model == 'fisheyelens_camera':
+            cam_params = self.__fisheye_camera_params(bl_scene, engine, aspect_ratio, film_width, film_height)
+
+        else:
+            cam_params = self.__ortho_camera_params(bl_scene, aspect_ratio)
+
+        return cam_params
+
+    def __ortho_camera_params(self, bl_scene, aspect_ratio):
+        camera = self.bl_camera.data
+        cam_params = {
+            'aspect_ratio': aspect_ratio,
+            'near_z': camera.appleseed.near_z,
+            'shutter_open_end_time': bl_scene.appleseed.shutter_open_end_time,
+            'shutter_open_begin_time': bl_scene.appleseed.shutter_open,
+            'shutter_close_begin_time': bl_scene.appleseed.shutter_close_begin_time,
+            'shutter_close_end_time': bl_scene.appleseed.shutter_close}
+
+        if camera.sensor_fit == 'HORIZONTAL' or (camera.sensor_fit == 'AUTO' and aspect_ratio > 1):
+            cam_params['film_width'] = camera.ortho_scale
+        else:
+            cam_params['film_height'] = camera.ortho_scale
+
+        return cam_params
+
+    def __spherical_camera_params(self, bl_scene):
+        cam_params = {
+            'shutter_open_end_time': bl_scene.appleseed.shutter_open_end_time,
+            'shutter_open_begin_time': bl_scene.appleseed.shutter_open,
+            'shutter_close_begin_time': bl_scene.appleseed.shutter_close_begin_time,
+            'shutter_close_end_time': bl_scene.appleseed.shutter_close}
+
+        return cam_params
+
+    def __base_camera_params(self, bl_scene, engine, aspect_ratio, film_width, film_height):
+        camera = self.bl_camera
+        x_aspect_comp = 1 if aspect_ratio > 1 else 1 / aspect_ratio
+        y_aspect_comp = aspect_ratio if aspect_ratio > 1 else 1
+        cam_params = {
+            'aspect_ratio': aspect_ratio,
+            'focal_length': camera.data.lens / 1000,  # mm to meters.
+            'film_dimensions': asr.Vector2f(film_width, film_height),
+            'near_z': camera.data.appleseed.near_z,
+            'shift_x': (engine.camera_shift_x(camera) + camera.data.shift_x) * x_aspect_comp * film_width,
+            'shift_y': camera.data.shift_y * y_aspect_comp * film_height,
+            'shutter_open_end_time': bl_scene.appleseed.shutter_open_end_time,
+            'shutter_open_begin_time': bl_scene.appleseed.shutter_open,
+            'shutter_close_begin_time': bl_scene.appleseed.shutter_close_begin_time,
+            'shutter_close_end_time': bl_scene.appleseed.shutter_close}
+
+        return cam_params
+
+    def __fisheye_camera_params(self, scene, engine, aspect_ratio, film_width, film_height):
+        camera = self.bl_camera
+
+        cam_params = self.__base_camera_params(scene, engine, aspect_ratio, film_width, film_height)
+
+        cam_params.update({'projection_type': camera.data.appleseed.fisheye_projection_type})
+
+        return cam_params
+
+    def __thin_lens_camera_params(self, bl_scene, engine, aspect_ratio, film_width, film_height):
+        camera = self.bl_camera
+
+        cam_params = self.__base_camera_params(
+            bl_scene,
+            engine,
+            aspect_ratio,
+            film_width,
+            film_height)
+
+        cam_params.update({'f_stop': camera.data.appleseed.f_number,
+                           'autofocus_enabled': False,
+                           'diaphragm_blades': camera.data.appleseed.diaphragm_blades,
+                           'diaphragm_tilt_angle': camera.data.appleseed.diaphragm_angle,
+                           'focal_distance': util.get_focal_distance(camera)})
+
+        if camera.data.appleseed.enable_autofocus:
+            x, y = util.find_autofocus_point(bl_scene)
+            cam_params['autofocus_target'] = asr.Vector2f(x, y)
+            cam_params['autofocus_enabled'] = True
+
+        if camera.data.appleseed.diaphragm_map is not None:
+            tex_name = f"{camera.data.appleseed.diaphragm_map.name_full}_inst"
+            cam_params['diaphragm_map'] = tex_name
+            del cam_params['diaphragm_blades']
+
+        return cam_params

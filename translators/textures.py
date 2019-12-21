@@ -41,5 +41,53 @@ class TextureTranslator(Translator):
     """
 
     def __init__(self, bl_texture, asset_handler=None):
-        logger.debug("Creating translator for %s", bl_texture.name_full)
-        super().__init__(bl_texture, asset_handler=asset_handler)
+        super().__init__(bl_texture, asset_handler)
+
+        self.__as_tex = None
+        self.__as_tex_inst = None
+
+        self.__as_tex_params = None
+        self.__as_tex_inst_params = None
+
+    @property
+    def bl_tex(self):
+        return self._bl_obj
+
+    def create_entities(self, bl_scene):
+        logger.debug("Creating entity for %s", self.obj_name)
+        self.__as_tex_params = self.__get_tex_params()
+        self.__as_tex = asr.Texture('disk_texture_2d', self.obj_name, self.__as_tex_params, [])
+
+        self.__as_tex_inst_params = self.__get_tex_inst_params()
+        self.__as_tex_inst = asr.TextureInstance(
+            f"{self.obj_name}_inst",
+            self.__as_tex_inst_params,
+            self.obj_name,
+            asr.Transformf(asr.Matrix4f.identity()))
+
+    def flush_entities(self, as_scene, as_main_assembly, as_project):
+        logger.debug("Flushing entity for %s", self.obj_name)
+        scene = as_project.get_scene()
+        tex_name = self.__as_tex.get_name()
+        scene.textures().insert(self.__as_tex)
+        self.__as_tex = scene.textures().get_by_name(tex_name)
+
+        tex_inst_name = self.__as_tex_inst.get_name()
+        scene.texture_instances().insert(self.__as_tex_inst)
+        self.__as_tex_inst = scene.texture_instances().get_by_name(tex_inst_name)
+
+    def __get_tex_params(self):
+        as_tex_params = self.bl_tex.appleseed
+        filepath = self._asset_handler.process_path(self.bl_tex.filepath, AssetType.TEXTURE_ASSET)
+        tex_params = {'filename': filepath, 'color_space': as_tex_params.as_color_space}
+
+        return tex_params
+
+    def __get_tex_inst_params(self):
+        as_tex_params = self.bl_tex.appleseed
+        tex_inst_params = {
+            'addressing_mode': as_tex_params.as_wrap_mode,
+            'filtering_mode': 'bilinear',
+            'alpha_mode': as_tex_params.as_alpha_mode}
+
+        return tex_inst_params

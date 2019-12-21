@@ -42,7 +42,7 @@ class Translator(object):
         self._instance_lib = asr.BlTransformLibrary(x_form_times)
 
     @property
-    def bl_obj_name(self):
+    def obj_name(self):
         return self._bl_obj.name_full
 
     @property
@@ -55,7 +55,7 @@ class Translator(object):
     def create_entities(self, bl_scene, context=None):
         raise NotImplementedError
 
-    def flush_entities(self, as_main_assembly, as_project):
+    def flush_entities(self, as_scene, as_main_assembly, as_project):
         raise NotImplementedError
 
     @staticmethod
