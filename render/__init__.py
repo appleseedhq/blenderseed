@@ -78,9 +78,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
     bl_use_shading_nodes_custom = False
     bl_use_postprocess = True
 
-    # True if we are doing interactive rendering.
-    __interactive_session = False
-
     #
     # Constructor.
     #
@@ -96,26 +93,19 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Interactive rendering.
         self.__interactive_scene_translator = None
-        self.__is_interactive = False
 
     #
     # Destructor.
     #
 
     def __del__(self):
-        try:
-            self.__stop_rendering()
-        except:
-            pass
-
-        # Sometimes __is_interactive does not exist, not sure why.
-        try:
-            if self.__is_interactive:
-                RenderAppleseed.__interactive_session = False
-        except:
-            pass
-
         logger.debug("Deleting render engine")
+
+        if self.__interactive_scene_translator is not None:
+            try:
+                self.__stop_rendering()
+            except:
+                pass
 
     #
     # RenderEngine methods.
@@ -126,8 +116,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
             if bpy.app.background:  # Can this happen?
                 return
 
-            # Disable material previews if we are doing an interactive render.
-            # if not RenderAppleseed.__interactive_session:
             level = 'error'
             with SetAppleseedLogLevel(level):
                 self.__render_material_preview(depsgraph)
@@ -137,31 +125,17 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 self.__add_render_passes(depsgraph.scene)
                 self.__render_final(depsgraph)
 
-    def view_update(self, context, depsgraph):
-        if self.__interactive_scene_translator is None:
-            self.__start_interactive_render(context, depsgraph)
-        else:
-            self.__pause_rendering()
-            logger.debug("Updating scene")
-            self.__interactive_scene_translator.update_scene(context, depsgraph)
-            self.__restart_interactive_render()
+    # def view_update(self, context, depsgraph):
+    #     if self.__interactive_scene_translator is None:
+    #         self.__start_interactive_render(context, depsgraph)
+    #     else:
+    #         self.__pause_rendering()
+    #         logger.debug("Updating scene")
+    #         self.__interactive_scene_translator.update_scene(context, depsgraph)
+    #         self.__restart_interactive_render()
 
-    def view_draw(self, context, depsgraph):
-        self.__draw_pixels(context, depsgraph)
-
-        # Check if view has changed.
-        view_update, cam_param_update, cam_translate_update, cam_model_update = self.__interactive_scene_translator.check_view(context,
-                                                                                                                               depsgraph)
-
-        if view_update or cam_param_update or cam_translate_update or cam_model_update:
-            self.__pause_rendering()
-            logger.debug("Updating view")
-            self.__interactive_scene_translator.update_view(context,
-                                                            depsgraph,
-                                                            view_update,
-                                                            cam_param_update,
-                                                            cam_model_update)
-            self.__restart_interactive_render()
+    # def view_draw(self, context, depsgraph):
+    #     self.__draw_pixels(context, depsgraph)
 
     def update_render_passes(self, scene=None, renderlayer=None):
         logger.debug("Updating render passes")
@@ -239,33 +213,28 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         if depsgraph.scene.appleseed.scene_export_mode == 'export_only':
             if depsgraph.scene.appleseed.export_path != "":
-                scene_translator = SceneTranslator.create_project_export_translator(self,
-                                                                                    depsgraph)
-                scene_translator.translate_scene()
+                scene_translator = SceneTranslator.create_project_export_translator(depsgraph)
+                scene_translator.translate_scene(self, depsgraph)
                 scene_translator.write_project(depsgraph.scene.appleseed.export_path)
             else:
                 self.error_set("appleseed: Export path not set!")
         else:
-            scene_translator = SceneTranslator.create_final_render_translator(self,
-                                                                              depsgraph)
+            scene_translator = SceneTranslator.create_final_render_translator(depsgraph)
             self.update_stats("appleseed Rendering: Translating scene", "")
 
             if depsgraph.scene.render.use_multiview and len(depsgraph.scene.render.views) > 1:
                 self.active_view_set(depsgraph.scene.render.views[0].name)
 
-                scene_translator.translate_scene()
-                self.__start_final_render(depsgraph.scene,
-                                          scene_translator.as_project)
+                scene_translator.translate_scene(self, depsgraph)
+                self.__start_final_render(depsgraph.scene, scene_translator.as_project)
 
                 for view in depsgraph.scene.render.views[1:]:
                     self.active_view_set(view.name)
                     scene_translator.update_multiview_camera()
-                    self.__start_final_render(depsgraph.scene,
-                                              scene_translator.as_project)
+                    self.__start_final_render(depsgraph.scene, scene_translator.as_project)
             else:
-                scene_translator.translate_scene()
-                self.__start_final_render(depsgraph.scene,
-                                          scene_translator.as_project)
+                scene_translator.translate_scene(self, depsgraph)
+                self.__start_final_render(depsgraph.scene, scene_translator.as_project)
 
     def __start_final_render(self, scene, project):
         """
@@ -280,13 +249,13 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         self.__tile_callback = FinalTileCallback(self, scene)
 
-        self.__renderer_controller = FinalRendererController(self,
-                                                             self.__tile_callback)
+        self.__renderer_controller = FinalRendererController(self, self.__tile_callback)
 
-        self.__renderer = asr.MasterRenderer(project,
-                                             project.configurations()['final'].get_inherited_parameters(),
-                                             [get_stdosl_render_paths()],
-                                             self.__tile_callback)
+        self.__renderer = asr.MasterRenderer(
+            project,
+            project.configurations()['final'].get_inherited_parameters(),
+            [get_stdosl_render_paths()],
+            self.__tile_callback)
 
         self.__render_thread = RenderThread(self.__renderer, self.__renderer_controller)
 
@@ -323,22 +292,19 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         logger.debug("Translating scene for interactive rendering")
 
-        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(self,
-                                                                                                   context,
-                                                                                                   depsgraph)
-        self.__interactive_scene_translator.translate_scene()
-
-        self.__camera = self.__interactive_scene_translator.camera_translator
+        self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(depsgraph)
+        self.__interactive_scene_translator.translate_scene(self, depsgraph, context)
 
         project = self.__interactive_scene_translator.as_project
 
-        self.__renderer_controller = InteractiveRendererController(self, self.__camera)
+        self.__renderer_controller = InteractiveRendererController()
         self.__tile_callback = asr.BlenderProgressiveTileCallback(self.tag_redraw)
 
-        self.__renderer = asr.MasterRenderer(project,
-                                             project.configurations()['interactive'].get_inherited_parameters(),
-                                             [get_stdosl_render_paths()],
-                                             self.__tile_callback)
+        self.__renderer = asr.MasterRenderer(
+            project,
+            project.configurations()['interactive'].get_inherited_parameters(),
+            [get_stdosl_render_paths()],
+            self.__tile_callback)
 
         self.__restart_interactive_render()
 

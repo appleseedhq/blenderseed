@@ -35,10 +35,6 @@ logger = get_logger()
 
 
 class MaterialTranslator(Translator):
-    """
-    This class translates a Blender material data block into its associated appleseed entities (Material and Surface shader)
-    """
 
-    def __init__(self, mat, asset_handler):
-        logger.debug("Creating translator for %s", mat.name_full)
-        super().__init__(mat, asset_handler)
+    def __init__(self, asset_handler):
+        super().__init__(asset_handler)

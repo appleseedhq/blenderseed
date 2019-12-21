@@ -37,6 +37,20 @@ logger = get_logger()
 
 
 class MeshTranslator(Translator):
-    def __init__(self, obj, export_mode, asset_handler):
-        logger.debug("Creating translator for %s", obj.name_full)
-        super().__init__(obj, asset_handler)
+    def __init__(self, bl_obj, export_mode, asset_handler, xform_times):
+        super().__init__(bl_obj, asset_handler, xform_times)
+
+        self.__export_mode = export_mode
+
+    def add_instance_step(self, instance_id, bl_matrix):
+        inst_id = f"{self.bl_obj_name}|{instance_id}"
+        self._instance_lib.add_xform_step(inst_id, self._convert_matrix(bl_matrix))
+
+    def create_entities(self, bl_scene, context=None):
+        pass
+
+    def flush_entities(self, as_main_assembly, as_project):
+        pass
+
+    def set_deform_key(self, time, depsgraph, index):
+        pass

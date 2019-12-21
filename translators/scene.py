@@ -52,7 +52,7 @@ class SceneTranslator(object):
 
     # Constructors.
     @classmethod
-    def create_project_export_translator(cls, engine, depsgraph):
+    def create_project_export_translator(cls, depsgraph):
         project_dir = os.path.dirname(depsgraph.scene_eval.appleseed.export_path)
 
         logger.debug("Creating texture and geometry directories in %s", project_dir)
@@ -70,16 +70,14 @@ class SceneTranslator(object):
 
         asset_handler = CopyAssetsAssetHandler(project_dir, geometry_dir, textures_dir, depsgraph)
 
-        return cls(engine=engine,
-                   export_mode=ProjectExportMode.PROJECT_EXPORT,
+        return cls(export_mode=ProjectExportMode.PROJECT_EXPORT,
                    selected_only=depsgraph.scene.appleseed.export_selected,
                    asset_handler=asset_handler)
 
     @classmethod
-    def create_final_render_translator(cls, engine, depsgraph):
+    def create_final_render_translator(cls, depsgraph):
         """
         Create a scene translator to export the scene to an in memory appleseed project.
-        :param engine:
         :param depsgraph:
         :return:
         """
@@ -88,17 +86,15 @@ class SceneTranslator(object):
 
         asset_handler = AssetHandler(depsgraph)
 
-        return cls(engine=engine,
-                   export_mode=ProjectExportMode.FINAL_RENDER,
+        return cls(export_mode=ProjectExportMode.FINAL_RENDER,
                    selected_only=False,
                    asset_handler=asset_handler)
 
     @classmethod
-    def create_interactive_render_translator(cls, engine, depsgraph):
+    def create_interactive_render_translator(cls, depsgraph):
         """
         Create a scene translator to export the scene to an in memory appleseed project
         optimized for quick interactive edits.
-        :param engine:
         :param depsgraph:
         :return:
         """
@@ -107,18 +103,16 @@ class SceneTranslator(object):
 
         asset_handler = AssetHandler(depsgraph)
 
-        return cls(engine=engine,
-                   export_mode=ProjectExportMode.INTERACTIVE_RENDER,
+        return cls(export_mode=ProjectExportMode.INTERACTIVE_RENDER,
                    selected_only=False,
                    asset_handler=asset_handler)
 
-    def __init__(self, engine, export_mode, selected_only, asset_handler):
+    def __init__(self, export_mode, selected_only, asset_handler):
         """
         Constructor. Do not use it to create instances of this class.
         Use the @classmethods instead.
         """
 
-        self.__engine = engine
         self.__asset_handler = asset_handler
         self.__export_mode = export_mode
         self.__selected_only = selected_only
@@ -143,7 +137,11 @@ class SceneTranslator(object):
         self.__project = None
         self.__frame = None
 
-    def translate_scene(self, depsgraph, context=None):
+    @property
+    def as_project(self):
+        return self.__project
+
+    def translate_scene(self, engine, depsgraph, context=None):
         logger.debug("Translating scene %s", depsgraph.scene_eval.name)
 
         prof_timer = Timer()
@@ -163,10 +161,7 @@ class SceneTranslator(object):
 
         self.__frame = asr.Frame("beauty", frame_params, aovs)
 
-        if self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            self.__set_render_window(depsgraph)
-        else:
-            self.__set_interactive_render_window(depsgraph, context)
+        self.__set_render_border_window(depsgraph, context)
 
         if len(depsgraph.scene_eval.appleseed.post_processing_stages) > 0 and self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             self.__set_post_process(depsgraph)
@@ -176,9 +171,10 @@ class SceneTranslator(object):
 
         # Create camera
         if depsgraph.scene_eval.camera is not None:
-            pass
+            # Create interactive or final render camera
+            self.__as_camera_translator = RenderCameraTranslator(depsgraph.scene_eval.camera, self.__asset_handler)
         else:
-            self.__engine.error_set("appleseed: No camera in scene!")
+            engine.error_set("appleseed: No camera in scene!")
 
         # Create world
         if depsgraph.scene_eval.world is not None and depsgraph.scene_eval.world.appleseed_sky.env_type != 'none':
@@ -190,29 +186,80 @@ class SceneTranslator(object):
         materials_to_add = dict()
         textures_to_add = dict()
 
-        for obj in depsgraph.scene_eval.objects:
+        for obj in bpy.data.objects:
             if obj.type == 'MESH':
-                objects_to_add[obj] = MeshTranslator(obj, self.__export_mode, self.__asset_handler)
+                logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
+                objects_to_add[obj] = MeshTranslator(obj, self.__export_mode, self.__asset_handler, self.__xform_times)
+            # elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
+            #     logger.debug("appleseed: Creating archive assembly translator for %s", obj.name_full)
+            #     objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler, self.__xform_times)
             elif obj.type == 'LIGHT':
+                logger.debug("appleseed: Creating light translator for %s", obj.name_full)
                 lights_to_add[obj] = LampTranslator(obj, self.__asset_handler)
 
         for mat in bpy.data.materials:
-            materials_to_add[mat] = MaterialTranslator(mat, self.__asset_handler)
+            logger.debug("appleseed: Creating material translator for %s", mat.name_full)
+            materials_to_add[mat] = MaterialTranslator(self.__asset_handler)
 
         for tex in bpy.data.textures:
-            textures_to_add[tex] = TextureTranslator(tex, self.__asset_handler)
+            logger.debug("appleseed: Creating texture translator for %s", tex.name_full)
+            textures_to_add[tex] = TextureTranslator(self.__asset_handler)
 
-        self.__calc_initial_loctions(self.__as_camera_translator, objects_to_add, lights_to_add, depsgraph)
+        # Create camera, world, material and texture entities
+        self.__as_camera_translator.create_entities(depsgraph.scene_eval, context)
+        self.__as_world_translator.create_entities(depsgraph.scene_eval)
+
+        for obj, trans in materials_to_add.items():
+            logger.debug("appleseed: Creating entity for translator %s", obj.name_full)
+            trans.create_entities(depsgraph.scene_eval)
+        for obj, trans in textures_to_add.items():
+            logger.debug("appleseed: Creating entity for translator %s", obj.name_full)
+            trans.create_entities(depsgraph.scene_eval)
+
+        # Set initial position of all objects and lamps
+        self.__calc_initial_positions(depsgraph, objects_to_add, lights_to_add)
 
         # Remove unused translators
         for translator in list(objects_to_add.keys()):
             if objects_to_add[translator].instances_size == 0:
+                logger.debug("appleseed: Translator %s has no instances, deleting...", translator)
                 del objects_to_add[translator]
 
-        # Create mesh entities
+        # Create 3D entities
+        for obj, trans in objects_to_add.items():
+            logger.debug("appleseed: Creating mesh entity for %s", obj.name_full)
+            trans.create_entities(depsgraph.scene_eval)
+        for obj, trans in lights_to_add.items():
+            logger.debug("appleseed: Creating light entity for %s", obj.name_full)
+            trans.create_entities(depsgraph.scene_eval)
 
+        # Calculate additional steps for motion blur
         if self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
-            pass
+            self.__calc_motion_steps(depsgraph, engine, objects_to_add)
+
+        # Flush entities
+        for obj, trans in objects_to_add.items():
+            logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
+            trans.flush_entities(self.__main_assembly, self.__project)
+        for obj, trans in lights_to_add.items():
+            logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
+            trans.flush_entities(self.__main_assembly, self.__project)
+        for obj, trans in materials_to_add.items():
+            logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
+            trans.flush_entities(self.__main_assembly, self.__project)
+        for obj, trans in textures_to_add.items():
+            logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
+            trans.flush_entities(self.__main_assembly, self.__project)
+
+        # Transfer temp translators to main list
+        for bl_obj, translator in objects_to_add.items():
+            self.__as_object_translators[bl_obj] = translator
+        for bl_obj, translator in lights_to_add.items():
+            self.__as_lamp_translators[bl_obj] = translator
+        for bl_obj, translator in materials_to_add.items():
+            self.__as_material_translators[bl_obj] = translator
+        for bl_obj, translator in textures_to_add.items():
+            self.__as_texture_translators[bl_obj] = translator
 
         self.__load_searchpaths()
 
@@ -287,6 +334,9 @@ class SceneTranslator(object):
         all_times.update(self.__deform_times)
         self.__all_times = sorted(list(all_times))
 
+        # Xform times is converted to a list here so it can be easily passed into the BlTransformLibrary of each translator.
+        self.__xform_times = sorted(list(self.__xform_times))
+
     def __translate_render_settings(self, depsgraph):
         logger.debug("Translating render settings")
 
@@ -305,27 +355,33 @@ class SceneTranslator(object):
                                 'texture': 'texture'}
         pixel_renderer = pixel_render_mapping[asr_scene_props.pixel_sampler]
 
-        parameters = {'uniform_pixel_renderer': {'force_antialiasing': True if asr_scene_props.force_aa else False,
-                                                 'samples': asr_scene_props.samples},
-                      'adaptive_tile_renderer': {'min_samples': asr_scene_props.adaptive_min_samples,
-                                                 'noise_threshold': asr_scene_props.adaptive_noise_threshold,
-                                                 'batch_size': asr_scene_props.adaptive_batch_size,
-                                                 'max_samples': asr_scene_props.adaptive_max_samples},
-                      'texture_controlled_pixel_renderer': {'min_samples': asr_scene_props.adaptive_min_samples,
-                                                            'max_samples': asr_scene_props.adaptive_max_samples,
-                                                            'file_path': realpath(asr_scene_props.texture_sampler_filepath)},
-                      'use_embree': asr_scene_props.use_embree,
-                      'pixel_renderer': pixel_renderer,
-                      'lighting_engine': lighting_engine,
-                      'tile_renderer': tile_renderer,
-                      'passes': asr_scene_props.renderer_passes,
-                      'generic_frame_renderer': {'tile_ordering': asr_scene_props.tile_ordering},
-                      'progressive_frame_renderer': {'max_average_spp': asr_scene_props.interactive_max_samples,
-                                                     'max_fps': asr_scene_props.interactive_max_fps,
-                                                     'time_limit': asr_scene_props.interactive_max_time},
-                      'light_sampler': {'algorithm': asr_scene_props.light_sampler,
-                                        'enable_light_importance_sampling': asr_scene_props.enable_light_importance_sampling},
-                      'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}
+        parameters = {
+            'uniform_pixel_renderer': {
+                'force_antialiasing': True if asr_scene_props.force_aa else False,
+                'samples': asr_scene_props.samples},
+            'adaptive_tile_renderer': {
+                'min_samples': asr_scene_props.adaptive_min_samples,
+                'noise_threshold': asr_scene_props.adaptive_noise_threshold,
+                'batch_size': asr_scene_props.adaptive_batch_size,
+                'max_samples': asr_scene_props.adaptive_max_samples},
+            'texture_controlled_pixel_renderer': {
+                'min_samples': asr_scene_props.adaptive_min_samples,
+                'max_samples': asr_scene_props.adaptive_max_samples,
+                'file_path': realpath(asr_scene_props.texture_sampler_filepath)},
+            'use_embree': asr_scene_props.use_embree,
+            'pixel_renderer': pixel_renderer,
+            'lighting_engine': lighting_engine,
+            'tile_renderer': tile_renderer,
+            'passes': asr_scene_props.renderer_passes,
+            'generic_frame_renderer': {'tile_ordering': asr_scene_props.tile_ordering},
+            'progressive_frame_renderer': {
+                'max_average_spp': asr_scene_props.interactive_max_samples,
+                'max_fps': asr_scene_props.interactive_max_fps,
+                'time_limit': asr_scene_props.interactive_max_time},
+            'light_sampler': {
+                'algorithm': asr_scene_props.light_sampler,
+                'enable_light_importance_sampling': asr_scene_props.enable_light_importance_sampling},
+            'shading_result_framebuffer': "permanent" if asr_scene_props.renderer_passes > 1 else "ephemeral"}
 
         if self.__export_mode != ProjectExportMode.PROJECT_EXPORT:
             if self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER:
@@ -336,40 +392,43 @@ class SceneTranslator(object):
             parameters['texture_store'] = {'max_size': asr_scene_props.tex_cache * 1024 * 1024}
 
         if lighting_engine == 'pt':
-            parameters['pt'] = {'enable_ibl': True if asr_scene_props.enable_ibl else False,
-                                'enable_dl': True if asr_scene_props.enable_dl else False,
-                                'enable_caustics': True if scene.appleseed.enable_caustics else False,
-                                'clamp_roughness': True if scene.appleseed.enable_clamp_roughness else False,
-                                'record_light_paths': True if scene.appleseed.record_light_paths else False,
-                                'next_event_estimation': True,
-                                'rr_min_path_length': asr_scene_props.rr_start,
-                                'optimize_for_lights_outside_volumes': asr_scene_props.optimize_for_lights_outside_volumes,
-                                'volume_distance_samples': asr_scene_props.volume_distance_samples,
-                                'dl_light_samples': asr_scene_props.dl_light_samples,
-                                'ibl_env_samples': asr_scene_props.ibl_env_samples,
-                                'dl_low_light_threshold': asr_scene_props.dl_low_light_threshold,
-                                'max_diffuse_bounces': asr_scene_props.max_diffuse_bounces if not asr_scene_props.max_diffuse_bounces_unlimited else -1,
-                                'max_glossy_bounces': asr_scene_props.max_glossy_brdf_bounces if not asr_scene_props.max_glossy_brdf_bounces_unlimited else -1,
-                                'max_specular_bounces': asr_scene_props.max_specular_bounces if not asr_scene_props.max_specular_bounces_unlimited else -1,
-                                'max_volume_bounces': asr_scene_props.max_volume_bounces if not asr_scene_props.max_volume_bounces_unlimited else -1,
-                                'max_bounces': asr_scene_props.max_bounces if not asr_scene_props.max_bounces_unlimited else -1}
+            parameters['pt'] = {
+                'enable_ibl': True if asr_scene_props.enable_ibl else False,
+                'enable_dl': True if asr_scene_props.enable_dl else False,
+                'enable_caustics': True if scene.appleseed.enable_caustics else False,
+                'clamp_roughness': True if scene.appleseed.enable_clamp_roughness else False,
+                'record_light_paths': True if scene.appleseed.record_light_paths else False,
+                'next_event_estimation': True,
+                'rr_min_path_length': asr_scene_props.rr_start,
+                'optimize_for_lights_outside_volumes': asr_scene_props.optimize_for_lights_outside_volumes,
+                'volume_distance_samples': asr_scene_props.volume_distance_samples,
+                'dl_light_samples': asr_scene_props.dl_light_samples,
+                'ibl_env_samples': asr_scene_props.ibl_env_samples,
+                'dl_low_light_threshold': asr_scene_props.dl_low_light_threshold,
+                'max_diffuse_bounces': asr_scene_props.max_diffuse_bounces if not asr_scene_props.max_diffuse_bounces_unlimited else -1,
+                'max_glossy_bounces': asr_scene_props.max_glossy_brdf_bounces if not asr_scene_props.max_glossy_brdf_bounces_unlimited else -1,
+                'max_specular_bounces': asr_scene_props.max_specular_bounces if not asr_scene_props.max_specular_bounces_unlimited else -1,
+                'max_volume_bounces': asr_scene_props.max_volume_bounces if not asr_scene_props.max_volume_bounces_unlimited else -1,
+                'max_bounces': asr_scene_props.max_bounces if not asr_scene_props.max_bounces_unlimited else -1}
             if not asr_scene_props.max_ray_intensity_unlimited:
                 parameters['pt']['max_ray_intensity'] = asr_scene_props.max_ray_intensity
         else:
-            parameters['sppm'] = {'alpha': asr_scene_props.sppm_alpha,
-                                  'dl_mode': asr_scene_props.sppm_dl_mode,
-                                  'enable_caustics': "true" if asr_scene_props.enable_caustics else "false",
-                                  'env_photons_per_pass': asr_scene_props.sppm_env_photons,
-                                  'initial_radius': asr_scene_props.sppm_initial_radius,
-                                  'light_photons_per_pass': asr_scene_props.sppm_light_photons,
+            parameters['sppm'] = {
+                'alpha': asr_scene_props.sppm_alpha,
+                'dl_mode': asr_scene_props.sppm_dl_mode,
+                'enable_caustics': "true" if asr_scene_props.enable_caustics else "false",
+                'env_photons_per_pass': asr_scene_props.sppm_env_photons,
+                'initial_radius': asr_scene_props.sppm_initial_radius,
+                'light_photons_per_pass': asr_scene_props.sppm_light_photons,
 
-                                  # Leave at 0 for now - not in appleseed.studio GUI
-                                  'max_path_length': 0,
-                                  'max_photons_per_estimate': asr_scene_props.sppm_max_per_estimate,
-                                  'path_tracing_max_path_length': asr_scene_props.sppm_pt_max_length,
-                                  'path_tracing_rr_min_path_length': asr_scene_props.sppm_pt_rr_start,
-                                  'photon_tracing_max_path_length': asr_scene_props.sppm_photon_max_length,
-                                  'photon_tracing_rr_min_path_length': asr_scene_props.sppm_photon_rr_start}
+                # Leave at 0 for now - not in appleseed.studio GUI
+                'max_path_length': 0,
+                'max_photons_per_estimate': asr_scene_props.sppm_max_per_estimate,
+                'path_tracing_max_path_length': asr_scene_props.sppm_pt_max_length,
+                'path_tracing_rr_min_path_length': asr_scene_props.sppm_pt_rr_start,
+                'photon_tracing_max_path_length': asr_scene_props.sppm_photon_max_length,
+                'photon_tracing_rr_min_path_length': asr_scene_props.sppm_photon_rr_start}
+
             if not asr_scene_props.sppm_pt_max_ray_intensity_unlimited:
                 parameters['sppm']['path_tracing_max_ray_intensity'] = asr_scene_props.sppm_pt_max_ray_intensity
 
@@ -479,18 +538,18 @@ class SceneTranslator(object):
 
         for index, stage in enumerate(asr_scene_props.post_processing_stages):
             if stage.model == 'render_stamp_post_processing_stage':
-                params = {'order': index,
-                          'format_string': stage.render_stamp}
+                params = {'order': index, 'format_string': stage.render_stamp}
             else:
-                params = {'order': index,
-                          'color_map': stage.color_map,
-                          'auto_range': stage.auto_range,
-                          'range_min': stage.range_min,
-                          'range_max': stage.range_max,
-                          'add_legend_bar': stage.add_legend_bar,
-                          'legend_bar_ticks': stage.legend_bar_ticks,
-                          'render_isolines': stage.render_isolines,
-                          'line_thickness': stage.line_thickness}
+                params = {
+                    'order': index,
+                    'color_map': stage.color_map,
+                    'auto_range': stage.auto_range,
+                    'range_min': stage.range_min,
+                    'range_max': stage.range_max,
+                    'add_legend_bar': stage.add_legend_bar,
+                    'legend_bar_ticks': stage.legend_bar_ticks,
+                    'render_isolines': stage.render_isolines,
+                    'line_thickness': stage.line_thickness}
 
                 if stage.color_map == 'custom':
                     params['color_map_file_path'] = stage.color_map_file_path
@@ -501,62 +560,64 @@ class SceneTranslator(object):
 
             self.__frame.post_processing_stages().insert(post_process)
 
-    def __set_render_window(self, depsgraph):
+    def __set_render_border_window(self, depsgraph, context=None):
         width, height = self.__viewport_resolution
+
+        min_x = 0
+        max_x = 0
+        min_y = 0
+        max_y = 0
 
         if depsgraph.scene_eval.render.use_border and self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             min_x = int(depsgraph.scene_eval.render.border_min_x * width)
             max_x = int(depsgraph.scene_eval.render.border_max_x * width) - 1
             min_y = height - int(depsgraph.scene_eval.render.border_max_y * height)
             max_y = height - int(depsgraph.scene_eval.render.border_min_y * height) - 1
-            self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
-    def __set_interactive_render_window(self, depsgraph, context):
-        width, height = self.__viewport_resolution
+        else:
+            # Interactive render borders
+            if context.space_data.use_render_border and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
+                min_x = int(context.space_data.render_border_min_x * width)
+                max_x = int(context.space_data.render_border_max_x * width) - 1
+                min_y = height - int(context.space_data.render_border_max_y * height)
+                max_y = height - int(context.space_data.render_border_min_y * height) - 1
 
-        if context.space_data.use_render_border and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
-            min_x = int(context.space_data.render_border_min_x * width)
-            max_x = int(context.space_data.render_border_max_x * width) - 1
-            min_y = height - int(context.space_data.render_border_max_y * height)
-            max_y = height - int(context.space_data.render_border_min_y * height) - 1
-            self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
+            elif depsgraph.scene_eval.render.use_border and context.region_data.view_perspective == 'CAMERA':
+                """
+                I can't explain how the following code produces the correct render window.
+                I basically threw every parameter combination I could think of together 
+                until the result looked right.
+                """
 
-        elif depsgraph.scene_eval.render.use_border and context.region_data.view_perspective == 'CAMERA':
-            """
-            I can't explain how the following code produces the correct render window.
-            I basically threw every parameter combination I could think of together 
-            until the result looked right.
-            """
+                zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
+                frame_aspect_ratio = width / height
+                camera_aspect_ratio = calc_film_aspect_ratio(depsgraph.scene_eval)
 
-            zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
-            frame_aspect_ratio = width / height
-            camera_aspect_ratio = calc_film_aspect_ratio(depsgraph.scene_eval)
+                if frame_aspect_ratio > 1:
+                    camera_width = width / zoom
+                    camera_height = camera_width / camera_aspect_ratio
+                else:
+                    camera_height = height / (zoom * camera_aspect_ratio)
+                    camera_width = camera_height * camera_aspect_ratio
 
-            if frame_aspect_ratio > 1:
-                camera_width = width / zoom
-                camera_height = camera_width / camera_aspect_ratio
-            else:
-                camera_height = height / (zoom * camera_aspect_ratio)
-                camera_width = camera_height * camera_aspect_ratio
+                view_offset_x, view_offset_y = context.region_data.view_camera_offset
+                view_shift_x = ((view_offset_x * 2) / zoom) * width
+                view_shift_y = ((view_offset_y * 2) / zoom) * height
+                window_shift_x = (width - camera_width) / 2
+                window_shift_y = (height - camera_height) / 2
 
-            view_offset_x, view_offset_y = context.region_data.view_camera_offset
-            view_shift_x = ((view_offset_x * 2) / zoom) * width
-            view_shift_y = ((view_offset_y * 2) / zoom) * height
-            window_shift_x = (width - camera_width) / 2
-            window_shift_y = (height - camera_height) / 2
+                window_x_min = int(camera_width * depsgraph.scene_eval.render.border_min_x + window_shift_x - view_shift_x)
+                window_x_max = int(camera_width * depsgraph.scene_eval.render.border_max_x + window_shift_x - view_shift_x)
+                window_y_min = height - int(camera_height * depsgraph.scene_eval.render.border_max_y + window_shift_y - view_shift_y)
+                window_y_max = height - int(camera_height * depsgraph.scene_eval.render.border_min_y + window_shift_y - view_shift_y)
 
-            window_x_min = int(camera_width * depsgraph.scene_eval.render.border_min_x + window_shift_x - view_shift_x)
-            window_x_max = int(camera_width * depsgraph.scene_eval.render.border_max_x + window_shift_x - view_shift_x)
-            window_y_min = height - int(camera_height * depsgraph.scene_eval.render.border_max_y + window_shift_y - view_shift_y)
-            window_y_max = height - int(camera_height * depsgraph.scene_eval.render.border_min_y + window_shift_y - view_shift_y)
+                # Check for coordinates outside the render window.
+                min_x = clamp_value(window_x_min, 0, width - 1)
+                max_x = clamp_value(window_x_max, 0, width - 1)
+                min_y = clamp_value(window_y_min, 0, height - 1)
+                max_y = clamp_value(window_y_max, 0, height - 1)
 
-            # Check for coordinates outside the render window.
-            window_x_min = clamp_value(window_x_min, 0, width - 1)
-            window_x_max = clamp_value(window_x_max, 0, width - 1)
-            window_y_min = clamp_value(window_y_min, 0, height - 1)
-            window_y_max = clamp_value(window_y_max, 0, height - 1)
-
-            self.__frame.set_crop_window([window_x_min, window_y_min, window_x_max, window_y_max])
+        self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
     def __load_searchpaths(self):
         logger.debug("Loading searchpaths")
@@ -566,11 +627,48 @@ class SceneTranslator(object):
 
         self.__project.set_search_paths(paths)
 
-    @staticmethod
-    def __round_up_pow2(deformation_blur_samples):
-        assert (deformation_blur_samples >= 2)
-        return 1 << (deformation_blur_samples - 1).bit_length()
+    def __calc_initial_positions(self, depsgraph, objects_to_add, lights_to_add):
+        logger.debug("Setting intial object positions for frame %s", depsgraph.scene_eval.frame_current)
 
+        self.__as_camera_translator.add_cam_xform(0.0)
+
+        for inst in depsgraph.object_instances:
+            if inst.show_self:
+                obj = inst.object.original
+                if obj.type == 'MESH':
+                    objects_to_add[obj].add_instance_step(inst.persistent_id, inst.matrix_world)
+                elif obj.type == 'LIGHT':
+                    lights_to_add[obj].add_instance_step(inst.persistent_id, inst.matrix_world)
+
+    def __calc_motion_steps(self, depsgraph, engine, objects_to_add):
+        current_frame = depsgraph.scene_eval.frame_current
+
+        logger.debug("Processing motion steps for frame %s", current_frame)
+
+        for index, time in enumerate(self.__all_times[1:]):
+            new_frame = current_frame + time
+            int_frame = math.floor(new_frame)
+            subframe = new_frame - int_frame
+
+            engine.frame_set(int_frame, subframe=subframe)
+
+            if time in self.__cam_times:
+                self.__as_camera_translator.add_cam_xform(time)
+            
+            if time in self.__xform_times:
+                for inst in depsgraph.object_instances:
+                    if inst.show_self:
+                        obj = inst.object.original
+                        if obj.type == 'MESH':
+                            objects_to_add[obj].add_instance_step(inst.persistent_id, inst.matrix_world)
+
+            if time in self.__deform_times:
+                for translator in objects_to_add.values:
+                    translator.set_deform_key(time, depsgraph, index + 1)
+        
+        engine.frame_set(current_frame, subframe=0.0)
+
+    # Static utility methods
     @staticmethod
     def __get_sub_frames(scene, shutter_length, samples, times):
         assert samples > 1
@@ -580,5 +678,7 @@ class SceneTranslator(object):
         for seg in range(0, samples):
             times.update({scene.appleseed.shutter_open + (seg * segment_size)})
 
-    def __calc_initial_loctions(self, camera_translator, objects_to_add, lights_to_add, depsgraph):
-        pass
+    @staticmethod
+    def __round_up_pow2(deformation_blur_samples):
+        assert (deformation_blur_samples >= 2)
+        return 1 << (deformation_blur_samples - 1).bit_length()

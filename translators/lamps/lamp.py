@@ -43,6 +43,23 @@ logger = get_logger()
 
 class LampTranslator(Translator):
     def __init__(self, bl_lamp, asset_handler):
-        logger.debug("Creating light translator for %s", bl_lamp.name_full)
         super().__init__(bl_lamp, asset_handler)
+
+    def add_instance_step(self, instance_id, bl_matrix):
+        inst_id = f"{self.bl_obj_name}|{instance_id}"
+        self._instance_lib.add_xform_step(inst_id, self.convert_lamp_matrix(bl_matrix))
+
+    def create_entities(self, bl_scene, context=None):
+        pass
+
+    def flush_entities(self, as_main_assembly, as_project):
+        pass
+
+    def convert_lamp_matrix(self, m):
+        if self._bl_obj.data.type == 'AREA':
+            rot = mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
+            m = m @ rot
+
+        return self._convert_matrix(m)
+
 
