@@ -36,21 +36,13 @@ logger = get_logger()
 class Translator(object):
 
     # Constructor.
-    def __init__(self, bl_obj, asset_handler, x_form_times):
+    def __init__(self, bl_obj, asset_handler):
         self._asset_handler = asset_handler
         self._bl_obj = bl_obj
-        self._instance_lib = asr.BlTransformLibrary(x_form_times)
 
     @property
     def obj_name(self):
         return self._bl_obj.name_full
-
-    @property
-    def instances_size(self):
-        return self._instance_lib.get_size()
-
-    def add_instance_step(self, instance_id, bl_matrix):
-        raise NotImplementedError   
 
     def create_entities(self, bl_scene, context=None):
         raise NotImplementedError

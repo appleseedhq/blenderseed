@@ -39,6 +39,8 @@ class MaterialTranslator(Translator):
     def __init__(self, mat, asset_handler):
         super().__init__(mat, asset_handler)
 
+        self.__mat_name = str()
+
         self.__as_mat_params = dict()
         self.__as_mat = None
         self.__as_shader_params = dict()
@@ -58,7 +60,7 @@ class MaterialTranslator(Translator):
         return self._bl_obj.node_tree
 
     def create_entities(self, bl_scene):
-        mat_name = f"{self.obj_name}_mat"
+        self.__mat_name = f"{self.obj_name}_mat"
         surface_name = f"{self.obj_name}_surface"
         as_mat_data = self.bl_mat.appleseed
 
@@ -72,7 +74,7 @@ class MaterialTranslator(Translator):
         self.__as_shader = asr.SurfaceShader("physical_surface_shader", surface_name, {})
 
         if as_mat_data.mode == 'surface':
-            self.__as_mat = asr.Material('osl_material', mat_name, {})
+            self.__as_mat = asr.Material('osl_material', self.__mat_name, {})
         else:
             vol_name = f"{self.obj_name}_volume"
 
@@ -88,7 +90,7 @@ class MaterialTranslator(Translator):
                 {'color_space': 'linear_rgb'},
                 self._convert_color(as_mat_data.volume_scattering)))
 
-            self.__as_mat = asr.Material('generic_material', mat_name, {})
+            self.__as_mat = asr.Material('generic_material', self.__mat_name, {})
             self.__as_volume = asr.Volume('generic_volume', vol_name, {})
             self.__as_volume.set_parameters(self.__as_volume_params)
 

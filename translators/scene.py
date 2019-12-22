@@ -676,7 +676,7 @@ class SceneTranslator(object):
 
             if time in self.__deform_times:
                 for translator in objects_to_add.values:
-                    translator.set_deform_key(time, depsgraph, index + 1)
+                    translator.set_deform_key(time, depsgraph, index)
         
         engine.frame_set(current_frame, subframe=0.0)
 

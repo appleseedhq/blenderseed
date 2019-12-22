@@ -104,8 +104,9 @@ class NodeTreeTranslator(Translator):
 
                     if key in node.filepaths:
                         sub_texture = bl_scene.appleseed.sub_textures
-                        parameter_value = self._asset_handler.process_path(parameter_value.filepath,
-                                                                          AssetType.TEXTURE_ASSET, sub_texture)
+                        parameter_value = self._asset_handler.process_path(
+                            parameter_value.filepath,
+                            AssetType.TEXTURE_ASSET, sub_texture)
 
                     if parameter_type == "int checkbox":
                         parameter_type = "int"
@@ -118,12 +119,8 @@ class NodeTreeTranslator(Translator):
                     parameters[key] = parameter_type + " " + str(parameter_value) 
 
             if node.node_type == 'osl':
-                shader_file_name = self._asset_handler.process_path(node.file_name,
-                                                                   AssetType.SHADER_ASSET)
-                self.__as_shader_group.add_shader("shader",
-                                                  shader_file_name,
-                                                  node.name,
-                                                  parameters)
+                shader_file_name = self._asset_handler.process_path(node.file_name, AssetType.SHADER_ASSET)
+                self.__as_shader_group.add_shader("shader", shader_file_name, node.name, parameters)
             elif node.node_type == 'osl_script':
                 script = node.script
                 osl_path = bpy.path.abspath(script.filepath, library=script.library)
@@ -134,24 +131,19 @@ class NodeTreeTranslator(Translator):
                     source_code = code.read()
                     code.close()
 
-                self.__as_shader_group.add_source_shader("shader",
-                                                         node.bl_idname,
-                                                         node.name,
-                                                         source_code,
-                                                         parameters)
+                self.__as_shader_group.add_source_shader("shader", node.bl_idname, node.name, source_code, parameters)
 
             for output in node.outputs:
                 if output.is_linked:
                     for link in output.links:
                         if link.to_node in self.__shader_list or link.to_node.node_type == 'osl_surface':
-                            self.__as_shader_group.add_connection(node.name,
-                                                                  output.socket_osl_id,
-                                                                  link.to_node.name,
-                                                                  link.to_socket.socket_osl_id)
+                            self.__as_shader_group.add_connection(
+                                node.name,
+                                output.socket_osl_id,
+                                link.to_node.name,
+                                link.to_socket.socket_osl_id)
 
-        surface_shader_file = self._asset_handler.process_path(surface_shader.file_name,
-                                                              AssetType.SHADER_ASSET)
+        surface_shader_file = self._asset_handler.process_path(
+            surface_shader.file_name, AssetType.SHADER_ASSET)
 
-        self.__as_shader_group.add_shader("surface",
-                                          surface_shader_file,
-                                          surface_shader.name, {})
+        self.__as_shader_group.add_shader("surface", surface_shader_file, surface_shader.name, {})
