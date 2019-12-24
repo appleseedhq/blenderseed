@@ -187,15 +187,15 @@ class SceneTranslator(object):
         textures_to_add = dict()
 
         for obj in bpy.data.objects:
-            if obj.type == 'MESH':
-                logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
-                objects_to_add[obj] = MeshTranslator(obj, self.__export_mode, self.__asset_handler, self.__xform_times)
-            # elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
-            #     logger.debug("appleseed: Creating archive assembly translator for %s", obj.name_full)
-            #     objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler, self.__xform_times)
-            elif obj.type == 'LIGHT':
+            if obj.type == 'LIGHT':
                 logger.debug("appleseed: Creating light translator for %s", obj.name_full)
                 lights_to_add[obj] = LampTranslator(obj, self.__asset_handler)
+        #     elif obj.type == 'MESH':
+        #         logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
+        #         objects_to_add[obj] = MeshTranslator(obj, self.__export_mode, self.__asset_handler, self.__xform_times)
+        #     elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
+        #         logger.debug("appleseed: Creating archive assembly translator for %s", obj.name_full)
+        #         objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler, self.__xform_times)
 
         for mat in bpy.data.materials:
             logger.debug("appleseed: Creating material translator for %s", mat.name_full)
@@ -239,6 +239,10 @@ class SceneTranslator(object):
 
         # Flush entities
         as_scene = self.__project.get_scene()
+
+        self.__as_camera_translator.flush_entities(as_scene, self.__main_assembly, self.__project)
+        self.__as_world_translator.flush_entities(as_scene, self.__main_assembly, self.__project)
+
         for obj, trans in objects_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
             trans.flush_entities(as_scene, self.__main_assembly, self.__project)
@@ -575,24 +579,23 @@ class SceneTranslator(object):
     def __set_render_border_window(self, depsgraph, context=None):
         width, height = self.__viewport_resolution
 
-        min_x = 0
-        max_x = 0
-        min_y = 0
-        max_y = 0
-
         if depsgraph.scene_eval.render.use_border and self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             min_x = int(depsgraph.scene_eval.render.border_min_x * width)
             max_x = int(depsgraph.scene_eval.render.border_max_x * width) - 1
             min_y = height - int(depsgraph.scene_eval.render.border_max_y * height)
             max_y = height - int(depsgraph.scene_eval.render.border_min_y * height) - 1
 
+            self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
+
         else:
             # Interactive render borders
-            if context.space_data.use_render_border and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
+            if context is not None and context.space_data.use_render_border and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
                 min_x = int(context.space_data.render_border_min_x * width)
                 max_x = int(context.space_data.render_border_max_x * width) - 1
                 min_y = height - int(context.space_data.render_border_max_y * height)
                 max_y = height - int(context.space_data.render_border_min_y * height) - 1
+
+                self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
             elif depsgraph.scene_eval.render.use_border and context.region_data.view_perspective == 'CAMERA':
                 """
@@ -629,7 +632,7 @@ class SceneTranslator(object):
                 min_y = clamp_value(window_y_min, 0, height - 1)
                 max_y = clamp_value(window_y_max, 0, height - 1)
 
-        self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
+                self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
     def __load_searchpaths(self):
         logger.debug("Loading searchpaths")
@@ -647,10 +650,10 @@ class SceneTranslator(object):
         for inst in depsgraph.object_instances:
             if inst.show_self:
                 obj = inst.object.original
-                if obj.type == 'MESH':
-                    objects_to_add[obj].add_instance_step(inst.persistent_id, inst.matrix_world)
-                elif obj.type == 'LIGHT':
-                    lights_to_add[obj].add_instance_step(inst.persistent_id, inst.matrix_world)
+                if obj.type == 'LIGHT':
+                    lights_to_add[obj].add_instance_step(inst.persistent_id[0], inst.matrix_world)
+        #         elif obj.type == 'MESH':
+        #             objects_to_add[obj].add_instance_step(inst.persistent_id[0], inst.matrix_world)
 
     def __calc_motion_steps(self, depsgraph, engine, objects_to_add):
         current_frame = depsgraph.scene_eval.frame_current
@@ -667,16 +670,16 @@ class SceneTranslator(object):
             if time in self.__cam_times:
                 self.__as_camera_translator.add_cam_xform(engine, time)
             
-            if time in self.__xform_times:
-                for inst in depsgraph.object_instances:
-                    if inst.show_self:
-                        obj = inst.object.original
-                        if obj.type == 'MESH':
-                            objects_to_add[obj].add_instance_step(inst.persistent_id, inst.matrix_world)
+            # if time in self.__xform_times:
+            #     for inst in depsgraph.object_instances:
+            #         if inst.show_self:
+            #             obj = inst.object.original
+            #             if obj.type == 'MESH':
+            #                 objects_to_add[obj].add_instance_step(inst.persistent_id[0], inst.matrix_world)
 
-            if time in self.__deform_times:
-                for translator in objects_to_add.values:
-                    translator.set_deform_key(time, depsgraph, index)
+            # if time in self.__deform_times:
+            #     for translator in objects_to_add.values:
+            #         translator.set_deform_key(time, depsgraph, index)
         
         engine.frame_set(current_frame, subframe=0.0)
 

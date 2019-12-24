@@ -41,9 +41,9 @@ class InteractiveCameraTranslator(Translator):
     camera object for final rendering.  This includes support for stereoscopic rendering.
     """
 
-    def __init__(self, cam asset_handler):
+    def __init__(self, cam, asset_handler):
         logger.debug("Creating interactive camera translator")
-        super().__init__(cam asset_handler)
+        super().__init__(cam, asset_handler)
 
     def create_entities(self, bl_scene, context=None):
         pass

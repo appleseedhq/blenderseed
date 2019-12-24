@@ -63,6 +63,7 @@ class LampTranslator(Translator):
         return self._bl_obj
 
     def add_instance_step(self, instance_id, bl_matrix):
+        logger.debug("appleseed: Adding xform for %s", self.obj_name)
         inst_id = f"{self.obj_name}|{instance_id}"
         self.__matrices[inst_id] = self.__convert_lamp_matrix(bl_matrix)
 
@@ -108,6 +109,7 @@ class LampTranslator(Translator):
             self.__as_area_lamp_material = asr.Material('osl_material', mat_name, {'osl_surface': shader_name})
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
+        print(self.__lamp_model)
         if self.__lamp_model != 'area_lamp':
             radiance_name = self.__as_lamp_radiance.get_name()
             as_main_assembly.colors().insert(self.__as_lamp_radiance)

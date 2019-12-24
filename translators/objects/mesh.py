@@ -50,19 +50,17 @@ class MeshTranslator(Translator):
         self.__instance_lib = asr.BlTransformLibrary(xform_times)
 
         self.__as_mesh = None
-        self.__as_mesh_inst = None
         self.__as_mesh_inst_params = dict()
         self.__front_materials = dict()
         self.__back_materials = dict()
 
         self.__geom_dir = self._asset_handler.geometry_dir if export_mode == ProjectExportMode.PROJECT_EXPORT else None
 
-        self.__has_assembly = False
-        self.__ass = None
-
         self.__mesh_filenames = list()
 
         self.__deforming = bl_obj.appleseed.use_deformation_blur and is_object_deforming(bl_obj)
+
+        self.__mesh_filenames = list()
     
     @property
     def mesh_obj(self):
@@ -89,22 +87,120 @@ class MeshTranslator(Translator):
 
         me = self._bl_obj.to_mesh()
 
-        if self.__deforming:
-            self.__as_mesh.set_motion_segment_count(len(self.__xform_times) - 1)
-
         self.__convert_mesh(me)
+
+        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+            logger.debug("Writing mesh file object %s, time = 0", self._bl_obj.name)
+            self.__write_mesh(self.__mesh_name)
 
         self._bl_obj.to_mesh_clear()
 
-    def flush_entities(self, as_main_assembly, as_project):
-        pass
+        if self.__deforming:
+            self.__as_mesh.set_motion_segment_count(len(self.__xform_times) - 1)
 
     def set_deform_key(self, time, depsgraph, index):
         me = self._bl_obj.to_mesh()
 
+        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+            logger.debug("Writing mesh file object %s, time = %s", self._bl_obj.name, time)
+
+            self.__convert_mesh(me)
+            self.__write_mesh(self.__mesh_name)
+
         self.__set_mesh_key(me, index)
 
         self._bl_obj.to_mesh_clear()
+
+    def flush_entities(self, as_main_assembly, as_project):
+        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+            # Replace the MeshObject by an empty one referencing
+            # the binarymesh files we saved before.
+
+            params = {}
+
+            if len(self.__mesh_filenames) == 1:
+                # No motion blur. Write a single filename.
+                params['filename'] = f"_geometry/{self.__mesh_filenames[0]}"
+            else:
+                # Motion blur. Write one filename per motion pose.
+
+                params['filename'] = dict()
+
+                for i, f in enumerate(self.__mesh_filenames):
+                    params['filename'][str(i)] = f"_geometry/{f}"
+
+            self.__as_mesh = asr.MeshObject(self.__mesh_name, params)
+
+        mesh_name = self.__object_instance_mesh_name(self.__mesh_name)
+
+        self.__instance_lib.flush_instances(
+            as_main_assembly,
+            self.__as_mesh_inst_params,
+            mesh_name,
+            self.__front_materials,
+            self.__back_materials,
+            self.__export_mode
+        )
+
+    def __get_mesh_inst_params(self):
+        asr_obj_props = self._bl_obj.appleseed
+        object_instance_params = {
+            'visibility': {
+                'camera': asr_obj_props.camera_visible,
+                'light': asr_obj_props.light_visible,
+                'shadow': asr_obj_props.shadow_visible,
+                'diffuse': asr_obj_props.diffuse_visible,
+                'glossy': asr_obj_props.glossy_visible,
+                'specular': asr_obj_props.specular_visible,
+                'transparency': asr_obj_props.transparency_visible},
+            'medium_priority': asr_obj_props.medium_priority,
+            'shadow_terminator_correction': asr_obj_props.shadow_terminator_correction,
+            'photon_target': asr_obj_props.photon_target}
+
+        if asr_obj_props.object_sss_set != "":
+            object_instance_params['sss_set_id'] = asr_obj_props.object_sss_set
+
+        return object_instance_params
+
+    def __get_material_mappings(self):
+
+        material_slots = self._bl_obj.material_slots
+
+        front_mats = dict()
+        rear_mats = dict()
+
+        if len(material_slots) > 1:
+            for i, m in enumerate(material_slots):
+                if m.material is not None and m.material.use_nodes:
+                    mat_key = m.material.name_full + "_mat"
+                else:
+                    mat_key = "__default_material"
+                front_mats[f"slot-{i}"] = mat_key
+        else:
+            if len(material_slots) == 1:
+                if material_slots[0].material is not None and material_slots[0].material.use_nodes:
+                    mat_key = material_slots[0].material.name_full + "_mat"
+                else:
+                    mat_key = "__default_material"
+                front_mats["default"] = mat_key
+            else:
+                mesh_name = f"{self.obj_name}_obj"
+                logger.debug("Mesh %s has no materials, assigning default material instead", mesh_name)
+                front_mats["default"] = "__default_material"
+
+        double_sided_materials = False if self._bl_obj.appleseed.double_sided is False else True
+
+        if double_sided_materials:
+            rear_mats = front_mats
+
+        return front_mats, rear_mats
+
+    def __get_mesh_params(self):
+        params = {}
+        if self._bl_obj.appleseed.object_alpha_texture is not None:
+            params['alpha_map'] = self._bl_obj.appleseed.object_alpha_texture.name_full + "_inst"
+
+        return params
 
     def __convert_mesh(self, me):
         main_timer = Timer()
@@ -192,9 +288,49 @@ class MeshTranslator(Translator):
         loop_length = len(me.loops)
         loops_pointer = me.loops[0].as_pointer()
 
-        asr.export_mesh_blender80_pose(self.__as_mesh,
-                                       key_index,
-                                       loops_pointer,
-                                       loop_length,
-                                       vertex_pointer,
-                                       do_normals)
+        asr.export_mesh_blender80_pose(
+            self.__as_mesh,
+            key_index,
+            loops_pointer,
+            loop_length,
+            vertex_pointer,
+            do_normals)
+
+    def __write_mesh(self, mesh_name):
+        # Compute tangents if needed.
+        if self._bl_obj.data.appleseed.smooth_tangents and self._bl_obj.data.appleseed.export_uvs:
+            asr.compute_smooth_vertex_tangents(self.__as_mesh)
+
+        # Compute the mesh signature and the mesh filename.
+        bl_hash = asr.MurmurHash()
+        asr.compute_signature(bl_hash, self.__as_mesh)
+
+        logger.debug("Mesh info:")
+        logger.debug("   get_triangle_count       %s", self.__as_mesh.get_triangle_count())
+        logger.debug("   get_material_slot_count  %s", self.__as_mesh.get_material_slot_count())
+        logger.debug("   get_vertex_count         %s", self.__as_mesh.get_vertex_count())
+        logger.debug("   get_tex_coords_count     %s", self.__as_mesh.get_tex_coords_count())
+        logger.debug("   get_vertex_normal_count  %s", self.__as_mesh.get_vertex_normal_count())
+        logger.debug("   get_vertex_tangent_count %s", self.__as_mesh.get_vertex_tangent_count())
+        logger.debug("   get_motion_segment_count %s", self.__as_mesh.get_motion_segment_count())
+
+        logger.debug("Computed mesh signature for object %s, hash: %s", self.obj_name, bl_hash)
+
+        # Save the mesh filename for later use.
+        mesh_filename = f"{bl_hash}.binarymesh"
+        self.__mesh_filenames.append(mesh_filename)
+
+        # Write the binarymesh file.
+        mesh_abs_path = os.path.join(self.__geom_dir, mesh_filename)
+
+        if not os.path.exists(mesh_abs_path):
+            logger.debug("Writing mesh for object %s to %s", mesh_name, mesh_abs_path)
+            asr.MeshObjectWriter.write(self.__as_mesh, "mesh", mesh_abs_path)
+        else:
+            logger.debug("Skipping already saved mesh file for mesh %s", mesh_name)
+
+    def __object_instance_mesh_name(self, mesh_name):
+        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+            return f"{mesh_name}.mesh"
+
+        return mesh_name
