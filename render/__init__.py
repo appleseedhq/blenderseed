@@ -101,11 +101,10 @@ class RenderAppleseed(bpy.types.RenderEngine):
     def __del__(self):
         logger.debug("Deleting render engine")
 
-        if self.__interactive_scene_translator is not None:
-            try:
-                self.__stop_rendering()
-            except:
-                pass
+        try:
+            self.__stop_rendering()
+        except:
+            pass
 
     #
     # RenderEngine methods.

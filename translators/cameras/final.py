@@ -39,7 +39,6 @@ logger = get_logger()
 class RenderCameraTranslator(Translator):
 
     def __init__(self, cam, asset_handler):
-        logger.debug("Creating camera translator")
         super().__init__(cam, asset_handler)
 
         self.__as_camera = None
@@ -52,8 +51,6 @@ class RenderCameraTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene, context=None, engine=None):
-        logger.debug("Creating camera entity")
-
         self.__cam_model = self.__get_model()
 
         self.__as_camera = asr.Camera(self.__cam_model, "Camera", {})

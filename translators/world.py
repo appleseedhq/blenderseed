@@ -58,8 +58,6 @@ class WorldTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene):
-        logger.debug("Creating world entity")
-
         as_world = self.bl_world.appleseed_sky
 
         self.__as_env_type = as_world.env_type

@@ -54,7 +54,6 @@ class TextureTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene):
-        logger.debug("Creating entity for %s", self.obj_name)
         self.__as_tex_params = self.__get_tex_params()
         self.__as_tex = asr.Texture('disk_texture_2d', self.obj_name, self.__as_tex_params, [])
 
@@ -66,7 +65,6 @@ class TextureTranslator(Translator):
             asr.Transformf(asr.Matrix4f.identity()))
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
-        logger.debug("Flushing entity for %s", self.obj_name)
         scene = as_project.get_scene()
         tex_name = self.__as_tex.get_name()
         scene.textures().insert(self.__as_tex)

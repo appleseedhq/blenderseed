@@ -142,7 +142,7 @@ class SceneTranslator(object):
         return self.__project
 
     def translate_scene(self, engine, depsgraph, context=None):
-        logger.debug("Translating scene %s", depsgraph.scene_eval.name)
+        logger.debug("appleseed: Translating scene %s", depsgraph.scene_eval.name)
 
         prof_timer = Timer()
         prof_timer.start()
@@ -172,12 +172,14 @@ class SceneTranslator(object):
         # Create camera
         if depsgraph.scene_eval.camera is not None:
             # Create interactive or final render camera
+            logger.debug("appleseed: Creating camera translator")
             self.__as_camera_translator = RenderCameraTranslator(depsgraph.scene_eval.camera, self.__asset_handler)
         else:
             engine.error_set("appleseed: No camera in scene!")
 
         # Create world
         if depsgraph.scene_eval.world is not None and depsgraph.scene_eval.world.appleseed_sky.env_type != 'none':
+            logger.debug("appleseed: Creating world translator")
             self.__as_world_translator = WorldTranslator(depsgraph.scene_eval.world, self.__asset_handler)
 
         # Blender scene processing
@@ -208,8 +210,11 @@ class SceneTranslator(object):
                 textures_to_add[tex] = TextureTranslator(tex, self.__asset_handler)
 
         # Create camera, world, material and texture entities
+        logger.debug("appleseed: Creating camera entity")
         self.__as_camera_translator.create_entities(depsgraph.scene_eval, context, engine)
-        self.__as_world_translator.create_entities(depsgraph.scene_eval)
+        if self.__as_world_translator is not None:
+            logger.debug("appleseed: Creating world entity")
+            self.__as_world_translator.create_entities(depsgraph.scene_eval)
 
         for obj, trans in materials_to_add.items():
             logger.debug("appleseed: Creating entity for translator %s", obj.name_full)
@@ -235,7 +240,7 @@ class SceneTranslator(object):
         # Create 3D entities
         for obj, trans in objects_to_add.items():
             logger.debug("appleseed: Creating mesh entity for %s", obj.name_full)
-            trans.create_entities(depsgraph.scene_eval)
+            trans.create_entities(depsgraph.scene_eval, len(self.__deform_times))
         for obj, trans in lights_to_add.items():
             logger.debug("appleseed: Creating light entity for %s", obj.name_full)
             trans.create_entities(depsgraph.scene_eval)
@@ -248,7 +253,8 @@ class SceneTranslator(object):
         as_scene = self.__project.get_scene()
 
         self.__as_camera_translator.flush_entities(as_scene, self.__main_assembly, self.__project)
-        self.__as_world_translator.flush_entities(as_scene, self.__main_assembly, self.__project)
+        if self.__as_world_translator is not None:
+            self.__as_world_translator.flush_entities(as_scene, self.__main_assembly, self.__project)
 
         for obj, trans in objects_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
@@ -291,7 +297,7 @@ class SceneTranslator(object):
 
     # Internal methods.
     def __create_project(self, depsgraph):
-        logger.debug("Creating appleseed project")
+        logger.debug("appleseed: Creating appleseed project")
 
         self.__project = asr.Project(depsgraph.scene_eval.name)
 
@@ -319,7 +325,7 @@ class SceneTranslator(object):
         self.__create_null_material()
 
     def __create_default_material(self):
-        logger.debug("Creating default material")
+        logger.debug("appleseed: Creating default material")
 
         surface_shader = asr.SurfaceShader("diagnostic_surface_shader", "__default_surface_shader", {'mode': 'facing_ratio'})
 
@@ -329,7 +335,7 @@ class SceneTranslator(object):
         self.__main_assembly.materials().insert(material)
 
     def __create_null_material(self):
-        logger.debug("Creating null material")
+        logger.debug("appleseed: Creating null material")
 
         material = asr.Material('generic_material', "__null_material", {})
 
@@ -361,7 +367,7 @@ class SceneTranslator(object):
         self.__xform_times = sorted(list(self.__xform_times))
 
     def __translate_render_settings(self, depsgraph):
-        logger.debug("Translating render settings")
+        logger.debug("appleseed: Translating render settings")
 
         scene = depsgraph.scene_eval
         asr_scene_props = scene.appleseed
@@ -464,7 +470,7 @@ class SceneTranslator(object):
         conf_interactive.set_parameters(parameters)
 
     def __translate_frame(self, depsgraph):
-        logger.debug("Translating frame")
+        logger.debug("appleseed: Translating frame")
 
         scene = depsgraph.scene_eval
 
@@ -506,7 +512,7 @@ class SceneTranslator(object):
         self.__viewport_resolution = [width, height]
 
     def __set_aovs(self, depsgraph):
-        logger.debug("Translating AOVs")
+        logger.debug("appleseed: Translating AOVs")
 
         asr_scene_props = depsgraph.scene_eval.appleseed
 
@@ -642,7 +648,7 @@ class SceneTranslator(object):
                 self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
 
     def __load_searchpaths(self):
-        logger.debug("Loading searchpaths")
+        logger.debug("appleseed: Loading searchpaths")
         paths = self.__project.get_search_paths()
 
         paths.extend(path for path in self.__asset_handler.searchpaths if path not in paths)
@@ -650,7 +656,7 @@ class SceneTranslator(object):
         self.__project.set_search_paths(paths)
 
     def __calc_initial_positions(self, depsgraph, engine, objects_to_add, lights_to_add):
-        logger.debug("Setting intial object positions for frame %s", depsgraph.scene_eval.frame_current)
+        logger.debug("appleseed: Setting intial object positions for frame %s", depsgraph.scene_eval.frame_current)
 
         self.__as_camera_translator.add_cam_xform(engine, 0.0)
 
@@ -665,7 +671,7 @@ class SceneTranslator(object):
     def __calc_motion_steps(self, depsgraph, engine, objects_to_add):
         current_frame = depsgraph.scene_eval.frame_current
 
-        logger.debug("Processing motion steps for frame %s", current_frame)
+        logger.debug("appleseed: Processing motion steps for frame %s", current_frame)
 
         for index, time in enumerate(self.__all_times[1:]):
             new_frame = current_frame + time

@@ -40,8 +40,6 @@ class MeshTranslator(Translator):
     def __init__(self, bl_obj, export_mode, asset_handler, xform_times):
         super().__init__(bl_obj, asset_handler)
 
-        self.__xform_times = xform_times
-
         self.__export_mode = export_mode
 
         self.__mesh_name = str()
@@ -76,7 +74,7 @@ class MeshTranslator(Translator):
         inst_id = f"{self.obj_name}|{instance_id}"
         self.__instance_lib.add_xform_step(time, inst_id, self._convert_matrix(bl_matrix))
 
-    def create_entities(self, bl_scene, context=None):
+    def create_entities(self, bl_scene, num_def_times, context=None):
         self.__mesh_name = f"{self.obj_name}_obj"
 
         self.__mesh_params = self.__get_mesh_params()
@@ -98,7 +96,7 @@ class MeshTranslator(Translator):
         self._bl_obj.to_mesh_clear()
 
         if self.__deforming:
-            self.__as_mesh.set_motion_segment_count(len(self.__xform_times) - 1)
+            self.__as_mesh.set_motion_segment_count(num_def_times - 1)
 
     def set_deform_key(self, time, depsgraph, index):
         me = self._bl_obj.to_mesh()
@@ -232,7 +230,8 @@ class MeshTranslator(Translator):
         return front_mats, rear_mats
 
     def __get_mesh_params(self):
-        params = {}
+        params = dict()
+
         if self._bl_obj.appleseed.object_alpha_texture is not None:
             params['alpha_map'] = self._bl_obj.appleseed.object_alpha_texture.name_full + "_inst"
 
