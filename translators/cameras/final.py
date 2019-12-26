@@ -42,7 +42,6 @@ class RenderCameraTranslator(Translator):
         super().__init__(cam, asset_handler)
 
         self.__as_camera = None
-        self.__xform_seq = asr.TransformSequence()
 
         self.__cam_model = None
 
@@ -60,15 +59,15 @@ class RenderCameraTranslator(Translator):
         self.__as_camera.set_parameters(self.__as_cam_params)
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
-        logger.debug("Flushing camera entity, num xform keys = %s", self.__xform_seq.size())
-        self.__xform_seq.optimize()
-        self.__as_camera.set_transform_sequence(self.__xform_seq)
+        logger.debug("Flushing camera entity, num xform keys = %s", self.__as_camera.transform_sequence().size())
+
+        self.__as_camera.transform_sequence().optimize()
 
         as_scene.cameras().insert(self.__as_camera)
         self.__as_camera = as_scene.cameras().get_by_name("Camera")
 
     def add_cam_xform(self, engine, time):
-        self.__xform_seq.set_transform(
+        self.__as_camera.transform_sequence().set_transform(
             time,
             self._convert_matrix(engine.camera_model_matrix(self.bl_camera)))
 

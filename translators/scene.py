@@ -172,8 +172,12 @@ class SceneTranslator(object):
         # Create camera
         if depsgraph.scene_eval.camera is not None:
             # Create interactive or final render camera
-            logger.debug("appleseed: Creating camera translator")
-            self.__as_camera_translator = RenderCameraTranslator(depsgraph.scene_eval.camera, self.__asset_handler)
+            if self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER:
+                logger.debug("appleseed: Creating interactive render camera translator")
+                self.__as_camera_translator = InteractiveCameraTranslator(depsgraph.scene_eval.camera, self.__asset_handler)
+            else:
+                logger.debug("appleseed: Creating final render camera translator")
+                self.__as_camera_translator = RenderCameraTranslator(depsgraph.scene_eval.camera, self.__asset_handler)
         else:
             engine.error_set("appleseed: No camera in scene!")
 
@@ -194,7 +198,7 @@ class SceneTranslator(object):
                 lights_to_add[obj] = LampTranslator(obj, self.__asset_handler)
             elif obj.type == 'MESH':
                 logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
-                objects_to_add[obj] = MeshTranslator(obj.evaluated_get(depsgraph), self.__export_mode, self.__asset_handler, self.__xform_times)
+                objects_to_add[obj] = MeshTranslator(obj.evaluated_get(depsgraph), self.__export_mode, self.__asset_handler, list(self.__xform_times))
         #     elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
         #         logger.debug("appleseed: Creating archive assembly translator for %s", obj.name_full)
         #         objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler, self.__xform_times)

@@ -124,17 +124,17 @@ class RenderAppleseed(bpy.types.RenderEngine):
                 self.__add_render_passes(depsgraph.scene)
                 self.__render_final(depsgraph)
 
-    # def view_update(self, context, depsgraph):
-    #     if self.__interactive_scene_translator is None:
-    #         self.__start_interactive_render(context, depsgraph)
-    #     else:
-    #         self.__pause_rendering()
-    #         logger.debug("Updating scene")
-    #         self.__interactive_scene_translator.update_scene(context, depsgraph)
-    #         self.__restart_interactive_render()
+    def view_update(self, context, depsgraph):
+        if self.__interactive_scene_translator is None:
+            self.__start_interactive_render(context, depsgraph)
+        # else:
+        #     self.__pause_rendering()
+        #     logger.debug("Updating scene")
+        #     self.__interactive_scene_translator.update_scene(context, depsgraph)
+        #     self.__restart_interactive_render()
 
-    # def view_draw(self, context, depsgraph):
-    #     self.__draw_pixels(context, depsgraph)
+    def view_draw(self, context, depsgraph):
+        self.__draw_pixels(context, depsgraph)
 
     def update_render_passes(self, scene=None, renderlayer=None):
         logger.debug("Updating render passes")
@@ -285,11 +285,9 @@ class RenderAppleseed(bpy.types.RenderEngine):
         assert (self.__tile_callback is None)
         assert (self.__render_thread is None)
 
-        logger.debug("Starting interactive rendering")
-        self.__is_interactive = True
-        RenderAppleseed.__interactive_session = True
-
-        logger.debug("Translating scene for interactive rendering")
+        logger.debug("appleseed: Starting interactive rendering")
+        
+        logger.debug("appleseed: Translating scene for interactive rendering")
 
         self.__interactive_scene_translator = SceneTranslator.create_interactive_render_translator(depsgraph)
         self.__interactive_scene_translator.translate_scene(self, depsgraph, context)
@@ -312,7 +310,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         Restart the interactive renderer.
         """
 
-        logger.debug("Start rendering")
+        logger.debug("appleseed: Start rendering")
         self.__renderer_controller.set_status(asr.IRenderControllerStatus.ContinueRendering)
         self.__render_thread = RenderThread(self.__renderer, self.__renderer_controller)
         self.__render_thread.start()
@@ -323,7 +321,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         # Signal appleseed to stop rendering.
-        logger.debug("Pause rendering")
+        logger.debug("appleseed: Pause rendering")
         try:
             if self.__render_thread:
                 self.__renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
@@ -339,7 +337,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         # Signal appleseed to stop rendering.
-        logger.debug("Abort rendering")
+        logger.debug("appleseed: Abort rendering")
         try:
             if self.__render_thread:
                 self.__renderer_controller.set_status(asr.IRenderControllerStatus.AbortRendering)
@@ -363,7 +361,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.unbind_display_space_shader()
 
     def __add_render_passes(self, scene):
-        logger.debug("Adding render passes")
+        logger.debug("appleseed: Adding render passes")
         asr_scene_props = scene.appleseed
 
         if asr_scene_props.screen_space_velocity_aov:
