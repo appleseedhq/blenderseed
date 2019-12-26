@@ -54,6 +54,8 @@ class MeshTranslator(Translator):
         self.__front_materials = dict()
         self.__back_materials = dict()
 
+        self.__ass = None
+
         self.__geom_dir = self._asset_handler.geometry_dir if export_mode == ProjectExportMode.PROJECT_EXPORT else None
 
         self.__mesh_filenames = list()
@@ -70,9 +72,9 @@ class MeshTranslator(Translator):
     def instances_size(self):
         return self.__instance_lib.get_size()   
 
-    def add_instance_step(self, instance_id, bl_matrix):
+    def add_instance_step(self, time, instance_id, bl_matrix):
         inst_id = f"{self.obj_name}|{instance_id}"
-        self.__instance_lib.add_xform_step(inst_id, self._convert_matrix(bl_matrix))
+        self.__instance_lib.add_xform_step(time, inst_id, self._convert_matrix(bl_matrix))
 
     def create_entities(self, bl_scene, context=None):
         self.__mesh_name = f"{self.obj_name}_obj"
@@ -106,12 +108,12 @@ class MeshTranslator(Translator):
 
             self.__convert_mesh(me)
             self.__write_mesh(self.__mesh_name)
-
-        self.__set_mesh_key(me, index)
+        else:
+            self.__set_mesh_key(me, index)
 
         self._bl_obj.to_mesh_clear()
 
-    def flush_entities(self, as_main_assembly, as_project):
+    def flush_entities(self, as_scene, as_main_assembly, as_project):
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Replace the MeshObject by an empty one referencing
             # the binarymesh files we saved before.
@@ -133,14 +135,48 @@ class MeshTranslator(Translator):
 
         mesh_name = self.__object_instance_mesh_name(self.__mesh_name)
 
-        self.__instance_lib.flush_instances(
-            as_main_assembly,
-            self.__as_mesh_inst_params,
-            mesh_name,
-            self.__front_materials,
-            self.__back_materials,
-            self.__export_mode
-        )
+        obj_inst_name = f"{self.obj_name}_inst"
+
+        needs_assembly = self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__instance_lib.needs_assembly()
+
+        if needs_assembly:
+            ass_name = f"{self.obj_name}_ass"
+            self.__ass = asr.Assembly(ass_name)
+
+            self.__as_mesh_inst = asr.ObjectInstance(
+                obj_inst_name,
+                self.__as_mesh_inst_params,
+                mesh_name,
+                asr.Transformd(asr.Matrix4d().identity()),
+                self.__front_materials,
+                self.__back_materials)
+
+            self.__ass.objects().insert(self.__as_mesh)
+            self.__as_mesh = self.__ass.objects().get_by_name(mesh_name)
+
+            self.__ass.object_instances().insert(self.__as_mesh_inst)
+            self.__as_mesh_inst = self.__ass.object_instances().get_by_name(obj_inst_name)
+
+            as_main_assembly.assemblies().insert(self.__ass)
+            self.__ass = as_main_assembly.assemblies().get_by_name(ass_name)
+
+            self.__instance_lib.flush_instances(as_main_assembly, ass_name)
+
+        else:
+            self.__as_mesh_inst = asr.ObjectInstance(
+                obj_inst_name,
+                self.__as_mesh_inst_params,
+                mesh_name,
+                self.__instance_lib.get_single_transform(),
+                self.__front_materials,
+                self.__back_materials)
+
+            as_main_assembly.objects().insert(self.__as_mesh)
+            self.__as_mesh = as_main_assembly.objects().get_by_name(mesh_name)
+
+            as_main_assembly.object_instances().insert(self.__as_mesh_inst)
+            self.__as_mesh_inst = as_main_assembly.object_instances().get_by_name(obj_inst_name)
+
 
     def __get_mesh_inst_params(self):
         asr_obj_props = self._bl_obj.appleseed
@@ -172,7 +208,7 @@ class MeshTranslator(Translator):
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
                 if m.material is not None and m.material.use_nodes:
-                    mat_key = m.material.name_full + "_mat"
+                    mat_key = f"{m.material.name_full}_mat"
                 else:
                     mat_key = "__default_material"
                 front_mats[f"slot-{i}"] = mat_key

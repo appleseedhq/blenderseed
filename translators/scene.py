@@ -190,20 +190,22 @@ class SceneTranslator(object):
             if obj.type == 'LIGHT':
                 logger.debug("appleseed: Creating light translator for %s", obj.name_full)
                 lights_to_add[obj] = LampTranslator(obj, self.__asset_handler)
-        #     elif obj.type == 'MESH':
-        #         logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
-        #         objects_to_add[obj] = MeshTranslator(obj, self.__export_mode, self.__asset_handler, self.__xform_times)
+            elif obj.type == 'MESH':
+                logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
+                objects_to_add[obj] = MeshTranslator(obj.evaluated_get(depsgraph), self.__export_mode, self.__asset_handler, self.__xform_times)
         #     elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
         #         logger.debug("appleseed: Creating archive assembly translator for %s", obj.name_full)
         #         objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler, self.__xform_times)
 
         for mat in bpy.data.materials:
-            logger.debug("appleseed: Creating material translator for %s", mat.name_full)
-            materials_to_add[mat] = MaterialTranslator(mat, self.__asset_handler)
+            if mat.users > 0:
+                logger.debug("appleseed: Creating material translator for %s", mat.name_full)
+                materials_to_add[mat] = MaterialTranslator(mat, self.__asset_handler)
 
-        for tex in bpy.data.textures:
-            logger.debug("appleseed: Creating texture translator for %s", tex.name_full)
-            textures_to_add[tex] = TextureTranslator(tex, self.__asset_handler)
+        for tex in bpy.data.images:
+            if tex.users > 1:
+                logger.debug("appleseed: Creating texture translator for %s", tex.name_full)
+                textures_to_add[tex] = TextureTranslator(tex, self.__asset_handler)
 
         # Create camera, world, material and texture entities
         self.__as_camera_translator.create_entities(depsgraph.scene_eval, context, engine)
@@ -224,6 +226,11 @@ class SceneTranslator(object):
             if objects_to_add[translator].instances_size == 0:
                 logger.debug("appleseed: Translator %s has no instances, deleting...", translator)
                 del objects_to_add[translator]
+
+        for translator in list(lights_to_add.keys()):
+            if len(lights_to_add[translator].matrices) == 0:
+                logger.debug("appleseed: Translator %s has no instances, deleting...", translator)
+                del lights_to_add[translator]
 
         # Create 3D entities
         for obj, trans in objects_to_add.items():
@@ -652,8 +659,8 @@ class SceneTranslator(object):
                 obj = inst.object.original
                 if obj.type == 'LIGHT':
                     lights_to_add[obj].add_instance_step(inst.persistent_id[0], inst.matrix_world)
-        #         elif obj.type == 'MESH':
-        #             objects_to_add[obj].add_instance_step(inst.persistent_id[0], inst.matrix_world)
+                elif obj.type == 'MESH':
+                    objects_to_add[obj].add_instance_step(0.0, inst.persistent_id[0], inst.matrix_world)
 
     def __calc_motion_steps(self, depsgraph, engine, objects_to_add):
         current_frame = depsgraph.scene_eval.frame_current
@@ -670,12 +677,12 @@ class SceneTranslator(object):
             if time in self.__cam_times:
                 self.__as_camera_translator.add_cam_xform(engine, time)
             
-            # if time in self.__xform_times:
-            #     for inst in depsgraph.object_instances:
-            #         if inst.show_self:
-            #             obj = inst.object.original
-            #             if obj.type == 'MESH':
-            #                 objects_to_add[obj].add_instance_step(inst.persistent_id[0], inst.matrix_world)
+            if time in self.__xform_times:
+                for inst in depsgraph.object_instances:
+                    if inst.show_self:
+                        obj = inst.object.original
+                        if obj.type == 'MESH':
+                            objects_to_add[obj].add_instance_step(time, inst.persistent_id[0], inst.matrix_world)
 
             # if time in self.__deform_times:
             #     for translator in objects_to_add.values:

@@ -62,6 +62,10 @@ class LampTranslator(Translator):
     def bl_lamp(self):
         return self._bl_obj
 
+    @property
+    def matrices(self):
+        return self.__matrices
+
     def add_instance_step(self, instance_id, bl_matrix):
         logger.debug("appleseed: Adding xform for %s", self.obj_name)
         inst_id = f"{self.obj_name}|{instance_id}"

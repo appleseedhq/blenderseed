@@ -60,6 +60,8 @@ class RenderCameraTranslator(Translator):
 
         self.__as_cam_params = self.__get_cam_params(bl_scene, engine)
 
+        self.__as_camera.set_parameters(self.__as_cam_params)
+
     def flush_entities(self, as_scene, as_main_assembly, as_project):
         logger.debug("Flushing camera entity, num xform keys = %s", self.__xform_seq.size())
         self.__xform_seq.optimize()
