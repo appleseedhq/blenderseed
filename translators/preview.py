@@ -205,8 +205,7 @@ class PreviewRenderer(object):
 
     def __create_material(self, scene):
         self.__mat_translator.create_entities(scene)
-        self.__mat_translator.flush_entities(self.__main_assembly,
-                                             self.__project)
+        self.__mat_translator.flush_entities(scene, self.__main_assembly, self.__project)
         if self.__mat_tree_translator is not None:
             self.__mat_tree_translator.create_entities(scene)
             self.__mat_tree_translator.flush_entities(self.__main_assembly,
