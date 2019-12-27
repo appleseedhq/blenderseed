@@ -71,6 +71,25 @@ class RenderCameraTranslator(Translator):
             time,
             self._convert_matrix(engine.camera_model_matrix(self.bl_camera)))
 
+    def update_mult_cam_xform(self, engine, bl_scene, time):
+        camera = self.bl_camera
+
+        aspect_ratio = util.calc_film_aspect_ratio(bl_scene)
+
+        film_width, film_height = util.calc_film_dimensions(aspect_ratio, camera.data, 1)
+
+        self.__as_camera.transform_sequence().set_transform(
+            time,
+            self._convert_matrix(engine.camera_model_matrix(self.bl_camera)))
+
+        params = self.__as_camera.get_parameters()
+
+        x_aspect_comp = 1 if aspect_ratio > 1 else 1 / aspect_ratio
+
+        params['shift_x'] = (engine.camera_shift_x(camera) + camera.data.shift_x) * x_aspect_comp * film_width
+
+        self.__as_camera.set_parameters(params)
+
     # Internal methods
     def __get_model(self):
         cam_mapping = {'PERSP': 'pinhole_camera',

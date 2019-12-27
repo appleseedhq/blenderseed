@@ -288,8 +288,19 @@ class SceneTranslator(object):
         prof_timer.stop()
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
-    def update_multiview_camera(self):
-        pass
+    def update_multiview_camera(self, engine, depsgraph):
+        current_frame = depsgraph.scene_eval.frame_current
+
+        for time in self.__cam_times:
+            new_frame = current_frame + time
+            int_frame = math.floor(new_frame)
+            subframe = new_frame - int_frame
+
+            engine.frame_set(int_frame, subframe=subframe)
+
+            self.__as_camera_translator.update_mult_cam_xform(engine, depsgraph.scene_eval, time)
+        
+        engine.frame_set(current_frame, subframe=0.0)
 
     def write_project(self, export_path):
         filename = bpy.path.ensure_ext(bpy.path.abspath(export_path), '.appleseed')

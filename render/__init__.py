@@ -229,7 +229,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
                 for view in depsgraph.scene.render.views[1:]:
                     self.active_view_set(view.name)
-                    scene_translator.update_multiview_camera()
+                    scene_translator.update_multiview_camera(self, depsgraph)
                     self.__start_final_render(depsgraph.scene, scene_translator.as_project)
             else:
                 scene_translator.translate_scene(self, depsgraph)
