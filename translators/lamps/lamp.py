@@ -312,17 +312,12 @@ class LampTranslator(Translator):
             m = m @ rot
 
         matrix = asr.Matrix4d([m[0][0], m[0][1], m[0][2], m[0][3],
-                               m[1][0], m[1][1], m[1][2], m[1][3],
                                m[2][0], m[2][1], m[2][2], m[2][3],
+                               -m[1][0], -m[1][1], -m[1][2], -m[1][3],
                                m[3][0], m[3][1], m[3][2], m[3][3]])
-
-        rotation_modify = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(-90.0))
-
-        matrix = rotation_modify * matrix
 
         return asr.Transformd(matrix)
 
-    
     @staticmethod
     def __find_shader_dir():
         for directory in get_osl_search_paths():
