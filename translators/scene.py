@@ -705,9 +705,9 @@ class SceneTranslator(object):
                         if obj.type == 'MESH':
                             objects_to_add[obj].add_instance_step(time, inst.persistent_id[0], inst.matrix_world)
 
-            # if time in self.__deform_times:
-            #     for translator in objects_to_add.values:
-            #         translator.set_deform_key(time, depsgraph, index)
+            if time in self.__deform_times:
+                for translator in objects_to_add.values():
+                    translator.set_deform_key(time, depsgraph, index)
         
         engine.frame_set(current_frame, subframe=0.0)
 
