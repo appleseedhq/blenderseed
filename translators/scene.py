@@ -125,14 +125,17 @@ class SceneTranslator(object):
         self.__as_material_translators = dict()
         self.__as_texture_translators = dict()
 
-        # Motion Steps
+        # Motion Steps.
         self.__all_times = {0.0}
         self.__cam_times = {0.0}
         self.__xform_times = {0.0}
         self.__deform_times = {0.0}
 
-        # Interactive tools
+        # Interactive tools.
         self.__viewport_resolution = None
+
+        # Render crop window.
+        self.__crop_window = None
 
         self.__project = None
         self.__frame = None
@@ -161,7 +164,10 @@ class SceneTranslator(object):
 
         self.__frame = asr.Frame("beauty", frame_params, aovs)
 
-        self.__set_render_border_window(depsgraph, context)
+        self.__calc_crop_window(depsgraph, context)
+
+        if self.__crop_window is not None:
+            self.__frame.set_crop_window(self.__crop_window)
 
         if len(depsgraph.scene_eval.appleseed.post_processing_stages) > 0 and self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             self.__set_post_process(depsgraph)
@@ -198,7 +204,7 @@ class SceneTranslator(object):
                 lights_to_add[obj] = LampTranslator(obj, self.__asset_handler)
             elif obj.type == 'MESH':
                 logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
-                objects_to_add[obj] = MeshTranslator(obj.evaluated_get(depsgraph), self.__export_mode, self.__asset_handler, list(self.__xform_times))
+                objects_to_add[obj] = MeshTranslator(obj.evaluated_get(depsgraph), self.__export_mode, self.__asset_handler)
         #     elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
         #         logger.debug("appleseed: Creating archive assembly translator for %s", obj.name_full)
         #         objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler, self.__xform_times)
@@ -302,6 +308,59 @@ class SceneTranslator(object):
         
         engine.frame_set(current_frame, subframe=0.0)
 
+    def update_scene(self, depsgraph, context):
+        # Check for updated datablocks.
+        for update in depsgraph.updates:
+            if isinstance(update.id, bpy.types.Material):
+                pass
+            elif isinstance(update.id, bpy.types.Object):
+                if update.id.type == 'MESH':
+                    if update.is_updated_geometry:
+                        self.__as_object_translators[update.id.original].update_obj_instance(depsgraph.scene_eval)
+
+    def check_view_window(self, depsgraph, context):
+        updates = dict()
+
+        # Check if camera xform has updated.
+        updates['cam_xform'] = self.__as_camera_translator.is_matrix_updated(context)
+
+        # Check if camera params have changed (zoom, focal length, etc...).
+        updates['cam_params'] = self.__as_camera_translator.are_cam_params_updated(depsgraph.scene_eval, context)
+
+        # Check if camera model has changed.
+        updates['cam_model'] = self.__as_camera_translator.is_camera_model_updated(context)
+
+        # Check if frame size has changed.
+        current_resolution = self.__viewport_resolution
+        self.__calc_viewport_resolution(depsgraph, context)
+        updates['frame_size'] = current_resolution != self.__viewport_resolution
+
+        # Check if crop window has changed.
+        current_crop_window = self.__crop_window
+        self.__calc_crop_window(depsgraph, context)
+        updates['crop_window'] = current_crop_window != self.__crop_window
+        
+        return updates
+
+    def update_view_window(self, depsgraph, context, updates):
+        if updates['cam_model']:
+            self.__as_camera_translator.update_cam_model(self.as_project.get_scene())
+            self.__as_camera_translator.add_cam_xform(0.0)
+        else:
+            if updates['cam_params']:
+                self.__as_camera_translator.update_cam_params()
+            if updates['cam_xform']:
+                self.__as_camera_translator.add_cam_xform(0.0)
+
+        if updates['frame_size']:
+            self.__update_frame_size(depsgraph, context)
+
+        if updates['crop_window']:
+            self.__frame.reset_crop_window()
+            if self.__crop_window is not None:
+                self.__frame.set_crop_window(self.__crop_window)
+
+    # Interactive update functions.
     def write_project(self, export_path):
         filename = bpy.path.ensure_ext(bpy.path.abspath(export_path), '.appleseed')
 
@@ -377,9 +436,6 @@ class SceneTranslator(object):
         all_times.update(self.__xform_times)
         all_times.update(self.__deform_times)
         self.__all_times = sorted(list(all_times))
-
-        # Xform times is converted to a list here so it can be easily passed into the BlTransformLibrary of each translator.
-        self.__xform_times = sorted(list(self.__xform_times))
 
     def __translate_render_settings(self, depsgraph):
         logger.debug("appleseed: Translating render settings")
@@ -483,6 +539,15 @@ class SceneTranslator(object):
 
         parameters['lighting_engine'] = 'pt'
         conf_interactive.set_parameters(parameters)
+
+    def __update_frame_size(self, depsgraph, context):
+        params = self.__frame.get_parameters()
+
+        width, height = self.__viewport_resolution
+
+        params['resolution'] = asr.Vector2i(width, height)
+
+        self.__frame.set_parameters(params)
 
     def __translate_frame(self, depsgraph):
         logger.debug("appleseed: Translating frame")
@@ -604,26 +669,32 @@ class SceneTranslator(object):
 
             self.__frame.post_processing_stages().insert(post_process)
 
-    def __set_render_border_window(self, depsgraph, context=None):
+    def __calc_crop_window(self, depsgraph, context=None):
         width, height = self.__viewport_resolution
+
+        self.__crop_window = None
 
         if depsgraph.scene_eval.render.use_border and self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             min_x = int(depsgraph.scene_eval.render.border_min_x * width)
-            max_x = int(depsgraph.scene_eval.render.border_max_x * width) - 1
             min_y = height - int(depsgraph.scene_eval.render.border_max_y * height)
+            max_x = int(depsgraph.scene_eval.render.border_max_x * width) - 1
             max_y = height - int(depsgraph.scene_eval.render.border_min_y * height) - 1
-
-            self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
+            self.__crop_window = [min_x,
+                                  min_y,
+                                  max_x,
+                                  max_y]
 
         else:
             # Interactive render borders
             if context is not None and context.space_data.use_render_border and context.region_data.view_perspective in ('ORTHO', 'PERSP'):
                 min_x = int(context.space_data.render_border_min_x * width)
-                max_x = int(context.space_data.render_border_max_x * width) - 1
                 min_y = height - int(context.space_data.render_border_max_y * height)
+                max_x = int(context.space_data.render_border_max_x * width) - 1
                 max_y = height - int(context.space_data.render_border_min_y * height) - 1
-
-                self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
+                self.__crop_window = [min_x,
+                                      min_y,
+                                      max_x,
+                                      max_y]
 
             elif depsgraph.scene_eval.render.use_border and context.region_data.view_perspective == 'CAMERA':
                 """
@@ -656,11 +727,13 @@ class SceneTranslator(object):
 
                 # Check for coordinates outside the render window.
                 min_x = clamp_value(window_x_min, 0, width - 1)
-                max_x = clamp_value(window_x_max, 0, width - 1)
                 min_y = clamp_value(window_y_min, 0, height - 1)
+                max_x = clamp_value(window_x_max, 0, width - 1)
                 max_y = clamp_value(window_y_max, 0, height - 1)
-
-                self.__frame.set_crop_window([min_x, min_y, max_x, max_y])
+                self.__crop_window = [min_x,
+                                      min_y,
+                                      max_x,
+                                      max_y]
 
     def __load_searchpaths(self):
         logger.debug("appleseed: Loading searchpaths")
@@ -673,7 +746,7 @@ class SceneTranslator(object):
     def __calc_initial_positions(self, depsgraph, engine, objects_to_add, lights_to_add):
         logger.debug("appleseed: Setting intial object positions for frame %s", depsgraph.scene_eval.frame_current)
 
-        self.__as_camera_translator.add_cam_xform(engine, 0.0)
+        self.__as_camera_translator.add_cam_xform(0.0, engine)
 
         for inst in depsgraph.object_instances:
             if inst.show_self:
@@ -696,7 +769,7 @@ class SceneTranslator(object):
             engine.frame_set(int_frame, subframe=subframe)
 
             if time in self.__cam_times:
-                self.__as_camera_translator.add_cam_xform(engine, time)
+                self.__as_camera_translator.add_cam_xform(time, engine)
             
             if time in self.__xform_times:
                 for inst in depsgraph.object_instances:

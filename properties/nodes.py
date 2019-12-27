@@ -31,8 +31,6 @@ import nodeitems_utils
 from ..logger import get_logger
 from ..utils import osl_utils, util
 
-from ..__init__ import preview_collections
-
 logger = get_logger()
 
 

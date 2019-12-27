@@ -45,9 +45,6 @@ class MaterialTranslator(Translator):
         self.__as_mat = None
         self.__as_shader_params = dict()
         self.__as_shader = None
-        self.__as_volume_params = dict()
-        self.__as_volume = None
-        self.__as_colors = list()
 
         self.__as_nodetree = None
 
@@ -60,12 +57,14 @@ class MaterialTranslator(Translator):
         return self._bl_obj.node_tree
 
     def create_entities(self, bl_scene):
-        self.__mat_name = f"{self.obj_name}_mat"
-        surface_name = f"{self.obj_name}_surface"
-        as_mat_data = self.bl_mat.appleseed
+        # Store the name of the material in case it changes later.
+        self.bl_mat.appleseed.mat_name = self.obj_name
+
+        mat_name = f"{self.bl_mat.appleseed.mat_name}_mat"
+        surface_name = f"{self.bl_mat.appleseed.mat_name}_surface"
 
         if self.bl_mat.node_tree is not None:
-            self.__as_nodetree = NodeTreeTranslator(self.bl_node_tree, self._asset_handler, self.obj_name)
+            self.__as_nodetree = NodeTreeTranslator(self.bl_node_tree, self._asset_handler, self.bl_mat.appleseed.mat_name)
             self.__as_nodetree.create_entities(bl_scene)
 
         self.__as_shader_params = self.__get_shader_params()
@@ -73,26 +72,7 @@ class MaterialTranslator(Translator):
 
         self.__as_shader = asr.SurfaceShader("physical_surface_shader", surface_name, {})
 
-        if as_mat_data.mode == 'surface':
-            self.__as_mat = asr.Material('osl_material', self.__mat_name, {})
-        else:
-            vol_name = f"{self.obj_name}_volume"
-
-            self.__as_volume_params = self.__get_vol_params()
-
-            self.__as_colors.append(asr.ColorEntity(
-                f"{vol_name}_absorption_color",
-                {'color_space': 'linear_rgb'},
-                self._convert_color(as_mat_data.volume_absorption)))
-
-            self.__as_colors.append(asr.ColorEntity(
-                f"{vol_name}_scattering_color",
-                {'color_space': 'linear_rgb'},
-                self._convert_color(as_mat_data.volume_scattering)))
-
-            self.__as_mat = asr.Material('generic_material', self.__mat_name, {})
-            self.__as_volume = asr.Volume('generic_volume', vol_name, {})
-            self.__as_volume.set_parameters(self.__as_volume_params)
+        self.__as_mat = asr.Material('osl_material', mat_name, {})
 
         self.__as_mat.set_parameters(self.__as_mat_params)
         self.__as_shader.set_parameters(self.__as_shader_params)
@@ -109,15 +89,8 @@ class MaterialTranslator(Translator):
         as_assembly.materials().insert(self.__as_mat)
         self.__as_mat = as_assembly.materials().get_by_name(mat_name)
 
-        for color in self.__as_colors:
-            col_name = color.get_name()
-            as_assembly.colors().insert(color)
-            color = as_assembly.colors().get_by_name(col_name)
-
-        if self.__as_volume is not None:
-            vol_name = self.__as_volume.get_name()
-            as_assembly.volumes().insert(self.__as_volume)
-            self.__as_volume = as_assembly.volumes().get_by_name(vol_name)
+    def update_material(self, bl_scene):
+        pass
 
     def __get_shader_params(self):
         as_mat_data = self.bl_mat.appleseed
@@ -126,26 +99,9 @@ class MaterialTranslator(Translator):
         return shader_params
 
     def __get_mat_params(self):
-        mat_params = {'surface_shader': f"{self.obj_name}_surface"}
+        mat_params = {'surface_shader': f"{self.bl_mat.appleseed.mat_name}_surface"}
 
-        if self.bl_mat.appleseed.mode == 'volume':
-            mat_params['volume'] = f"{self.obj_name}_volume"
-
-        if self.bl_node_tree is not None and self.bl_mat.appleseed.mode == 'surface':
-            mat_params['osl_surface'] = f"{self.obj_name}_tree"
+        if self.bl_node_tree is not None:
+            mat_params['osl_surface'] = f"{self.bl_mat.appleseed.mat_name}_tree"
 
         return mat_params
-
-    def __get_vol_params(self):
-        as_mat_data = self.bl_mat.appleseed
-        vol_name = f"{self.obj_name}_volume"
-
-        vol_params = {
-            'absorption': vol_name + "_absorption_color",
-            'scattering': vol_name + "_scattering_color",
-            'absorption_multiplier': as_mat_data.volume_absorption_multiplier,
-            'scattering_multiplier': as_mat_data.volume_scattering_multiplier,
-            'phase_function_model': as_mat_data.volume_phase_function_model,
-            'average_cosine': as_mat_data.volume_average_cosine}
-
-        return vol_params

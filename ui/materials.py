@@ -143,34 +143,10 @@ class ASMATERIAL_PT_shading(bpy.types.Panel):
 
         layout.prop(asr_mat, "shader_lighting_samples", text="Lighting Samples")
 
-        layout.prop(asr_mat, "mode", text="Shading Mode")
 
-        if asr_mat.mode == 'volume':
-            layout.prop(asr_mat, "volume_phase_function_model", text="Volume")
-            if asr_mat.volume_phase_function_model != 'none':
-                # Absorption
-                col = layout.column(align=True)
-                col.prop(asr_mat, "volume_absorption", text="Absorption")
-
-                # Absorption Multiplier
-                col.prop(asr_mat, "volume_absorption_multiplier", text="Absorption Multiplier")
-
-                # Volume Scattering
-                col = layout.column(align=True)
-                col.prop(asr_mat, "volume_scattering", text="Scattering")
-
-                # Scattering Multiplier
-                col.prop(asr_mat, "volume_scattering_multiplier", text="Scattering Multiplier")
-
-                if asr_mat.volume_phase_function_model == 'henyey':
-                    col.prop(asr_mat, "volume_average_cosine", text="Average Cosine")
-
-
-classes = (
-    ASMATERIAL_PT_slots,
-    ASMATERIAL_PT_preview,
-    ASMATERIAL_PT_shading
-)
+classes = (ASMATERIAL_PT_slots,
+           ASMATERIAL_PT_preview,
+           ASMATERIAL_PT_shading)
 
 
 def register():

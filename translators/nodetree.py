@@ -63,6 +63,9 @@ class NodeTreeTranslator(Translator):
         as_assembly.shader_groups().insert(self.__as_shader_group)
         self.__as_shader_group = as_assembly.shader_groups().get_by_name(shader_groupname)
 
+    def update_nodetree(self, bl_scene):
+        self.__create_shadergroup(bl_scene)
+
     def __create_shadergroup(self, bl_scene):
         surface_shader = None
         for node in self.bl_nodes:

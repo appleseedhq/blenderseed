@@ -37,7 +37,7 @@ logger = get_logger()
 
 
 class MeshTranslator(Translator):
-    def __init__(self, bl_obj, export_mode, asset_handler, xform_times):
+    def __init__(self, bl_obj, export_mode, asset_handler):
         super().__init__(bl_obj, asset_handler)
 
         self.__export_mode = export_mode
@@ -45,7 +45,7 @@ class MeshTranslator(Translator):
         self.__mesh_name = str()
         self.__mesh_params = str()
 
-        self.__instance_lib = asr.BlTransformLibrary(xform_times)
+        self.__instance_lib = asr.BlTransformLibrary()
 
         self.__as_mesh = None
         self.__as_mesh_inst_params = dict()
@@ -133,7 +133,7 @@ class MeshTranslator(Translator):
 
         mesh_name = self.__object_instance_mesh_name(self.__mesh_name)
 
-        obj_inst_name = f"{self.obj_name}_inst"
+        self.__obj_inst_name = f"{self.obj_name}_inst"
 
         needs_assembly = self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__instance_lib.needs_assembly()
 
@@ -142,7 +142,7 @@ class MeshTranslator(Translator):
             self.__ass = asr.Assembly(ass_name)
 
             self.__as_mesh_inst = asr.ObjectInstance(
-                obj_inst_name,
+                self.__obj_inst_name,
                 self.__as_mesh_inst_params,
                 mesh_name,
                 asr.Transformd(asr.Matrix4d().identity()),
@@ -153,7 +153,7 @@ class MeshTranslator(Translator):
             self.__as_mesh = self.__ass.objects().get_by_name(mesh_name)
 
             self.__ass.object_instances().insert(self.__as_mesh_inst)
-            self.__as_mesh_inst = self.__ass.object_instances().get_by_name(obj_inst_name)
+            self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.__obj_inst_name)
 
             as_main_assembly.assemblies().insert(self.__ass)
             self.__ass = as_main_assembly.assemblies().get_by_name(ass_name)
@@ -162,7 +162,7 @@ class MeshTranslator(Translator):
 
         else:
             self.__as_mesh_inst = asr.ObjectInstance(
-                obj_inst_name,
+                self.__obj_inst_name,
                 self.__as_mesh_inst_params,
                 mesh_name,
                 self.__instance_lib.get_single_transform(),
@@ -173,8 +173,27 @@ class MeshTranslator(Translator):
             self.__as_mesh = as_main_assembly.objects().get_by_name(mesh_name)
 
             as_main_assembly.object_instances().insert(self.__as_mesh_inst)
-            self.__as_mesh_inst = as_main_assembly.object_instances().get_by_name(obj_inst_name)
+            self.__as_mesh_inst = as_main_assembly.object_instances().get_by_name(self.__obj_inst_name)
 
+    def update_obj_instance(self, bl_scene):
+        self.__ass.object_instances().remove(self.__as_mesh_inst)
+
+        self.__as_mesh_inst_params = self.__get_mesh_inst_params()
+
+        self.__front_materials, self.__back_materials = self.__get_material_mappings()
+
+        mesh_name = self.__object_instance_mesh_name(self.__mesh_name)
+
+        self.__as_mesh_inst = asr.ObjectInstance(
+                self.__obj_inst_name,
+                self.__as_mesh_inst_params,
+                mesh_name,
+                asr.Transformd(asr.Matrix4d().identity()),
+                self.__front_materials,
+                self.__back_materials)
+        
+        self.__ass.object_instances().insert(self.__as_mesh_inst)
+        self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.__obj_inst_name)
 
     def __get_mesh_inst_params(self):
         asr_obj_props = self._bl_obj.appleseed
@@ -206,14 +225,14 @@ class MeshTranslator(Translator):
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
                 if m.material is not None and m.material.use_nodes:
-                    mat_key = f"{m.material.name_full}_mat"
+                    mat_key = f"{m.material.original.appleseed.mat_name}_mat"
                 else:
                     mat_key = "__default_material"
                 front_mats[f"slot-{i}"] = mat_key
         else:
             if len(material_slots) == 1:
                 if material_slots[0].material is not None and material_slots[0].material.use_nodes:
-                    mat_key = material_slots[0].material.name_full + "_mat"
+                    mat_key = material_slots[0].material.original.appleseed.mat_name + "_mat"
                 else:
                     mat_key = "__default_material"
                 front_mats["default"] = mat_key

@@ -51,16 +51,7 @@ else:
     import bpy
     
 
-preview_collections = dict()
-
-
 def register():
-    import bpy.utils.previews
-    pcoll = bpy.utils.previews.new()
-    my_icons_dir = os.path.join(os.path.dirname(__file__), "icons")
-    pcoll.load("as_icon", os.path.join(my_icons_dir, "appleseed32.png"), 'IMAGE')
-    preview_collections["main"] = pcoll
-
     from .utils import path_util
     path_util.load_appleseed_python_paths()
 

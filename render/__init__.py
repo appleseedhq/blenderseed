@@ -74,7 +74,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
     bl_idname = 'APPLESEED_RENDER'
     bl_label = 'appleseed'
     bl_use_preview = True
-    bl_use_shading_nodes = True
+    # bl_use_shading_nodes = True
     bl_use_shading_nodes_custom = False
     bl_use_postprocess = True
 
@@ -127,17 +127,25 @@ class RenderAppleseed(bpy.types.RenderEngine):
     def view_update(self, context, depsgraph):
         if self.__interactive_scene_translator is None:
             self.__start_interactive_render(context, depsgraph)
-        # else:
-        #     self.__pause_rendering()
-        #     logger.debug("Updating scene")
-        #     self.__interactive_scene_translator.update_scene(context, depsgraph)
-        #     self.__restart_interactive_render()
+        else:
+            self.__pause_rendering()
+            logger.debug("appleseed: Updating scene")
+            self.__interactive_scene_translator.update_scene(depsgraph, context)
+            self.__restart_interactive_render()
 
     def view_draw(self, context, depsgraph):
+        # Check if view camera model has changes
+        updates = self.__interactive_scene_translator.check_view_window(depsgraph, context)
+
+        if True in updates.values():
+            self.__pause_rendering()
+            self.__interactive_scene_translator.update_view_window(depsgraph, context, updates)
+            self.__restart_interactive_render()
+
         self.__draw_pixels(context, depsgraph)
 
     def update_render_passes(self, scene=None, renderlayer=None):
-        logger.debug("Updating render passes")
+        logger.debug("appleseed: Updating render passes")
         asr_scene_props = scene.appleseed
 
         if not self.is_preview:
@@ -350,6 +358,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         self.__renderer = None
         self.__renderer_controller = None
         self.__tile_callback = None
+        self.__interactive_scene_translator = None
 
     def __draw_pixels(self, context, depsgraph):
         """

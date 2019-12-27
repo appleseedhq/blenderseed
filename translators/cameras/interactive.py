@@ -59,7 +59,7 @@ class InteractiveCameraTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, bl_scene, context, engine=None):
-        self.__view_cam_type = f"{context.region_data.view_perspective}"
+        self.__view_cam_type = context.region_data.view_perspective
 
         self.__model = self.__get_model()
 
@@ -73,8 +73,52 @@ class InteractiveCameraTranslator(Translator):
         as_scene.cameras().insert(self.__as_camera)
         self.__as_camera = as_scene.cameras().get_by_name("Camera")
 
-    def add_cam_xform(self, engine, time):
+    def add_cam_xform(self, time, engine=None):
         self.__as_camera.transform_sequence().set_transform(time, self._convert_matrix(self.__xform_matrix))
+
+    def is_matrix_updated(self, context):
+        current_matrix = self.__xform_matrix
+
+        self.__set_matrix(context)
+
+        if current_matrix != self.__xform_matrix:
+            return True
+        
+        return False
+
+    def is_camera_model_updated(self, context):
+        current_view_cam = self.__view_cam_type
+        current_model = self.__model
+        
+        self.__view_cam_type = context.region_data.view_perspective
+
+        self.__model = self.__get_model()
+
+        if current_view_cam != self.__view_cam_type or current_model != self.__model:
+            return True
+        
+        return False
+
+    def are_cam_params_updated(self, bl_scene, context):
+        current_params = self.__cam_params
+
+        self.__cam_params = self.__get_cam_params(bl_scene, context)
+
+        if current_params != self.__cam_params:
+            return True
+
+        return False
+
+    def update_cam_params(self):
+        self.__as_camera.set_parameters(self.__cam_params)
+
+    def update_cam_model(self, as_scene):
+        as_scene.cameras().remove(self.__as_camera)
+
+        self.__as_camera = asr.Camera(self.__model, "Camera", self.__cam_params)
+        
+        as_scene.cameras().insert(self.__as_camera)
+        self.__as_camera = as_scene.cameras().get_by_name("Camera")
 
     def __get_model(self):
         cam_mapping = {'PERSP': 'pinhole_camera',
@@ -127,7 +171,7 @@ class InteractiveCameraTranslator(Translator):
         return params
 
     def __set_ortho_camera_params(self, context, aspect_ratio):
-        self.__xform_matrix = Matrix(context.region_data.view_matrix).inverted()
+        self.__set_matrix(context)
         sensor_width = self.__zoom * self.__extent_base * 1
         params = {'film_width': sensor_width, 'aspect_ratio': aspect_ratio}
 
@@ -137,8 +181,8 @@ class InteractiveCameraTranslator(Translator):
         return params
 
     def __set_persp_camera_params(self, context, aspect_ratio):
+        self.__set_matrix(context)
         sensor_size = 32 * self.__zoom
-        self.__xform_matrix = Matrix(context.region_data.view_matrix).inverted()
         params = {'focal_length': context.space_data.lens,
                   'aspect_ratio': aspect_ratio,
                   'film_width': sensor_size}
@@ -147,6 +191,12 @@ class InteractiveCameraTranslator(Translator):
             params['film_height'] = params.pop('film_width')
 
         return params
+
+    def __set_matrix(self, context):
+        if self.__view_cam_type in ("ORTHO", "PERSP"):
+            self.__xform_matrix = Matrix(context.region_data.view_matrix).inverted()
+        else:
+            self.__xform_matrix = self.bl_camera.matrix_world
 
     def __set_view_camera_params(self, context, aspect_ratio):
         film_width, film_height = util.calc_film_dimensions(aspect_ratio, self.bl_camera.data, self.__zoom)
@@ -159,7 +209,7 @@ class InteractiveCameraTranslator(Translator):
         self.__shift_x = ((offset[0] * 2 + (self.bl_camera.data.shift_x * x_aspect_comp)) / self.__zoom) * film_width
         self.__shift_y = ((offset[1] * 2 + (self.bl_camera.data.shift_y * y_aspect_comp)) / self.__zoom) * film_height
 
-        self.__xform_matrix = self.bl_camera.matrix_world.copy()
+        self.__set_matrix(context)
 
         if self.__model == 'orthographic_camera':
             sensor_width = self.bl_camera.data.ortho_scale * self.__zoom

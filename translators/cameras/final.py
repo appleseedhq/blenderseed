@@ -66,7 +66,7 @@ class RenderCameraTranslator(Translator):
         as_scene.cameras().insert(self.__as_camera)
         self.__as_camera = as_scene.cameras().get_by_name("Camera")
 
-    def add_cam_xform(self, engine, time):
+    def add_cam_xform(self, time, engine=None):
         self.__as_camera.transform_sequence().set_transform(
             time,
             self._convert_matrix(engine.camera_model_matrix(self.bl_camera)))

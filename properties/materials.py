@@ -59,57 +59,8 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                            max=64,
                                            update=refresh_preview)
 
-    mode: bpy.props.EnumProperty(name="mode",
-                                 items=[('surface', "Surface", ""),
-                                        ('volume', "Volume", "")],
-                                 default='surface',
-                                 update=refresh_preview)
-
-    # Volume props
-    volume_phase_function_model: bpy.props.EnumProperty(name="Volumetric Model",
-                                                        description="Volume phase function model",
-                                                        items=[('henyey', "Henyey-Greenstein", ""),
-                                                               ('isotropic', "Isotropic", "")],
-                                                        default="isotropic",
-                                                        update=refresh_preview)
-
-    volume_absorption: bpy.props.FloatVectorProperty(name="volume_absorption",
-                                                     description="Volume absorption",
-                                                     default=(0.5, 0.5, 0.5),
-                                                     subtype='COLOR',
-                                                     min=0.0,
-                                                     max=1.0,
-                                                     update=refresh_preview)
-
-    volume_absorption_multiplier: bpy.props.FloatProperty(name="volume_absorption_multiplier",
-                                                          description="Volume absorption multiplier",
-                                                          default=1.0,
-                                                          min=0.0,
-                                                          max=200.0,
-                                                          update=refresh_preview)
-
-    volume_scattering: bpy.props.FloatVectorProperty(name="volume_scattering",
-                                                     description="Volume scattering",
-                                                     default=(0.5, 0.5, 0.5),
-                                                     subtype='COLOR',
-                                                     min=0.0,
-                                                     max=1.0,
-                                                     update=refresh_preview)
-
-    volume_scattering_multiplier: bpy.props.FloatProperty(name="volume_scattering_multiplier",
-                                                          description="Volume absorption multiplier",
-                                                          default=1.0,
-                                                          min=0.0,
-                                                          max=200.0,
-                                                          update=refresh_preview)
-
-    volume_average_cosine: bpy.props.FloatProperty(name="volume_average_cosine",
-                                                   description="Volume average cosine",
-                                                   default=0.0,
-                                                   min=-1.0,
-                                                   max=1.0,
-                                                   update=refresh_preview)
-
+    mat_name: bpy.props.StringProperty(name="mat_name",
+                                       default="")
 
 def register():
     util.safe_register_class(AppleseedMatProps)
