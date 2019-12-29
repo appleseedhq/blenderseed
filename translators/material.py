@@ -90,7 +90,7 @@ class MaterialTranslator(Translator):
         self.__as_mat = as_assembly.materials().get_by_name(mat_name)
 
     def update_material(self, bl_scene):
-        pass
+        self.__as_nodetree.update_nodetree(bl_scene)
 
     def __get_shader_params(self):
         as_mat_data = self.bl_mat.appleseed

@@ -33,9 +33,8 @@ import bpy
 import appleseed as asr
 from .assethandlers import AssetHandler, CopyAssetsAssetHandler
 from .cameras import InteractiveCameraTranslator, RenderCameraTranslator
-from .lamps import LampTranslator
 from .material import MaterialTranslator
-from .objects import ArchiveAssemblyTranslator, MeshTranslator
+from .objects import ArchiveAssemblyTranslator, MeshTranslator, LampTranslator
 from .textures import TextureTranslator
 from .utilites import ProjectExportMode
 from .world import WorldTranslator
@@ -194,15 +193,15 @@ class SceneTranslator(object):
 
         # Blender scene processing
         objects_to_add = dict()
-        lights_to_add = dict()
         materials_to_add = dict()
         textures_to_add = dict()
 
         for obj in bpy.data.objects:
             if obj.type == 'LIGHT':
                 logger.debug("appleseed: Creating light translator for %s", obj.name_full)
-                lights_to_add[obj] = LampTranslator(obj, self.__asset_handler)
+                objects_to_add[obj] = LampTranslator(obj, self.__asset_handler)
             elif obj.type == 'MESH':
+                print(f"appleseed: Creating mesh translator for {obj.name_full}")
                 logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
                 objects_to_add[obj] = MeshTranslator(obj.evaluated_get(depsgraph), self.__export_mode, self.__asset_handler)
         #     elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
@@ -210,9 +209,8 @@ class SceneTranslator(object):
         #         objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler, self.__xform_times)
 
         for mat in bpy.data.materials:
-            if mat.users > 0:
-                logger.debug("appleseed: Creating material translator for %s", mat.name_full)
-                materials_to_add[mat] = MaterialTranslator(mat, self.__asset_handler)
+            logger.debug("appleseed: Creating material translator for %s", mat.name_full)
+            materials_to_add[mat] = MaterialTranslator(mat, self.__asset_handler)
 
         for tex in bpy.data.images:
             if tex.users > 1:
@@ -234,7 +232,7 @@ class SceneTranslator(object):
             trans.create_entities(depsgraph.scene_eval)
 
         # Set initial position of all objects and lamps
-        self.__calc_initial_positions(depsgraph, engine, objects_to_add, lights_to_add)
+        self.__calc_initial_positions(depsgraph, engine, objects_to_add)
 
         # Remove unused translators
         for translator in list(objects_to_add.keys()):
@@ -242,18 +240,10 @@ class SceneTranslator(object):
                 logger.debug("appleseed: Translator %s has no instances, deleting...", translator)
                 del objects_to_add[translator]
 
-        for translator in list(lights_to_add.keys()):
-            if len(lights_to_add[translator].matrices) == 0:
-                logger.debug("appleseed: Translator %s has no instances, deleting...", translator)
-                del lights_to_add[translator]
-
         # Create 3D entities
         for obj, trans in objects_to_add.items():
-            logger.debug("appleseed: Creating mesh entity for %s", obj.name_full)
+            logger.debug("appleseed: Creating entity for %s", obj.name_full)
             trans.create_entities(depsgraph.scene_eval, len(self.__deform_times))
-        for obj, trans in lights_to_add.items():
-            logger.debug("appleseed: Creating light entity for %s", obj.name_full)
-            trans.create_entities(depsgraph.scene_eval)
 
         # Calculate additional steps for motion blur
         if self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
@@ -269,9 +259,6 @@ class SceneTranslator(object):
         for obj, trans in objects_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
             trans.flush_entities(as_scene, self.__main_assembly, self.__project)
-        for obj, trans in lights_to_add.items():
-            logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
-            trans.flush_entities(as_scene, self.__main_assembly, self.__project)
         for obj, trans in materials_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
             trans.flush_entities(as_scene, self.__main_assembly, self.__project)
@@ -282,8 +269,6 @@ class SceneTranslator(object):
         # Transfer temp translators to main list
         for bl_obj, translator in objects_to_add.items():
             self.__as_object_translators[bl_obj] = translator
-        for bl_obj, translator in lights_to_add.items():
-            self.__as_lamp_translators[bl_obj] = translator
         for bl_obj, translator in materials_to_add.items():
             self.__as_material_translators[bl_obj] = translator
         for bl_obj, translator in textures_to_add.items():
@@ -309,14 +294,32 @@ class SceneTranslator(object):
         engine.frame_set(current_frame, subframe=0.0)
 
     def update_scene(self, depsgraph, context):
+        new_objects = dict()
+        new_materials = dict()
+
+        xform_updates = list()
+
         # Check for updated datablocks.
         for update in depsgraph.updates:
             if isinstance(update.id, bpy.types.Material):
-                pass
+                if update.id.original in self.__as_material_translators.keys():
+                    self.__as_material_translators[update.id.original].update_material(depsgraph.scene_eval)
+                else:
+                    new_materials[update.id.original] = MaterialTranslator(update.id.original, self.__asset_handler)
             elif isinstance(update.id, bpy.types.Object):
-                if update.id.type == 'MESH':
-                    if update.is_updated_geometry:
-                        self.__as_object_translators[update.id.original].update_obj_instance(depsgraph.scene_eval)
+                    if update.id.type == 'MESH':
+                        if update.id.original in self.__as_object_translators.keys():
+                            if update.is_updated_geometry:
+                                self.__as_object_translators[update.id.original].update_obj_instance(depsgraph.scene_eval)
+                            if update.is_updated_transform:
+                                xform_updates.append(update.id.original)
+                        else:
+                            new_objects[update.id.original] = MeshTranslator(update.id, self.__export_mode, self.__asset_handler)
+
+        # Update transforms for moved objects and their instances.
+        for instance in depsgraph.object_instances:
+            if instance.object.original in xform_updates:
+                self.__as_object_translators[instance.object.original].update_xform(instance.persistent_id[0], instance.matrix_world)
 
     def check_view_window(self, depsgraph, context):
         updates = dict()
@@ -743,17 +746,16 @@ class SceneTranslator(object):
 
         self.__project.set_search_paths(paths)
 
-    def __calc_initial_positions(self, depsgraph, engine, objects_to_add, lights_to_add):
+    def __calc_initial_positions(self, depsgraph, engine, objects_to_add):
         logger.debug("appleseed: Setting intial object positions for frame %s", depsgraph.scene_eval.frame_current)
 
         self.__as_camera_translator.add_cam_xform(0.0, engine)
 
         for inst in depsgraph.object_instances:
             if inst.show_self:
-                obj = inst.object.original
-                if obj.type == 'LIGHT':
-                    lights_to_add[obj].add_instance_step(inst.persistent_id[0], inst.matrix_world)
-                elif obj.type == 'MESH':
+                obj = inst.instance_object.parent.original if inst.is_instance else inst.object.original
+                if obj.type in ('MESH', 'LIGHT'):
+                    print(f"{obj.name_full} {list(inst.persistent_id)}")
                     objects_to_add[obj].add_instance_step(0.0, inst.persistent_id[0], inst.matrix_world)
 
     def __calc_motion_steps(self, depsgraph, engine, objects_to_add):
@@ -774,7 +776,7 @@ class SceneTranslator(object):
             if time in self.__xform_times:
                 for inst in depsgraph.object_instances:
                     if inst.show_self:
-                        obj = inst.object.original
+                        obj = inst.instance_object.original if inst.is_instance else inst.object.original
                         if obj.type == 'MESH':
                             objects_to_add[obj].add_instance_step(time, inst.persistent_id[0], inst.matrix_world)
 
