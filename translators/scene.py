@@ -753,10 +753,14 @@ class SceneTranslator(object):
 
         for inst in depsgraph.object_instances:
             if inst.show_self:
-                obj = inst.instance_object.parent.original if inst.is_instance else inst.object.original
+                if inst.is_instance:
+                    obj = inst.instance_object.original
+                    inst_id = f"{obj.name_full}|{inst.parent.original.name_full}|{inst.persistent_id[0]}"
+                else:
+                    obj = inst.object.original
+                    inst_id = f"{obj.name_full}|{inst.persistent_id[0]}"
                 if obj.type in ('MESH', 'LIGHT'):
-                    print(f"{obj.name_full} {list(inst.persistent_id)}")
-                    objects_to_add[obj].add_instance_step(0.0, inst.persistent_id[0], inst.matrix_world)
+                    objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
 
     def __calc_motion_steps(self, depsgraph, engine, objects_to_add):
         current_frame = depsgraph.scene_eval.frame_current
@@ -776,9 +780,14 @@ class SceneTranslator(object):
             if time in self.__xform_times:
                 for inst in depsgraph.object_instances:
                     if inst.show_self:
-                        obj = inst.instance_object.original if inst.is_instance else inst.object.original
+                        if inst.is_instance:
+                            obj = inst.instance_object.original
+                            inst_id = f"{obj.name_full}|{inst.parent.original.name_full}|{inst.persistent_id[0]}"
+                        else:
+                            obj = inst.object.original
+                            inst_id = f"{obj.name_full}|{inst.persistent_id[0]}"
                         if obj.type == 'MESH':
-                            objects_to_add[obj].add_instance_step(time, inst.persistent_id[0], inst.matrix_world)
+                            objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
 
             if time in self.__deform_times:
                 for translator in objects_to_add.values():
