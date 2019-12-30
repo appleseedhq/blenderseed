@@ -297,8 +297,6 @@ class SceneTranslator(object):
         new_objects = dict()
         new_materials = dict()
 
-        xform_updates = list()
-
         # Check for updated datablocks.
         for update in depsgraph.updates:
             if isinstance(update.id, bpy.types.Material):
@@ -311,15 +309,20 @@ class SceneTranslator(object):
                         if update.id.original in self.__as_object_translators.keys():
                             if update.is_updated_geometry:
                                 self.__as_object_translators[update.id.original].update_obj_instance(depsgraph.scene_eval)
-                            if update.is_updated_transform:
-                                xform_updates.append(update.id.original)
                         else:
                             new_objects[update.id.original] = MeshTranslator(update.id, self.__export_mode, self.__asset_handler)
 
         # Update transforms for moved objects and their instances.
-        for instance in depsgraph.object_instances:
-            if instance.object.original in xform_updates:
-                self.__as_object_translators[instance.object.original].update_xform(instance.persistent_id[0], instance.matrix_world)
+        for inst in depsgraph.object_instances:
+            if inst.show_self:
+                if inst.is_instance:
+                    obj = inst.instance_object.original
+                    inst_id = f"{obj.name_full}|{inst.parent.original.name_full}|{inst.persistent_id[0]}"
+                else:
+                    obj = inst.object.original
+                    inst_id = f"{obj.name_full}|{inst.persistent_id[0]}"
+                if obj.type == 'MESH':
+                    self.__as_object_translators[obj].update_xform(inst_id, inst.matrix_world)
 
     def check_view_window(self, depsgraph, context):
         updates = dict()

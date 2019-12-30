@@ -71,8 +71,7 @@ class MeshTranslator(Translator):
         return self.__instance_lib.get_size()   
 
     def add_instance_step(self, time, instance_id, bl_matrix):
-        inst_id = f"{self.obj_name}|{instance_id}"
-        self.__instance_lib.add_xform_step(time, inst_id, self._convert_matrix(bl_matrix))
+        self.__instance_lib.add_xform_step(time, instance_id, self._convert_matrix(bl_matrix))
 
     def create_entities(self, bl_scene, num_def_times):
         self.__mesh_name = f"{self.obj_name}_obj"
@@ -196,8 +195,7 @@ class MeshTranslator(Translator):
         self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.__obj_inst_name)
 
     def update_xform(self, instance_id, bl_matrix):
-        inst_id = f"{self.obj_name}|{instance_id}"
-        self.__instance_lib.update_xform(inst_id, self._convert_matrix(bl_matrix))
+        self.__instance_lib.update_xform(instance_id, self._convert_matrix(bl_matrix))
 
     def __get_mesh_inst_params(self):
         asr_obj_props = self._bl_obj.appleseed
