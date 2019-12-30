@@ -213,7 +213,7 @@ class SceneTranslator(object):
             materials_to_add[mat] = MaterialTranslator(mat, self.__asset_handler)
 
         for tex in bpy.data.images:
-            if tex.users > 1:
+            if tex.users > 0 and tex.name not in ("Render Result"):
                 logger.debug("appleseed: Creating texture translator for %s", tex.name_full)
                 textures_to_add[tex] = TextureTranslator(tex, self.__asset_handler)
 
@@ -312,7 +312,7 @@ class SceneTranslator(object):
                         else:
                             new_objects[update.id.original] = MeshTranslator(update.id, self.__export_mode, self.__asset_handler)
 
-        # Update transforms for moved objects and their instances.
+        # Update transforms for objects and their instances.
         for inst in depsgraph.object_instances:
             if inst.show_self:
                 if inst.is_instance:
@@ -321,7 +321,7 @@ class SceneTranslator(object):
                 else:
                     obj = inst.object.original
                     inst_id = f"{obj.name_full}|{inst.persistent_id[0]}"
-                if obj.type == 'MESH':
+                if obj.type in ('MESH', 'LIGHT'):
                     self.__as_object_translators[obj].update_xform(inst_id, inst.matrix_world)
 
     def check_view_window(self, depsgraph, context):

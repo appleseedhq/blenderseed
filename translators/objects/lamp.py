@@ -68,18 +68,17 @@ class LampTranslator(Translator):
 
     def add_instance_step(self, time, instance_id, bl_matrix):
         logger.debug("appleseed: Adding xform for %s", self.obj_name)
-        inst_id = f"{self.obj_name}|{instance_id}"
-        self.__matrices[inst_id] = self.__convert_lamp_matrix(bl_matrix)
+        self.__matrices[instance_id] = self.__convert_lamp_matrix(bl_matrix)
 
     def create_entities(self, bl_scene, deforms_length):
-        self.__lamp_name = f"{self.obj_name}"
+        self.__lamp_name = f"{self.obj_name}_lamp"
         as_lamp_data = self.bl_lamp.data.appleseed
 
         self.__lamp_model = self.__get_lamp_model()
 
         if self.bl_lamp.data.type != 'AREA':
             radiance = self._convert_color(as_lamp_data.radiance)
-            lamp_radiance_name = f"{self.obj_name}_radiance"
+            lamp_radiance_name = f"{self.__lamp_name}_radiance"
 
             self.__as_lamp_radiance = asr.ColorEntity(
                 lamp_radiance_name,
@@ -96,13 +95,13 @@ class LampTranslator(Translator):
                 self.__as_lamp_params = self.__get_sun_lamp_params()
         else:
             shape_params = self._get_area_mesh_params()
-            mesh_name = f"{self.obj_name}_mesh"
+            mesh_name = f"{self.__lamp_name}_mesh"
 
             self.__as_area_lamp = asr.create_primitive_mesh(mesh_name, shape_params)
 
-            mat_name = f"{self.obj_name}_mat"
+            mat_name = f"{self.__lamp_name}_mat"
 
-            shader_name = f"{self.obj_name}_tree"
+            shader_name = f"{self.__lamp_name}_tree"
 
             if not self.bl_lamp.data.use_nodes:
                 self._set_shadergroup()
@@ -122,12 +121,12 @@ class LampTranslator(Translator):
                 as_lamp = asr.Light(self.__lamp_model, key, self.__as_lamp_params)
                 as_lamp.set_transform(transform_matrix)
                 as_main_assembly.lights().insert(as_lamp)
-                transform_matrix = as_main_assembly.lights().get_by_name(key)
+                self.__matrices[key] = as_main_assembly.lights().get_by_name(key)
         
         else:
-            mat_name = f"{self.obj_name}_mat"
+            mat_name = f"{self.__lamp_name}_mat"
 
-            mesh_name = f"{self.obj_name}_mesh"
+            mesh_name = f"{self.__lamp_name}_mesh"
 
             as_main_assembly.materials().insert(self.__as_area_lamp_material)
             self.__as_area_lamp_material = as_main_assembly.materials().get_by_name(mat_name)
@@ -157,6 +156,10 @@ class LampTranslator(Translator):
                 as_main_assembly.object_instances().insert(as_area_lamp_mesh_inst)
                 transform_matrix = as_main_assembly.object_instances().get_by_name(inst_name)
 
+    def update_xform(self, inst_id, bl_matrix):
+        if self.__lamp_model != 'area_lamp':
+            self.__matrices[inst_id].set_transform(self.__convert_lamp_matrix(bl_matrix))
+
     def __get_point_lamp_params(self):
         as_lamp_data = self.bl_lamp.data.appleseed
         light_params = {
@@ -173,7 +176,7 @@ class LampTranslator(Translator):
         outer_angle = math.degrees(self.bl_lamp.data.spot_size)
         inner_angle = (1.0 - self.bl_lamp.data.spot_blend) * outer_angle
 
-        intensity = f"{self.obj_name}_radiance"
+        intensity = f"{self.__lamp_name}_radiance"
         intensity_multiplier = as_lamp_data.radiance_multiplier
 
         if as_lamp_data.radiance_use_tex and as_lamp_data.radiance_tex is not None:
@@ -277,7 +280,7 @@ class LampTranslator(Translator):
     def _set_shadergroup(self):
         as_lamp_data = self.bl_lamp.data.appleseed
 
-        shader_name = f"{self.obj_name}_tree"
+        shader_name = f"{self.__lamp_name}_tree"
 
         shader_group = asr.ShaderGroup(shader_name)
 
