@@ -213,7 +213,7 @@ class SceneTranslator(object):
             materials_to_add[mat] = MaterialTranslator(mat, self.__asset_handler)
 
         for tex in bpy.data.images:
-            if tex.users > 0 and tex.name not in ("Render Result"):
+            if tex.users > 0 and tex.name not in ("Render Result", "Viewer Node"):
                 logger.debug("appleseed: Creating texture translator for %s", tex.name_full)
                 textures_to_add[tex] = TextureTranslator(tex, self.__asset_handler)
 
@@ -301,7 +301,12 @@ class SceneTranslator(object):
         for update in depsgraph.updates:
             if isinstance(update.id, bpy.types.Material):
                 if update.id.original in self.__as_material_translators.keys():
-                    self.__as_material_translators[update.id.original].update_material(depsgraph.scene_eval)
+                    # Check if material name has changed.
+                    if self.__as_material_translators[update.id.original].check_for_name_change():
+                        self.__recreate_material(self.__as_material_translators[update.id.original], depsgraph)
+                    else:
+                        self.__as_material_translators[update.id.original].update_material(depsgraph.scene_eval)
+                    # TODO: See which objects use the material and update them
                 else:
                     new_materials[update.id.original] = MaterialTranslator(update.id.original, self.__asset_handler)
             elif isinstance(update.id, bpy.types.Object):
@@ -790,13 +795,25 @@ class SceneTranslator(object):
                             obj = inst.object.original
                             inst_id = f"{obj.name_full}|{inst.persistent_id[0]}"
                         if obj.type == 'MESH':
-                            objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
+                            objects_to_add[obj].add_instance_step(time, inst_id, inst.matrix_world)
 
             if time in self.__deform_times:
                 for translator in objects_to_add.values():
                     translator.set_deform_key(time, depsgraph, index)
         
         engine.frame_set(current_frame, subframe=0.0)
+
+    def __recreate_material(self, mat_trans, depsgraph):
+        mat_name = mat_trans.get_mat_name()
+
+        mat_trans.delete_material(self.__main_assembly)
+        mat_trans.create_entities(depsgraph.scene_eval)
+        mat_trans.flush_entities(self.__project.get_scene(), self.__main_assembly, self.__project)
+
+        for trans in self.__as_object_translators.values():
+            materials = trans.get_material_mappings()
+            if mat_name in materials:
+                trans.update_obj_instance(depsgraph.scene_eval)
 
     # Static utility methods
     @staticmethod

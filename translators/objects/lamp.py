@@ -160,6 +160,9 @@ class LampTranslator(Translator):
         if self.__lamp_model != 'area_lamp':
             self.__matrices[inst_id].set_transform(self.__convert_lamp_matrix(bl_matrix))
 
+    def get_material_mappings(self):
+        return list()
+
     def __get_point_lamp_params(self):
         as_lamp_data = self.bl_lamp.data.appleseed
         light_params = {

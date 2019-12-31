@@ -58,13 +58,13 @@ class MaterialTranslator(Translator):
 
     def create_entities(self, bl_scene):
         # Store the name of the material in case it changes later.
-        self.bl_mat.appleseed.mat_name = self.obj_name
+        self.__mat_name = f"{self.obj_name}"
+        mat_name = f"{self.__mat_name}_mat"
 
-        mat_name = f"{self.bl_mat.appleseed.mat_name}_mat"
-        surface_name = f"{self.bl_mat.appleseed.mat_name}_surface"
+        surface_name = f"{self.__mat_name}_surface"
 
         if self.bl_mat.node_tree is not None:
-            self.__as_nodetree = NodeTreeTranslator(self.bl_node_tree, self._asset_handler, self.bl_mat.appleseed.mat_name)
+            self.__as_nodetree = NodeTreeTranslator(self.bl_node_tree, self._asset_handler, self.__mat_name)
             self.__as_nodetree.create_entities(bl_scene)
 
         self.__as_shader_params = self.__get_shader_params()
@@ -89,8 +89,25 @@ class MaterialTranslator(Translator):
         as_assembly.materials().insert(self.__as_mat)
         self.__as_mat = as_assembly.materials().get_by_name(mat_name)
 
+    def delete_material(self, as_main_assembly):
+        if self.__as_nodetree is not None:
+            self.__as_nodetree.delete_nodetree(as_main_assembly)
+        self.__as_nodetree = None
+
+        as_main_assembly.surface_shaders().remove(self.__as_shader)
+        self.__as_shader = None
+
+        as_main_assembly.materials().remove(self.__as_mat)
+        self.__as_mat = None
+
     def update_material(self, bl_scene):
         self.__as_nodetree.update_nodetree(bl_scene)
+
+    def check_for_name_change(self):
+        return self.__mat_name != f"{self.bl_mat.name_full}"
+
+    def get_mat_name(self):
+        return f"{self.__mat_name}_mat"
 
     def __get_shader_params(self):
         as_mat_data = self.bl_mat.appleseed
@@ -99,9 +116,9 @@ class MaterialTranslator(Translator):
         return shader_params
 
     def __get_mat_params(self):
-        mat_params = {'surface_shader': f"{self.bl_mat.appleseed.mat_name}_surface"}
+        mat_params = {'surface_shader': f"{self.__mat_name}_surface"}
 
         if self.bl_node_tree is not None:
-            mat_params['osl_surface'] = f"{self.bl_mat.appleseed.mat_name}_tree"
+            mat_params['osl_surface'] = f"{self.__mat_name}_tree"
 
         return mat_params

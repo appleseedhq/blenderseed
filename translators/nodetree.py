@@ -63,6 +63,10 @@ class NodeTreeTranslator(Translator):
         as_assembly.shader_groups().insert(self.__as_shader_group)
         self.__as_shader_group = as_assembly.shader_groups().get_by_name(shader_groupname)
 
+    def delete_nodetree(self, as_main_assembly):
+        as_main_assembly.shader_groups().remove(self.__as_shader_group)
+        self.__as_shader_group = None
+
     def update_nodetree(self, bl_scene):
         self.__create_shadergroup(bl_scene)
 

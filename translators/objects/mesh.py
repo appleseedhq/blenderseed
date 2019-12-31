@@ -68,7 +68,7 @@ class MeshTranslator(Translator):
 
     @property
     def instances_size(self):
-        return self.__instance_lib.get_size()   
+        return self.__instance_lib.get_size()
 
     def add_instance_step(self, time, instance_id, bl_matrix):
         self.__instance_lib.add_xform_step(time, instance_id, self._convert_matrix(bl_matrix))
@@ -197,6 +197,14 @@ class MeshTranslator(Translator):
     def update_xform(self, instance_id, bl_matrix):
         self.__instance_lib.update_xform(instance_id, self._convert_matrix(bl_matrix))
 
+    def get_material_mappings(self):
+        material_mappings = list()
+
+        material_mappings.extend(x for x in self.__front_materials.values())
+        material_mappings.extend(x for x in self.__back_materials.values() if x not in material_mappings)
+
+        return material_mappings
+
     def __get_mesh_inst_params(self):
         asr_obj_props = self._bl_obj.appleseed
         object_instance_params = {
@@ -227,14 +235,14 @@ class MeshTranslator(Translator):
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
                 if m.material is not None and m.material.use_nodes:
-                    mat_key = f"{m.material.original.appleseed.mat_name}_mat"
+                    mat_key = f"{m.material.original.name_full}_mat"
                 else:
                     mat_key = "__default_material"
                 front_mats[f"slot-{i}"] = mat_key
         else:
             if len(material_slots) == 1:
                 if material_slots[0].material is not None and material_slots[0].material.use_nodes:
-                    mat_key = material_slots[0].material.original.appleseed.mat_name + "_mat"
+                    mat_key = material_slots[0].material.original.name_full + "_mat"
                 else:
                     mat_key = "__default_material"
                 front_mats["default"] = mat_key
