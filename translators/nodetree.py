@@ -51,12 +51,12 @@ class NodeTreeTranslator(Translator):
     def bl_nodes(self):
         return self._bl_obj.nodes
 
-    def create_entities(self, bl_scene):
+    def create_entities(self, depsgraph):
         tree_name = f"{self.__mat_name}_tree"
 
         self.__as_shader_group = asr.ShaderGroup(tree_name)
 
-        self.__create_shadergroup(bl_scene)
+        self.__create_shadergroup(depsgraph.scene_eval)
 
     def flush_entities(self, as_scene, as_assembly, as_project):
         shader_groupname = self.__as_shader_group.get_name()

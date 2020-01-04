@@ -59,7 +59,8 @@ class AppleseedMatProps(bpy.types.PropertyGroup):
                                            max=64,
                                            update=refresh_preview)
 
-    mat_name: bpy.props.StringProperty(name="mat_name",
+    # Original object name.
+    obj_name: bpy.props.StringProperty(name="obj_name",
                                        default="")
 
 def register():

@@ -45,7 +45,7 @@ class LampTranslator(Translator):
     def __init__(self, bl_lamp, asset_handler):
         super().__init__(bl_lamp, asset_handler)
 
-        self.__lamp_name = str()
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
 
         self.__lamp_model = None
         self.__as_lamp_params = None
@@ -63,6 +63,10 @@ class LampTranslator(Translator):
         return self._bl_obj
 
     @property
+    def orig_name(self):
+        return self._bl_obj.appleseed.obj_name
+
+    @property
     def instances_size(self):
         return len(self.__matrices)
 
@@ -70,15 +74,14 @@ class LampTranslator(Translator):
         logger.debug("appleseed: Adding xform for %s", self.obj_name)
         self.__matrices[instance_id] = self.__convert_lamp_matrix(bl_matrix)
 
-    def create_entities(self, bl_scene, deforms_length):
-        self.__lamp_name = f"{self.obj_name}_lamp"
+    def create_entities(self, depsgraph, deforms_length):
         as_lamp_data = self.bl_lamp.data.appleseed
 
         self.__lamp_model = self.__get_lamp_model()
 
         if self.bl_lamp.data.type != 'AREA':
             radiance = self._convert_color(as_lamp_data.radiance)
-            lamp_radiance_name = f"{self.__lamp_name}_radiance"
+            lamp_radiance_name = f"{self.orig_name}_radiance"
 
             self.__as_lamp_radiance = asr.ColorEntity(
                 lamp_radiance_name,
@@ -95,19 +98,19 @@ class LampTranslator(Translator):
                 self.__as_lamp_params = self.__get_sun_lamp_params()
         else:
             shape_params = self._get_area_mesh_params()
-            mesh_name = f"{self.__lamp_name}_mesh"
+            mesh_name = f"{self.orig_name}_mesh"
 
             self.__as_area_lamp = asr.create_primitive_mesh(mesh_name, shape_params)
 
-            mat_name = f"{self.__lamp_name}_mat"
+            mat_name = f"{self.orig_name}_mat"
 
-            shader_name = f"{self.__lamp_name}_tree"
+            shader_name = f"{self.orig_name}_tree"
 
             if not self.bl_lamp.data.use_nodes:
                 self._set_shadergroup()
             else:
                 self.__node_tree = NodeTreeTranslator(self.bl_lamp.data.node_tree, self._asset_handler, self.obj_name)
-                self.__node_tree.create_entities(bl_scene)
+                self.__node_tree.create_entities(depsgraph.scene_eval)
 
             self.__as_area_lamp_material = asr.Material('osl_material', mat_name, {'osl_surface': shader_name})
 
@@ -124,9 +127,9 @@ class LampTranslator(Translator):
                 self.__matrices[key] = as_main_assembly.lights().get_by_name(key)
         
         else:
-            mat_name = f"{self.__lamp_name}_mat"
+            mat_name = f"{self.orig_name}_mat"
 
-            mesh_name = f"{self.__lamp_name}_mesh"
+            mesh_name = f"{self.orig_name}_mesh"
 
             as_main_assembly.materials().insert(self.__as_area_lamp_material)
             self.__as_area_lamp_material = as_main_assembly.materials().get_by_name(mat_name)
@@ -160,9 +163,6 @@ class LampTranslator(Translator):
         if self.__lamp_model != 'area_lamp':
             self.__matrices[inst_id].set_transform(self.__convert_lamp_matrix(bl_matrix))
 
-    def get_material_mappings(self):
-        return list()
-
     def __get_point_lamp_params(self):
         as_lamp_data = self.bl_lamp.data.appleseed
         light_params = {
@@ -179,7 +179,7 @@ class LampTranslator(Translator):
         outer_angle = math.degrees(self.bl_lamp.data.spot_size)
         inner_angle = (1.0 - self.bl_lamp.data.spot_blend) * outer_angle
 
-        intensity = f"{self.__lamp_name}_radiance"
+        intensity = f"{self.orig_name}_radiance"
         intensity_multiplier = as_lamp_data.radiance_multiplier
 
         if as_lamp_data.radiance_use_tex and as_lamp_data.radiance_tex is not None:
@@ -283,7 +283,7 @@ class LampTranslator(Translator):
     def _set_shadergroup(self):
         as_lamp_data = self.bl_lamp.data.appleseed
 
-        shader_name = f"{self.__lamp_name}_tree"
+        shader_name = f"{self.orig_name}_tree"
 
         shader_group = asr.ShaderGroup(shader_name)
 

@@ -141,8 +141,9 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
                                             description="",
                                             default=True)
 
-    osl_node_tree: bpy.props.PointerProperty(name="Lamp OSL Node Tree", type=bpy.types.NodeTree)
-
+    # Original object name.
+    obj_name: bpy.props.StringProperty(name="obj_name",
+                                       default="")
 
 def register():
     util.safe_register_class(AppleseedLampProps)

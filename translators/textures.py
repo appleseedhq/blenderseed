@@ -43,27 +43,29 @@ class TextureTranslator(Translator):
     def __init__(self, bl_texture, asset_handler=None):
         super().__init__(bl_texture, asset_handler)
 
-        self.__tex_name = str()
-
         self.__as_tex = None
         self.__as_tex_inst = None
 
         self.__as_tex_params = None
         self.__as_tex_inst_params = None
 
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
+
     @property
     def bl_tex(self):
         return self._bl_obj
 
-    def create_entities(self, bl_scene):
-        self.__tex_name = self._bl_obj.name_full
+    @property
+    def orig_name(self):
+        return self._bl_obj.appleseed.obj_name
 
+    def create_entities(self, depsgraph):
         self.__as_tex_params = self.__get_tex_params()
-        self.__as_tex = asr.Texture('disk_texture_2d', self.__tex_name, self.__as_tex_params, [])
+        self.__as_tex = asr.Texture('disk_texture_2d', self.orig_name, self.__as_tex_params, [])
 
         self.__as_tex_inst_params = self.__get_tex_inst_params()
         self.__as_tex_inst = asr.TextureInstance(
-            f"{self.__tex_name}_inst",
+            f"{self.orig_name}_inst",
             self.__as_tex_inst_params,
             self.obj_name,
             asr.Transformf(asr.Matrix4f.identity()))

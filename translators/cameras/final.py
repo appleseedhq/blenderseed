@@ -49,12 +49,12 @@ class RenderCameraTranslator(Translator):
     def bl_camera(self):
         return self._bl_obj
 
-    def create_entities(self, bl_scene, context=None, engine=None):
+    def create_entities(self, depsgraph, context=None, engine=None):
         self.__cam_model = self.__get_model()
 
         self.__as_camera = asr.Camera(self.__cam_model, "Camera", {})
 
-        self.__as_cam_params = self.__get_cam_params(bl_scene, engine)
+        self.__as_cam_params = self.__get_cam_params(depsgraph.scene_eval, engine)
 
         self.__as_camera.set_parameters(self.__as_cam_params)
 

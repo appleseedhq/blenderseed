@@ -119,7 +119,6 @@ class SceneTranslator(object):
         # Translators.
         self.__as_world_translator = None
         self.__as_camera_translator = None
-        self.__as_lamp_translators = dict()
         self.__as_object_translators = dict()
         self.__as_material_translators = dict()
         self.__as_texture_translators = dict()
@@ -132,6 +131,7 @@ class SceneTranslator(object):
 
         # Interactive tools.
         self.__viewport_resolution = None
+        self.__current_frame = None
 
         # Render crop window.
         self.__crop_window = None
@@ -201,9 +201,8 @@ class SceneTranslator(object):
                 logger.debug("appleseed: Creating light translator for %s", obj.name_full)
                 objects_to_add[obj] = LampTranslator(obj, self.__asset_handler)
             elif obj.type == 'MESH':
-                print(f"appleseed: Creating mesh translator for {obj.name_full}")
                 logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
-                objects_to_add[obj] = MeshTranslator(obj.evaluated_get(depsgraph), self.__export_mode, self.__asset_handler)
+                objects_to_add[obj] = MeshTranslator(obj, self.__export_mode, self.__asset_handler)
         #     elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
         #         logger.debug("appleseed: Creating archive assembly translator for %s", obj.name_full)
         #         objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler, self.__xform_times)
@@ -219,17 +218,17 @@ class SceneTranslator(object):
 
         # Create camera, world, material and texture entities
         logger.debug("appleseed: Creating camera entity")
-        self.__as_camera_translator.create_entities(depsgraph.scene_eval, context, engine)
+        self.__as_camera_translator.create_entities(depsgraph, context, engine)
         if self.__as_world_translator is not None:
             logger.debug("appleseed: Creating world entity")
-            self.__as_world_translator.create_entities(depsgraph.scene_eval)
+            self.__as_world_translator.create_entities(depsgraph)
 
         for obj, trans in materials_to_add.items():
             logger.debug("appleseed: Creating entity for translator %s", obj.name_full)
-            trans.create_entities(depsgraph.scene_eval)
+            trans.create_entities(depsgraph)
         for obj, trans in textures_to_add.items():
             logger.debug("appleseed: Creating entity for translator %s", obj.name_full)
-            trans.create_entities(depsgraph.scene_eval)
+            trans.create_entities(depsgraph)
 
         # Set initial position of all objects and lamps
         self.__calc_initial_positions(depsgraph, engine, objects_to_add)
@@ -243,7 +242,7 @@ class SceneTranslator(object):
         # Create 3D entities
         for obj, trans in objects_to_add.items():
             logger.debug("appleseed: Creating entity for %s", obj.name_full)
-            trans.create_entities(depsgraph.scene_eval, len(self.__deform_times))
+            trans.create_entities(depsgraph, len(self.__deform_times))
 
         # Calculate additional steps for motion blur
         if self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
@@ -294,40 +293,60 @@ class SceneTranslator(object):
         engine.frame_set(current_frame, subframe=0.0)
 
     def update_scene(self, depsgraph, context):
-        new_objects = dict()
-        new_materials = dict()
+        objects_to_add = dict()
+        materials_to_add = dict()
+
+        transform_updates = list()
+        object_updates = list()
 
         # Check for updated datablocks.
         for update in depsgraph.updates:
+            # This one is easy.
             if isinstance(update.id, bpy.types.Material):
                 if update.id.original in self.__as_material_translators.keys():
-                    # Check if material name has changed.
-                    if self.__as_material_translators[update.id.original].check_for_name_change():
-                        self.__recreate_material(self.__as_material_translators[update.id.original], depsgraph)
-                    else:
-                        self.__as_material_translators[update.id.original].update_material(depsgraph.scene_eval)
-                    # TODO: See which objects use the material and update them
+                    self.__as_material_translators[update.id.original].update_material(depsgraph)
                 else:
-                    new_materials[update.id.original] = MaterialTranslator(update.id.original, self.__asset_handler)
+                    materials_to_add[update.id.original] = MaterialTranslator(update.id.original, self.__asset_handler)
+            # Now comes agony and mental anguish.
             elif isinstance(update.id, bpy.types.Object):
                     if update.id.type == 'MESH':
                         if update.id.original in self.__as_object_translators.keys():
                             if update.is_updated_geometry:
-                                self.__as_object_translators[update.id.original].update_obj_instance(depsgraph.scene_eval)
+                                self.__as_object_translators[update.id.original].update_obj_instance(depsgraph)
+                                object_updates.append(update.id.original)
+                            if update.is_updated_transform:
+                                transform_updates.append(update.id.original)
                         else:
-                            new_objects[update.id.original] = MeshTranslator(update.id, self.__export_mode, self.__asset_handler)
+                            objects_to_add[update.id.original] = MeshTranslator(update.id.original, self.__export_mode, self.__asset_handler)
+                    elif update.id.type == 'LIGHT':
+                        if update.id.original in self.__as_object_translators.keys():
+                            if update.is_updated_geometry:
+                                self.__as_object_translators[update.id.original].update_lamp(depsgraph)
+                                object_updates.append(update.id.original)
+                            if update.is_updated_transform:
+                                transform_updates.append(update.id.original)
+                        else:
+                            objects_to_add[update.id.original] = LampTranslator(update.id.original, self.__asset_handler)
+            elif isinstance(update.id, bpy.types.World):
+                pass
 
-        # Update transforms for objects and their instances.
+        # Create new objects.
+        for trans in objects_to_add.values():
+            trans.create_entities(depsgraph, 0)
+        
+        # Now we determine what transforms need to be updated.
         for inst in depsgraph.object_instances:
             if inst.show_self:
-                if inst.is_instance:
-                    obj = inst.instance_object.original
-                    inst_id = f"{obj.name_full}|{inst.parent.original.name_full}|{inst.persistent_id[0]}"
-                else:
-                    obj = inst.object.original
-                    inst_id = f"{obj.name_full}|{inst.persistent_id[0]}"
-                if obj.type in ('MESH', 'LIGHT'):
+                obj, inst_id = self.__get_instance_data(inst)
+                if obj in transform_updates or (inst.parent is not None and inst.parent.original in object_updates):
                     self.__as_object_translators[obj].update_xform(inst_id, inst.matrix_world)
+                elif obj in objects_to_add.keys():
+                    objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
+
+        for bl_obj, trans in objects_to_add.items():
+            trans.flush_entities(self.__project.get_scene(), self.__main_assembly, self.__project)
+            self.__as_object_translators[bl_obj] = trans
+
 
     def check_view_window(self, depsgraph, context):
         updates = dict()
@@ -761,22 +780,17 @@ class SceneTranslator(object):
 
         for inst in depsgraph.object_instances:
             if inst.show_self:
-                if inst.is_instance:
-                    obj = inst.instance_object.original
-                    inst_id = f"{obj.name_full}|{inst.parent.original.name_full}|{inst.persistent_id[0]}"
-                else:
-                    obj = inst.object.original
-                    inst_id = f"{obj.name_full}|{inst.persistent_id[0]}"
+                obj, inst_id = self.__get_instance_data(inst)
                 if obj.type in ('MESH', 'LIGHT'):
                     objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
 
     def __calc_motion_steps(self, depsgraph, engine, objects_to_add):
-        current_frame = depsgraph.scene_eval.frame_current
+        self.__current_frame = depsgraph.scene_eval.frame_current
 
-        logger.debug("appleseed: Processing motion steps for frame %s", current_frame)
+        logger.debug("appleseed: Processing motion steps for frame %s", self.__current_frame)
 
         for index, time in enumerate(self.__all_times[1:]):
-            new_frame = current_frame + time
+            new_frame = self.__current_frame + time
             int_frame = math.floor(new_frame)
             subframe = new_frame - int_frame
 
@@ -788,32 +802,14 @@ class SceneTranslator(object):
             if time in self.__xform_times:
                 for inst in depsgraph.object_instances:
                     if inst.show_self:
-                        if inst.is_instance:
-                            obj = inst.instance_object.original
-                            inst_id = f"{obj.name_full}|{inst.parent.original.name_full}|{inst.persistent_id[0]}"
-                        else:
-                            obj = inst.object.original
-                            inst_id = f"{obj.name_full}|{inst.persistent_id[0]}"
-                        if obj.type == 'MESH':
-                            objects_to_add[obj].add_instance_step(time, inst_id, inst.matrix_world)
+                        obj, inst_id = self.__get_instance_data(inst)
+                        objects_to_add[obj].add_instance_step(time, inst_id, inst.matrix_world)
 
             if time in self.__deform_times:
                 for translator in objects_to_add.values():
                     translator.set_deform_key(time, depsgraph, index)
         
-        engine.frame_set(current_frame, subframe=0.0)
-
-    def __recreate_material(self, mat_trans, depsgraph):
-        mat_name = mat_trans.get_mat_name()
-
-        mat_trans.delete_material(self.__main_assembly)
-        mat_trans.create_entities(depsgraph.scene_eval)
-        mat_trans.flush_entities(self.__project.get_scene(), self.__main_assembly, self.__project)
-
-        for trans in self.__as_object_translators.values():
-            materials = trans.get_material_mappings()
-            if mat_name in materials:
-                trans.update_obj_instance(depsgraph.scene_eval)
+        engine.frame_set(self.__current_frame, subframe=0.0)
 
     # Static utility methods
     @staticmethod
@@ -824,6 +820,17 @@ class SceneTranslator(object):
 
         for seg in range(0, samples):
             times.update({scene.appleseed.shutter_open + (seg * segment_size)})
+
+    @staticmethod
+    def __get_instance_data(instance):
+        if instance.is_instance: # Instance was generated by a particle system or dupli object.
+            obj = instance.instance_object.original
+            inst_id = f"{obj.appleseed.obj_name}|{instance.parent.original.appleseed.obj_name}|{instance.persistent_id[0]}"
+        else: # Instance is a discreet object in the scene.
+            obj = instance.object.original
+            inst_id = f"{obj.appleseed.obj_name}|{instance.persistent_id[0]}"
+
+        return obj, inst_id
 
     @staticmethod
     def __round_up_pow2(deformation_blur_samples):

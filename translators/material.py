@@ -39,8 +39,6 @@ class MaterialTranslator(Translator):
     def __init__(self, mat, asset_handler):
         super().__init__(mat, asset_handler)
 
-        self.__mat_name = str()
-
         self.__as_mat_params = dict()
         self.__as_mat = None
         self.__as_shader_params = dict()
@@ -48,31 +46,33 @@ class MaterialTranslator(Translator):
 
         self.__as_nodetree = None
 
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
+
     @property
     def bl_mat(self):
         return self._bl_obj
 
     @property
+    def orig_name(self):
+        return self._bl_obj.appleseed.obj_name
+
+    @property
     def bl_node_tree(self):
         return self._bl_obj.node_tree
 
-    def create_entities(self, bl_scene):
-        # Store the name of the material in case it changes later.
-        self.__mat_name = f"{self.obj_name}"
-        mat_name = f"{self.__mat_name}_mat"
-
-        surface_name = f"{self.__mat_name}_surface"
+    def create_entities(self, depsgraph):
+        surface_name = f"{self.orig_name}_surface"
 
         if self.bl_mat.node_tree is not None:
-            self.__as_nodetree = NodeTreeTranslator(self.bl_node_tree, self._asset_handler, self.__mat_name)
-            self.__as_nodetree.create_entities(bl_scene)
+            self.__as_nodetree = NodeTreeTranslator(self.bl_node_tree, self._asset_handler, self.orig_name)
+            self.__as_nodetree.create_entities(depsgraph)
 
         self.__as_shader_params = self.__get_shader_params()
         self.__as_mat_params = self.__get_mat_params()
 
         self.__as_shader = asr.SurfaceShader("physical_surface_shader", surface_name, {})
 
-        self.__as_mat = asr.Material('osl_material', mat_name, {})
+        self.__as_mat = asr.Material('osl_material', self.orig_name, {})
 
         self.__as_mat.set_parameters(self.__as_mat_params)
         self.__as_shader.set_parameters(self.__as_shader_params)
@@ -103,12 +103,6 @@ class MaterialTranslator(Translator):
     def update_material(self, bl_scene):
         self.__as_nodetree.update_nodetree(bl_scene)
 
-    def check_for_name_change(self):
-        return self.__mat_name != f"{self.bl_mat.name_full}"
-
-    def get_mat_name(self):
-        return f"{self.__mat_name}_mat"
-
     def __get_shader_params(self):
         as_mat_data = self.bl_mat.appleseed
         shader_params = {'lighting_samples': as_mat_data.shader_lighting_samples}
@@ -116,9 +110,9 @@ class MaterialTranslator(Translator):
         return shader_params
 
     def __get_mat_params(self):
-        mat_params = {'surface_shader': f"{self.__mat_name}_surface"}
+        mat_params = {'surface_shader': f"{self.orig_name}_surface"}
 
         if self.bl_node_tree is not None:
-            mat_params['osl_surface'] = f"{self.__mat_name}_tree"
+            mat_params['osl_surface'] = f"{self.orig_name}_tree"
 
         return mat_params

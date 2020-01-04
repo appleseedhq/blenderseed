@@ -42,7 +42,6 @@ class MeshTranslator(Translator):
 
         self.__export_mode = export_mode
 
-        self.__mesh_name = str()
         self.__mesh_params = str()
 
         self.__instance_lib = asr.BlTransformLibrary()
@@ -61,10 +60,16 @@ class MeshTranslator(Translator):
         self.__deforming = bl_obj.appleseed.use_deformation_blur and is_object_deforming(bl_obj)
 
         self.__mesh_filenames = list()
+
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
     
     @property
     def mesh_obj(self):
         return self._bl_obj
+
+    @property
+    def orig_name(self):
+        return self._bl_obj.appleseed.obj_name
 
     @property
     def instances_size(self):
@@ -73,42 +78,44 @@ class MeshTranslator(Translator):
     def add_instance_step(self, time, instance_id, bl_matrix):
         self.__instance_lib.add_xform_step(time, instance_id, self._convert_matrix(bl_matrix))
 
-    def create_entities(self, bl_scene, num_def_times):
-        self.__mesh_name = f"{self.obj_name}_obj"
-
+    def create_entities(self, depsgraph, num_def_times):
         self.__mesh_params = self.__get_mesh_params()
 
-        self.__as_mesh = asr.MeshObject(self.__mesh_name, self.__mesh_params)
+        self.__as_mesh = asr.MeshObject(self.orig_name, self.__mesh_params)
 
         self.__as_mesh_inst_params = self.__get_mesh_inst_params()
 
         self.__front_materials, self.__back_materials = self.__get_material_mappings()
 
-        me = self._bl_obj.to_mesh()
+        eval_object = self._bl_obj.evaluated_get(depsgraph)
+
+        me = eval_object.to_mesh()
 
         self.__convert_mesh(me)
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             logger.debug("Writing mesh file object %s, time = 0", self._bl_obj.name)
-            self.__write_mesh(self.__mesh_name)
+            self.__write_mesh(self.orig_name)
 
-        self._bl_obj.to_mesh_clear()
+        eval_object.to_mesh_clear()
 
         if self.__deforming:
             self.__as_mesh.set_motion_segment_count(num_def_times - 1)
 
     def set_deform_key(self, time, depsgraph, index):
-        me = self._bl_obj.to_mesh()
+        eval_object = self._bl_obj.evaluated_get(depsgraph)
+
+        me = eval_object.to_mesh()
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             logger.debug("Writing mesh file object %s, time = %s", self._bl_obj.name, time)
 
             self.__convert_mesh(me)
-            self.__write_mesh(self.__mesh_name)
+            self.__write_mesh(self.orig_name)
         else:
             self.__set_mesh_key(me, index)
 
-        self._bl_obj.to_mesh_clear()
+        eval_object.to_mesh_clear()
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
@@ -128,9 +135,9 @@ class MeshTranslator(Translator):
                 for i, f in enumerate(self.__mesh_filenames):
                     params['filename'][str(i)] = f"_geometry/{f}"
 
-            self.__as_mesh = asr.MeshObject(self.__mesh_name, params)
+            self.__as_mesh = asr.MeshObject(self.orig_name, params)
 
-        mesh_name = self.__object_instance_mesh_name(self.__mesh_name)
+        mesh_name = self.__object_instance_mesh_name(self.orig_name)
 
         self.__obj_inst_name = f"{self.obj_name}_inst"
 
@@ -174,14 +181,14 @@ class MeshTranslator(Translator):
             as_main_assembly.object_instances().insert(self.__as_mesh_inst)
             self.__as_mesh_inst = as_main_assembly.object_instances().get_by_name(self.__obj_inst_name)
 
-    def update_obj_instance(self, bl_scene):
+    def update_obj_instance(self, depsgraph):
         self.__ass.object_instances().remove(self.__as_mesh_inst)
 
         self.__as_mesh_inst_params = self.__get_mesh_inst_params()
 
         self.__front_materials, self.__back_materials = self.__get_material_mappings()
 
-        mesh_name = self.__object_instance_mesh_name(self.__mesh_name)
+        mesh_name = self.__object_instance_mesh_name(self.orig_name)
 
         self.__as_mesh_inst = asr.ObjectInstance(
                 self.__obj_inst_name,
@@ -196,14 +203,6 @@ class MeshTranslator(Translator):
 
     def update_xform(self, instance_id, bl_matrix):
         self.__instance_lib.update_xform(instance_id, self._convert_matrix(bl_matrix))
-
-    def get_material_mappings(self):
-        material_mappings = list()
-
-        material_mappings.extend(x for x in self.__front_materials.values())
-        material_mappings.extend(x for x in self.__back_materials.values() if x not in material_mappings)
-
-        return material_mappings
 
     def __get_mesh_inst_params(self):
         asr_obj_props = self._bl_obj.appleseed
@@ -235,14 +234,14 @@ class MeshTranslator(Translator):
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
                 if m.material is not None and m.material.use_nodes:
-                    mat_key = f"{m.material.original.name_full}_mat"
+                    mat_key = f"{m.material.original.appleseed.obj_name}"
                 else:
                     mat_key = "__default_material"
                 front_mats[f"slot-{i}"] = mat_key
         else:
             if len(material_slots) == 1:
                 if material_slots[0].material is not None and material_slots[0].material.use_nodes:
-                    mat_key = material_slots[0].material.original.name_full + "_mat"
+                    mat_key = f"{material_slots[0].material.original.appleseed.obj_name}"
                 else:
                     mat_key = "__default_material"
                 front_mats["default"] = mat_key
@@ -262,7 +261,7 @@ class MeshTranslator(Translator):
         params = dict()
 
         if self._bl_obj.appleseed.object_alpha_texture is not None:
-            params['alpha_map'] = self._bl_obj.appleseed.object_alpha_texture.name_full + "_inst"
+            params['alpha_map'] = self._bl_obj.appleseed.object_alpha_texture.appleseed.obj_name + "_inst"
 
         return params
 
@@ -378,7 +377,7 @@ class MeshTranslator(Translator):
         logger.debug("   get_vertex_tangent_count %s", self.__as_mesh.get_vertex_tangent_count())
         logger.debug("   get_motion_segment_count %s", self.__as_mesh.get_motion_segment_count())
 
-        logger.debug("Computed mesh signature for object %s, hash: %s", self.obj_name, bl_hash)
+        logger.debug("Computed mesh signature for object %s, hash: %s", self.orig_name, bl_hash)
 
         # Save the mesh filename for later use.
         mesh_filename = f"{bl_hash}.binarymesh"
