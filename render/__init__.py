@@ -209,7 +209,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         material_preview_renderer = PreviewRenderer(depsgraph)
-        material_preview_renderer.translate_preview(depsgraph.scene_eval)
+        material_preview_renderer.translate_preview(depsgraph)
 
         self.__start_final_render(depsgraph.scene_eval, material_preview_renderer.as_project)
 
