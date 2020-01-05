@@ -296,8 +296,12 @@ class SceneTranslator(object):
         objects_to_add = dict()
         materials_to_add = dict()
 
-        transform_updates = list()
+        recreate_instances = list()
         object_updates = list()
+
+        check_for_deletions = False
+
+        recreate_instances = list()
 
         # Check for updated datablocks.
         for update in depsgraph.updates:
@@ -315,7 +319,7 @@ class SceneTranslator(object):
                                 self.__as_object_translators[update.id.original].update_obj_instance(depsgraph)
                                 object_updates.append(update.id.original)
                             if update.is_updated_transform:
-                                transform_updates.append(update.id.original)
+                                recreate_instances.append(update.id.original)
                         else:
                             objects_to_add[update.id.original] = MeshTranslator(update.id.original, self.__export_mode, self.__asset_handler)
                     elif update.id.type == 'LIGHT':
@@ -324,29 +328,62 @@ class SceneTranslator(object):
                                 self.__as_object_translators[update.id.original].update_lamp(depsgraph)
                                 object_updates.append(update.id.original)
                             if update.is_updated_transform:
-                                transform_updates.append(update.id.original)
+                                recreate_instances.append(update.id.original)
                         else:
                             objects_to_add[update.id.original] = LampTranslator(update.id.original, self.__asset_handler)
             elif isinstance(update.id, bpy.types.World):
                 pass
+            elif isinstance(update.id, bpy.types.Collection):
+                check_for_deletions = True
+
+        # Now we figure out which objects have particle systems that need to have their instances recreated.
+        for obj in object_updates:
+            if len(obj.particle_systems) > 0:
+                for system in obj.particle_systems:
+                    if system.settings.render_type == 'OBJECT':
+                        recreate_instances.append(system.settings.instance_object)
+
+        for obj in recreate_instances:
+            self.__as_object_translators[obj].clear_instances(self.__main_assembly)
+
+        for inst in depsgraph.object_instances:
+            if inst.show_self:
+                obj, inst_id = self.__get_instance_data(inst)
+                if obj in recreate_instances:
+                    self.__as_object_translators[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
+                elif obj in objects_to_add.keys():
+                    objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
+
+        # Create new materials.
+        for mat in materials_to_add.values():
+            mat.create_entities(depsgraph)
 
         # Create new objects.
         for trans in objects_to_add.values():
             trans.create_entities(depsgraph, 0)
-        
-        # Now we determine what transforms need to be updated.
-        for inst in depsgraph.object_instances:
-            if inst.show_self:
-                obj, inst_id = self.__get_instance_data(inst)
-                if obj in transform_updates or (inst.parent is not None and inst.parent.original in object_updates):
-                    self.__as_object_translators[obj].update_xform(inst_id, inst.matrix_world)
-                elif obj in objects_to_add.keys():
-                    objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
+
+        for obj in recreate_instances:
+            self.__as_object_translators[obj].flush_instances(self.__main_assembly)
+
+        for mat_obj, trans in materials_to_add.items():
+            trans.flush_entities(self.__project.get_scene(), self.__main_assembly, self.__project)
+            self.__as_material_translators[mat_obj] = trans
 
         for bl_obj, trans in objects_to_add.items():
             trans.flush_entities(self.__project.get_scene(), self.__main_assembly, self.__project)
             self.__as_object_translators[bl_obj] = trans
 
+        # Check if any objects were deleted.
+        if check_for_deletions:
+            obj_list = list(self.__as_object_translators.keys())
+
+            for obj in obj_list:
+                try:
+                    if obj.name_full in bpy.data.objects:
+                        continue
+                except:
+                    self.__as_object_translators[obj].delete_object(self.__main_assembly)
+                    del self.__as_object_translators[obj]
 
     def check_view_window(self, depsgraph, context):
         updates = dict()
@@ -803,7 +840,8 @@ class SceneTranslator(object):
                 for inst in depsgraph.object_instances:
                     if inst.show_self:
                         obj, inst_id = self.__get_instance_data(inst)
-                        objects_to_add[obj].add_instance_step(time, inst_id, inst.matrix_world)
+                        if obj.type in ('MESH', 'LIGHT'):
+                            objects_to_add[obj].add_instance_step(time, inst_id, inst.matrix_world)
 
             if time in self.__deform_times:
                 for translator in objects_to_add.values():

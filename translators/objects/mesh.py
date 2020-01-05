@@ -61,6 +61,8 @@ class MeshTranslator(Translator):
 
         self.__mesh_filenames = list()
 
+        self.__ass_name = str()
+
         self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
     
     @property
@@ -144,8 +146,8 @@ class MeshTranslator(Translator):
         needs_assembly = self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__instance_lib.needs_assembly()
 
         if needs_assembly:
-            ass_name = f"{self.obj_name}_ass"
-            self.__ass = asr.Assembly(ass_name)
+            self.__ass_name = f"{self.obj_name}_ass"
+            self.__ass = asr.Assembly(self.__ass_name)
 
             self.__as_mesh_inst = asr.ObjectInstance(
                 self.__obj_inst_name,
@@ -162,9 +164,9 @@ class MeshTranslator(Translator):
             self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.__obj_inst_name)
 
             as_main_assembly.assemblies().insert(self.__ass)
-            self.__ass = as_main_assembly.assemblies().get_by_name(ass_name)
+            self.__ass = as_main_assembly.assemblies().get_by_name(self.__ass_name)
 
-            self.__instance_lib.flush_instances(as_main_assembly, ass_name)
+            self.flush_instances(as_main_assembly)
 
         else:
             self.__as_mesh_inst = asr.ObjectInstance(
@@ -180,6 +182,9 @@ class MeshTranslator(Translator):
 
             as_main_assembly.object_instances().insert(self.__as_mesh_inst)
             self.__as_mesh_inst = as_main_assembly.object_instances().get_by_name(self.__obj_inst_name)
+
+    def flush_instances(self, as_main_assembly):
+        self.__instance_lib.flush_instances(as_main_assembly, self.__ass_name)
 
     def update_obj_instance(self, depsgraph):
         self.__ass.object_instances().remove(self.__as_mesh_inst)
@@ -201,8 +206,20 @@ class MeshTranslator(Translator):
         self.__ass.object_instances().insert(self.__as_mesh_inst)
         self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.__obj_inst_name)
 
-    def update_xform(self, instance_id, bl_matrix):
-        self.__instance_lib.update_xform(instance_id, self._convert_matrix(bl_matrix))
+    def clear_instances(self, as_main_assembly):
+        self.__instance_lib.clear_instances(as_main_assembly)
+
+    def delete_object(self, as_main_assembly):
+        self.clear_instances(as_main_assembly)
+
+        self.__ass.objects().remove(self.__as_mesh)
+        self.__ass.object_instances().remove(self.__as_mesh_inst)
+
+        as_main_assembly.assemblies().remove(self.__ass)
+
+        self.__as_mesh = None
+        self.__as_mesh_inst = None
+        self.__ass = None
 
     def __get_mesh_inst_params(self):
         asr_obj_props = self._bl_obj.appleseed

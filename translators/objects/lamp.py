@@ -157,11 +157,16 @@ class LampTranslator(Translator):
                     {"default": "__null_material"})
 
                 as_main_assembly.object_instances().insert(as_area_lamp_mesh_inst)
-                transform_matrix = as_main_assembly.object_instances().get_by_name(inst_name)
+                self.__matrices[key] = as_main_assembly.object_instances().get_by_name(inst_name)
 
-    def update_xform(self, inst_id, bl_matrix):
+    def clear_instances(self, as_main_assembly):
         if self.__lamp_model != 'area_lamp':
-            self.__matrices[inst_id].set_transform(self.__convert_lamp_matrix(bl_matrix))
+            for key, transform_matrix in self.__matrices.items():
+                as_main_assembly.lights().remove(transform_matrix)
+                del self.__matrices[key]
+
+    def flush_instances(self, as_main_assembly):
+        pass
 
     def __get_point_lamp_params(self):
         as_lamp_data = self.bl_lamp.data.appleseed
