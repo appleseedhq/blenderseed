@@ -325,12 +325,13 @@ class SceneTranslator(object):
                     elif update.id.type == 'LIGHT':
                         if update.id.original in self.__as_object_translators.keys():
                             if update.is_updated_geometry:
-                                self.__as_object_translators[update.id.original].update_lamp(depsgraph, self.__main_assembly)
+                                self.__as_object_translators[update.id.original].update_lamp(depsgraph, self.__main_assembly,self.__project.get_scene(), self.__project)
                                 object_updates.append(update.id.original)
+                                recreate_instances.append(update.id.original)
                             if update.is_updated_transform:
                                 recreate_instances.append(update.id.original)
                         else:
-                            objects_to_add[update.id.original] = LampTranslator(update.id.original, self.__asset_handler)
+                            objects_to_add[update.id.original] = LampTranslator(update.id.original, self.__export_mode, self.__asset_handler)
             elif isinstance(update.id, bpy.types.World):
                 pass
             elif isinstance(update.id, bpy.types.Collection):
