@@ -199,8 +199,8 @@ class SceneTranslator(object):
         for obj in bpy.data.objects:
             if obj.type == 'LIGHT':
                 logger.debug("appleseed: Creating light translator for %s", obj.name_full)
-                objects_to_add[obj] = LampTranslator(obj, self.__asset_handler)
-            elif obj.type == 'MESH':
+                objects_to_add[obj] = LampTranslator(obj, self.__export_mode, self.__asset_handler)
+            elif obj.type == 'MESH' and len(obj.data.loops) > 0:
                 logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
                 objects_to_add[obj] = MeshTranslator(obj, self.__export_mode, self.__asset_handler)
         #     elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
@@ -325,7 +325,7 @@ class SceneTranslator(object):
                     elif update.id.type == 'LIGHT':
                         if update.id.original in self.__as_object_translators.keys():
                             if update.is_updated_geometry:
-                                self.__as_object_translators[update.id.original].update_lamp(depsgraph)
+                                self.__as_object_translators[update.id.original].update_lamp(depsgraph, self.__main_assembly)
                                 object_updates.append(update.id.original)
                             if update.is_updated_transform:
                                 recreate_instances.append(update.id.original)
@@ -341,7 +341,11 @@ class SceneTranslator(object):
             if len(obj.particle_systems) > 0:
                 for system in obj.particle_systems:
                     if system.settings.render_type == 'OBJECT':
-                        recreate_instances.append(system.settings.instance_object)
+                        recreate_instances.append(system.settings.instance_object.original)
+                    elif system.settings.render_type == 'COLLECTION':
+                        for obj in system.settings.instance_collection.objects:
+                            if obj.type in ('MESH', 'LIGHT') and obj.original not in recreate_instances:
+                                recreate_instances.append(obj.original)
 
         for obj in recreate_instances:
             self.__as_object_translators[obj].clear_instances(self.__main_assembly)
@@ -429,7 +433,7 @@ class SceneTranslator(object):
 
     # Interactive update functions.
     def write_project(self, export_path):
-        filename = bpy.path.ensure_ext(bpy.path.abspath(export_path), '.appleseed')
+        filename = os.path.abspath(bpy.path.ensure_ext(bpy.path.abspath(export_path), '.appleseed'))
 
         asr.ProjectFileWriter().write(
             self.__project,
@@ -818,7 +822,7 @@ class SceneTranslator(object):
         for inst in depsgraph.object_instances:
             if inst.show_self:
                 obj, inst_id = self.__get_instance_data(inst)
-                if obj.type in ('MESH', 'LIGHT'):
+                if obj in objects_to_add.keys():
                     objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
 
     def __calc_motion_steps(self, depsgraph, engine, objects_to_add):
@@ -840,7 +844,7 @@ class SceneTranslator(object):
                 for inst in depsgraph.object_instances:
                     if inst.show_self:
                         obj, inst_id = self.__get_instance_data(inst)
-                        if obj.type in ('MESH', 'LIGHT'):
+                        if obj in objects_to_add.keys():
                             objects_to_add[obj].add_instance_step(time, inst_id, inst.matrix_world)
 
             if time in self.__deform_times:
