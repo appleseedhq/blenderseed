@@ -384,7 +384,7 @@ class SceneTranslator(object):
 
             for obj in obj_list:
                 try:
-                    if obj.name_full in bpy.data.objects:
+                    if obj.name_full in bpy.data.objects or obj.name_full in bpy.data.lights:
                         continue
                 except:
                     self.__as_object_translators[obj].delete_object(self.__main_assembly)

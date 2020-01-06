@@ -358,6 +358,37 @@ class LampTranslator(Translator):
     def flush_instances(self, as_main_assembly):
         self.__instance_lib.flush_instances(as_main_assembly, self.__ass_name)
 
+    def delete_object(self, as_main_assembly):
+        self.clear_instances(as_main_assembly)
+
+        print("Cleared instances")
+
+        if self.__lamp_model != 'area_lamp':
+            print("Removing regular light")
+            self.__ass.lights().remove(self.__as_lamp)
+            self.__as_lamp = None
+
+            as_main_assembly.colors().remove(self.__as_lamp_radiance)
+            self.__as_lamp_radiance = None
+
+        else:
+            print("Removing area lamp")
+            self.__ass.objects().remove(self.__as_area_lamp_mesh)
+
+            self.__ass.object_instances().remove(self.__as_area_lamp_inst)
+
+            if self.__as_area_lamp_shadergroup is not None:
+                as_main_assembly.shader_groups().remove(self.__as_area_lamp_shadergroup)
+                self.__as_area_lamp_shadergroup = None
+            else:
+                self.__node_tree.delete_nodetree(as_main_assembly)
+                self.__node_tree = None
+
+            as_main_assembly.materials().remove(self.__as_area_lamp_material)
+        
+        as_main_assembly.assemblies().remove(self.__ass)
+        self.__ass = None    
+
     def __get_point_lamp_params(self):
         as_lamp_data = self.bl_lamp.data.appleseed
         light_params = {
