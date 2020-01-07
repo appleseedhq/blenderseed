@@ -64,64 +64,90 @@ class WorldTranslator(Translator):
 
         self.__as_env_type = as_world.env_type
 
-        if self.__as_env_type == 'sunsky':
-            self.__as_env_type = as_world.sun_model
+        if self.__as_env_type != 'none':
 
-        if self.__as_env_type == 'constant':
-            self.__as_colors.append(
-                asr.ColorEntity(
-                    'horizon_radiance_color',
-                    {'color_space': 'linear_rgb'},
-                    self._convert_color(as_world.horizon_color)))
+            if self.__as_env_type == 'sunsky':
+                self.__as_env_type = as_world.sun_model
 
-        elif self.__as_env_type in ('gradient', 'constant_hemisphere'):
-            self.__as_colors.append(
-                asr.ColorEntity(
-                    'horizon_radiance_color',
-                    {'color_space': 'srgb'},
-                    self._convert_color(as_world.horizon_color)))
+            if self.__as_env_type == 'constant':
+                self.__as_colors.append(
+                    asr.ColorEntity(
+                        'horizon_radiance_color',
+                        {'color_space': 'linear_rgb'},
+                        self._convert_color(as_world.horizon_color)))
 
-            self.__as_colors.append(
-                asr.ColorEntity(
-                    'zenith_radiance_color',
-                    {'color_space': 'linear_rgb'},
-                    self._convert_color(as_world.zenith_color)))
+            elif self.__as_env_type in ('gradient', 'constant_hemisphere'):
+                self.__as_colors.append(
+                    asr.ColorEntity(
+                        'horizon_radiance_color',
+                        {'color_space': 'linear_rgb'},
+                        self._convert_color(as_world.horizon_color)))
 
-        self.__as_edf_params = self.__create_params()
+                self.__as_colors.append(
+                    asr.ColorEntity(
+                        'zenith_radiance_color',
+                        {'color_space': 'linear_rgb'},
+                        self._convert_color(as_world.zenith_color)))
 
-        self.__as_env_edf = asr.EnvironmentEDF(
-            self.__as_env_type + "_environment_edf",
-            "sky_edf",
-            self.__as_edf_params)
+            self.__as_edf_params = self.__create_params()
 
-        self.__as_env_shader = asr.EnvironmentShader(
-            "edf_environment_shader",
-            "sky_shader",
-            {'environment_edf': 'sky_edf', 'alpha_value': as_world.env_alpha})
+            self.__as_env_edf = asr.EnvironmentEDF(
+                self.__as_env_type + "_environment_edf",
+                "sky_edf",
+                self.__as_edf_params)
 
-        self.__as_env = asr.Environment(
-            "sky",
-            {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
+            self.__as_env_shader = asr.EnvironmentShader(
+                "edf_environment_shader",
+                "sky_shader",
+                {'environment_edf': 'sky_edf', 'alpha_value': as_world.env_alpha})
 
-        self.__as_env_edf.transform_sequence().set_transform(
-            0.0,
-            asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
+            self.__as_env = asr.Environment(
+                "sky",
+                {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
+
+        else:
+            self.__as_env = asr.Environment("environment", {})
 
     def flush_entities(self, as_scene, as_assembly, as_project):
-        for index, color in enumerate(self.__as_colors):
-            color_name = color.get_name()
-            as_scene.colors().insert(color)
-            self.__as_colors[index] = as_scene.colors().get_by_name(color_name)
+        if self.__as_env_type != 'none':
+            self.__as_env_edf.transform_sequence().set_transform(
+                0.0,
+                asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
 
-        as_env_edf_name = self.__as_env_edf.get_name()
-        as_scene.environment_edfs().insert(self.__as_env_edf)
-        self.__as_env_edf = as_scene.environment_edfs().get_by_name(as_env_edf_name)
+            for index, color in enumerate(self.__as_colors):
+                color_name = color.get_name()
+                as_scene.colors().insert(color)
+                self.__as_colors[index] = as_scene.colors().get_by_name(color_name)
 
-        as_env_shader_name = self.__as_env_shader.get_name()
-        as_scene.environment_shaders().insert(self.__as_env_shader)
-        self.__as_env_shader = as_scene.environment_shaders().get_by_name(as_env_shader_name)
+            as_env_edf_name = self.__as_env_edf.get_name()
+            as_scene.environment_edfs().insert(self.__as_env_edf)
+            self.__as_env_edf = as_scene.environment_edfs().get_by_name(as_env_edf_name)
+
+            as_env_shader_name = self.__as_env_shader.get_name()
+            as_scene.environment_shaders().insert(self.__as_env_shader)
+            self.__as_env_shader = as_scene.environment_shaders().get_by_name(as_env_shader_name)
 
         as_scene.set_environment(self.__as_env)
+
+    def update_world(self, as_scene, depsgraph):
+        pass
+
+    def delete_world(self, as_scene):
+        for color in self.__as_colors:
+            
+            as_scene.colors().remove(color)
+            
+        self.__as_colors.clear()
+
+        if self.__as_env_edf is not None:
+            as_scene.environment_edfs().remove(self.__as_env_edf)
+            self.__as_env_edf = None
+
+        if self.__as_env_shader is not None:
+            as_scene.environment_shaders().remove(self.__as_env_shader)
+            self.__as_env_shader = None
+
+        as_scene.set_environment(asr.Environment("environment", {}))
 
     # Internal methods.
     def _convert_matrix(self, m):

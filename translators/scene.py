@@ -143,6 +143,14 @@ class SceneTranslator(object):
     def as_project(self):
         return self.__project
 
+    @property
+    def as_scene(self):
+        return self.__project.get_scene()
+
+    @property
+    def as_main_assembly(self):
+        return self.__main_assembly
+
     def translate_scene(self, engine, depsgraph, context=None):
         logger.debug("appleseed: Translating scene %s", depsgraph.scene_eval.name)
 
@@ -187,7 +195,7 @@ class SceneTranslator(object):
             engine.error_set("appleseed: No camera in scene!")
 
         # Create world
-        if depsgraph.scene_eval.world is not None and depsgraph.scene_eval.world.appleseed_sky.env_type != 'none':
+        if depsgraph.scene_eval.world is not None:
             logger.debug("appleseed: Creating world translator")
             self.__as_world_translator = WorldTranslator(depsgraph.scene_eval.world, self.__asset_handler)
 
@@ -248,22 +256,19 @@ class SceneTranslator(object):
         if self.__export_mode != ProjectExportMode.INTERACTIVE_RENDER:
             self.__calc_motion_steps(depsgraph, engine, objects_to_add)
 
-        # Flush entities
-        as_scene = self.__project.get_scene()
-
-        self.__as_camera_translator.flush_entities(as_scene, self.__main_assembly, self.__project)
+        self.__as_camera_translator.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
         if self.__as_world_translator is not None:
-            self.__as_world_translator.flush_entities(as_scene, self.__main_assembly, self.__project)
+            self.__as_world_translator.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
 
         for obj, trans in objects_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
-            trans.flush_entities(as_scene, self.__main_assembly, self.__project)
+            trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
         for obj, trans in materials_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
-            trans.flush_entities(as_scene, self.__main_assembly, self.__project)
+            trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
         for obj, trans in textures_to_add.items():
             logger.debug("appleseed: Flushing entity for %s into project", obj.name_full)
-            trans.flush_entities(as_scene, self.__main_assembly, self.__project)
+            trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
 
         # Transfer temp translators to main list
         for bl_obj, translator in objects_to_add.items():
@@ -325,7 +330,7 @@ class SceneTranslator(object):
                     elif update.id.type == 'LIGHT':
                         if update.id.original in self.__as_object_translators.keys():
                             if update.is_updated_geometry:
-                                self.__as_object_translators[update.id.original].update_lamp(depsgraph, self.__main_assembly,self.__project.get_scene(), self.__project)
+                                self.__as_object_translators[update.id.original].update_lamp(depsgraph, self.as_main_assembly, self.as_scene, self.__project)
                                 object_updates.append(update.id.original)
                                 recreate_instances.append(update.id.original)
                             if update.is_updated_transform:
@@ -333,7 +338,16 @@ class SceneTranslator(object):
                         else:
                             objects_to_add[update.id.original] = LampTranslator(update.id.original, self.__export_mode, self.__asset_handler)
             elif isinstance(update.id, bpy.types.World):
-                pass
+                self.__as_world_translator.update_world(self.as_scene, depsgraph)
+            elif isinstance(update.id, bpy.types.Scene):
+                # Check if world was added or deleted.
+                if depsgraph.scene_eval.world is None and self.__as_world_translator is not None: # Delete existing world.
+                    self.__as_world_translator.delete_world(self.as_scene)
+                    self.__as_world_translator = None
+                elif depsgraph.scene_eval.world is not None and self.__as_world_translator is None: # Create new world.
+                    self.__as_world_translator = WorldTranslator(depsgraph.scene_eval.world, self.__asset_handler)
+                    self.__as_world_translator.create_entities(depsgraph)
+                    self.__as_world_translator.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
             elif isinstance(update.id, bpy.types.Collection):
                 check_for_deletions = True
 
@@ -349,7 +363,7 @@ class SceneTranslator(object):
                                 recreate_instances.append(obj.original)
 
         for obj in recreate_instances:
-            self.__as_object_translators[obj].clear_instances(self.__main_assembly)
+            self.__as_object_translators[obj].clear_instances(self.as_main_assembly)
 
         for inst in depsgraph.object_instances:
             if inst.show_self:
@@ -368,14 +382,14 @@ class SceneTranslator(object):
             trans.create_entities(depsgraph, 0)
 
         for obj in recreate_instances:
-            self.__as_object_translators[obj].flush_instances(self.__main_assembly)
+            self.__as_object_translators[obj].flush_instances(self.as_main_assembly)
 
         for mat_obj, trans in materials_to_add.items():
-            trans.flush_entities(self.__project.get_scene(), self.__main_assembly, self.__project)
+            trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
             self.__as_material_translators[mat_obj] = trans
 
         for bl_obj, trans in objects_to_add.items():
-            trans.flush_entities(self.__project.get_scene(), self.__main_assembly, self.__project)
+            trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
             self.__as_object_translators[bl_obj] = trans
 
         # Check if any objects were deleted.
@@ -387,7 +401,7 @@ class SceneTranslator(object):
                     if obj.name_full in bpy.data.objects or obj.name_full in bpy.data.lights:
                         continue
                 except:
-                    self.__as_object_translators[obj].delete_object(self.__main_assembly)
+                    self.__as_object_translators[obj].delete_object(self.as_main_assembly)
                     del self.__as_object_translators[obj]
 
     def check_view_window(self, depsgraph, context):
@@ -416,7 +430,7 @@ class SceneTranslator(object):
 
     def update_view_window(self, depsgraph, context, updates):
         if updates['cam_model']:
-            self.__as_camera_translator.update_cam_model(self.as_project.get_scene())
+            self.__as_camera_translator.update_cam_model(self.as_scene)
             self.__as_camera_translator.add_cam_xform(0.0)
         else:
             if updates['cam_params']:
@@ -454,17 +468,17 @@ class SceneTranslator(object):
         self.__project.set_scene(asr.Scene())
 
         # Create the environment.
-        self.__project.get_scene().set_environment(asr.Environment("environment", {}))
+        self.as_scene.set_environment(asr.Environment("environment", {}))
 
         # Create the main assembly.
-        self.__project.get_scene().assemblies().insert(asr.Assembly("assembly", {}))
-        self.__main_assembly = self.__project.get_scene().assemblies()["assembly"]
+        self.as_scene.assemblies().insert(asr.Assembly("assembly", {}))
+        self.__main_assembly = self.as_scene.assemblies()["assembly"]
 
         # Instance the main assembly.
         assembly_inst = asr.AssemblyInstance("assembly_inst", {}, "assembly")
 
         assembly_inst.transform_sequence().set_transform(0.0, asr.Transformd(asr.Matrix4d.identity()))
-        self.__project.get_scene().assembly_instances().insert(assembly_inst)
+        self.as_scene.assembly_instances().insert(assembly_inst)
 
         # Create default materials.
         self.__create_default_material()
@@ -477,15 +491,15 @@ class SceneTranslator(object):
 
         material = asr.Material('generic_material', "__default_material", {'surface_shader': '__default_surface_shader'})
 
-        self.__main_assembly.surface_shaders().insert(surface_shader)
-        self.__main_assembly.materials().insert(material)
+        self.as_main_assembly.surface_shaders().insert(surface_shader)
+        self.as_main_assembly.materials().insert(material)
 
     def __create_null_material(self):
         logger.debug("appleseed: Creating null material")
 
         material = asr.Material('generic_material', "__null_material", {})
 
-        self.__main_assembly.materials().insert(material)
+        self.as_main_assembly.materials().insert(material)
 
     def __calc_shutter_times(self, depsgraph):
         scene = depsgraph.scene_eval
