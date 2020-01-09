@@ -34,15 +34,59 @@ logger = get_logger()
 
 
 class ArchiveAssemblyTranslator(Translator):
-    def __init__(self, archive_obj, asset_handler, xform_times):
-        super().__init__(archive_obj, asset_handler, xform_times)
+    def __init__(self, archive_obj, asset_handler):
+        super().__init__(archive_obj, asset_handler)
 
-    def add_instance_step(self, instance_id, bl_matrix):
-        inst_id = f"{self.bl_obj_name}|{instance_id}"
-        self._instance_lib.add_xform_step(inst_id, self._convert_matrix(bl_matrix))
+        self.__instance_lib = asr.BlTransformLibrary()
+
+        self.__ass_name = None
+
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
+
+    @property
+    def orig_name(self):
+        return self._bl_obj.appleseed.obj_name
+
+    @property
+    def instances_size(self):
+        return self.__instance_lib.get_size()
+
+    def add_instance_step(self, time, instance_id, bl_matrix):
+        self.__instance_lib.add_xform_step(time, instance_id, self._convert_matrix(bl_matrix))
 
     def create_entities(self, bl_scene, context=None):
-        pass
+        self.__ass_name = f"{self.orig_name}_ass"
 
-    def flush_entities(self, as_main_assembly, as_project):
-        pass
+        file_path = self._asset_handler.process_path(self._bl_obj.appleseed.archive_path,
+                                                    AssetType.ARCHIVE_ASSET)
+
+        ass_options = {'filename': file_path}
+
+        self.__ass = asr.Assembly("archive_assembly", self.__ass_name, ass_options)
+
+    def flush_entities(self, as_scene, as_main_assembly, as_project):
+        as_main_assembly.assemblies().insert(self.__ass)
+        self.__ass = as_main_assembly.assemblies().get_by_name(self.__ass_name)
+
+        self.flush_instances(as_main_assembly)
+
+    def flush_instances(self, as_main_assembly):
+        self.__instance_lib.flush_instances(as_main_assembly, self.__ass_name)
+
+    def update_archive_ass(self, depsgraph):
+        file_path = self._asset_handler.process_path(self._bl_obj.appleseed.archive_path,
+                                                    AssetType.ARCHIVE_ASSET)
+
+        ass_options = {'filename': file_path}
+
+        self.__ass.set_parameters(ass_options)
+
+    def clear_instances(self, as_main_assembly):
+        self.__instance_lib.clear_instances(as_main_assembly)
+
+    def delete_object(self, as_main_assembly):
+        self.clear_instances(as_main_assembly)
+
+        as_main_assembly.assemblies().remove(self.__ass)
+
+        self.__ass = None

@@ -211,9 +211,9 @@ class SceneTranslator(object):
             elif obj.type == 'MESH' and len(obj.data.loops) > 0:
                 logger.debug("appleseed: Creating mesh translator for %s", obj.name_full)
                 objects_to_add[obj] = MeshTranslator(obj, self.__export_mode, self.__asset_handler)
-        #     elif obj.type == 'MESH' and obj.appleseed.object_export == "archive_assembly":
-        #         logger.debug("appleseed: Creating archive assembly translator for %s", obj.name_full)
-        #         objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler, self.__xform_times)
+            elif obj.type == 'EMPTY' and obj.appleseed.object_export == "archive_assembly":
+                logger.debug("appleseed: Creating archive assembly translator for %s", obj.name_full)
+                objects_to_add[obj] = ArchiveAssemblyTranslator(obj, self.__asset_handler)
 
         for mat in bpy.data.materials:
             logger.debug("appleseed: Creating material translator for %s", mat.name_full)
@@ -337,6 +337,13 @@ class SceneTranslator(object):
                                 recreate_instances.append(update.id.original)
                         else:
                             objects_to_add[update.id.original] = LampTranslator(update.id.original, self.__export_mode, self.__asset_handler)
+                    elif update.id.type == 'EMPTY' and update.id.appleseed.object_export == "archive_assembly":
+                        if update.id.original in self.__as_object_translators.keys():
+                            if update.is_updated_geometry:
+                                self.__as_object_translators[update.id.original].update_archive_ass(depsgraph)
+                                object_updates.append(update.id.original)
+                            if update.is_updated_transform:
+                                recreate_instances.append(update.id.original)
             elif isinstance(update.id, bpy.types.World):
                 self.__as_world_translator.update_world(self.as_scene, depsgraph)
             elif isinstance(update.id, bpy.types.Scene):
