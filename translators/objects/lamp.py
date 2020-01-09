@@ -82,6 +82,9 @@ class LampTranslator(Translator):
     def add_instance_step(self, time, instance_id, bl_matrix):
         self.__instance_lib.add_xform_step(time, instance_id, self.__convert_lamp_matrix(bl_matrix))
 
+    def set_deform_key(self, time, depsgraph, index):
+        pass
+
     def create_entities(self, depsgraph, deforms_length):
         as_lamp_data = self.bl_lamp.data.appleseed
 
