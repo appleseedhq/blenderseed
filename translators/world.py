@@ -66,28 +66,9 @@ class WorldTranslator(Translator):
 
         if self.__as_env_type != 'none':
 
-            if self.__as_env_type == 'sunsky':
-                self.__as_env_type = as_world.sun_model
+            self.__as_env_type = as_world.env_type if as_world.env_type != 'sunsky' else as_world.sun_model
 
-            if self.__as_env_type == 'constant':
-                self.__as_colors.append(
-                    asr.ColorEntity(
-                        'horizon_radiance_color',
-                        {'color_space': 'linear_rgb'},
-                        self._convert_color(as_world.horizon_color)))
-
-            elif self.__as_env_type in ('gradient', 'constant_hemisphere'):
-                self.__as_colors.append(
-                    asr.ColorEntity(
-                        'horizon_radiance_color',
-                        {'color_space': 'linear_rgb'},
-                        self._convert_color(as_world.horizon_color)))
-
-                self.__as_colors.append(
-                    asr.ColorEntity(
-                        'zenith_radiance_color',
-                        {'color_space': 'linear_rgb'},
-                        self._convert_color(as_world.zenith_color)))
+            self.__set_colors()
 
             self.__as_edf_params = self.__create_params()
 
@@ -130,11 +111,43 @@ class WorldTranslator(Translator):
         as_scene.set_environment(self.__as_env)
 
     def update_world(self, as_scene, depsgraph):
-        pass
+        as_world = self.bl_world.appleseed_sky
+
+        current_env_type = self.__as_env_type
+
+        self.__as_env_type = as_world.env_type if as_world.env_type != 'sunsky' else as_world.sun_model            
+
+        if current_env_type == 'none': # Create new environment entities.
+            self.create_entities(depsgraph)
+            self.flush_entities(as_scene, None, None)
+        elif self.__as_env_type == 'none': # Delete current world entities.
+            self.delete_world(as_scene)
+        elif current_env_type == self.__as_env_type:
+            self.__as_edf_params = self.__create_params()
+            self.__as_env_edf.set_parameters(self.__as_edf_params)
+
+            env_shader_params = self.__as_env_shader.get_parameters()
+            env_shader_params['alpha_value'] = as_world.env_alpha
+            self.__as_env_shader.set_parameters(env_shader_params)
+
+            for color in self.__as_colors:
+                as_scene.colors().remove(color)
+            
+            self.__as_colors.clear()
+
+            self.__set_colors()
+
+            for index, color in enumerate(self.__as_colors):
+                color_name = color.get_name()
+                as_scene.colors().insert(color)
+                self.__as_colors[index] = as_scene.colors().get_by_name(color_name)
+        else: # World still exists but needs to be changed.
+            self.delete_world(as_scene)
+            self.create_entities(depsgraph)
+            self.flush_entities(as_scene, None, None)
 
     def delete_world(self, as_scene):
         for color in self.__as_colors:
-            
             as_scene.colors().remove(color)
             
         self.__as_colors.clear()
@@ -150,6 +163,29 @@ class WorldTranslator(Translator):
         as_scene.set_environment(asr.Environment("environment", {}))
 
     # Internal methods.
+    def __set_colors(self):
+        as_world = self.bl_world.appleseed_sky
+
+        if self.__as_env_type == 'constant':
+            self.__as_colors.append(
+                asr.ColorEntity(
+                    'horizon_radiance_color',
+                    {'color_space': 'linear_rgb'},
+                    self._convert_color(as_world.horizon_color)))
+
+        elif self.__as_env_type in ('gradient', 'constant_hemisphere'):
+            self.__as_colors.append(
+                asr.ColorEntity(
+                    'horizon_radiance_color',
+                    {'color_space': 'linear_rgb'},
+                    self._convert_color(as_world.horizon_color)))
+
+            self.__as_colors.append(
+                asr.ColorEntity(
+                    'zenith_radiance_color',
+                    {'color_space': 'linear_rgb'},
+                    self._convert_color(as_world.zenith_color)))
+
     def _convert_matrix(self, m):
         as_world = self.bl_world.appleseed_sky
         vertical_shift = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(as_world.vertical_shift))
