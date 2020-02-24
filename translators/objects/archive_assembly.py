@@ -39,6 +39,7 @@ class ArchiveAssemblyTranslator(Translator):
 
         self.__instance_lib = asr.BlTransformLibrary()
 
+        self.__ass = None
         self.__ass_name = None
 
         self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
@@ -49,23 +50,23 @@ class ArchiveAssemblyTranslator(Translator):
 
     @property
     def instances_size(self):
-        return self.__instance_lib.get_size()
+        return len(self.__instance_lib)
+
+    def create_entities(self, bl_scene, context=None):
+        self.__ass_name = f"{self.orig_name}_ass"
+
+        file_path = self._asset_handler.process_path(self._bl_obj.appleseed.archive_path,
+                                                     AssetType.ARCHIVE_ASSET)
+
+        ass_options = {'filename': file_path}
+
+        self.__ass = asr.Assembly("archive_assembly", self.__ass_name, ass_options)
 
     def add_instance_step(self, time, instance_id, bl_matrix):
         self.__instance_lib.add_xform_step(time, instance_id, self._convert_matrix(bl_matrix))
 
     def set_deform_key(self, time, depsgraph, index):
         pass
-
-    def create_entities(self, bl_scene, context=None):
-        self.__ass_name = f"{self.orig_name}_ass"
-
-        file_path = self._asset_handler.process_path(self._bl_obj.appleseed.archive_path,
-                                                    AssetType.ARCHIVE_ASSET)
-
-        ass_options = {'filename': file_path}
-
-        self.__ass = asr.Assembly("archive_assembly", self.__ass_name, ass_options)
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
         as_main_assembly.assemblies().insert(self.__ass)
@@ -78,7 +79,7 @@ class ArchiveAssemblyTranslator(Translator):
 
     def update_archive_ass(self, depsgraph):
         file_path = self._asset_handler.process_path(self._bl_obj.appleseed.archive_path,
-                                                    AssetType.ARCHIVE_ASSET)
+                                                     AssetType.ARCHIVE_ASSET)
 
         ass_options = {'filename': file_path}
 

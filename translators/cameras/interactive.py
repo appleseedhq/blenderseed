@@ -49,10 +49,14 @@ class InteractiveCameraTranslator(Translator):
 
         self.__as_camera = None
 
+        self.__model = None
+
         self.__cam_model = None
         self.__view_cam_type = None
         self.__cam_params = None
         self.__xform_matrix = None
+
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
 
     @property
     def bl_camera(self):
@@ -76,7 +80,28 @@ class InteractiveCameraTranslator(Translator):
     def add_cam_xform(self, time, engine=None):
         self.__as_camera.transform_sequence().set_transform(time, self._convert_matrix(self.__xform_matrix))
 
-    def is_matrix_updated(self, context):
+    def check_for_updates(self, context, bl_scene):
+        updates = dict()
+
+        updates['cam_xform'] = self.__is_matrix_updated(context)
+        updates['cam_params'] = self.__are_cam_params_updated(context, bl_scene)
+        updates['cam_model'] = self.__is_camera_model_updated(context)
+
+        return updates
+
+    def update_cam_params(self):
+        self.__as_camera.set_parameters(self.__cam_params)
+
+    def update_cam_model(self, as_scene):
+        as_scene.cameras().remove(self.__as_camera)
+
+        self.__as_camera = asr.Camera(self.__model, "Camera", self.__cam_params)
+        
+        as_scene.cameras().insert(self.__as_camera)
+        self.__as_camera = as_scene.cameras().get_by_name("Camera")
+
+    # Internal methods.
+    def __is_matrix_updated(self, context):
         current_matrix = self.__xform_matrix
 
         self.__set_matrix(context)
@@ -86,7 +111,7 @@ class InteractiveCameraTranslator(Translator):
         
         return False
 
-    def is_camera_model_updated(self, context):
+    def __is_camera_model_updated(self, context):
         current_view_cam = self.__view_cam_type
         current_model = self.__model
         
@@ -99,7 +124,7 @@ class InteractiveCameraTranslator(Translator):
         
         return False
 
-    def are_cam_params_updated(self, bl_scene, context):
+    def __are_cam_params_updated(self, context, bl_scene):
         current_params = self.__cam_params
 
         self.__cam_params = self.__get_cam_params(bl_scene, context)
@@ -108,17 +133,6 @@ class InteractiveCameraTranslator(Translator):
             return True
 
         return False
-
-    def update_cam_params(self):
-        self.__as_camera.set_parameters(self.__cam_params)
-
-    def update_cam_model(self, as_scene):
-        as_scene.cameras().remove(self.__as_camera)
-
-        self.__as_camera = asr.Camera(self.__model, "Camera", self.__cam_params)
-        
-        as_scene.cameras().insert(self.__as_camera)
-        self.__as_camera = as_scene.cameras().get_by_name("Camera")
 
     def __get_model(self):
         cam_mapping = {'PERSP': 'pinhole_camera',

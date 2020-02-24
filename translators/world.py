@@ -77,23 +77,19 @@ class WorldTranslator(Translator):
                 "sky_edf",
                 self.__as_edf_params)
 
-            self.__as_env_shader = asr.EnvironmentShader(
-                "edf_environment_shader",
-                "sky_shader",
-                {'environment_edf': 'sky_edf', 'alpha_value': as_world.env_alpha})
+            self.__as_env_shader = asr.EnvironmentShader("edf_environment_shader",
+                                                         "sky_shader",
+                                                         {'environment_edf': 'sky_edf', 'alpha_value': as_world.env_alpha})
 
-            self.__as_env = asr.Environment(
-                "sky",
-                {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
+            self.__as_env = asr.Environment("sky",
+                                            {"environment_edf": "sky_edf", "environment_shader": "sky_shader"})
 
         else:
             self.__as_env = asr.Environment("environment", {})
 
     def flush_entities(self, as_scene, as_assembly, as_project):
         if self.__as_env_type != 'none':
-            self.__as_env_edf.transform_sequence().set_transform(
-                0.0,
-                asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
+            self.__as_env_edf.transform_sequence().set_transform(0.0, asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
 
             for index, color in enumerate(self.__as_colors):
                 color_name = color.get_name()
@@ -167,24 +163,18 @@ class WorldTranslator(Translator):
         as_world = self.bl_world.appleseed_sky
 
         if self.__as_env_type == 'constant':
-            self.__as_colors.append(
-                asr.ColorEntity(
-                    'horizon_radiance_color',
-                    {'color_space': 'linear_rgb'},
-                    self._convert_color(as_world.horizon_color)))
+            self.__as_colors.append(asr.ColorEntity('horizon_radiance_color',
+                                                    {'color_space': 'linear_rgb'},
+                                                    self._convert_color(as_world.horizon_color)))
 
         elif self.__as_env_type in ('gradient', 'constant_hemisphere'):
-            self.__as_colors.append(
-                asr.ColorEntity(
-                    'horizon_radiance_color',
-                    {'color_space': 'linear_rgb'},
-                    self._convert_color(as_world.horizon_color)))
+            self.__as_colors.append(asr.ColorEntity('horizon_radiance_color',
+                                                    {'color_space': 'linear_rgb'},
+                                                    self._convert_color(as_world.horizon_color)))
 
-            self.__as_colors.append(
-                asr.ColorEntity(
-                    'zenith_radiance_color',
-                    {'color_space': 'linear_rgb'},
-                    self._convert_color(as_world.zenith_color)))
+            self.__as_colors.append(asr.ColorEntity('zenith_radiance_color',
+                                                    {'color_space': 'linear_rgb'},
+                                                    self._convert_color(as_world.zenith_color)))
 
     def _convert_matrix(self, m):
         as_world = self.bl_world.appleseed_sky
@@ -225,16 +215,15 @@ class WorldTranslator(Translator):
                       'upper_hemi_radiance': "zenith_radiance_color"}
 
         else:
-            params = {
-                'ground_albedo': as_world.ground_albedo,
-                'sun_phi': as_world.sun_phi,
-                'sun_theta': as_world.sun_theta,
-                'turbidity': as_world.turbidity,
-                'turbidity_multiplier': as_world.turbidity_multiplier,
-                'luminance_multiplier': as_world.luminance_multiplier,
-                'luminance_gamma': as_world.luminance_gamma,
-                'saturation_multiplier': as_world.saturation_multiplier,
-                'horizon_shift': as_world.horizon_shift}
+            params = {'ground_albedo': as_world.ground_albedo,
+                      'sun_phi': as_world.sun_phi,
+                      'sun_theta': as_world.sun_theta,
+                      'turbidity': as_world.turbidity,
+                      'turbidity_multiplier': as_world.turbidity_multiplier,
+                      'luminance_multiplier': as_world.luminance_multiplier,
+                      'luminance_gamma': as_world.luminance_gamma,
+                      'saturation_multiplier': as_world.saturation_multiplier,
+                      'horizon_shift': as_world.horizon_shift}
 
         return params
 

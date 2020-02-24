@@ -44,6 +44,9 @@ class RenderCameraTranslator(Translator):
         self.__as_camera = None
 
         self.__cam_model = None
+        self.__as_cam_params = None
+
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
 
     @property
     def bl_camera(self):
@@ -90,7 +93,7 @@ class RenderCameraTranslator(Translator):
 
         self.__as_camera.set_parameters(params)
 
-    # Internal methods
+    # Internal methods.
     def __get_model(self):
         cam_mapping = {'PERSP': 'pinhole_camera',
                        'ORTHO': 'orthographic_camera',

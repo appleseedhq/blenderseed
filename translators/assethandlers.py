@@ -60,26 +60,26 @@ class AssetHandler(object):
         self._searchpaths.append(path)
 
     def process_path(self, filename, asset_type, sub_texture=False):
-        file = bpy.path.abspath(filename)
+        archive_asset = bpy.path.abspath(filename)
 
-        if '%' in file:
-            file = self._convert_frame_number(file)
+        if '%' in archive_asset:
+            archive_asset = self._convert_frame_number(archive_asset)
 
         if asset_type == AssetType.SHADER_ASSET:
-            dir_name, file_name = os.path.split(file)
+            dir_name, file_name = os.path.split(archive_asset)
             self._searchpaths.append(dir_name)
-            file = os.path.splitext(file_name)[0]
+            archive_asset = os.path.splitext(file_name)[0]
 
         if asset_type == AssetType.TEXTURE_ASSET and sub_texture:
-            base_filename = os.path.splitext(file)[0]
-            file = f"{base_filename}.tx"
+            base_filename = os.path.splitext(archive_asset)[0]
+            archive_asset = f"{base_filename}.tx"
 
         if asset_type == AssetType.ARCHIVE_ASSET:
-            archive_dir, archive = os.path.split(file)
+            archive_dir, archive = os.path.split(archive_asset)
             self._searchpaths.append(archive_dir)
-            file = archive
+            archive_asset = archive
 
-        return file
+        return archive_asset
 
     def _convert_frame_number(self, file):
         base_filename, ext = os.path.splitext(file)
@@ -133,7 +133,7 @@ class CopyAssetsAssetHandler(AssetHandler):
             dest_file = os.path.join(dest_dir, filename)
             if not os.path.exists(dest_file):
                 shutil.copy(os.path.join(original_dir, filename), os.path.join(dest_dir, filename))
-            return "_textures/" + filename
+            return f"_textures/{filename}"
 
         else:
             self._searchpaths.append(original_dir)

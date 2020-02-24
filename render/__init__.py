@@ -130,7 +130,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         else:
             self.__pause_rendering()
             logger.debug("appleseed: Updating scene")
-            self.__interactive_scene_translator.update_scene(depsgraph, context)
+            self.__interactive_scene_translator.update_scene(depsgraph)
             self.__restart_interactive_render()
 
     def view_draw(self, context, depsgraph):
@@ -139,7 +139,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         if True in updates.values():
             self.__pause_rendering()
-            self.__interactive_scene_translator.update_view_window(depsgraph, context, updates)
+            self.__interactive_scene_translator.update_view_window(updates)
             self.__restart_interactive_render()
 
         self.__draw_pixels(context, depsgraph)

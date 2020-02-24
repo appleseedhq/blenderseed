@@ -41,6 +41,8 @@ logger = get_logger()
 class NodeTreeTranslator(Translator):
 
     def __init__(self, node_tree, asset_handler, mat_name):
+        logger.debug("appleseed: Creating translator for %s node tree", mat_name)
+
         super().__init__(node_tree, asset_handler)
 
         self.__mat_name = mat_name
@@ -52,6 +54,8 @@ class NodeTreeTranslator(Translator):
         return self._bl_obj.nodes
 
     def create_entities(self, depsgraph):
+        logger.debug("appleseed: Creating entitiy for %s node tree", self.__mat_name)
+
         tree_name = f"{self.__mat_name}_tree"
 
         self.__as_shader_group = asr.ShaderGroup(tree_name)
@@ -59,22 +63,26 @@ class NodeTreeTranslator(Translator):
         self.__create_shadergroup(depsgraph.scene_eval)
 
     def flush_entities(self, as_scene, as_assembly, as_project):
+        logger.debug("appleseed: Flushing data for %s node tree", self.__mat_name)
         shader_groupname = self.__as_shader_group.get_name()
         as_assembly.shader_groups().insert(self.__as_shader_group)
         self.__as_shader_group = as_assembly.shader_groups().get_by_name(shader_groupname)
 
+    def update_nodetree(self, bl_scene):
+        logger.debug("appleseed: Updating node tree for %s", self.__mat_name)
+        self.__create_shadergroup(bl_scene)
+
     def delete_nodetree(self, as_main_assembly):
+        logger.debug("appleseed: Deleting node tree for %s", self.__mat_name)
         as_main_assembly.shader_groups().remove(self.__as_shader_group)
         self.__as_shader_group = None
-
-    def update_nodetree(self, bl_scene):
-        self.__create_shadergroup(bl_scene)
 
     def __create_shadergroup(self, bl_scene):
         surface_shader = None
         for node in self.bl_nodes:
             if isinstance(node, AppleseedOSLNode):
                 if node.node_type == 'osl_surface':
+                    logger.debug("appleseed: Found surface shader for %s node tree", self.__mat_name)
                     surface_shader = node
                     self.__shader_list = surface_shader.traverse_tree()
                     break
@@ -93,7 +101,7 @@ class NodeTreeTranslator(Translator):
                         break
 
         if surface_shader is None:
-            logger.debug("No surface shader for %s", self.__as_shader_group.get_name())
+            logger.debug("appleseed: No surface shader for %s node tree", self.__mat_name)
             return
 
         self.__as_shader_group.clear()
@@ -127,6 +135,7 @@ class NodeTreeTranslator(Translator):
 
             if node.node_type == 'osl':
                 shader_file_name = self._asset_handler.process_path(node.file_name, AssetType.SHADER_ASSET)
+                logger.debug("appleseed: Adding %s shader to %s node tree", node.name, self.__mat_name)
                 self.__as_shader_group.add_shader("shader", shader_file_name, node.name, parameters)
             elif node.node_type == 'osl_script':
                 script = node.script
@@ -137,18 +146,17 @@ class NodeTreeTranslator(Translator):
                     code = open(osl_path, 'r')
                     source_code = code.read()
                     code.close()
-
+                logger.debug("appleseed: Adding %s source shader to %s node tree", node.name, self.__mat_name)
                 self.__as_shader_group.add_source_shader("shader", node.bl_idname, node.name, source_code, parameters)
 
             for output in node.outputs:
                 if output.is_linked:
                     for link in output.links:
                         if link.to_node in self.__shader_list or link.to_node.node_type == 'osl_surface':
-                            self.__as_shader_group.add_connection(
-                                node.name,
-                                output.socket_osl_id,
-                                link.to_node.name,
-                                link.to_socket.socket_osl_id)
+                            self.__as_shader_group.add_connection(node.name,
+                                                                  output.socket_osl_id,
+                                                                  link.to_node.name,
+                                                                  link.to_socket.socket_osl_id)
 
         surface_shader_file = self._asset_handler.process_path(
             surface_shader.file_name, AssetType.SHADER_ASSET)

@@ -64,11 +64,11 @@ class TextureTranslator(Translator):
         self.__as_tex = asr.Texture('disk_texture_2d', self.orig_name, self.__as_tex_params, [])
 
         self.__as_tex_inst_params = self.__get_tex_inst_params()
-        self.__as_tex_inst = asr.TextureInstance(
-            f"{self.orig_name}_inst",
-            self.__as_tex_inst_params,
-            self.obj_name,
-            asr.Transformf(asr.Matrix4f.identity()))
+
+        self.__as_tex_inst = asr.TextureInstance(f"{self.orig_name}_inst",
+                                                 self.__as_tex_inst_params,
+                                                 self.obj_name,
+                                                 asr.Transformf(asr.Matrix4f.identity()))
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
         scene = as_project.get_scene()
@@ -89,9 +89,8 @@ class TextureTranslator(Translator):
 
     def __get_tex_inst_params(self):
         as_tex_params = self.bl_tex.appleseed
-        tex_inst_params = {
-            'addressing_mode': as_tex_params.as_wrap_mode,
-            'filtering_mode': 'bilinear',
-            'alpha_mode': as_tex_params.as_alpha_mode}
+        tex_inst_params = {'addressing_mode': as_tex_params.as_wrap_mode,
+                           'filtering_mode': 'bilinear',
+                           'alpha_mode': as_tex_params.as_alpha_mode}
 
         return tex_inst_params

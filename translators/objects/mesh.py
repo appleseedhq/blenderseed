@@ -47,21 +47,20 @@ class MeshTranslator(Translator):
         self.__instance_lib = asr.BlTransformLibrary()
 
         self.__as_mesh = None
+        self.__as_mesh_inst = None
         self.__as_mesh_inst_params = dict()
         self.__front_materials = dict()
         self.__back_materials = dict()
 
+        self.__obj_inst_name = None
+        self.__ass_name = str()
         self.__ass = None
 
         self.__geom_dir = self._asset_handler.geometry_dir if export_mode == ProjectExportMode.PROJECT_EXPORT else None
 
         self.__mesh_filenames = list()
 
-        self.__deforming = bl_obj.appleseed.use_deformation_blur and is_object_deforming(bl_obj)
-
-        self.__mesh_filenames = list()
-
-        self.__ass_name = str()
+        self.__is_deforming = bl_obj.appleseed.use_deformation_blur and is_object_deforming(bl_obj)
 
         self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
     
@@ -75,10 +74,7 @@ class MeshTranslator(Translator):
 
     @property
     def instances_size(self):
-        return self.__instance_lib.get_size()
-
-    def add_instance_step(self, time, instance_id, bl_matrix):
-        self.__instance_lib.add_xform_step(time, instance_id, self._convert_matrix(bl_matrix))
+        return len(self.__instance_lib)
 
     def create_entities(self, depsgraph, num_def_times):
         self.__mesh_params = self.__get_mesh_params()
@@ -96,13 +92,16 @@ class MeshTranslator(Translator):
         self.__convert_mesh(me)
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
-            logger.debug("Writing mesh file object %s, time = 0", self._bl_obj.name)
+            logger.debug("Writing mesh file object %s, time = 0", self.orig_name)
             self.__write_mesh(self.orig_name)
 
         eval_object.to_mesh_clear()
 
-        if self.__deforming:
+        if self.__is_deforming:
             self.__as_mesh.set_motion_segment_count(num_def_times - 1)
+
+    def add_instance_step(self, time, instance_id, bl_matrix):
+        self.__instance_lib.add_xform_step(time, instance_id, self._convert_matrix(bl_matrix))
 
     def set_deform_key(self, time, depsgraph, index):
         eval_object = self._bl_obj.evaluated_get(depsgraph)
@@ -110,7 +109,7 @@ class MeshTranslator(Translator):
         me = eval_object.to_mesh()
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
-            logger.debug("Writing mesh file object %s, time = %s", self._bl_obj.name, time)
+            logger.debug("Writing mesh file object %s, time = %s", self.orig_name, time)
 
             self.__convert_mesh(me)
             self.__write_mesh(self.orig_name)
@@ -120,6 +119,8 @@ class MeshTranslator(Translator):
         eval_object.to_mesh_clear()
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
+        logger.debug("appleseed: Flusing mesh for object %s", self.orig_name)
+
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Replace the MeshObject by an empty one referencing
             # the binarymesh files we saved before.
@@ -141,21 +142,22 @@ class MeshTranslator(Translator):
 
         mesh_name = self.__object_instance_mesh_name(self.orig_name)
 
-        self.__obj_inst_name = f"{self.obj_name}_inst"
+        self.__obj_inst_name = f"{self.orig_name}_inst"
 
+        self.__instance_lib.optimize_xforms()
+        
         needs_assembly = self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__instance_lib.needs_assembly()
 
         if needs_assembly:
-            self.__ass_name = f"{self.obj_name}_ass"
+            self.__ass_name = f"{self.orig_name}_ass"
             self.__ass = asr.Assembly(self.__ass_name)
 
-            self.__as_mesh_inst = asr.ObjectInstance(
-                self.__obj_inst_name,
-                self.__as_mesh_inst_params,
-                mesh_name,
-                asr.Transformd(asr.Matrix4d().identity()),
-                self.__front_materials,
-                self.__back_materials)
+            self.__as_mesh_inst = asr.ObjectInstance(self.__obj_inst_name,
+                                                     self.__as_mesh_inst_params,
+                                                     mesh_name,
+                                                     asr.Transformd(asr.Matrix4d().identity()),
+                                                     self.__front_materials,
+                                                     self.__back_materials)
 
             self.__ass.objects().insert(self.__as_mesh)
             self.__as_mesh = self.__ass.objects().get_by_name(mesh_name)
@@ -169,13 +171,12 @@ class MeshTranslator(Translator):
             self.flush_instances(as_main_assembly)
 
         else:
-            self.__as_mesh_inst = asr.ObjectInstance(
-                self.__obj_inst_name,
-                self.__as_mesh_inst_params,
-                mesh_name,
-                self.__instance_lib.get_single_transform(),
-                self.__front_materials,
-                self.__back_materials)
+            self.__as_mesh_inst = asr.ObjectInstance(self.__obj_inst_name,
+                                                     self.__as_mesh_inst_params,
+                                                     mesh_name,
+                                                     self.__instance_lib.get_single_transform(),
+                                                     self.__front_materials,
+                                                     self.__back_materials)
 
             as_main_assembly.objects().insert(self.__as_mesh)
             self.__as_mesh = as_main_assembly.objects().get_by_name(mesh_name)
@@ -186,7 +187,7 @@ class MeshTranslator(Translator):
     def flush_instances(self, as_main_assembly):
         self.__instance_lib.flush_instances(as_main_assembly, self.__ass_name)
 
-    def update_obj_instance(self, depsgraph):
+    def update_obj_instance(self):
         self.__ass.object_instances().remove(self.__as_mesh_inst)
 
         self.__as_mesh_inst_params = self.__get_mesh_inst_params()
@@ -195,14 +196,14 @@ class MeshTranslator(Translator):
 
         mesh_name = self.__object_instance_mesh_name(self.orig_name)
 
-        self.__as_mesh_inst = asr.ObjectInstance(
-                self.__obj_inst_name,
-                self.__as_mesh_inst_params,
-                mesh_name,
-                asr.Transformd(asr.Matrix4d().identity()),
-                self.__front_materials,
-                self.__back_materials)
-        
+        self.__as_mesh_inst = asr.ObjectInstance(self.__obj_inst_name,
+                                                 self.__as_mesh_inst_params,
+                                                 mesh_name,
+                                                 asr.Transformd(
+                                                     asr.Matrix4d().identity()),
+                                                 self.__front_materials,
+                                                 self.__back_materials)
+
         self.__ass.object_instances().insert(self.__as_mesh_inst)
         self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.__obj_inst_name)
 
@@ -223,18 +224,16 @@ class MeshTranslator(Translator):
 
     def __get_mesh_inst_params(self):
         asr_obj_props = self._bl_obj.appleseed
-        object_instance_params = {
-            'visibility': {
-                'camera': asr_obj_props.camera_visible,
-                'light': asr_obj_props.light_visible,
-                'shadow': asr_obj_props.shadow_visible,
-                'diffuse': asr_obj_props.diffuse_visible,
-                'glossy': asr_obj_props.glossy_visible,
-                'specular': asr_obj_props.specular_visible,
-                'transparency': asr_obj_props.transparency_visible},
-            'medium_priority': asr_obj_props.medium_priority,
-            'shadow_terminator_correction': asr_obj_props.shadow_terminator_correction,
-            'photon_target': asr_obj_props.photon_target}
+        object_instance_params = {'visibility': {'camera': asr_obj_props.camera_visible,
+                                                 'light': asr_obj_props.light_visible,
+                                                 'shadow': asr_obj_props.shadow_visible,
+                                                 'diffuse': asr_obj_props.diffuse_visible,
+                                                 'glossy': asr_obj_props.glossy_visible,
+                                                 'specular': asr_obj_props.specular_visible,
+                                                 'transparency': asr_obj_props.transparency_visible},
+                                  'medium_priority': asr_obj_props.medium_priority,
+                                  'shadow_terminator_correction': asr_obj_props.shadow_terminator_correction,
+                                  'photon_target': asr_obj_props.photon_target}
 
         if asr_obj_props.object_sss_set != "":
             object_instance_params['sss_set_id'] = asr_obj_props.object_sss_set
@@ -278,7 +277,7 @@ class MeshTranslator(Translator):
         params = dict()
 
         if self._bl_obj.appleseed.object_alpha_texture is not None:
-            params['alpha_map'] = self._bl_obj.appleseed.object_alpha_texture.appleseed.obj_name + "_inst"
+            params['alpha_map'] = f"{self._bl_obj.appleseed.object_alpha_texture.appleseed.obj_name}_inst"
 
         return params
 
@@ -291,7 +290,7 @@ class MeshTranslator(Translator):
 
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
-                self.__as_mesh.push_material_slot("slot-%s" % i)
+                self.__as_mesh.push_material_slot(f"slot-{i}")
         else:
             self.__as_mesh.push_material_slot("default")
 
@@ -335,17 +334,16 @@ class MeshTranslator(Translator):
 
         convert_timer = Timer()
 
-        asr.export_mesh_blender80(
-            self.__as_mesh,
-            loop_tris_length,
-            loop_tris_pointer,
-            loops_length,
-            loops_pointer,
-            polygons_pointer,
-            vert_pointer,
-            uv_layer_pointer,
-            do_normals,
-            do_uvs)
+        asr.export_mesh_blender80(self.__as_mesh,
+                                  loop_tris_length,
+                                  loop_tris_pointer,
+                                  loops_length,
+                                  loops_pointer,
+                                  polygons_pointer,
+                                  vert_pointer,
+                                  uv_layer_pointer,
+                                  do_normals,
+                                  do_uvs)
 
         convert_timer.stop()
         main_timer.stop()
@@ -368,13 +366,12 @@ class MeshTranslator(Translator):
         loop_length = len(me.loops)
         loops_pointer = me.loops[0].as_pointer()
 
-        asr.export_mesh_blender80_pose(
-            self.__as_mesh,
-            key_index,
-            loops_pointer,
-            loop_length,
-            vertex_pointer,
-            do_normals)
+        asr.export_mesh_blender80_pose(self.__as_mesh,
+                                       key_index,
+                                       loops_pointer,
+                                       loop_length,
+                                       vertex_pointer,
+                                       do_normals)
 
     def __write_mesh(self, mesh_name):
         # Compute tangents if needed.

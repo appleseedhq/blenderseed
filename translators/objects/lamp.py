@@ -56,13 +56,16 @@ class LampTranslator(Translator):
         self.__radiance = None
         
         self.__instance_lib = asr.BlTransformLibrary()
-
+        self.__as_area_lamp_inst_name = None
+        self.__instance_params = None
         self.__as_lamp = None
 
         self.__ass = None
+        self.__ass_name = None
 
         self.__as_area_lamp_mesh = None
         self.__as_area_lamp_inst = None
+        self.__as_mesh_inst = None
         self.__as_area_lamp_material = None
         self.__as_area_lamp_shadergroup = None
         self.__node_tree = None
@@ -77,13 +80,7 @@ class LampTranslator(Translator):
 
     @property
     def instances_size(self):
-        return self.__instance_lib.get_size()
-
-    def add_instance_step(self, time, instance_id, bl_matrix):
-        self.__instance_lib.add_xform_step(time, instance_id, self.__convert_lamp_matrix(bl_matrix))
-
-    def set_deform_key(self, time, depsgraph, index):
-        pass
+        return len(self.__instance_lib)
 
     def create_entities(self, depsgraph, deforms_length):
         as_lamp_data = self.bl_lamp.data.appleseed
@@ -94,10 +91,9 @@ class LampTranslator(Translator):
             self.__radiance = self._convert_color(as_lamp_data.radiance)
             lamp_radiance_name = f"{self.orig_name}_radiance"
 
-            self.__as_lamp_radiance = asr.ColorEntity(
-                lamp_radiance_name,
-                {'color_space': 'linear_rgb'},
-                self.__radiance)
+            self.__as_lamp_radiance = asr.ColorEntity(lamp_radiance_name,
+                                                      {'color_space': 'linear_rgb'},
+                                                      self.__radiance)
 
             if self.__lamp_model == 'point_light':
                 self.__as_lamp_params = self.__get_point_lamp_params()
@@ -133,8 +129,15 @@ class LampTranslator(Translator):
 
             self.__as_area_lamp_material = asr.Material('osl_material', mat_name, {'osl_surface': shader_name})
 
-    def flush_entities(self, as_scene, as_main_assembly, as_project):
+    def add_instance_step(self, time, instance_id, bl_matrix):
+        self.__instance_lib.add_xform_step(time, instance_id, self.__convert_lamp_matrix(bl_matrix))
 
+    def set_deform_key(self, time, depsgraph, index):
+        pass
+
+    def flush_entities(self, as_scene, as_main_assembly, as_project):
+        self.__instance_lib.optimize_xforms()
+        
         needs_assembly = self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__instance_lib.needs_assembly()
 
         if self.__lamp_model != 'area_lamp':
@@ -176,13 +179,12 @@ class LampTranslator(Translator):
                 self.__node_tree.flush_entities(as_scene, as_main_assembly, as_project)
 
             if needs_assembly:
-                self.__as_area_lamp_inst = asr.ObjectInstance(
-                    self.__as_area_lamp_inst_name,
-                    self.__instance_params,
-                    mesh_name,
-                    asr.Transformd(asr.Matrix4d().identity()),
-                    {"default": mat_name},
-                    {"default": "__null_material"})
+                self.__as_area_lamp_inst = asr.ObjectInstance(self.__as_area_lamp_inst_name,
+                                                              self.__instance_params,
+                                                              mesh_name,
+                                                              asr.Transformd(asr.Matrix4d().identity()),
+                                                              {"default": mat_name},
+                                                              {"default": "__null_material"})
 
                 self.__ass_name = f"{self.orig_name}_ass"
 
@@ -200,13 +202,12 @@ class LampTranslator(Translator):
                 self.flush_instances(as_main_assembly)
 
             else:
-                self.__as_area_lamp_inst = asr.ObjectInstance(
-                    self.__as_area_lamp_inst_name,
-                    self.__instance_params,
-                    mesh_name,
-                    self.__instance_lib.get_single_transform(),
-                    {"default": mat_name},
-                    {"default": "__null_material"})
+                self.__as_area_lamp_inst = asr.ObjectInstance(self.__as_area_lamp_inst_name,
+                                                              self.__instance_params,
+                                                              mesh_name,
+                                                              self.__instance_lib.get_single_transform(),
+                                                              {"default": mat_name},
+                                                              {"default": "__null_material"})
 
                 as_main_assembly.objects().insert(self.__as_area_lamp_mesh)
                 self.__as_area_lamp_mesh = as_main_assembly.objects().get_by_name(mesh_name)
@@ -263,13 +264,13 @@ class LampTranslator(Translator):
 
                 self.__instance_params = self._get_area_mesh_instance_params()
 
-                self.__as_area_lamp_inst = asr.ObjectInstance(
-                    self.__as_area_lamp_inst_name,
-                    self.__instance_params,
-                    mesh_name,
-                    asr.Transformd(asr.Matrix4d().identity()),
-                    {"default": mat_name},
-                    {"default": "__null_material"})
+                self.__as_area_lamp_inst = asr.ObjectInstance(self.__as_area_lamp_inst_name,
+                                                              self.__instance_params,
+                                                              mesh_name,
+                                                              asr.Transformd(
+                                                                  asr.Matrix4d().identity()),
+                                                              {"default": mat_name},
+                                                              {"default": "__null_material"})
 
                 self.__ass.objects().insert(self.__as_area_lamp_mesh)
                 self.__as_area_lamp_mesh = self.__ass.objects().get_by_name(mesh_name)
@@ -341,13 +342,13 @@ class LampTranslator(Translator):
                 else:
                     self.__node_tree.flush_entities(as_scene, as_main_assembly, as_project)
 
-                self.__as_area_lamp_inst = asr.ObjectInstance(
-                    self.__as_area_lamp_inst_name,
-                    self.__instance_params,
-                    mesh_name,
-                    asr.Transformd(asr.Matrix4d().identity()),
-                    {"default": mat_name},
-                    {"default": "__null_material"})
+                self.__as_area_lamp_inst = asr.ObjectInstance(self.__as_area_lamp_inst_name,
+                                                              self.__instance_params,
+                                                              mesh_name,
+                                                              asr.Transformd(
+                                                                  asr.Matrix4d().identity()),
+                                                              {"default": mat_name},
+                                                              {"default": "__null_material"})
 
                 self.__ass.objects().insert(self.__as_area_lamp_mesh)
                 self.__as_area_lamp_mesh = self.__ass.objects().get_by_name(mesh_name)
@@ -363,8 +364,6 @@ class LampTranslator(Translator):
 
     def delete_object(self, as_main_assembly):
         self.clear_instances(as_main_assembly)
-
-        print("Cleared instances")
 
         if self.__lamp_model != 'area_lamp':
             print("Removing regular light")
@@ -394,12 +393,11 @@ class LampTranslator(Translator):
 
     def __get_point_lamp_params(self):
         as_lamp_data = self.bl_lamp.data.appleseed
-        light_params = {
-            'intensity': f"{self.obj_name}_radiance",
-            'intensity_multiplier': as_lamp_data.radiance_multiplier,
-            'exposure': as_lamp_data.exposure,
-            'cast_indirect_light': as_lamp_data.cast_indirect,
-            'importance_multiplier': as_lamp_data.importance_multiplier}
+        light_params = {'intensity': f"{self.obj_name}_radiance",
+                        'intensity_multiplier': as_lamp_data.radiance_multiplier,
+                        'exposure': as_lamp_data.exposure,
+                        'cast_indirect_light': as_lamp_data.cast_indirect,
+                        'importance_multiplier': as_lamp_data.importance_multiplier}
 
         return light_params
 
@@ -417,39 +415,36 @@ class LampTranslator(Translator):
         if as_lamp_data.radiance_multiplier_use_tex and as_lamp_data.radiance_multiplier_tex is not None:
             intensity_multiplier = f"{as_lamp_data.radiance_multiplier_tex.name_full}_inst"
 
-        light_params = {
-            'intensity': intensity,
-            'intensity_multiplier': intensity_multiplier,
-            'exposure': as_lamp_data.exposure,
-            'cast_indirect_light': as_lamp_data.cast_indirect,
-            'importance_multiplier': as_lamp_data.importance_multiplier,
-            'exposure_multiplier': as_lamp_data.exposure_multiplier,
-            'tilt_angle': as_lamp_data.tilt_angle,
-            'inner_angle': inner_angle,
-            'outer_angle': outer_angle}
+        light_params = {'intensity': intensity,
+                        'intensity_multiplier': intensity_multiplier,
+                        'exposure': as_lamp_data.exposure,
+                        'cast_indirect_light': as_lamp_data.cast_indirect,
+                        'importance_multiplier': as_lamp_data.importance_multiplier,
+                        'exposure_multiplier': as_lamp_data.exposure_multiplier,
+                        'tilt_angle': as_lamp_data.tilt_angle,
+                        'inner_angle': inner_angle,
+                        'outer_angle': outer_angle}
 
         return light_params
 
     def __get_directional_lamp_params(self):
         as_lamp_data = self.bl_lamp.data.appleseed
-        light_params = {
-            'irradiance': f"{self.obj_name}_radiance",
-            'irradiance_multiplier': as_lamp_data.radiance_multiplier,
-            'exposure': as_lamp_data.exposure,
-            'cast_indirect_light': as_lamp_data.cast_indirect,
-            'importance_multiplier': as_lamp_data.importance_multiplier}
+        light_params = {'irradiance': f"{self.obj_name}_radiance",
+                        'irradiance_multiplier': as_lamp_data.radiance_multiplier,
+                        'exposure': as_lamp_data.exposure,
+                        'cast_indirect_light': as_lamp_data.cast_indirect,
+                        'importance_multiplier': as_lamp_data.importance_multiplier}
 
         return light_params
 
     def __get_sun_lamp_params(self):
         as_lamp_data = self.bl_lamp.data.appleseed
-        light_params = {
-            'radiance_multiplier': as_lamp_data.radiance_multiplier,
-            'cast_indirect_light': as_lamp_data.cast_indirect,
-            'importance_multiplier': as_lamp_data.importance_multiplier,
-            'size_multiplier': as_lamp_data.size_multiplier,
-            'distance': as_lamp_data.distance,
-            'turbidity': as_lamp_data.turbidity}
+        light_params = {'radiance_multiplier': as_lamp_data.radiance_multiplier,
+                        'cast_indirect_light': as_lamp_data.cast_indirect,
+                        'importance_multiplier': as_lamp_data.importance_multiplier,
+                        'size_multiplier': as_lamp_data.size_multiplier,
+                        'distance': as_lamp_data.distance,
+                        'turbidity': as_lamp_data.turbidity}
 
         if as_lamp_data.use_edf:
             light_params['environment_edf'] = 'sky_edf'
@@ -525,12 +520,11 @@ class LampTranslator(Translator):
 
         lamp_color = " ".join(map(str, as_lamp_data.area_color))
 
-        lamp_params = {
-            'in_color': f"color {lamp_color}",
-            'in_intensity': f"float {as_lamp_data.area_intensity}",
-            'in_intensity_scale': f"float {as_lamp_data.area_intensity_scale}",
-            'in_exposure': f"float {as_lamp_data.area_exposure}",
-            'in_normalize': f"int {as_lamp_data.area_normalize}"}
+        lamp_params = {'in_color': f"color {lamp_color}",
+                       'in_intensity': f"float {as_lamp_data.area_intensity}",
+                       'in_intensity_scale': f"float {as_lamp_data.area_intensity_scale}",
+                       'in_exposure': f"float {as_lamp_data.area_exposure}",
+                       'in_normalize': f"int {as_lamp_data.area_normalize}"}
 
         self.__as_area_lamp_shadergroup.add_shader("shader", shader_path, "asAreaLight", lamp_params)
         self.__as_area_lamp_shadergroup.add_shader("surface", surface_path, "asClosure2Surface", {})
@@ -550,6 +544,5 @@ class LampTranslator(Translator):
     def __find_shader_dir():
         for directory in get_osl_search_paths():
             if os.path.basename(directory) in ('shaders', 'blenderseed'):
-
                 return directory
 

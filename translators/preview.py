@@ -165,29 +165,33 @@ class PreviewRenderer(object):
         # Define the background plane
         plane = asr.MeshObjectReader.read([],
                                           "plane_obj",
-                                          {'filename': os.path.join(preview_template_dir,
-                                                                    'material_preview_ground.binarymesh')})
+                                          {'filename': os.path.join(preview_template_dir, 'material_preview_ground.binarymesh')})
+
         plane_inst = asr.ObjectInstance("plane",
                                         {},
                                         "plane_obj.part_0",
                                         asr.Transformd(asr.Matrix4d.identity()),
                                         {'default': "plane_mat_1"})
+
         plane_mat = asr.Material("generic_material",
                                  "plane_mat_1",
                                  {'bsdf': "plane_bsdf", 'surface_shader': "base_shader"})
+
         plane_bsdf = asr.BSDF("lambertian_brdf",
                               "plane_bsdf",
                               {'reflectance': "plane_tex"})
+
         plane_tex = asr.Texture("disk_texture_2d",
                                 "plane_tex_tex",
-                                {'filename': os.path.join(preview_template_dir,
-                                                          "checker_texture.png"),
+                                {'filename': os.path.join(preview_template_dir, "checker_texture.png"),
                                  'color_space': 'srgb'},
                                 [])
+
         plane_tex_inst = asr.TextureInstance("plane_tex",
                                              {},
                                              "plane_tex_tex",
                                              asr.Transformf(asr.Matrix4f.identity()))
+
         return plane, plane_bsdf, plane_inst, plane_mat, plane_tex, plane_tex_inst
 
     def __create_camera(self, depsgraph):
@@ -195,12 +199,14 @@ class PreviewRenderer(object):
         camera = asr.Camera('pinhole_camera',
                             "preview_camera",
                             {"film_width": 0.032, "focal_length": 0.035, "aspect_ratio": util.calc_film_aspect_ratio(depsgraph.scene_eval)})
+
         camera_matrix = asr.Matrix4d([1.0, 0.0, 0.0, -0.03582507744431496,
                                       0.0, -4.371138828673793e-08, -1.0, -2.135615587234497,
                                       0.0, 1.0, -4.371138828673793e-08, 0.5015512704849243,
                                       0.0, 0.0, 0.0, 1.0])
-        camera.transform_sequence().set_transform(0.0,
-                                                  asr.Transformd(camera_matrix))
+
+        camera.transform_sequence().set_transform(0.0, asr.Transformd(camera_matrix))
+
         self.__project.get_scene().cameras().insert(camera)
 
     def __create_material(self, depsgraph):
@@ -213,8 +219,7 @@ class PreviewRenderer(object):
 
         self.__mat_name = f"{likely_material.name_full}"
 
-        self.__mat_translator = MaterialTranslator(likely_material,
-                                                   self.asset_handler)
+        self.__mat_translator = MaterialTranslator(likely_material, self.asset_handler)
 
     def __get_preview_material(self, depsgraph):
         return depsgraph.scene_eval.objects['preview_sphere'].material_slots[0].material
@@ -254,9 +259,8 @@ class PreviewRenderer(object):
     def __set_frame(self, depsgraph):
         width, height = util.get_render_resolution(depsgraph.scene_eval)
 
-        frame_params = {
-            'resolution': asr.Vector2i(width, height),
-            'camera': "preview_camera"}
+        frame_params = {'resolution': asr.Vector2i(width, height),
+                        'camera': "preview_camera"}
 
         frame = asr.Frame("beauty", frame_params)
 
