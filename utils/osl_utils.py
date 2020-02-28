@@ -155,7 +155,7 @@ def generate_node(node, node_class):
 
         if not param['connectable']:
             continue
-        
+
         if param['hide_ui'] is True:
             hide_ui = True
 
@@ -480,6 +480,9 @@ def parse_shader(q, filename=None):
             param_data['options'] = metadata['options']['value'].split(" = ")[-1].replace("\"", "").split("|")
         if 'as_blender_input_socket' in metadata:
             param_data['connectable'] = False if metadata['as_blender_input_socket']['value'] == 0.0 else True
+        if 'as_deprecated' in metadata:
+            param_data['hide_ui'] = True
+            param_data['connectable'] = False
 
         if param['isoutput'] is True:
             d['outputs'].append(param_data)
