@@ -598,6 +598,7 @@ class SceneTranslator(object):
 
                                   # Leave at 0 for now - not in appleseed.studio GUI
                                   'max_path_length': 0,
+                                  'sppm_enable_importons': asr_scene_props.sppm_enable_importons,
                                   'max_photons_per_estimate': asr_scene_props.sppm_max_per_estimate,
                                   'path_tracing_max_path_length': asr_scene_props.sppm_pt_max_length,
                                   'path_tracing_rr_min_path_length': asr_scene_props.sppm_pt_rr_start,

@@ -54,7 +54,8 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
 
     model: bpy.props.EnumProperty(name="model",
                                   items=[
-                                      ('render_stamp_post_processing_stage', "Render Stamp", ""),
+                                      ('render_stamp_post_processing_stage',
+                                       "Render Stamp", ""),
                                       ('color_map_post_processing_stage', "Color Map", "")],
                                   default='render_stamp_post_processing_stage',
                                   update=update_name)
@@ -67,13 +68,20 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
     render_stamp_patterns: bpy.props.EnumProperty(name="render_stamp_patterns",
                                                   description="Variables to insert into the render stamp",
                                                   items=[
-                                                      ('{lib-version}', "Library Version", ""),
-                                                      ('{lib-name}', "Library Name", ""),
-                                                      ('{lib-variant}', "Library Variant", ""),
-                                                      ('{lib-config}', "Library Configuration", ""),
-                                                      ('{lib-build-date}', "Library Build Date", ""),
-                                                      ('{lib-build-time}', "Library Build Time", ""),
-                                                      ('{render-time}', "Render Time", ""),
+                                                      ('{lib-version}',
+                                                       "Library Version", ""),
+                                                      ('{lib-name}',
+                                                       "Library Name", ""),
+                                                      ('{lib-variant}',
+                                                       "Library Variant", ""),
+                                                      ('{lib-config}',
+                                                       "Library Configuration", ""),
+                                                      ('{lib-build-date}',
+                                                       "Library Build Date", ""),
+                                                      ('{lib-build-time}',
+                                                       "Library Build Time", ""),
+                                                      ('{render-time}',
+                                                       "Render Time", ""),
                                                       ('{peak-memory}', "Peak Memory", "")],
                                                   default="{render-time}",
                                                   update=update_stamp)
@@ -138,10 +146,14 @@ class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
                                          description="The bit depth of the output file.  Leave at default for no conversion",
                                          items=[
                                              ('default', "Default", ""),
-                                             ('uint8', "Uint8", "Unsigned 8-bit integer"),
-                                             ('sint8', "Sint8", "Signed 8-bit integer"),
-                                             ('uint16', "Uint16", "Unsigned 16-bit integer"),
-                                             ('sint16', "Sint16", "Signed 16-bit integer"),
+                                             ('uint8', "Uint8",
+                                              "Unsigned 8-bit integer"),
+                                             ('sint8', "Sint8",
+                                              "Signed 8-bit integer"),
+                                             ('uint16', "Uint16",
+                                              "Unsigned 16-bit integer"),
+                                             ('sint16', "Sint16",
+                                              "Signed 16-bit integer"),
                                              ('half', "Half", "16-bit float"),
                                              ('float', "Float", "32-bit float")],
                                          default='default')
@@ -261,7 +273,8 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     pixel_sampler: bpy.props.EnumProperty(name="Pixel Sampler",
                                           description="Sampler",
                                           items=[('uniform', "Uniform", "Uniform"),
-                                                 ('adaptive', "Adaptive", "Adaptive"),
+                                                 ('adaptive', "Adaptive",
+                                                  "Adaptive"),
                                                  ('texture', "Texture-Based", "Texture-Based Sampling")],
                                           default='uniform')
 
@@ -461,11 +474,16 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     sppm_dl_mode: bpy.props.EnumProperty(name="Direct Lighting",
                                          description="SPPM Direct Lighting Component",
                                          items=[('rt', "RT Direct Lighting", 'Use ray tracing to estimate direct lighting'),
-                                                ('sppm', "SPPM Direct Lighting", 'Use photon maps to estimate direct lighting'),
+                                                ('sppm', "SPPM Direct Lighting",
+                                                 'Use photon maps to estimate direct lighting'),
                                                 ('off', "No Direct Lighting", 'Do not estimate direct lighting')],
                                          default='rt')
 
     # SPPM photon tracing settings.
+
+    sppm_enable_importons: bpy.props.BoolProperty(name="sppm_enable_importons",
+                                                  description="When checked, \"importons\" are traced to identify important parts of the scene, and later on photons are only stored in these important parts",
+                                                  default=False)
 
     sppm_photon_max_length: bpy.props.IntProperty(name="sppm_photon_max_length",
                                                   description="Maximum path length for photons (0: unlimited)",
@@ -704,29 +722,39 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
     override_mode: bpy.props.EnumProperty(name="override_mode",
                                           items=[
                                               ('albedo', "Albedo", ""),
-                                              ('ambient_occlusion', "Ambient Occlusion", ""),
+                                              ('ambient_occlusion',
+                                               "Ambient Occlusion", ""),
                                               ('assemblies', "Assemblies", ""),
-                                              ('assembly_instances', "Assembly Instances", ""),
+                                              ('assembly_instances',
+                                               "Assembly Instances", ""),
                                               ('barycentric', "Barycentric", ""),
                                               ('bitangent', "Bitangent", ""),
                                               ('coverage', "Coverage", ""),
                                               ('depth', "Depth", ""),
                                               ('facing_ratio', "Facing Ratio", ""),
-                                              ('geometric_normal', "Geometric Normal", ""),
+                                              ('geometric_normal',
+                                               "Geometric Normal", ""),
                                               ('materials', "Materials", ""),
                                               ("objects", "Objects", ""),
-                                              ('object_instances', "Object Instances", ""),
-                                              ('original_shading_normal', "Original Shading Normal", ""),
+                                              ('object_instances',
+                                               "Object Instances", ""),
+                                              ('original_shading_normal',
+                                               "Original Shading Normal", ""),
                                               ('primitives', "Primitives", ""),
                                               ('ray_spread', "Ray Spread", ""),
-                                              ('screen_space_wireframe', "Screen Space Wireframe", ""),
-                                              ('screen_space_velocity', "Screen Space Velocity", ""),
-                                              ('shading_normal', "Shading Normal", ""),
+                                              ('screen_space_wireframe',
+                                               "Screen Space Wireframe", ""),
+                                              ('screen_space_velocity',
+                                               "Screen Space Velocity", ""),
+                                              ('shading_normal',
+                                               "Shading Normal", ""),
                                               ('sides', "Sides", ""),
                                               ('tangent', "Tangent", ""),
                                               ('uv', "UVs", ""),
-                                              ('world_space_position', "World Space Position", ""),
-                                              ('world_space_wireframe', "World Space Wireframe", ""),
+                                              ('world_space_position',
+                                               "World Space Position", ""),
+                                              ('world_space_wireframe',
+                                               "World Space Wireframe", ""),
                                               ('world_space_velocity', "World Space Velocity", "")],
                                           default='facing_ratio')
 
@@ -742,7 +770,8 @@ def register():
     for cls in classes:
         util.safe_register_class(cls)
 
-    bpy.types.Scene.appleseed = bpy.props.PointerProperty(type=AppleseedRenderSettings)
+    bpy.types.Scene.appleseed = bpy.props.PointerProperty(
+        type=AppleseedRenderSettings)
 
 
 def unregister():
