@@ -265,6 +265,7 @@ class SceneTranslator(object):
         self.__load_searchpaths()
 
         prof_timer.stop()
+        print(f"Scene translated in {prof_timer.elapsed()} seconds.")
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
     def update_multiview_camera(self, engine, depsgraph):
@@ -598,7 +599,8 @@ class SceneTranslator(object):
 
                                   # Leave at 0 for now - not in appleseed.studio GUI
                                   'max_path_length': 0,
-                                  'sppm_enable_importons': asr_scene_props.sppm_enable_importons,
+                                  'enable_importons': asr_scene_props.sppm_enable_importons,
+                                  'importon_lookup_radius': asr_scene_props.sppm_importon_lookup_radius,
                                   'max_photons_per_estimate': asr_scene_props.sppm_max_per_estimate,
                                   'path_tracing_max_path_length': asr_scene_props.sppm_pt_max_length,
                                   'path_tracing_rr_min_path_length': asr_scene_props.sppm_pt_rr_start,

@@ -485,6 +485,12 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                   description="When checked, \"importons\" are traced to identify important parts of the scene, and later on photons are only stored in these important parts",
                                                   default=False)
 
+    sppm_importon_lookup_radius: bpy.props.FloatProperty(name="sppm_importon_lookup_radius",
+                                                         description="Importon lookup radius (in percents of the scene diameter) when deciding whether to store or not a photon",
+                                                         default=5.0,
+                                                         min=0.0,
+                                                         max=100.0)
+
     sppm_photon_max_length: bpy.props.IntProperty(name="sppm_photon_max_length",
                                                   description="Maximum path length for photons (0: unlimited)",
                                                   default=0,

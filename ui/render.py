@@ -357,7 +357,13 @@ class ASRENDER_PT_lighting_sppm_tracing(bpy.types.Panel, ASRENDER_PT_base):
         layout.use_property_split = True
 
         col = layout.column(align=True)
-        col.prop(asr_scene_props, "sppm_enable_importons", text="Enable Importons")
+        row = col.row()
+        row.prop(asr_scene_props, "sppm_enable_importons", text="Enable Importons")
+        row = col.row()
+        row.enabled = asr_scene_props.sppm_enable_importons
+        row.prop(asr_scene_props, "sppm_importon_lookup_radius", text="Importon Lookup Radius")
+
+        col = layout.column(align=True)
         col.prop(asr_scene_props, "sppm_photon_max_length", text="Max Bounces")
         col.prop(asr_scene_props, "sppm_photon_rr_start", text="Russian Roulette Start Bounce")
         col.prop(asr_scene_props, "sppm_light_photons", text="Light Photons")
