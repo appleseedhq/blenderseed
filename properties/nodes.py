@@ -27,6 +27,7 @@
 
 import bpy
 import nodeitems_utils
+from nodeitems_builtins import ShaderNodeCategory
 
 from ..logger import get_logger
 from ..utils import osl_utils, util
@@ -311,6 +312,15 @@ classes = [AppleseedOSLScriptBaseNode]
 
 preview_collections = {}
 
+def hide_non_appleseed_nodes(method):
+    @classmethod
+    def func(cls, context):
+        renderer = context.scene.render.engine
+        return renderer != 'APPLESEED_RENDER'
+    return func
+
+old_shader_node_category_poll = None
+
 
 def register():
     import bpy.utils.previews
@@ -329,6 +339,10 @@ def register():
         classes.extend(node_classes)
         osl_node_names.append([node_name, node_category])
 
+    global old_shader_node_category_poll
+    old_shader_node_category_poll = ShaderNodeCategory.poll
+    ShaderNodeCategory.poll = hide_non_appleseed_nodes(ShaderNodeCategory.poll)
+
     for cls in classes:
         util.safe_register_class(cls)
 
@@ -337,6 +351,8 @@ def register():
 
 def unregister():
     nodeitems_utils.unregister_node_categories("APPLESEED")
+
+    ShaderNodeCategory.poll = old_shader_node_category_poll
 
     for cls in reversed(classes):
         util.safe_unregister_class(cls)
