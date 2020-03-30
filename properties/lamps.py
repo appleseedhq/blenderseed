@@ -131,7 +131,7 @@ class AppleseedLampProps(bpy.types.PropertyGroup):
 
     area_exposure: bpy.props.FloatProperty(name="exposure",
                                            description="Intensity of area light",
-                                           default=1.0)
+                                           default=0.0)
 
     area_normalize: bpy.props.BoolProperty(name="area_normalize",
                                            description="",
