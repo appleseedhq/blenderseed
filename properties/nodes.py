@@ -103,6 +103,8 @@ class AppleseedOSLNode(bpy.types.Node):
                     image = getattr(self, (x['name']))
                     layout.prop(image, "filepath", text="Filepath")
                 else:
+                    if hasattr(self, "%s_use_node" % x['label']):
+                        socket_number += 1
                     if getattr(self, param_section):
                         label_text = x['label']
                         if x['type'] in ('color', 'vector', 'float[2]'):
@@ -116,7 +118,6 @@ class AppleseedOSLNode(bpy.types.Node):
                             col.prop(self, x['name'], text=label_text)
                             col = split.column(align=True)
                             col.prop(self, "%s_use_node" % x['label'], text="", toggle=True, icon='NODETREE')
-                            socket_number += 1
                         else:
                             layout.prop(self, x['name'], text=label_text)
             else:
