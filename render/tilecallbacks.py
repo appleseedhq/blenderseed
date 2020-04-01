@@ -92,9 +92,6 @@ class FinalTileCallback(asr.ITileCallback):
             self.__pass_incremented = True
         self.__rendered_tiles = 0
 
-    def on_tile_begin(self, frame, tile_x, tile_y):
-        pass
-
     def on_tile_end(self, frame, tile_x, tile_y):
         """
         Processes the tile data as it finished
