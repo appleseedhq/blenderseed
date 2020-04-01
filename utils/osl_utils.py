@@ -422,7 +422,7 @@ def read_osl_shaders():
         if os.path.isdir(shader_dir):
             logger.debug("[appleseed] Searching {0} for OSO files...".format(shader_dir))
             for file in os.listdir(shader_dir):
-                if file.endswith(".oso"):
+                if file.endswith(".oso") and os.path.basename(file) != "as_texture2surface.oso":
                     logger.debug("[appleseed] Reading {0}...".format(file))
                     filename = os.path.join(shader_dir, file)
                     q.open(filename)
