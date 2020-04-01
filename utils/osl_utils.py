@@ -358,7 +358,7 @@ def generate_node(node, node_class):
 
             parameter_types[param['name']] = "color"
 
-        elif param['type'] == 'vector':
+        elif param['type'] in ('vector', 'point', 'normal'):
             kwargs = {'name': param['name'], 'description': helper}
 
             if 'default' in keys:
