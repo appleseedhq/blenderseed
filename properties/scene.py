@@ -361,7 +361,7 @@ class AppleseedRenderSettings(bpy.types.PropertyGroup):
                                                    default=False)
 
     enable_dl: bpy.props.BoolProperty(name="enable_dl",
-                                      description="Enable direct lighting",
+                                      description="Enable direct light sampling (Next Event Estimation)",
                                       default=True)
 
     next_event_estimation: bpy.props.BoolProperty(name="next_event_estimation",
