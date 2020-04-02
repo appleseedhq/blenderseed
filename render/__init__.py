@@ -108,13 +108,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
         except:
             pass
 
-        # Sometimes __is_interactive does not exist, not sure why.
-        try:
-            if self.__is_interactive:
-                RenderAppleseed.__interactive_session = False
-        except:
-            pass
-
         logger.debug("Deleting render engine")
 
     #
@@ -126,8 +119,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
             if bpy.app.background:  # Can this happen?
                 return
 
-            # Disable material previews if we are doing an interactive render.
-            # if not RenderAppleseed.__interactive_session:
             level = 'error'
             with SetAppleseedLogLevel(level):
                 self.__render_material_preview(depsgraph)
@@ -318,8 +309,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
         assert (self.__render_thread is None)
 
         logger.debug("Starting interactive rendering")
-        self.__is_interactive = True
-        RenderAppleseed.__interactive_session = True
 
         logger.debug("Translating scene for interactive rendering")
 
