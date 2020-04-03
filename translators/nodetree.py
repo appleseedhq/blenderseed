@@ -116,7 +116,7 @@ class NodeTreeTranslator(Translator):
                     if parameter_type == "int checkbox":
                         parameter_type = "int"
                         parameter_value = int(parameter_value)
-                    elif parameter_type in ('color', 'vector', 'normal', 'float[2]'):
+                    elif parameter_type in ('color', 'vector', 'normal', 'point', 'float[2]'):
                         parameter_value = " ".join(map(str, parameter_value))
                         if parameter_type == 'float[2]':
                             parameter_type = 'float[]'
