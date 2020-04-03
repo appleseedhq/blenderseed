@@ -286,7 +286,7 @@ def generate_node(node, node_class):
                                                                             description=helper,
                                                                             default=str(default))
 
-            parameter_types[param['name']] = "string"
+            parameter_types[param['name']] = param['type']
 
         elif param['type'] == "int":
             if widget != "" and widget in ("mapper", "popup"):
@@ -318,7 +318,7 @@ def generate_node(node, node_class):
 
                 ntype.__annotations__[prop_name] = bpy.props.IntProperty(**kwargs)
 
-                parameter_types[param['name']] = "int"
+                parameter_types[param['name']] = param['type']
 
         elif param['type'] == "float":
 
@@ -334,7 +334,7 @@ def generate_node(node, node_class):
 
             ntype.__annotations__[prop_name] = bpy.props.FloatProperty(**kwargs)
 
-            parameter_types[param['name']] = "float"
+            parameter_types[param['name']] = param['type']
 
         elif param['type'] == "float[2]":
             kwargs = {'name': param['name'], 'description': helper, 'size': 2}
@@ -344,7 +344,7 @@ def generate_node(node, node_class):
 
             ntype.__annotations__[prop_name] = bpy.props.FloatVectorProperty(**kwargs)
 
-            parameter_types[param['name']] = "float[2]"
+            parameter_types[param['name']] =  param['type']
 
         elif param['type'] == 'color':
             ntype.__annotations__[prop_name] = bpy.props.FloatVectorProperty(name=param['name'],
@@ -356,7 +356,7 @@ def generate_node(node, node_class):
                                                                              min=0.0,
                                                                              max=1.0)
 
-            parameter_types[param['name']] = "color"
+            parameter_types[param['name']] = param['type']
 
         elif param['type'] in ('vector', 'point', 'normal'):
             kwargs = {'name': param['name'], 'description': helper}
@@ -368,7 +368,7 @@ def generate_node(node, node_class):
 
             ntype.__annotations__[prop_name] = bpy.props.FloatVectorProperty(**kwargs)
 
-            parameter_types[param['name']] = "vector"
+            parameter_types[param['name']] = param['type']
 
         elif param['type'] == 'pointer':
             pass
