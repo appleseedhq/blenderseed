@@ -50,7 +50,7 @@ import urllib
 # Constants.
 #--------------------------------------------------------------------------------------------------
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 SETTINGS_FILENAME = "blenderseed.package.configuration.xml"
 
 
@@ -348,7 +348,7 @@ class WindowsPackageBuilder(PackageBuilder):
         progress("Windows-specific: Copying dependencies")
         bin_dir = self.settings.appleseed_bin_path
 
-        for dll in ["appleseed.dll", "appleseed.shared.dll"]:
+        for dll in ["appleseed.dll"]:
             shutil.copy(os.path.join(bin_dir, dll), os.path.join(self.settings.root_dir, "appleseed", "bin"))
 
     def post_process_package(self):
@@ -380,7 +380,7 @@ class MacPackageBuilder(PackageBuilder):
         safe_make_directory(lib_dir)
 
         # Copy appleseed libraries.
-        for lib in ["libappleseed.dylib", "libappleseed.shared.dylib"]:
+        for lib in ["libappleseed.dylib"]:
             shutil.copy(os.path.join(self.settings.appleseed_lib_path, lib), lib_dir)
 
         # Get shared libs needed by binaries.
