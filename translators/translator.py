@@ -51,7 +51,19 @@ class Translator(object):
         raise NotImplementedError
 
     @staticmethod
-    def _convert_matrix(m):        
+    def _convert_matrix(m):
+        """
+        Converts a Blender matrix to an appleseed matrix
+        We have the following conventions:
+        Both Blender and appleseed use right-hand coordinate systems.
+        Both Blender and appleseed use column-major matrices.
+        Both Blender and appleseed use pre-multiplication.
+        In Blender, given a matrix m, m[i][j] is the element at the i'th row, j'th column.
+        The only difference between the coordinate systems of Blender and appleseed is the up vector:
+        in Blender, up is Z+; in appleseed, up is Y+.  So we need to add a -90 degree rotation along the x
+        axis to translate.
+        """
+
         return [m[0][0], m[0][1], m[0][2], m[0][3],
                 m[2][0], m[2][1], m[2][2], m[2][3],
                 -m[1][0], -m[1][1], -m[1][2], -m[1][3],

@@ -74,7 +74,6 @@ class RenderAppleseed(bpy.types.RenderEngine):
     bl_idname = 'APPLESEED_RENDER'
     bl_label = 'appleseed'
     bl_use_preview = True
-    # bl_use_shading_nodes = True
     bl_use_shading_nodes_custom = False
     bl_use_postprocess = True
 
@@ -83,7 +82,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
     #
 
     def __init__(self):
-        logger.debug("Creating render engine")
+        logger.debug("appleseed: Creating render engine")
 
         # Common for all rendering modes.
         self.__renderer = None
@@ -99,12 +98,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
     #
 
     def __del__(self):
-        logger.debug("Deleting render engine")
-
         try:
             self.__stop_rendering()
         except:
             pass
+
+        logger.debug("appleseed: Deleting render engine")
 
     #
     # RenderEngine methods.

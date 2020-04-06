@@ -62,7 +62,7 @@ class RenderCameraTranslator(Translator):
         self.__as_camera.set_parameters(self.__as_cam_params)
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
-        logger.debug("Flushing camera entity, num xform keys = %s", self.__as_camera.transform_sequence().size())
+        logger.debug("appleseed: Flushing camera entity, num xform keys = %s", self.__as_camera.transform_sequence().size())
 
         self.__as_camera.transform_sequence().optimize()
 
@@ -217,13 +217,6 @@ class RenderCameraTranslator(Translator):
         return cam_params
 
     def _convert_matrix(self, m):
-        matrix = asr.Matrix4d([m[0][0], m[0][1], m[0][2], m[0][3],
-                               m[1][0], m[1][1], m[1][2], m[1][3],
-                               m[2][0], m[2][1], m[2][2], m[2][3],
-                               m[3][0], m[3][1], m[3][2], m[3][3]])
-
-        rotation_modify = asr.Matrix4d.make_rotation(asr.Vector3d(1.0, 0.0, 0.0), math.radians(-90.0))
-
-        matrix = rotation_modify * matrix
+        matrix = asr.Matrix4d(super()._convert_matrix(m))
 
         return asr.Transformd(matrix)

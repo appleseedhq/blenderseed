@@ -44,7 +44,7 @@ class InteractiveCameraTranslator(Translator):
     """
 
     def __init__(self, cam, asset_handler):
-        logger.debug("Creating interactive camera translator")
+        logger.debug("appleseed: Creating interactive camera translator")
         super().__init__(cam, asset_handler)
 
         self.__as_camera = None
@@ -260,9 +260,6 @@ class InteractiveCameraTranslator(Translator):
         return params
 
     def _convert_matrix(self, m):
-        matrix = asr.Matrix4d([m[0][0], m[0][1], m[0][2], m[0][3],
-                               m[2][0], m[2][1], m[2][2], m[2][3],
-                               -m[1][0], -m[1][1], -m[1][2], -m[1][3],
-                               m[3][0], m[3][1], m[3][2], m[3][3]])
+        matrix = asr.Matrix4d(super()._convert_matrix(m))
 
         return asr.Transformd(matrix)
