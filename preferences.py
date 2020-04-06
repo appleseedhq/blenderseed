@@ -104,9 +104,9 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
         box.label(text=asr.get_synthetic_version_string())
 
         lib_info = asr.get_third_parties_versions()
-        for key in lib_info:
-            box = layout.box()
-            box.label(text="%s: %s" % (key, lib_info[key]))
+
+        for key, item in lib_info.items():
+            box.label(text=f"{key} version {item}")
 
 
 classes = (AppleseedSearchPath,
