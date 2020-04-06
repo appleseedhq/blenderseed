@@ -28,7 +28,6 @@
 import os
 
 import appleseed as asr
-from ..textures import TextureTranslator
 from ..translator import Translator
 from ..utilites import ProjectExportMode
 from ...logger import get_logger
@@ -38,94 +37,89 @@ logger = get_logger()
 
 
 class MeshTranslator(Translator):
-    def __init__(self, obj, export_mode, asset_handler):
-        logger.debug("Creating translator for %s", obj.name_full)
-        super().__init__(obj, asset_handler=asset_handler)
+    def __init__(self, bl_obj, export_mode, asset_handler):
+        super().__init__(bl_obj, asset_handler)
+
         self.__export_mode = export_mode
-        self.__instances = {}
+
+        self.__mesh_params = str()
+
+        self.__instance_lib = asr.BlTransformLibrary()
 
         self.__as_mesh = None
         self.__as_mesh_inst = None
-        self.__as_mesh_inst_params = {}
-        self.__front_materials = {}
-        self.__back_materials = {}
+        self.__as_mesh_inst_params = dict()
+        self.__front_materials = dict()
+        self.__back_materials = dict()
 
-        self.__geom_dir = self.asset_handler.geometry_dir if export_mode == ProjectExportMode.PROJECT_EXPORT else None
-
-        self.__has_assembly = False
+        self.__obj_inst_name = None
+        self.__ass_name = str()
         self.__ass = None
 
-        self.__mesh_filenames = []
+        self.__geom_dir = self._asset_handler.geometry_dir if export_mode == ProjectExportMode.PROJECT_EXPORT else None
 
-        # Motion blur
-        self.__key_index = 0
-        self.__deforming = obj.appleseed.use_deformation_blur and is_object_deforming(obj)
+        self.__mesh_filenames = list()
 
+        self.__is_deforming = bl_obj.appleseed.use_deformation_blur and is_object_deforming(bl_obj)
+
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
+    
     @property
-    def bl_obj(self):
+    def mesh_obj(self):
         return self._bl_obj
 
     @property
-    def instances(self):
-        return self.__instances
+    def orig_name(self):
+        return self._bl_obj.appleseed.obj_name
 
-    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
-        logger.debug("Creating entity for %s", self.appleseed_name)
+    @property
+    def instances_size(self):
+        return len(self.__instance_lib)
 
-        mesh_name = f"{self.appleseed_name}_obj"
+    def create_entities(self, depsgraph, num_def_times):
+        self.__mesh_params = self.__get_mesh_params()
 
-        mesh_params = self.__get_mesh_params(textures_to_add,
-                                             as_texture_translators)
-
-        self.__as_mesh = asr.MeshObject(mesh_name, mesh_params)
+        self.__as_mesh = asr.MeshObject(self.orig_name, self.__mesh_params)
 
         self.__as_mesh_inst_params = self.__get_mesh_inst_params()
+
         self.__front_materials, self.__back_materials = self.__get_material_mappings()
 
-    def set_xform_step(self, time, inst_key, bl_matrix):
-        if inst_key in self.__instances.keys():
-            self.__instances[inst_key].set_transform(time,
-                               self._convert_matrix(bl_matrix))
+        eval_object = self._bl_obj.evaluated_get(depsgraph)
 
-    def set_deform_key(self, time, depsgraph, key_times):
-        if not self.__deforming and self.__key_index > 0:
-            logger.debug("Skipping mesh key for non deforming object %s", self.bl_obj.name)
-            return
+        me = eval_object.to_mesh()
 
-        mesh_name = f"{self.appleseed_name}_obj"
-
-        me = self.__create_bl_render_mesh()
+        self.__convert_mesh(me)
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
-            # Write a mesh file for the mesh key.
-            logger.debug("Writing mesh file object %s, time = %s", self.bl_obj.name, time)
+            logger.debug("Writing mesh file object %s, time = 0", self.orig_name)
+            self.__write_mesh(self.orig_name)
+
+        eval_object.to_mesh_clear()
+
+        if self.__is_deforming:
+            self.__as_mesh.set_motion_segment_count(num_def_times - 1)
+
+    def add_instance_step(self, time, instance_id, bl_matrix):
+        self.__instance_lib.add_xform_step(time, instance_id, self._convert_matrix(bl_matrix))
+
+    def set_deform_key(self, time, depsgraph, index):
+        eval_object = self._bl_obj.evaluated_get(depsgraph)
+
+        me = eval_object.to_mesh()
+
+        if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
+            logger.debug("Writing mesh file object %s, time = %s", self.orig_name, time)
 
             self.__convert_mesh(me)
-            self.__write_mesh(mesh_name)
-
+            self.__write_mesh(self.orig_name)
         else:
-            if self.__key_index == 0:
-                # First key, convert the mesh and reserve keys.
-                logger.debug("Converting mesh object %s", self.bl_obj.name)
-                self.__convert_mesh(me)
+            self.__set_mesh_key(me, index)
 
-                if self.__deforming:
-                    self.__as_mesh.set_motion_segment_count(len(key_times) - 1)
-            else:
-                # Set vertex and normal poses.
-                logger.debug("Setting mesh key for object %s, time = %s", self.bl_obj.name, time)
-                self.__set_mesh_key(me,
-                                    self.__key_index)
+        eval_object.to_mesh_clear()
 
-        self._bl_obj.to_mesh_clear()
-        self.__key_index += 1
-
-    def flush_entities(self, as_assembly, as_project):
-        logger.debug("Flushing entity for %s", self.appleseed_name)
-        for instance in self.__instances.values():
-            instance.optimize()
-
-        mesh_name = f"{self.appleseed_name}_obj"
+    def flush_entities(self, as_scene, as_main_assembly, as_project):
+        logger.debug("appleseed: Flusing mesh for object %s", self.orig_name)
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Replace the MeshObject by an empty one referencing
@@ -135,123 +129,101 @@ class MeshTranslator(Translator):
 
             if len(self.__mesh_filenames) == 1:
                 # No motion blur. Write a single filename.
-                params['filename'] = "_geometry/" + self.__mesh_filenames[0]
+                params['filename'] = f"_geometry/{self.__mesh_filenames[0]}"
             else:
                 # Motion blur. Write one filename per motion pose.
 
-                params['filename'] = {}
+                params['filename'] = dict()
 
                 for i, f in enumerate(self.__mesh_filenames):
-                    params['filename'][str(i)] = "_geometry/" + f
+                    params['filename'][str(i)] = f"_geometry/{f}"
 
-            self.__as_mesh = asr.MeshObject(mesh_name,
-                                            params)
+            self.__as_mesh = asr.MeshObject(self.orig_name, params)
 
-        mesh_name = self.__object_instance_mesh_name(f"{self.appleseed_name}_obj")
+        mesh_name = self.__object_instance_mesh_name(self.orig_name)
 
-        if self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or len(self.__instances) > 1:
-            self.__has_assembly = True
-        else:
-            for instance in self.__instances.values():
-                xform_seq = instance
-                if xform_seq.size() > 1:
-                    self.__has_assembly = True
+        self.__obj_inst_name = f"{self.orig_name}_inst"
 
-        if self.__has_assembly:
-            self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
+        self.__instance_lib.optimize_xforms()
+        
+        needs_assembly = self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__instance_lib.needs_assembly()
+
+        if needs_assembly:
+            self.__ass_name = f"{self.orig_name}_ass"
+            self.__ass = asr.Assembly(self.__ass_name)
+
+            self.__as_mesh_inst = asr.ObjectInstance(self.__obj_inst_name,
                                                      self.__as_mesh_inst_params,
                                                      mesh_name,
                                                      asr.Transformd(asr.Matrix4d().identity()),
                                                      self.__front_materials,
                                                      self.__back_materials)
 
-            ass_name = f"{self.appleseed_name}_ass"
-
-            self.__ass = asr.Assembly(ass_name)
-
             self.__ass.objects().insert(self.__as_mesh)
             self.__as_mesh = self.__ass.objects().get_by_name(mesh_name)
 
             self.__ass.object_instances().insert(self.__as_mesh_inst)
-            self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.appleseed_name)
+            self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.__obj_inst_name)
 
-            as_assembly.assemblies().insert(self.__ass)
-            self.__ass = as_assembly.assemblies().get_by_name(ass_name)
+            as_main_assembly.assemblies().insert(self.__ass)
+            self.__ass = as_main_assembly.assemblies().get_by_name(self.__ass_name)
 
-            for key, transform_matrix in self.__instances.items():
-                ass_inst_name = f"{key}_ass_inst"
-                ass_inst = asr.AssemblyInstance(ass_inst_name,
-                                                {},
-                                                ass_name)
-                ass_inst.set_transform_sequence(transform_matrix)
-                as_assembly.assembly_instances().insert(ass_inst)
-                self.__instances[key] = as_assembly.assembly_instances().get_by_name(ass_inst_name)
+            self.flush_instances(as_main_assembly)
 
         else:
-            self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
+            self.__as_mesh_inst = asr.ObjectInstance(self.__obj_inst_name,
                                                      self.__as_mesh_inst_params,
                                                      mesh_name,
-                                                     xform_seq.get_earliest_transform(),
+                                                     self.__instance_lib.get_single_transform(),
                                                      self.__front_materials,
                                                      self.__back_materials)
 
-            as_assembly.objects().insert(self.__as_mesh)
-            self.__as_mesh = as_assembly.objects().get_by_name(mesh_name)
+            as_main_assembly.objects().insert(self.__as_mesh)
+            self.__as_mesh = as_main_assembly.objects().get_by_name(mesh_name)
 
-            as_assembly.object_instances().insert(self.__as_mesh_inst)
-            self.__as_mesh_inst = as_assembly.object_instances().get_by_name(self.appleseed_name)
+            as_main_assembly.object_instances().insert(self.__as_mesh_inst)
+            self.__as_mesh_inst = as_main_assembly.object_instances().get_by_name(self.__obj_inst_name)
 
-    def update_object(self, context, depsgraph, as_assembly, textures_to_add, as_texture_translators):
-        logger.debug("Updating translator for %s", self.appleseed_name)
-        mesh_name = self.__object_instance_mesh_name(f"{self.appleseed_name}_obj")
+    def flush_instances(self, as_main_assembly):
+        self.__instance_lib.flush_instances(as_main_assembly, self.__ass_name)
 
-        self.__as_mesh_inst_params = self.__get_mesh_inst_params()
-        self.__front_materials, self.__back_materials = self.__get_material_mappings()
-
+    def update_obj_instance(self):
         self.__ass.object_instances().remove(self.__as_mesh_inst)
 
-        self.__as_mesh_inst = asr.ObjectInstance(self.appleseed_name,
+        self.__as_mesh_inst_params = self.__get_mesh_inst_params()
+
+        self.__front_materials, self.__back_materials = self.__get_material_mappings()
+
+        mesh_name = self.__object_instance_mesh_name(self.orig_name)
+
+        self.__as_mesh_inst = asr.ObjectInstance(self.__obj_inst_name,
                                                  self.__as_mesh_inst_params,
                                                  mesh_name,
-                                                 asr.Transformd(asr.Matrix4d().identity()),
+                                                 asr.Transformd(
+                                                     asr.Matrix4d().identity()),
                                                  self.__front_materials,
                                                  self.__back_materials)
 
         self.__ass.object_instances().insert(self.__as_mesh_inst)
-        self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.appleseed_name)
+        self.__as_mesh_inst = self.__ass.object_instances().get_by_name(self.__obj_inst_name)
 
-    def delete_instances(self, as_assembly, as_scene):
-        for ass_inst in self.__instances.values():
-            as_assembly.assembly_instances().remove(ass_inst)
+    def clear_instances(self, as_main_assembly):
+        self.__instance_lib.clear_instances(as_main_assembly)
 
-        self.__instances.clear()
+    def delete_object(self, as_main_assembly):
+        self.clear_instances(as_main_assembly)
 
-    def xform_update(self, inst_key, bl_matrix, as_assembly, as_scene):
-        logger.debug("Updating instances for %s", self.appleseed_name)
-        xform_seq = asr.TransformSequence()
-        xform_seq.set_transform(0.0, self._convert_matrix(bl_matrix))
-        ass_name = f"{self.appleseed_name}_ass"
-        ass_inst_name = f"{inst_key}_ass_inst"
-        ass_inst = asr.AssemblyInstance(ass_inst_name,
-                                        {},
-                                        ass_name)
-        ass_inst.set_transform_sequence(xform_seq)
-        as_assembly.assembly_instances().insert(ass_inst)
-        self.__instances[inst_key] = as_assembly.assembly_instances().get_by_name(ass_inst_name)
-
-    def delete_object(self, as_assembly):
         self.__ass.objects().remove(self.__as_mesh)
         self.__ass.object_instances().remove(self.__as_mesh_inst)
-        as_assembly.assemblies().remove(self.__ass)
-        for ass_inst in self.__instances.values():
-            as_assembly.assembly_instances().remove(ass_inst)
 
-    def add_instance(self, key):
-        logger.debug("Adding instance to %s", self.appleseed_name)
-        self.__instances[key] = asr.TransformSequence()
+        as_main_assembly.assemblies().remove(self.__ass)
+
+        self.__as_mesh = None
+        self.__as_mesh_inst = None
+        self.__ass = None
 
     def __get_mesh_inst_params(self):
-        asr_obj_props = self.bl_obj.appleseed
+        asr_obj_props = self._bl_obj.appleseed
         object_instance_params = {'visibility': {'camera': asr_obj_props.camera_visible,
                                                  'light': asr_obj_props.light_visible,
                                                  'shadow': asr_obj_props.shadow_visible,
@@ -270,7 +242,7 @@ class MeshTranslator(Translator):
 
     def __get_material_mappings(self):
 
-        material_slots = self.bl_obj.material_slots
+        material_slots = self._bl_obj.material_slots
 
         front_mats = dict()
         rear_mats = dict()
@@ -278,64 +250,55 @@ class MeshTranslator(Translator):
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
                 if m.material is not None and m.material.use_nodes:
-                    mat_key = m.material.name_full + "_mat"
+                    mat_key = f"{m.material.original.appleseed.obj_name}"
                 else:
                     mat_key = "__default_material"
                 front_mats[f"slot-{i}"] = mat_key
         else:
             if len(material_slots) == 1:
                 if material_slots[0].material is not None and material_slots[0].material.use_nodes:
-                    mat_key = material_slots[0].material.name_full + "_mat"
+                    mat_key = f"{material_slots[0].material.original.appleseed.obj_name}"
                 else:
                     mat_key = "__default_material"
                 front_mats["default"] = mat_key
             else:
-                mesh_name = f"{self.appleseed_name}_obj"
+                mesh_name = f"{self.obj_name}_obj"
                 logger.debug("Mesh %s has no materials, assigning default material instead", mesh_name)
                 front_mats["default"] = "__default_material"
 
-        double_sided_materials = False if self.bl_obj.appleseed.double_sided is False else True
+        double_sided_materials = False if self._bl_obj.appleseed.double_sided is False else True
 
         if double_sided_materials:
             rear_mats = front_mats
 
         return front_mats, rear_mats
 
-    def __get_mesh_params(self, textures_to_add, as__texture_translators):
-        params = {}
-        if self.bl_obj.appleseed.object_alpha_texture is not None:
-            tex_id = self.bl_obj.appleseed.object_alpha_texture.name_full
-            if tex_id not in as__texture_translators:
-                textures_to_add[tex_id] = TextureTranslator(self.bl_obj.appleseed.object_alpha_texture,
-                                                            self.asset_handler)
+    def __get_mesh_params(self):
+        params = dict()
 
-            params['alpha_map'] = self.bl_obj.appleseed.object_alpha_texture.name_full + "_inst"
+        if self._bl_obj.appleseed.object_alpha_texture is not None:
+            params['alpha_map'] = f"{self._bl_obj.appleseed.object_alpha_texture.appleseed.obj_name}_inst"
 
         return params
 
-    def __create_bl_render_mesh(self):
-        me = self._bl_obj.to_mesh()
-
-        return me
-
     def __convert_mesh(self, me):
         main_timer = Timer()
-        material_slots = self.bl_obj.material_slots
+        material_slots = self._bl_obj.material_slots
         active_uv = None
 
         self.__as_mesh.reserve_material_slots(len(material_slots))
 
         if len(material_slots) > 1:
             for i, m in enumerate(material_slots):
-                self.__as_mesh.push_material_slot("slot-%s" % i)
+                self.__as_mesh.push_material_slot(f"slot-{i}")
         else:
             self.__as_mesh.push_material_slot("default")
 
-        do_normals = self.bl_obj.data.appleseed.export_normals
+        do_normals = self._bl_obj.data.appleseed.export_normals
 
         normal_timer = Timer()
 
-        if do_normals is True and not self.bl_obj.data.has_custom_normals:
+        if do_normals is True and not self._bl_obj.data.has_custom_normals:
             me.calc_normals()
             me.split_faces()
 
@@ -358,7 +321,7 @@ class MeshTranslator(Translator):
         do_uvs = False
         uv_layer_pointer = 0
 
-        if self.bl_obj.data.appleseed.export_uvs and len(me.uv_layers) > 0:
+        if self._bl_obj.data.appleseed.export_uvs and len(me.uv_layers) > 0:
             do_uvs = True
             uv_textures = me.uv_layers
 
@@ -385,18 +348,16 @@ class MeshTranslator(Translator):
         convert_timer.stop()
         main_timer.stop()
 
-        logger.debug("\nMesh %s converted in: %s", self.appleseed_name, main_timer.elapsed())
+        logger.debug("\nMesh %s converted in: %s", self.obj_name, main_timer.elapsed())
         logger.debug("  Number of triangles:    %s", len(me.loop_triangles))
         logger.debug("  Normals converted in:   %s", normal_timer.elapsed())
         logger.debug("  Looptris converted in:  %s", looptri_timer.elapsed())
         logger.debug("  C++ conversion in:      %s", convert_timer.elapsed())
 
     def __set_mesh_key(self, me, key_index):
-        pose = key_index - 1
+        do_normals = self._bl_obj.data.appleseed.export_normals
 
-        do_normals = self.bl_obj.data.appleseed.export_normals
-
-        if do_normals is True and not self.bl_obj.data.has_custom_normals:
+        if do_normals is True and not self._bl_obj.data.has_custom_normals:
             me.calc_normals()
             me.split_faces()
 
@@ -406,7 +367,7 @@ class MeshTranslator(Translator):
         loops_pointer = me.loops[0].as_pointer()
 
         asr.export_mesh_blender80_pose(self.__as_mesh,
-                                       pose,
+                                       key_index,
                                        loops_pointer,
                                        loop_length,
                                        vertex_pointer,
@@ -414,7 +375,7 @@ class MeshTranslator(Translator):
 
     def __write_mesh(self, mesh_name):
         # Compute tangents if needed.
-        if self.bl_obj.data.appleseed.smooth_tangents and self.bl_obj.data.appleseed.export_uvs:
+        if self._bl_obj.data.appleseed.smooth_tangents and self._bl_obj.data.appleseed.export_uvs:
             asr.compute_smooth_vertex_tangents(self.__as_mesh)
 
         # Compute the mesh signature and the mesh filename.
@@ -430,7 +391,7 @@ class MeshTranslator(Translator):
         logger.debug("   get_vertex_tangent_count %s", self.__as_mesh.get_vertex_tangent_count())
         logger.debug("   get_motion_segment_count %s", self.__as_mesh.get_motion_segment_count())
 
-        logger.debug("Computed mesh signature for object %s, hash: %s", self.appleseed_name, bl_hash)
+        logger.debug("Computed mesh signature for object %s, hash: %s", self.orig_name, bl_hash)
 
         # Save the mesh filename for later use.
         mesh_filename = f"{bl_hash}.binarymesh"

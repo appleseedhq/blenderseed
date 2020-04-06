@@ -25,5 +25,6 @@
 # THE SOFTWARE.
 #
 
+from .lamp import LampTranslator
 from .mesh import MeshTranslator
 from .archive_assembly import ArchiveAssemblyTranslator

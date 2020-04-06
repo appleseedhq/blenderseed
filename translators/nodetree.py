@@ -39,12 +39,11 @@ logger = get_logger()
 
 
 class NodeTreeTranslator(Translator):
-    """
-    This class translates a Blender node tree into an appleseed OSL shader group
-    """
 
     def __init__(self, node_tree, asset_handler, mat_name):
-        super().__init__(node_tree, asset_handler=asset_handler)
+        logger.debug("appleseed: Creating translator for %s node tree", mat_name)
+
+        super().__init__(node_tree, asset_handler)
 
         self.__mat_name = mat_name
 
@@ -54,26 +53,36 @@ class NodeTreeTranslator(Translator):
     def bl_nodes(self):
         return self._bl_obj.nodes
 
-    def create_entities(self, bl_scene):
+    def create_entities(self, depsgraph):
+        logger.debug("appleseed: Creating entitiy for %s node tree", self.__mat_name)
+
         tree_name = f"{self.__mat_name}_tree"
 
         self.__as_shader_group = asr.ShaderGroup(tree_name)
 
-        self.__create_shadergroup(bl_scene)
+        self.__create_shadergroup(depsgraph.scene_eval)
 
-    def flush_entities(self, as_assembly, as_project):
+    def flush_entities(self, as_scene, as_assembly, as_project):
+        logger.debug("appleseed: Flushing data for %s node tree", self.__mat_name)
         shader_groupname = self.__as_shader_group.get_name()
         as_assembly.shader_groups().insert(self.__as_shader_group)
         self.__as_shader_group = as_assembly.shader_groups().get_by_name(shader_groupname)
 
-    def delete(self, as_assembly):
-        as_assembly.shader_groups().remove(self.__as_shader_group)
+    def update_nodetree(self, bl_scene):
+        logger.debug("appleseed: Updating node tree for %s", self.__mat_name)
+        self.__create_shadergroup(bl_scene)
+
+    def delete_nodetree(self, as_main_assembly):
+        logger.debug("appleseed: Deleting node tree for %s", self.__mat_name)
+        as_main_assembly.shader_groups().remove(self.__as_shader_group)
+        self.__as_shader_group = None
 
     def __create_shadergroup(self, bl_scene):
         surface_shader = None
         for node in self.bl_nodes:
             if isinstance(node, AppleseedOSLNode):
                 if node.node_type == 'osl_surface':
+                    logger.debug("appleseed: Found surface shader for %s node tree", self.__mat_name)
                     surface_shader = node
                     self.__shader_list = surface_shader.traverse_tree()
                     break
@@ -92,13 +101,13 @@ class NodeTreeTranslator(Translator):
                         break
 
         if surface_shader is None:
-            logger.debug("No surface shader for %s", self.__as_shader_group.get_name())
+            logger.debug("appleseed: No surface shader for %s node tree", self.__mat_name)
             return
 
         self.__as_shader_group.clear()
 
         for node in self.__shader_list:
-            parameters = {}
+            parameters = dict()
             parameter_types = node.parameter_types
 
             node_items = node.keys()
@@ -110,8 +119,9 @@ class NodeTreeTranslator(Translator):
 
                     if key in node.filepaths:
                         sub_texture = bl_scene.appleseed.sub_textures
-                        parameter_value = self.asset_handler.process_path(parameter_value.filepath,
-                                                                          AssetType.TEXTURE_ASSET, sub_texture)
+                        parameter_value = self._asset_handler.process_path(
+                            parameter_value.filepath,
+                            AssetType.TEXTURE_ASSET, sub_texture)
 
                     if parameter_type == "int checkbox":
                         parameter_type = "int"
@@ -124,12 +134,9 @@ class NodeTreeTranslator(Translator):
                     parameters[key] = parameter_type + " " + str(parameter_value) 
 
             if node.node_type == 'osl':
-                shader_file_name = self.asset_handler.process_path(node.file_name,
-                                                                   AssetType.SHADER_ASSET)
-                self.__as_shader_group.add_shader("shader",
-                                                  shader_file_name,
-                                                  node.name,
-                                                  parameters)
+                shader_file_name = self._asset_handler.process_path(node.file_name, AssetType.SHADER_ASSET)
+                logger.debug("appleseed: Adding %s shader to %s node tree", node.name, self.__mat_name)
+                self.__as_shader_group.add_shader("shader", shader_file_name, node.name, parameters)
             elif node.node_type == 'osl_script':
                 script = node.script
                 osl_path = bpy.path.abspath(script.filepath, library=script.library)
@@ -139,12 +146,8 @@ class NodeTreeTranslator(Translator):
                     code = open(osl_path, 'r')
                     source_code = code.read()
                     code.close()
-
-                self.__as_shader_group.add_source_shader("shader",
-                                                         node.bl_idname,
-                                                         node.name,
-                                                         source_code,
-                                                         parameters)
+                logger.debug("appleseed: Adding %s source shader to %s node tree", node.name, self.__mat_name)
+                self.__as_shader_group.add_source_shader("shader", node.bl_idname, node.name, source_code, parameters)
 
             for output in node.outputs:
                 if output.is_linked:
@@ -155,9 +158,7 @@ class NodeTreeTranslator(Translator):
                                                                   link.to_node.name,
                                                                   link.to_socket.socket_osl_id)
 
-        surface_shader_file = self.asset_handler.process_path(surface_shader.file_name,
-                                                              AssetType.SHADER_ASSET)
+        surface_shader_file = self._asset_handler.process_path(
+            surface_shader.file_name, AssetType.SHADER_ASSET)
 
-        self.__as_shader_group.add_shader("surface",
-                                          surface_shader_file,
-                                          surface_shader.name, {})
+        self.__as_shader_group.add_shader("surface", surface_shader_file, surface_shader.name, {})

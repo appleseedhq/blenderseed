@@ -47,6 +47,10 @@ class AppleseedTextureSettings(bpy.types.PropertyGroup):
                                                  ('detect', "Detect", "")],
                                           default='detect')
 
+    # Original object name.
+    obj_name: bpy.props.StringProperty(name="obj_name",
+                                       default="")
+
 
 def register():
     safe_register_class(AppleseedTextureSettings)

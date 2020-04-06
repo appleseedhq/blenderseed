@@ -160,6 +160,10 @@ class AppleseedSkySettings(bpy.types.PropertyGroup):
                                                 min=0.0,
                                                 max=1.0,)
 
+    # Original object name.
+    obj_name: bpy.props.StringProperty(name="obj_name",
+                                       default="")
+
 
 classes = (
     AppleseedSSSSetsProps,

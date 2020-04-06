@@ -30,7 +30,6 @@ import math
 from mathutils import Matrix
 
 import appleseed as asr
-from ..textures import TextureTranslator
 from ..translator import Translator
 from ...logger import get_logger
 from ...utils import util
@@ -44,93 +43,96 @@ class InteractiveCameraTranslator(Translator):
     camera object for final rendering.  This includes support for stereoscopic rendering.
     """
 
-    def __init__(self, asset_handler, engine, context, camera=None):
-        logger.debug("Creating interactive camera translator")
-        super().__init__(camera, asset_handler)
+    def __init__(self, cam, asset_handler):
+        logger.debug("appleseed: Creating interactive camera translator")
+        super().__init__(cam, asset_handler)
 
         self.__as_camera = None
-        self.__xform_seq = asr.TransformSequence()
-        self.__engine = engine
-        self.__context = context
+
         self.__model = None
+
+        self.__cam_model = None
         self.__view_cam_type = None
-        self.__params = None
-        self.__matrix = None
+        self.__cam_params = None
+        self.__xform_matrix = None
+
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
 
     @property
     def bl_camera(self):
         return self._bl_obj
 
-    def create_entities(self, bl_scene, textures_to_add, as_texture_translators):
-        logger.debug("Creating entity for camera")
-
-        self.__view_cam_type = self.__context.region_data.view_perspective
+    def create_entities(self, depsgraph, context, engine=None):
+        self.__view_cam_type = context.region_data.view_perspective
 
         self.__model = self.__get_model()
 
-        self.__get_cam_params(bl_scene, textures_to_add, as_texture_translators)
+        self.__cam_params = self.__get_cam_params(depsgraph.scene_eval, context)
 
-        self.__as_camera = asr.Camera(self.__model, "Camera", self.__params)
+        self.__as_camera = asr.Camera(self.__model, "Camera", self.__cam_params)
 
-    def set_xform_step(self, time):
-        self.__as_camera.transform_sequence().set_transform(time, self._convert_matrix(self.__matrix))
-
-    def flush_entities(self, as_scene, as_assembly, as_project):
-        logger.debug("Flushing camera entity, num xform keys = %s", self.__xform_seq.size())
+    def flush_entities(self, as_scene, as_main_assembly, as_project):
+        self.__as_camera.transform_sequence().optimize()
 
         as_scene.cameras().insert(self.__as_camera)
         self.__as_camera = as_scene.cameras().get_by_name("Camera")
 
-    def check_view(self, context, depsgraph):
-        """
-        This function only needs to test for matrix changes and viewport lens/zoom changes.  All other camera
-        changes are captured by a scene update
-        """
-        cam_param_update = False
-        cam_translate_update = False
-        cam_model_update = False
+    def add_cam_xform(self, time, engine=None):
+        self.__as_camera.transform_sequence().set_transform(time, self._convert_matrix(self.__xform_matrix))
 
-        model = self.__model
-        current_translation = self.__matrix
-        zoom = self.__zoom
-        lens = self.__lens
-        extent_base = self.__extent_base
-        shift_x = self.__shift_x
-        shift_y = self.__shift_y
+    def check_for_updates(self, context, bl_scene):
+        updates = dict()
 
-        self.__context = context
+        updates['cam_xform'] = self.__is_matrix_updated(context)
+        updates['cam_params'] = self.__are_cam_params_updated(context, bl_scene)
+        updates['cam_model'] = self.__is_camera_model_updated(context)
 
-        self.__view_cam_type = self.__context.region_data.view_perspective
+        return updates
+
+    def update_cam_params(self):
+        self.__as_camera.set_parameters(self.__cam_params)
+
+    def update_cam_model(self, as_scene):
+        as_scene.cameras().remove(self.__as_camera)
+
+        self.__as_camera = asr.Camera(self.__model, "Camera", self.__cam_params)
+        
+        as_scene.cameras().insert(self.__as_camera)
+        self.__as_camera = as_scene.cameras().get_by_name("Camera")
+
+    # Internal methods.
+    def __is_matrix_updated(self, context):
+        current_matrix = self.__xform_matrix
+
+        self.__set_matrix(context)
+
+        if current_matrix != self.__xform_matrix:
+            return True
+        
+        return False
+
+    def __is_camera_model_updated(self, context):
+        current_view_cam = self.__view_cam_type
+        current_model = self.__model
+        
+        self.__view_cam_type = context.region_data.view_perspective
 
         self.__model = self.__get_model()
 
-        self.__get_cam_params(depsgraph.scene_eval,
-                              None,
-                              None)
+        if current_view_cam != self.__view_cam_type or current_model != self.__model:
+            return True
+        
+        return False
 
-        if current_translation != self.__matrix:
-            cam_translate_update = True
+    def __are_cam_params_updated(self, context, bl_scene):
+        current_params = self.__cam_params
 
-        if zoom != self.__zoom or extent_base != self.__extent_base or lens != self.__lens or \
-                shift_x != self.__shift_x or shift_y != self.__shift_y:
-            cam_param_update = True
+        self.__cam_params = self.__get_cam_params(bl_scene, context)
 
-        if model != self.__model:
-            cam_model_update = True
+        if current_params != self.__cam_params:
+            return True
 
-        return cam_param_update, cam_translate_update, cam_model_update
-
-    def update_camera(self, context, depsgraph, as_scene, cam_model_update, textures_to_add, as_texture_translators):
-        logger.debug("Updating camera entity")
-        self.__context = context
-        if cam_model_update:
-            as_scene.cameras().remove(self.__as_camera)
-            self.create_entities(depsgraph.scene_eval,
-                                 textures_to_add,
-                                 as_texture_translators)
-            self.flush_entities(as_scene, None, None)
-        else:
-            self.__as_camera.set_parameters(self.__params)
+        return False
 
     def __get_model(self):
         cam_mapping = {'PERSP': 'pinhole_camera',
@@ -150,14 +152,17 @@ class InteractiveCameraTranslator(Translator):
 
         return model
 
-    def __get_cam_params(self, bl_scene, textures_to_add, as_texture_translators):
-        view_cam_type = self.__context.region_data.view_perspective
-        width = self.__context.region.width
-        height = self.__context.region.height
+    def __get_cam_params(self, bl_scene, context=None):
+        params = dict()
+
+        view_cam_type = self.__view_cam_type
+
+        width = context.region.width
+        height = context.region.height
 
         aspect_ratio = width / height
 
-        self.__lens = self.__context.space_data.lens
+        self.__lens = context.space_data.lens
         self.__zoom = None
         self.__extent_base = None
         self.__shift_x = None
@@ -165,49 +170,52 @@ class InteractiveCameraTranslator(Translator):
 
         if view_cam_type == "ORTHO":
             self.__zoom = 2.25
-            self.__extent_base = self.__context.space_data.region_3d.view_distance * 32.0 / self.__lens
-            self.__set_ortho_camera_params(aspect_ratio)
+            self.__extent_base = context.space_data.region_3d.view_distance * 32.0 / self.__lens
+            params = self.__set_ortho_camera_params(context, aspect_ratio)
 
         elif view_cam_type == "PERSP":
             self.__zoom = 2.25
-            self.__set_persp_camera_params(aspect_ratio)
+            params = self.__set_persp_camera_params(context, aspect_ratio)
 
         elif view_cam_type == "CAMERA":
             # Borrowed from Cycles source code, since for something this nutty there's no reason to reinvent the wheel
-            self.__zoom = 4 / ((math.sqrt(2) + self.__context.region_data.view_camera_zoom / 50) ** 2)
-            self.__set_view_camera_params(aspect_ratio,
-                                          textures_to_add,
-                                          as_texture_translators)
+            self.__zoom = 4 / ((math.sqrt(2) + context.region_data.view_camera_zoom / 50) ** 2)
+            params = self.__set_view_camera_params(context, aspect_ratio)
 
-    def __set_ortho_camera_params(self, aspect_ratio):
-        self.__matrix = Matrix(self.__context.region_data.view_matrix).inverted()
+        return params
+
+    def __set_ortho_camera_params(self, context, aspect_ratio):
+        self.__set_matrix(context)
         sensor_width = self.__zoom * self.__extent_base * 1
-        params = {'film_width': sensor_width,
-                  'aspect_ratio': aspect_ratio}
+        params = {'film_width': sensor_width, 'aspect_ratio': aspect_ratio}
 
         if aspect_ratio < 1:
             params['film_height'] = params.pop('film_width')
 
-        self.__params = params
+        return params
 
-    def __set_persp_camera_params(self, aspect_ratio):
+    def __set_persp_camera_params(self, context, aspect_ratio):
+        self.__set_matrix(context)
         sensor_size = 32 * self.__zoom
-        self.__matrix = Matrix(self.__context.region_data.view_matrix).inverted()
-        params = {'focal_length': self.__context.space_data.lens,
+        params = {'focal_length': context.space_data.lens,
                   'aspect_ratio': aspect_ratio,
                   'film_width': sensor_size}
 
         if aspect_ratio < 1:
             params['film_height'] = params.pop('film_width')
 
-        self.__params = params
+        return params
 
-    def __set_view_camera_params(self, aspect_ratio, textures_to_add, as_texture_translators):
-        film_width, film_height = util.calc_film_dimensions(aspect_ratio,
-                                                            self.bl_camera.data,
-                                                            self.__zoom)
+    def __set_matrix(self, context):
+        if self.__view_cam_type in ("ORTHO", "PERSP"):
+            self.__xform_matrix = Matrix(context.region_data.view_matrix).inverted()
+        else:
+            self.__xform_matrix = self.bl_camera.matrix_world
 
-        offset = tuple(self.__context.region_data.view_camera_offset)
+    def __set_view_camera_params(self, context, aspect_ratio):
+        film_width, film_height = util.calc_film_dimensions(aspect_ratio, self.bl_camera.data, self.__zoom)
+
+        offset = tuple(context.region_data.view_camera_offset)
 
         x_aspect_comp = 1 if aspect_ratio > 1 else 1 / aspect_ratio
         y_aspect_comp = aspect_ratio if aspect_ratio > 1 else 1
@@ -215,7 +223,7 @@ class InteractiveCameraTranslator(Translator):
         self.__shift_x = ((offset[0] * 2 + (self.bl_camera.data.shift_x * x_aspect_comp)) / self.__zoom) * film_width
         self.__shift_y = ((offset[1] * 2 + (self.bl_camera.data.shift_y * y_aspect_comp)) / self.__zoom) * film_height
 
-        self.__matrix = self.bl_camera.matrix_world
+        self.__set_matrix(context)
 
         if self.__model == 'orthographic_camera':
             sensor_width = self.bl_camera.data.ortho_scale * self.__zoom
@@ -226,7 +234,7 @@ class InteractiveCameraTranslator(Translator):
                 params['film_height'] = params.pop('film_width')
 
         else:
-            aspect_ratio = util.calc_film_aspect_ratio(self.__context.scene)
+            aspect_ratio = util.calc_film_aspect_ratio(context.scene)
             params = {'focal_length': self.bl_camera.data.lens / 1000,
                       'aspect_ratio': aspect_ratio,
                       'shift_x': self.__shift_x,
@@ -236,8 +244,6 @@ class InteractiveCameraTranslator(Translator):
         if self.__model == 'fisheyelens_camera':
             if self.bl_camera.data.appleseed.fisheye_projection_type is not 'none':
                 params['projection_type'] = self.bl_camera.data.appleseed.fisheye_projection_type
-            else:
-                self.__engine.report({'ERROR'}, "Panoramic camera not supported in interactive mode")
 
         if self.__model == 'thinlens_camera':
             params.update({'f_stop': self.bl_camera.data.appleseed.f_number,
@@ -246,14 +252,14 @@ class InteractiveCameraTranslator(Translator):
                            'diaphragm_tilt_angle': self.bl_camera.data.appleseed.diaphragm_angle,
                            'focal_distance': util.get_focal_distance(self.bl_camera)})
 
-            if textures_to_add is not None and as_texture_translators is not None:
-                if self.bl_camera.data.appleseed.diaphragm_map is not None:
-                    tex_id = self.bl_camera.data.appleseed.diaphragm_map.name_full
-                    if tex_id not in as_texture_translators:
-                        textures_to_add[tex_id] = TextureTranslator(self.bl_camera.data.appleseed.diaphragm_map,
-                                                                    self.asset_handler)
-                    tex_name = f"{self.bl_camera.data.appleseed.diaphragm_map.name_full}_inst"
-                    params.update({'diaphragm_map': tex_name})
-                    del params['diaphragm_blades']
+            if self.bl_camera.data.appleseed.diaphragm_map is not None:
+                tex_name = f"{self.bl_camera.data.appleseed.diaphragm_map.name_full}_inst"
+                params.update({'diaphragm_map': tex_name})
+                del params['diaphragm_blades']
 
-        self.__params = params
+        return params
+
+    def _convert_matrix(self, m):
+        matrix = asr.Matrix4d(super()._convert_matrix(m))
+
+        return asr.Transformd(matrix)

@@ -32,8 +32,6 @@ from nodeitems_builtins import ShaderNodeCategory
 from ..logger import get_logger
 from ..utils import osl_utils, util
 
-from ..__init__ import preview_collections
-
 logger = get_logger()
 
 
@@ -158,7 +156,7 @@ class AppleseedOSLScriptNode(AppleseedOSLNode):
 
     node_type = "osl_script"
 
-    classes = []
+    classes = list()
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "script", text="")
@@ -307,11 +305,11 @@ def node_categories(osl_nodes):
     return appleseed_node_categories
 
 
-osl_node_names = []
+osl_node_names = list()
 
 classes = [AppleseedOSLScriptBaseNode]
 
-preview_collections = {}
+preview_collections = dict()
 
 def hide_non_appleseed_nodes(method):
     @classmethod
@@ -351,6 +349,10 @@ def register():
 
 
 def unregister():
+    for pcoll in preview_collections.values():
+        bpy.utils.previews.remove(pcoll)
+    preview_collections.clear()
+    
     nodeitems_utils.unregister_node_categories("APPLESEED")
 
     ShaderNodeCategory.poll = old_shader_node_category_poll

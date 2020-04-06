@@ -41,33 +41,36 @@ class TextureTranslator(Translator):
     """
 
     def __init__(self, bl_texture, asset_handler=None):
-        logger.debug("Creating translator for %s", bl_texture.name_full)
-        super().__init__(bl_texture, asset_handler=asset_handler)
+        super().__init__(bl_texture, asset_handler)
 
         self.__as_tex = None
         self.__as_tex_inst = None
 
-    # Properties
+        self.__as_tex_params = None
+        self.__as_tex_inst_params = None
+
+        self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
+
     @property
     def bl_tex(self):
         return self._bl_obj
 
-    def create_entities(self, bl_scene):
-        logger.debug("Creating entity for %s", self.appleseed_name)
-        tex_params = self.__get_tex_params()
-        self.__as_tex = asr.Texture('disk_texture_2d',
-                                    self.appleseed_name,
-                                    tex_params,
-                                    [])
+    @property
+    def orig_name(self):
+        return self._bl_obj.appleseed.obj_name
 
-        tex_inst_params = self.__get_tex_inst_params()
-        self.__as_tex_inst = asr.TextureInstance(f"{self.appleseed_name}_inst",
-                                                 tex_inst_params,
-                                                 self.appleseed_name,
+    def create_entities(self, depsgraph):
+        self.__as_tex_params = self.__get_tex_params()
+        self.__as_tex = asr.Texture('disk_texture_2d', self.orig_name, self.__as_tex_params, [])
+
+        self.__as_tex_inst_params = self.__get_tex_inst_params()
+
+        self.__as_tex_inst = asr.TextureInstance(f"{self.orig_name}_inst",
+                                                 self.__as_tex_inst_params,
+                                                 self.obj_name,
                                                  asr.Transformf(asr.Matrix4f.identity()))
 
-    def flush_entities(self, as_assembly, as_project):
-        logger.debug("Flushing entity for %s", self.appleseed_name)
+    def flush_entities(self, as_scene, as_main_assembly, as_project):
         scene = as_project.get_scene()
         tex_name = self.__as_tex.get_name()
         scene.textures().insert(self.__as_tex)
@@ -79,9 +82,8 @@ class TextureTranslator(Translator):
 
     def __get_tex_params(self):
         as_tex_params = self.bl_tex.appleseed
-        filepath = self.asset_handler.process_path(self.bl_tex.filepath, AssetType.TEXTURE_ASSET)
-        tex_params = {'filename': filepath,
-                      'color_space': as_tex_params.as_color_space}
+        filepath = self._asset_handler.process_path(self.bl_tex.filepath, AssetType.TEXTURE_ASSET)
+        tex_params = {'filename': filepath, 'color_space': as_tex_params.as_color_space}
 
         return tex_params
 

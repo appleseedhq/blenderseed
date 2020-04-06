@@ -79,23 +79,11 @@ class FinalRendererController(BaseRendererController):
 
 
 class InteractiveRendererController(BaseRendererController):
-    def __init__(self, engine, camera):
+    def __init__(self):
         super(InteractiveRendererController, self).__init__()
 
-        self.__engine = engine
-        self.__camera = camera
-
     def on_frame_begin(self):
-        if False:
-            self.__camera.set_transform(0.0)
-            self._status = asr.IRenderControllerStatus.ContinueRendering
-        else:
-            pass
+        pass
 
     def get_status(self):
-        try:
-            if not self.__engine.test_break():
-                return self._status
-        except Exception as e:
-            logger.debug("%s", e)
-            return asr.IRenderControllerStatus.AbortRendering
+        return self._status

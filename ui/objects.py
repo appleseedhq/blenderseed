@@ -162,7 +162,7 @@ class ASOBJECT_PT_export_override(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         renderer = context.scene.render
-        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type in {'MESH', 'CURVE', 'SURFACE', 'EMPTY'}
+        return renderer.engine == 'APPLESEED_RENDER' and context.object is not None and context.object.type == 'EMPTY'
 
     def draw(self, context):
         layout = self.layout
