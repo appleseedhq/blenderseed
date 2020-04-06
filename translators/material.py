@@ -62,14 +62,14 @@ class MaterialTranslator(Translator):
     def bl_node_tree(self):
         return self._bl_obj.node_tree
 
-    def create_entities(self, depsgraph):
+    def create_entities(self, depsgraph, engine):
         logger.debug("appleseed: Creating texture entity for %s", self.orig_name)
 
         surface_name = f"{self.orig_name}_surface"
 
         if self.bl_mat.node_tree is not None:
             self.__as_nodetree = NodeTreeTranslator(self.bl_node_tree, self._asset_handler, self.orig_name)
-            self.__as_nodetree.create_entities(depsgraph)
+            self.__as_nodetree.create_entities(depsgraph, engine)
 
         self.__as_shader_params = self.__get_shader_params()
         self.__as_mat_params = self.__get_mat_params()
@@ -95,8 +95,8 @@ class MaterialTranslator(Translator):
         as_assembly.materials().insert(self.__as_mat)
         self.__as_mat = as_assembly.materials().get_by_name(mat_name)
 
-    def update_material(self, bl_scene):
-        self.__as_nodetree.update_nodetree(bl_scene)
+    def update_material(self, bl_scene, engine):
+        self.__as_nodetree.update_nodetree(bl_scene, engine)
 
     def delete_material(self, as_main_assembly):
         if self.__as_nodetree is not None:

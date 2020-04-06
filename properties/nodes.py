@@ -62,7 +62,7 @@ class AppleseedOSLNode(bpy.types.Node):
 
     file_name = ""
 
-    def traverse_tree(self, material_node):
+    def traverse_tree(self, material_node, engine):
         """Iterate inputs and traverse the tree backward if any inputs are connected.
 
         Nodes are added to a list attribute of the material output node.
@@ -74,6 +74,7 @@ class AppleseedOSLNode(bpy.types.Node):
                     linked_node.traverse_tree(material_node)
                 else:
                     logger.error(f"Node {linked_node.name} is not an appleseed node, stopping traversal")
+                    engine.report({'ERROR'}, f"Node {linked_node.name} is not an appleseed node, stopping traversal")
         material_node.tree.append(self)
 
     def draw_buttons(self, context, layout):
@@ -223,7 +224,7 @@ class AppleseedOSLScriptNode(AppleseedOSLNode):
             for socket in self.socket_output_names:
                 self.outputs.new(socket[0], socket[1])
 
-    def traverse_tree(self, material_node):
+    def traverse_tree(self, material_node, engine):
         """Iterate inputs and traverse the tree backward if any inputs are connected.
 
         Nodes are added to a list attribute of the material output node.

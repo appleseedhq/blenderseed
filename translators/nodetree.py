@@ -53,14 +53,14 @@ class NodeTreeTranslator(Translator):
     def bl_nodes(self):
         return self._bl_obj.nodes
 
-    def create_entities(self, depsgraph):
+    def create_entities(self, depsgraph, engine):
         logger.debug("appleseed: Creating entitiy for %s node tree", self.__mat_name)
 
         tree_name = f"{self.__mat_name}_tree"
 
         self.__as_shader_group = asr.ShaderGroup(tree_name)
 
-        self.__create_shadergroup(depsgraph.scene_eval)
+        self.__create_shadergroup(depsgraph.scene_eval, engine)
 
     def flush_entities(self, as_scene, as_assembly, as_project):
         logger.debug("appleseed: Flushing data for %s node tree", self.__mat_name)
@@ -68,23 +68,23 @@ class NodeTreeTranslator(Translator):
         as_assembly.shader_groups().insert(self.__as_shader_group)
         self.__as_shader_group = as_assembly.shader_groups().get_by_name(shader_groupname)
 
-    def update_nodetree(self, bl_scene):
+    def update_nodetree(self, bl_scene, engine):
         logger.debug("appleseed: Updating node tree for %s", self.__mat_name)
-        self.__create_shadergroup(bl_scene)
+        self.__create_shadergroup(bl_scene, engine)
 
     def delete_nodetree(self, as_main_assembly):
         logger.debug("appleseed: Deleting node tree for %s", self.__mat_name)
         as_main_assembly.shader_groups().remove(self.__as_shader_group)
         self.__as_shader_group = None
 
-    def __create_shadergroup(self, bl_scene):
+    def __create_shadergroup(self, bl_scene, engine):
         surface_shader = None
         for node in self.bl_nodes:
             if isinstance(node, AppleseedOSLNode):
                 if node.node_type == 'osl_surface':
                     logger.debug("appleseed: Found surface shader for %s node tree", self.__mat_name)
                     surface_shader = node
-                    self.__shader_list = surface_shader.traverse_tree()
+                    self.__shader_list = surface_shader.traverse_tree(engine)
                     break
                 
         # Replaces a Cycles material node behind the scenes
@@ -97,7 +97,7 @@ class NodeTreeTranslator(Translator):
                         self._bl_obj.links.new(node_connection.from_socket, replacement_node.inputs[0])
                         self._bl_obj.links.remove(node_connection)
                         surface_shader = replacement_node
-                        self.__shader_list = surface_shader.traverse_tree()
+                        self.__shader_list = surface_shader.traverse_tree(engine)
                         break
 
         if surface_shader is None:

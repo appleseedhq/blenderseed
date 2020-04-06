@@ -52,12 +52,12 @@ class PreviewRenderer(object):
     def asset_handler(self):
         return self.__asset_handler
 
-    def translate_preview(self, depsgraph):
+    def translate_preview(self, depsgraph, engine):
         self.__generate_material(depsgraph)
 
         self.__create_preview_scene(depsgraph)
 
-        self.__create_material(depsgraph)
+        self.__create_material(depsgraph, engine)
 
         self.__create_config()
 
@@ -209,8 +209,8 @@ class PreviewRenderer(object):
 
         self.__project.get_scene().cameras().insert(camera)
 
-    def __create_material(self, depsgraph):
-        self.__mat_translator.create_entities(depsgraph)
+    def __create_material(self, depsgraph, engine):
+        self.__mat_translator.create_entities(depsgraph, engine)
         self.__mat_translator.flush_entities(self.__project.get_scene(), self.__main_assembly, self.__project)
 
     def __generate_material(self, depsgraph):
