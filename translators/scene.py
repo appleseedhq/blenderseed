@@ -444,6 +444,7 @@ class SceneTranslator(object):
 
     # Interactive update functions.
     def write_project(self, export_path):
+        # Export project files.
         filename = os.path.abspath(bpy.path.ensure_ext(bpy.path.abspath(export_path), '.appleseed'))
 
         asr.ProjectFileWriter().write(self.__project,
@@ -644,7 +645,6 @@ class SceneTranslator(object):
 
         frame_params = {'resolution': asr.Vector2i(width, height),
                         'camera': "Camera",
-                        'tile_size': asr.Vector2i(asr_scene_props.tile_size, asr_scene_props.tile_size),
                         'filter': asr_scene_props.pixel_filter,
                         'filter_size': asr_scene_props.pixel_filter_size,
                         'denoiser': asr_scene_props.denoise_mode,
@@ -656,6 +656,9 @@ class SceneTranslator(object):
                         'patch_distance_threshold': asr_scene_props.patch_distance_threshold,
                         'denoise_scales': asr_scene_props.denoise_scales,
                         'mark_invalid_pixels': asr_scene_props.mark_invalid_pixels}
+
+        if self.__export_mode != ProjectExportMode.PROJECT_EXPORT:
+            frame_params['tile_size'] = asr.Vector2i(asr_scene_props.tile_size, asr_scene_props.tile_size)
 
         return frame_params
 
