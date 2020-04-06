@@ -110,6 +110,12 @@ class RenderAppleseed(bpy.types.RenderEngine):
     #
 
     def render(self, depsgraph):
+        # Sanity check to make sure the file doesn't have any packed image data.
+        for image in bpy.data.images:
+            if len(image.packed_files) > 0:
+                self.report({'ERROR'}, "Please unpack all data before rendering!")
+                return
+
         if self.is_preview:
             if bpy.app.background:  # Can this happen?
                 return

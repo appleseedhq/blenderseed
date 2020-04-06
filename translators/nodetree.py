@@ -92,10 +92,10 @@ class NodeTreeTranslator(Translator):
             for node in self.bl_nodes:
                 if node.name in ('Light Output', 'Material Output'):
                     if node.inputs[0].is_linked:
-                        node_connection = node.inputs[0].links[0].from_socket
+                        node_connection = node.inputs[0].links[0]
                         replacement_node = self.bl_nodes.new('AppleseedasClosure2SurfaceNode')
-                        self._bl_obj.links.new(node_connection, replacement_node.inputs[0])
-                        self.bl_nodes.remove(node)
+                        self._bl_obj.links.new(node_connection.from_socket, replacement_node.inputs[0])
+                        self._bl_obj.links.remove(node_connection)
                         surface_shader = replacement_node
                         self.__shader_list = surface_shader.traverse_tree()
                         break
@@ -126,7 +126,7 @@ class NodeTreeTranslator(Translator):
                     if parameter_type == "int checkbox":
                         parameter_type = "int"
                         parameter_value = int(parameter_value)
-                    elif parameter_type in ('color', 'vector', 'normal', 'float[2]'):
+                    elif parameter_type in ('color', 'vector', 'normal', 'point', 'float[2]'):
                         parameter_value = " ".join(map(str, parameter_value))
                         if parameter_type == 'float[2]':
                             parameter_type = 'float[]'

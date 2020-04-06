@@ -27,6 +27,7 @@
 
 import bpy
 import nodeitems_utils
+from nodeitems_builtins import ShaderNodeCategory
 
 from ..logger import get_logger
 from ..utils import osl_utils, util
@@ -100,6 +101,8 @@ class AppleseedOSLNode(bpy.types.Node):
                     image = getattr(self, (x['name']))
                     layout.prop(image, "filepath", text="Filepath")
                 else:
+                    if hasattr(self, "%s_use_node" % x['label']):
+                        socket_number += 1
                     if getattr(self, param_section):
                         label_text = x['label']
                         if x['type'] in ('color', 'vector', 'float[2]'):
@@ -113,7 +116,6 @@ class AppleseedOSLNode(bpy.types.Node):
                             col.prop(self, x['name'], text=label_text)
                             col = split.column(align=True)
                             col.prop(self, "%s_use_node" % x['label'], text="", toggle=True, icon='NODETREE')
-                            socket_number += 1
                         else:
                             layout.prop(self, x['name'], text=label_text)
             else:
@@ -309,6 +311,15 @@ classes = [AppleseedOSLScriptBaseNode]
 
 preview_collections = dict()
 
+def hide_non_appleseed_nodes(method):
+    @classmethod
+    def func(cls, context):
+        renderer = context.scene.render.engine
+        return renderer != 'APPLESEED_RENDER'
+    return func
+
+old_shader_node_category_poll = None
+
 
 def register():
     import bpy.utils.previews
@@ -327,6 +338,10 @@ def register():
         classes.extend(node_classes)
         osl_node_names.append([node_name, node_category])
 
+    global old_shader_node_category_poll
+    old_shader_node_category_poll = ShaderNodeCategory.poll
+    ShaderNodeCategory.poll = hide_non_appleseed_nodes(ShaderNodeCategory.poll)
+
     for cls in classes:
         util.safe_register_class(cls)
 
@@ -339,6 +354,8 @@ def unregister():
     preview_collections.clear()
     
     nodeitems_utils.unregister_node_categories("APPLESEED")
+
+    ShaderNodeCategory.poll = old_shader_node_category_poll
 
     for cls in reversed(classes):
         util.safe_unregister_class(cls)
