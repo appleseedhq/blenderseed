@@ -82,7 +82,7 @@ def generate_node(node, node_class):
             if input_socket.name in self.socket_ui_props:
                 input_socket.hide = not getattr(self, "%s_use_node" % input_socket.name)
 
-    def traverse_tree(self):
+    def traverse_tree(self, engine):
         """Iterate inputs and traverse the tree backward if any inputs are connected.
 
         Nodes are added to a list attribute of the material output node.
@@ -94,9 +94,10 @@ def generate_node(node, node_class):
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
                 if hasattr(linked_node, "traverse_tree"):
-                    linked_node.traverse_tree(self)
+                    linked_node.traverse_tree(self, engine)
                 else:
                     logger.error(f"Node {linked_node.name} is not an appleseed node, stopping traversal")
+                    engine.report({'ERROR'}, f"Node {linked_node.name} is not an appleseed node, stopping traversal")
         return util.filter_params(self.tree)
 
     node_classes = list()

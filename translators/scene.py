@@ -223,7 +223,7 @@ class SceneTranslator(object):
             self.__as_world_translator.create_entities(depsgraph)
 
         for obj, trans in materials_to_add.items():
-            trans.create_entities(depsgraph)
+            trans.create_entities(depsgraph, engine)
         for obj, trans in textures_to_add.items():
             trans.create_entities(depsgraph)
 
@@ -282,7 +282,7 @@ class SceneTranslator(object):
 
         engine.frame_set(current_frame, subframe=0.0)
 
-    def update_scene(self, depsgraph):
+    def update_scene(self, depsgraph, engine):
         objects_to_add = dict()
         materials_to_add = dict()
 
@@ -297,7 +297,7 @@ class SceneTranslator(object):
             # This one is easy.
             if isinstance(update.id, bpy.types.Material):
                 if update.id.original in self.__as_material_translators.keys():
-                    self.__as_material_translators[update.id.original].update_material(depsgraph)
+                    self.__as_material_translators[update.id.original].update_material(depsgraph, engine)
                 else:
                     materials_to_add[update.id.original] = MaterialTranslator(update.id.original,
                                                                               self.__asset_handler)
@@ -379,7 +379,7 @@ class SceneTranslator(object):
 
         # Create new materials.
         for mat in materials_to_add.values():
-            mat.create_entities(depsgraph)
+            mat.create_entities(depsgraph, engine)
 
         # Create new objects.
         for trans in objects_to_add.values():

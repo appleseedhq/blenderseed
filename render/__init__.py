@@ -135,7 +135,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         else:
             self.__pause_rendering()
             logger.debug("appleseed: Updating scene")
-            self.__interactive_scene_translator.update_scene(depsgraph)
+            self.__interactive_scene_translator.update_scene(depsgraph, self)
             self.__restart_interactive_render()
 
     def view_draw(self, context, depsgraph):
@@ -214,7 +214,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
 
         material_preview_renderer = PreviewRenderer(depsgraph)
-        material_preview_renderer.translate_preview(depsgraph)
+        material_preview_renderer.translate_preview(depsgraph, self)
 
         self.__start_final_render(depsgraph.scene_eval, material_preview_renderer.as_project)
 
