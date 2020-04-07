@@ -265,7 +265,6 @@ class SceneTranslator(object):
         self.__load_searchpaths()
 
         prof_timer.stop()
-        print(f"Scene translated in {prof_timer.elapsed()} seconds.")
         logger.debug("Scene translated in %f seconds.", prof_timer.elapsed())
 
     def update_multiview_camera(self, engine, depsgraph):
