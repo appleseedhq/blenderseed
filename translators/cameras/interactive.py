@@ -44,7 +44,7 @@ class InteractiveCameraTranslator(Translator):
     """
 
     def __init__(self, cam, asset_handler):
-        logger.debug("appleseed: Creating interactive camera translator")
+        logger.debug(f"appleseed: Creating interactive camera translator for {cam.name_full}")
         super().__init__(cam, asset_handler)
 
         self.__as_camera = None
@@ -63,6 +63,7 @@ class InteractiveCameraTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, depsgraph, context, engine=None):
+        logger.debug(f"appleseed: Creating interactive camera entity for {self.bl_camera.name_full}")
         self.__view_cam_type = context.region_data.view_perspective
 
         self.__model = self.__get_model()
@@ -72,6 +73,7 @@ class InteractiveCameraTranslator(Translator):
         self.__as_camera = asr.Camera(self.__model, "Camera", self.__cam_params)
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
+        logger.debug(f"appleseed: Flushing interactive camera entity for {self.bl_camera.name_full} into project")
         self.__as_camera.transform_sequence().optimize()
 
         as_scene.cameras().insert(self.__as_camera)

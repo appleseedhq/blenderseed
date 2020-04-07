@@ -44,6 +44,7 @@ logger = get_logger()
 
 class LampTranslator(Translator):
     def __init__(self, bl_lamp, export_mode, asset_handler):
+        logger.debug(f"appleseed: Creating lamp translator for {bl_lamp.name_full}")
         super().__init__(bl_lamp, asset_handler)
 
         self._bl_obj.appleseed.obj_name = self._bl_obj.name_full
@@ -83,6 +84,7 @@ class LampTranslator(Translator):
         return len(self.__instance_lib)
 
     def create_entities(self, depsgraph, deforms_length):
+        logger.debug(f"appleseed: Creating lamp entity for {self.orig_name}")
         as_lamp_data = self.bl_lamp.data.appleseed
 
         self.__lamp_model = self.__get_lamp_model()
@@ -136,6 +138,7 @@ class LampTranslator(Translator):
         pass
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
+        logger.debug(f"appleseed: Flushing lamp entity for {self.orig_name} to project")
         self.__instance_lib.optimize_xforms()
         
         needs_assembly = self.__export_mode == ProjectExportMode.INTERACTIVE_RENDER or self.__instance_lib.needs_assembly()
@@ -216,6 +219,7 @@ class LampTranslator(Translator):
                 self.__as_mesh_inst = as_main_assembly.object_instances().get_by_name(self.__as_area_lamp_inst_name)
 
     def update_lamp(self, depsgraph, as_main_assembly, as_scene, as_project):
+        logger.debug(f"appleseed: Updating lamp entity for {self.orig_name}")
         as_lamp_data = self.bl_lamp.data.appleseed
 
         current_model = self.__lamp_model
@@ -363,10 +367,10 @@ class LampTranslator(Translator):
         self.__instance_lib.flush_instances(as_main_assembly, self.__ass_name)
 
     def delete_object(self, as_main_assembly):
+        logger.debug(f"appleseed: Deleting lamp entity for {self.orig_name}")
         self.clear_instances(as_main_assembly)
 
         if self.__lamp_model != 'area_lamp':
-            print("Removing regular light")
             self.__ass.lights().remove(self.__as_lamp)
             self.__as_lamp = None
 
@@ -374,7 +378,6 @@ class LampTranslator(Translator):
             self.__as_lamp_radiance = None
 
         else:
-            print("Removing area lamp")
             self.__ass.objects().remove(self.__as_area_lamp_mesh)
 
             self.__ass.object_instances().remove(self.__as_area_lamp_inst)

@@ -39,6 +39,7 @@ logger = get_logger()
 class RenderCameraTranslator(Translator):
 
     def __init__(self, cam, asset_handler):
+        logger.debug(f"appleseed: Creating final render camera translator for {cam.name_full}")
         super().__init__(cam, asset_handler)
 
         self.__as_camera = None
@@ -53,6 +54,7 @@ class RenderCameraTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, depsgraph, context=None, engine=None):
+        logger.debug(f"appleseed: Creating final render camera entity for {self.obj_name}")
         self.__cam_model = self.__get_model()
 
         self.__as_camera = asr.Camera(self.__cam_model, "Camera", {})
@@ -62,7 +64,7 @@ class RenderCameraTranslator(Translator):
         self.__as_camera.set_parameters(self.__as_cam_params)
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
-        logger.debug("appleseed: Flushing camera entity, num xform keys = %s", self.__as_camera.transform_sequence().size())
+        logger.debug(f"appleseed: Flushing final render camera entity into project, num xform keys = {self.__as_camera.transform_sequence().size()}")
 
         self.__as_camera.transform_sequence().optimize()
 

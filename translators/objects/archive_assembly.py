@@ -35,6 +35,7 @@ logger = get_logger()
 
 class ArchiveAssemblyTranslator(Translator):
     def __init__(self, archive_obj, asset_handler):
+        logger.debug(f"appleseed: Creating archive asset translator for {archive_obj.name_full}")
         super().__init__(archive_obj, asset_handler)
 
         self.__instance_lib = asr.BlTransformLibrary()
@@ -53,6 +54,7 @@ class ArchiveAssemblyTranslator(Translator):
         return len(self.__instance_lib)
 
     def create_entities(self, bl_scene, context=None):
+        logger.debug(f"appleseed: Creating archive asset entity for {self.orig_name}")
         self.__ass_name = f"{self.orig_name}_ass"
 
         file_path = self._asset_handler.process_path(self._bl_obj.appleseed.archive_path,
@@ -69,6 +71,7 @@ class ArchiveAssemblyTranslator(Translator):
         pass
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
+        logger.debug(f"appleseed: Flushing archive asset entity for {self.orig_name} to project")
         as_main_assembly.assemblies().insert(self.__ass)
         self.__ass = as_main_assembly.assemblies().get_by_name(self.__ass_name)
 
@@ -78,6 +81,7 @@ class ArchiveAssemblyTranslator(Translator):
         self.__instance_lib.flush_instances(as_main_assembly, self.__ass_name)
 
     def update_archive_ass(self, depsgraph):
+        logger.debug(f"appleseed: Updating archive asset entity for {self.orig_name}")
         file_path = self._asset_handler.process_path(self._bl_obj.appleseed.archive_path,
                                                      AssetType.ARCHIVE_ASSET)
 
@@ -89,6 +93,7 @@ class ArchiveAssemblyTranslator(Translator):
         self.__instance_lib.clear_instances(as_main_assembly)
 
     def delete_object(self, as_main_assembly):
+        logger.debug(f"appleseed: Deleting archive asset entity for {self.orig_name}")
         self.clear_instances(as_main_assembly)
 
         as_main_assembly.assemblies().remove(self.__ass)

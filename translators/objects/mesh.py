@@ -38,6 +38,7 @@ logger = get_logger()
 
 class MeshTranslator(Translator):
     def __init__(self, bl_obj, export_mode, asset_handler):
+        logger.debug(f"appleseed: Creating mesh translator for {bl_obj.name_full}")
         super().__init__(bl_obj, asset_handler)
 
         self.__export_mode = export_mode
@@ -77,6 +78,7 @@ class MeshTranslator(Translator):
         return len(self.__instance_lib)
 
     def create_entities(self, depsgraph, num_def_times):
+        logger.debug(f"appleseed: Creating mesh entity for {self.orig_name}")
         self.__mesh_params = self.__get_mesh_params()
 
         self.__as_mesh = asr.MeshObject(self.orig_name, self.__mesh_params)
@@ -92,7 +94,7 @@ class MeshTranslator(Translator):
         self.__convert_mesh(me)
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
-            logger.debug("Writing mesh file object %s, time = 0", self.orig_name)
+            logger.debug(f"appleseed: Writing mesh file object {self.orig_name}, time = 0")
             self.__write_mesh(self.orig_name)
 
         eval_object.to_mesh_clear()
@@ -109,7 +111,7 @@ class MeshTranslator(Translator):
         me = eval_object.to_mesh()
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
-            logger.debug("Writing mesh file object %s, time = %s", self.orig_name, time)
+            logger.debug(f"appleseed: Writing mesh file object {self.orig_name}, time = {time}")
 
             self.__convert_mesh(me)
             self.__write_mesh(self.orig_name)
@@ -119,7 +121,7 @@ class MeshTranslator(Translator):
         eval_object.to_mesh_clear()
 
     def flush_entities(self, as_scene, as_main_assembly, as_project):
-        logger.debug("appleseed: Flusing mesh for object %s", self.orig_name)
+        logger.debug("appleseed: Flusing mesh entity for {self.orig_name} into project")
 
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:
             # Replace the MeshObject by an empty one referencing
@@ -185,6 +187,7 @@ class MeshTranslator(Translator):
             self.__as_mesh_inst = as_main_assembly.object_instances().get_by_name(self.__obj_inst_name)
 
     def flush_instances(self, as_main_assembly):
+        logger.debug(f"appleseed: Flushing instances for mesh entity {self.orig_name} into project.  Number of instances = {self.__instance_lib.size()}")
         self.__instance_lib.flush_instances(as_main_assembly, self.__ass_name)
 
     def update_obj_instance(self):
@@ -211,6 +214,7 @@ class MeshTranslator(Translator):
         self.__instance_lib.clear_instances(as_main_assembly)
 
     def delete_object(self, as_main_assembly):
+        logger.debug(f"appleseed: Deleting mesh entity for {self.orig_name}")
         self.clear_instances(as_main_assembly)
 
         self.__ass.objects().remove(self.__as_mesh)
@@ -263,7 +267,7 @@ class MeshTranslator(Translator):
                 front_mats["default"] = mat_key
             else:
                 mesh_name = f"{self.obj_name}_obj"
-                logger.debug("Mesh %s has no materials, assigning default material instead", mesh_name)
+                logger.debug("appleseed: Mesh %s has no materials, assigning default material instead", mesh_name)
                 front_mats["default"] = "__default_material"
 
         double_sided_materials = False if self._bl_obj.appleseed.double_sided is False else True
@@ -348,11 +352,11 @@ class MeshTranslator(Translator):
         convert_timer.stop()
         main_timer.stop()
 
-        logger.debug("\nMesh %s converted in: %s", self.obj_name, main_timer.elapsed())
-        logger.debug("  Number of triangles:    %s", len(me.loop_triangles))
-        logger.debug("  Normals converted in:   %s", normal_timer.elapsed())
-        logger.debug("  Looptris converted in:  %s", looptri_timer.elapsed())
-        logger.debug("  C++ conversion in:      %s", convert_timer.elapsed())
+        logger.debug("\nappleseed: Mesh %s converted in: %s", self.obj_name, main_timer.elapsed())
+        logger.debug("             Number of triangles:    %s", len(me.loop_triangles))
+        logger.debug("             Normals converted in:   %s", normal_timer.elapsed())
+        logger.debug("             Looptris converted in:  %s", looptri_timer.elapsed())
+        logger.debug("             C++ conversion in:      %s", convert_timer.elapsed())
 
     def __set_mesh_key(self, me, key_index):
         do_normals = self._bl_obj.data.appleseed.export_normals
@@ -391,7 +395,7 @@ class MeshTranslator(Translator):
         logger.debug("   get_vertex_tangent_count %s", self.__as_mesh.get_vertex_tangent_count())
         logger.debug("   get_motion_segment_count %s", self.__as_mesh.get_motion_segment_count())
 
-        logger.debug("Computed mesh signature for object %s, hash: %s", self.orig_name, bl_hash)
+        logger.debug("appleseed: Computed mesh signature for object %s, hash: %s", self.orig_name, bl_hash)
 
         # Save the mesh filename for later use.
         mesh_filename = f"{bl_hash}.binarymesh"
@@ -401,10 +405,10 @@ class MeshTranslator(Translator):
         mesh_abs_path = os.path.join(self.__geom_dir, mesh_filename)
 
         if not os.path.exists(mesh_abs_path):
-            logger.debug("Writing mesh for object %s to %s", mesh_name, mesh_abs_path)
+            logger.debug("appleseed: Writing mesh for object %s to %s", mesh_name, mesh_abs_path)
             asr.MeshObjectWriter.write(self.__as_mesh, "mesh", mesh_abs_path)
         else:
-            logger.debug("Skipping already saved mesh file for mesh %s", mesh_name)
+            logger.debug("appleseed: Skipping already saved mesh file for mesh %s", mesh_name)
 
     def __object_instance_mesh_name(self, mesh_name):
         if self.__export_mode == ProjectExportMode.PROJECT_EXPORT:

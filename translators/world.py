@@ -60,6 +60,7 @@ class WorldTranslator(Translator):
         return self._bl_obj
 
     def create_entities(self, depsgraph):
+        logger.debug("appleseed: Creating world entity")
         as_world = self.bl_world.appleseed_sky
 
         self.__as_env_type = as_world.env_type
@@ -88,6 +89,7 @@ class WorldTranslator(Translator):
             self.__as_env = asr.Environment("environment", {})
 
     def flush_entities(self, as_scene, as_assembly, as_project):
+        logger.debug("appleseed: Flushing world entity to project")
         if self.__as_env_type != 'none':
             self.__as_env_edf.transform_sequence().set_transform(0.0, asr.Transformd(self._convert_matrix(asr.Matrix4d.identity())))
 
@@ -107,6 +109,7 @@ class WorldTranslator(Translator):
         as_scene.set_environment(self.__as_env)
 
     def update_world(self, as_scene, depsgraph):
+        logger.debug("appleseed: Updating world")
         as_world = self.bl_world.appleseed_sky
 
         current_env_type = self.__as_env_type
@@ -143,6 +146,7 @@ class WorldTranslator(Translator):
             self.flush_entities(as_scene, None, None)
 
     def delete_world(self, as_scene):
+        logger.debug("appleseed: Deleting world")
         for color in self.__as_colors:
             as_scene.colors().remove(color)
             
