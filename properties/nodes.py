@@ -71,7 +71,7 @@ class AppleseedOSLNode(bpy.types.Node):
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
                 if hasattr(linked_node, "traverse_tree"):
-                    linked_node.traverse_tree(material_node)
+                    linked_node.traverse_tree(material_node, engine)
                 else:
                     logger.error(f"Node {linked_node.name} is not an appleseed node, stopping traversal")
                     engine.report({'ERROR'}, f"Node {linked_node.name} is not an appleseed node, stopping traversal")
