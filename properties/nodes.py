@@ -226,20 +226,6 @@ class AppleseedOSLScriptNode(AppleseedOSLNode):
             for socket in self.socket_output_names:
                 self.outputs.new(socket[0], socket[1])
 
-    def traverse_tree(self, material_node, engine):
-        """Iterate inputs and traverse the tree backward if any inputs are connected.
-
-        Nodes are added to a list attribute of the material output node.
-        """
-        for socket in self.inputs:
-            if socket.is_linked:
-                linked_node = socket.links[0].from_node
-                if hasattr(linked_node, "traverse_tree"):
-                    linked_node.traverse_tree(material_node)
-                else:
-                    logger.error(f"Node {linked_node.name} is not an appleseed node, stopping traversal")
-        material_node.tree.append(self)
-
 
 class AppleseedOSLScriptBaseNode(AppleseedOSLScriptNode):
     bl_idname = "AppleseedOSLScriptBaseNode"
@@ -277,6 +263,10 @@ def node_categories(osl_nodes):
     osl_utilities = []
     osl_other = []
 
+    cycles_nodes = list()
+    for node in util.cycles_nodes:
+        cycles_nodes.append(nodeitems_utils.NodeItem(node))
+
     for node in osl_nodes:
         node_item = nodeitems_utils.NodeItem(node[0])
         node_category = node[1]
@@ -303,6 +293,7 @@ def node_categories(osl_nodes):
         AppleseedOSLNodeCategory("OSL_Color", "appleseed - Color", items=osl_color),
         AppleseedOSLNodeCategory("OSL_Utilities", "appleseed - Utility", items=osl_utilities),
         AppleseedOSLNodeCategory("OSL_Script", "appleseed - Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptBaseNode")]),
+        AppleseedOSLNodeCategory("OSL_Cycles", "Cycles", items=cycles_nodes),
         AppleseedOSLNodeCategory("OSL_Other", "appleseed - No Category", items=osl_other)]
 
     return appleseed_node_categories

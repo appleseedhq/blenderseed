@@ -41,6 +41,8 @@ logger = get_logger()
 
 image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
 
+cycles_nodes = ("ShaderNodeRGBToBW", "ShaderNodeRGBCurve")
+
 
 def safe_register_class(cls):
     try:

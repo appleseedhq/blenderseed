@@ -34,6 +34,7 @@ from .assethandlers import AssetType
 from .translator import Translator
 from ..properties.nodes import AppleseedOSLNode
 from ..logger import get_logger
+from ..utils.util import cycles_nodes, filter_params
 
 logger = get_logger()
 
@@ -84,7 +85,7 @@ class NodeTreeTranslator(Translator):
                 if node.node_type == 'osl_surface':
                     logger.debug(f"appleseed: Found surface shader for {self.__mat_name} node tree")
                     surface_shader = node
-                    self.__shader_list = surface_shader.traverse_tree(engine)
+                    self.__shader_list = filter_params(self.__traverse_tree(surface_shader, list(), engine))
                     break
                 
         # Replaces a Cycles material node behind the scenes
@@ -97,7 +98,7 @@ class NodeTreeTranslator(Translator):
                         self._bl_obj.links.new(node_connection.from_socket, replacement_node.inputs[0])
                         self._bl_obj.links.remove(node_connection)
                         surface_shader = replacement_node
-                        self.__shader_list = surface_shader.traverse_tree(engine)
+                        self.__shader_list = filter_params(self.__traverse_tree(surface_shader, list(), engine))
                         break
 
         if surface_shader is None:
@@ -162,3 +163,19 @@ class NodeTreeTranslator(Translator):
             surface_shader.file_name, AssetType.SHADER_ASSET)
 
         self.__as_shader_group.add_shader("surface", surface_shader_file, surface_shader.name, {})
+
+    def __traverse_tree(self, node, tree_list, engine):
+        for socket in node.inputs:
+            if socket.is_linked:
+                linked_node = socket.links[0].from_node
+                if linked_node.bl_idname in cycles_nodes:
+                    print("I see a Cycles node")
+                elif isinstance(node, AppleseedOSLNode):
+                    self.__traverse_tree(linked_node, tree_list, engine)
+            # else:
+            #     logger.error(f"Node {linked_node.name} is not an appleseed node, stopping traversal")
+            #     engine.report({'ERROR'}, f"Node {linked_node.name} is not an appleseed node, stopping traversal")
+
+        tree_list.append(node)
+        
+        return tree_list
