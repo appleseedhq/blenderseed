@@ -264,7 +264,7 @@ def node_categories(osl_nodes):
     osl_other = []
 
     cycles_nodes = list()
-    for node in util.cycles_nodes:
+    for node in util.cycles_nodes.keys():
         cycles_nodes.append(nodeitems_utils.NodeItem(node))
 
     for node in osl_nodes:

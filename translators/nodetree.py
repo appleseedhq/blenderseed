@@ -168,7 +168,7 @@ class NodeTreeTranslator(Translator):
         for socket in node.inputs:
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
-                if linked_node.bl_idname in cycles_nodes:
+                if linked_node.bl_idname in cycles_nodes.keys():
                     print("I see a Cycles node")
                 elif isinstance(node, AppleseedOSLNode):
                     self.__traverse_tree(linked_node, tree_list, engine)

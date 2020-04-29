@@ -41,7 +41,7 @@ logger = get_logger()
 
 image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
 
-cycles_nodes = ("ShaderNodeRGBToBW", "ShaderNodeRGBCurve")
+cycles_nodes = {"ShaderNodeRGBToBW": "node_rgb_to_bw.oso", "ShaderNodeRGBCurve": "node_rgb_curves.oso"}
 
 
 def safe_register_class(cls):
