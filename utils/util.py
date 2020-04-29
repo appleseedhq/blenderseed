@@ -90,6 +90,13 @@ def realpath(path):
 
     return path
 
+def appleseed_popup_info(message="", title="appleseed Info", icon='INFO'):
+
+    def draw(self, context):
+        self.layout.label(text=message)
+
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
+
 
 @persistent
 def update_project(_):
