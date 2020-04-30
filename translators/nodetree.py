@@ -34,8 +34,8 @@ from .assethandlers import AssetType
 from .translator import Translator
 from ..properties.nodes import AppleseedOSLNode
 from ..logger import get_logger
-from ..utils.cycles_shader_parsers import parse_cycles_shader
-from ..utils.util import cycles_nodes, filter_params
+from ..utils.cycles_shader_parsers import cycles_nodes, parse_cycles_shader
+from ..utils.util import filter_params
 
 logger = get_logger()
 

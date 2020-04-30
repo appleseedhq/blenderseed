@@ -30,7 +30,7 @@ import nodeitems_utils
 from nodeitems_builtins import ShaderNodeCategory
 
 from ..logger import get_logger
-from ..utils import osl_utils, util
+from ..utils import cycles_shader_parsers, osl_utils, util
 
 logger = get_logger()
 
@@ -264,7 +264,7 @@ def node_categories(osl_nodes):
     osl_other = []
 
     cycles_nodes = list()
-    for node in util.cycles_nodes.keys():
+    for node in cycles_shader_parsers.cycles_nodes.keys():
         cycles_nodes.append(nodeitems_utils.NodeItem(node))
 
     for node in osl_nodes:

@@ -26,8 +26,10 @@
 #
 
 import bpy
+import numpy as np
 
-from .util import mapping_to_array
+cycles_nodes = {"ShaderNodeRGBCurve": "node_rgb_curves.oso",
+                "ShaderNodeValToRGB": "node_rgb_ramp.osl"}
 
 
 def parse_cycles_shader(shader):
@@ -39,19 +41,44 @@ def parse_ShaderNodeRGBCurve(shader):
     params = dict()
     outputs = ["ColorOut"]
 
-    # Color input.
+    # Curve mapping.
+    mapping = shader.mapping
+    mapping.update()
+    rgb_array = mapping_to_array(mapping)
+    rgb_string = " ".join(map(str, rgb_array))
+    params['ramp'] = "color[] " + rgb_string
+
+    # Additional params.
     color_input = list(shader.inputs[1].default_value)
     params['ColorIn'] = f"color {color_input[0]} {color_input[1]} {color_input[2]}"
+    params['Fac'] = f"float {shader.inputs[0].default_value}"
+
+    return params, outputs
 
     # Fac input.
     params['Fac'] = f"float {shader.inputs[0].default_value}"
 
-    # Curve mapping.
-    mapping = shader.mapping
-    mapping.update()
-    float_array = mapping_to_array(mapping)
-    float_string = " ".join(map(str, float_array))
-    value_string = f"color[] {float_string}"
-    params['ramp'] = value_string
+
+def mapping_to_array(mapping):
+    curve_resolution = bpy.context.preferences.addons['blenderseed'].preferences.curve_resolution
+    rgb_floats = np.empty(curve_resolution * 3, dtype=float)
+
+    map_r = mapping.curves[0]
+    map_g = mapping.curves[1]
+    map_b = mapping.curves[2]
+    map_i = mapping.curves[3]
+
+    for i in range(curve_resolution):
+        start_index = i * 3
+        t = i / (curve_resolution - 1)
+        rgb_floats[start_index] = mapping.evaluate(
+            map_r, mapping.evaluate(map_i, t))
+        rgb_floats[start_index +
+                   1] = mapping.evaluate(map_g, mapping.evaluate(map_i, t))
+        rgb_floats[start_index +
+                   2] = mapping.evaluate(map_b, mapping.evaluate(map_i, t))
+
+    return rgb_floats
+
 
     return params, outputs

@@ -31,7 +31,6 @@ import os
 import bpy
 import bpy_extras
 from bpy.app.handlers import persistent
-import numpy as np
 
 import appleseed as asr
 from . import path_util, osl_utils
@@ -42,8 +41,6 @@ logger = get_logger()
 
 image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp',
                     'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
-
-cycles_nodes = {"ShaderNodeRGBCurve": "node_rgb_curves.oso"}
 
 
 def safe_register_class(cls):
@@ -98,24 +95,6 @@ def appleseed_popup_info(message="", title="appleseed Info", icon='INFO'):
         self.layout.label(text=message)
 
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
-
-def mapping_to_array(mapping):
-    curve_resolution = bpy.context.preferences.addons['blenderseed'].preferences.curve_resolution
-    rgb_floats = np.empty(curve_resolution * 3, dtype=float)
-
-    map_r = mapping.curves[0]
-    map_g = mapping.curves[1]
-    map_b = mapping.curves[2]
-    map_i = mapping.curves[3]
-
-    for i in range(curve_resolution):
-        start_index = i * 3
-        t = i / (curve_resolution - 1)
-        rgb_floats[start_index] = mapping.evaluate(map_r, mapping.evaluate(map_i, t))
-        rgb_floats[start_index + 1] = mapping.evaluate(map_g, mapping.evaluate(map_i, t))
-        rgb_floats[start_index + 2] = mapping.evaluate(map_b, mapping.evaluate(map_i, t))
-
-    return rgb_floats
 
 @persistent
 def update_project(_):
