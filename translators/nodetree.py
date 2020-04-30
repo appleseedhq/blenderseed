@@ -31,10 +31,10 @@ import bpy
 
 import appleseed as asr
 from .assethandlers import AssetType
+from .cycles_shaders import cycles_nodes, parse_cycles_shader
 from .translator import Translator
 from ..properties.nodes import AppleseedOSLNode
 from ..logger import get_logger
-from ..utils.cycles_shader_parsers import cycles_nodes, parse_cycles_shader
 from ..utils.util import filter_params
 
 logger = get_logger()

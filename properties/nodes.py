@@ -30,7 +30,7 @@ import nodeitems_utils
 from nodeitems_builtins import ShaderNodeCategory
 
 from ..logger import get_logger
-from ..utils import cycles_shader_parsers, osl_utils, util
+from ..utils import osl_utils, util
 
 logger = get_logger()
 
@@ -247,9 +247,10 @@ def node_categories(osl_nodes):
     osl_utilities = []
     osl_other = []
 
-    cycles_nodes = list()
-    for node in cycles_shader_parsers.cycles_nodes.keys():
-        cycles_nodes.append(nodeitems_utils.NodeItem(node))
+    from ..translators.cycles_shaders import cycles_nodes
+    cyc_nodes = list()
+    for node in cycles_nodes.keys():
+        cyc_nodes.append(nodeitems_utils.NodeItem(node))
 
     for node in osl_nodes:
         node_item = nodeitems_utils.NodeItem(node[0])
@@ -277,7 +278,7 @@ def node_categories(osl_nodes):
         AppleseedOSLNodeCategory("OSL_Color", "appleseed - Color", items=osl_color),
         AppleseedOSLNodeCategory("OSL_Utilities", "appleseed - Utility", items=osl_utilities),
         AppleseedOSLNodeCategory("OSL_Script", "appleseed - Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptBaseNode")]),
-        AppleseedOSLNodeCategory("OSL_Cycles", "Cycles", items=cycles_nodes),
+        AppleseedOSLNodeCategory("OSL_Cycles", "Cycles", items=cyc_nodes),
         AppleseedOSLNodeCategory("OSL_Other", "appleseed - No Category", items=osl_other)]
 
     return appleseed_node_categories
