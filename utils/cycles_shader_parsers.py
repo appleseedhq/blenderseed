@@ -36,6 +36,9 @@ def parse_cycles_shader(shader):
 
     if shader.bl_idname == "ShaderNodeRGBCurve":
         return parse_ShaderNodeRGBCurve(shader)
+    elif shader.bl_idname == "ShaderNodeValToRGB":
+        return parse_ShaderNodeValToRGB(shader)
+
 
 def parse_ShaderNodeRGBCurve(shader):
     params = dict()
@@ -55,8 +58,27 @@ def parse_ShaderNodeRGBCurve(shader):
 
     return params, outputs
 
-    # Fac input.
+
+def parse_ShaderNodeValToRGB(shader):
+    params = dict()
+    outputs = ["Color", "Alpha"]
+
+    # Interpret color ramp.
+    ramp = shader.color_ramp
+    ramp_interpolate = ramp.interpolation != 'CONSTANT'
+    rgb_array, alpha_array = ramp_to_array(ramp)
+
+    rgb_string = " ".join(map(str, rgb_array))
+    params['ramp_color'] = "color[] " + rgb_string
+
+    alpha_string = " ".join(map(str, alpha_array))
+    params['ramp_alpha'] = "float[] " + alpha_string
+
+    # Additional params.
+    params['interpolate'] = f"int {int(ramp_interpolate)}"
     params['Fac'] = f"float {shader.inputs[0].default_value}"
+
+    return params, outputs
 
 
 def mapping_to_array(mapping):
@@ -81,4 +103,19 @@ def mapping_to_array(mapping):
     return rgb_floats
 
 
-    return params, outputs
+def ramp_to_array(ramp):
+    curve_resolution = bpy.context.preferences.addons['blenderseed'].preferences.curve_resolution
+    rgb_array = np.empty(curve_resolution * 3, dtype=float)
+    alpha_array = np.empty(curve_resolution, dtype=float)
+
+    for i in range(curve_resolution):
+        rgb_starting_index = i * 3
+
+        color = ramp.evaluate(i / (curve_resolution - 1))
+
+        rgb_array[rgb_starting_index] = color[0]
+        rgb_array[rgb_starting_index + 1] = color[1]
+        rgb_array[rgb_starting_index + 2] = color[2]
+        alpha_array[i] = color[3]
+
+    return rgb_array, alpha_array
