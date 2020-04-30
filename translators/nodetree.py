@@ -34,6 +34,7 @@ from .assethandlers import AssetType
 from .translator import Translator
 from ..properties.nodes import AppleseedOSLNode
 from ..logger import get_logger
+from ..utils.cycles_shader_parsers import parse_cycles_shader
 from ..utils.util import cycles_nodes, filter_params
 
 logger = get_logger()
@@ -108,56 +109,73 @@ class NodeTreeTranslator(Translator):
         self.__as_shader_group.clear()
 
         for node in self.__shader_list:
-            parameters = dict()
-            parameter_types = node.parameter_types
+            if isinstance(node, AppleseedOSLNode):  # appleseed nodes
+                parameters = dict()
+                parameter_types = node.parameter_types
 
-            node_items = node.keys()
+                node_items = node.keys()
 
-            for key in node_items:
-                if key in parameter_types:
-                    parameter_value = getattr(node, key)
-                    parameter_type = parameter_types[key]
+                for key in node_items:
+                    if key in parameter_types:
+                        parameter_value = getattr(node, key)
+                        parameter_type = parameter_types[key]
 
-                    if key in node.filepaths:
-                        sub_texture = bl_scene.appleseed.sub_textures
-                        parameter_value = self._asset_handler.process_path(
-                            parameter_value.filepath,
-                            AssetType.TEXTURE_ASSET, sub_texture)
+                        if key in node.filepaths:
+                            sub_texture = bl_scene.appleseed.sub_textures
+                            parameter_value = self._asset_handler.process_path(
+                                parameter_value.filepath,
+                                AssetType.TEXTURE_ASSET, sub_texture)
 
-                    if parameter_type == "int checkbox":
-                        parameter_type = "int"
-                        parameter_value = int(parameter_value)
-                    elif parameter_type in ('color', 'vector', 'normal', 'point', 'float[2]'):
-                        parameter_value = " ".join(map(str, parameter_value))
-                        if parameter_type == 'float[2]':
-                            parameter_type = 'float[]'
+                        if parameter_type == "int checkbox":
+                            parameter_type = "int"
+                            parameter_value = int(parameter_value)
+                        elif parameter_type in ('color', 'vector', 'normal', 'point', 'float[2]'):
+                            parameter_value = " ".join(map(str, parameter_value))
+                            if parameter_type == 'float[2]':
+                                parameter_type = 'float[]'
 
-                    parameters[key] = parameter_type + " " + str(parameter_value) 
-
-            if node.node_type == 'osl':
-                shader_file_name = self._asset_handler.process_path(node.file_name, AssetType.SHADER_ASSET)
-                logger.debug(f"appleseed: Adding {node.name} shader to {self.__mat_name} node tree")
+                        parameters[key] = parameter_type + " " + str(parameter_value)
+                
+                if node.node_type == 'osl':
+                    shader_file_name = self._asset_handler.process_path(node.file_name, AssetType.SHADER_ASSET)
+                    logger.debug(f"appleseed: Adding {node.name} shader to {self.__mat_name} node tree")
+                    self.__as_shader_group.add_shader("shader", shader_file_name, node.name, parameters)
+                elif node.node_type == 'osl_script':
+                    script = node.script
+                    osl_path = bpy.path.abspath(script.filepath, library=script.library)
+                    if script.is_in_memory or script.is_dirty or script.is_modified or not os.path.exists(osl_path):
+                        source_code = script.as_string()
+                    else:
+                        code = open(osl_path, 'r')
+                        source_code = code.read()
+                        code.close()
+                    logger.debug(f"appleseed: Adding {node.name} source shader to {self.__mat_name} node tree")
+                    self.__as_shader_group.add_source_shader("shader", node.bl_idname, node.name, source_code, parameters)
+                
+                for output in node.outputs:
+                    if output.is_linked:
+                        for link in output.links:
+                            if link.to_node in self.__shader_list:
+                                self.__as_shader_group.add_connection(node.name,
+                                                                      output.socket_osl_id,
+                                                                      link.to_node.name,
+                                                                      link.to_socket.socket_osl_id)
+            else:  # Cycles nodes
+                parameters, outputs = parse_cycles_shader(node)
+                shader_path = os.path.join(self._asset_handler.cycles_osl_path, cycles_nodes[node.bl_idname])
+                shader_file_name = self._asset_handler.process_path(shader_path, AssetType.SHADER_ASSET)
+                logger.debug(f"appleseed: Adding {node.name} Cycles shader to {self.__mat_name} node tree")
                 self.__as_shader_group.add_shader("shader", shader_file_name, node.name, parameters)
-            elif node.node_type == 'osl_script':
-                script = node.script
-                osl_path = bpy.path.abspath(script.filepath, library=script.library)
-                if script.is_in_memory or script.is_dirty or script.is_modified or not os.path.exists(osl_path):
-                    source_code = script.as_string()
-                else:
-                    code = open(osl_path, 'r')
-                    source_code = code.read()
-                    code.close()
-                logger.debug(f"appleseed: Adding {node.name} source shader to {self.__mat_name} node tree")
-                self.__as_shader_group.add_source_shader("shader", node.bl_idname, node.name, source_code, parameters)
 
-            for output in node.outputs:
-                if output.is_linked:
-                    for link in output.links:
-                        if link.to_node in self.__shader_list or link.to_node.node_type == 'osl_surface':
-                            self.__as_shader_group.add_connection(node.name,
-                                                                  output.socket_osl_id,
-                                                                  link.to_node.name,
-                                                                  link.to_socket.socket_osl_id)
+                for index, output in enumerate(node.outputs):
+                    if output.is_linked:
+                        for link in output.links:
+                            if link.to_node in self.__shader_list:
+                                self.__as_shader_group.add_connection(node.name,
+                                                                      outputs[index],
+                                                                      link.to_node.name,
+                                                                      link.to_socket.socket_osl_id)
+
 
         surface_shader_file = self._asset_handler.process_path(
             surface_shader.file_name, AssetType.SHADER_ASSET)
@@ -168,13 +186,11 @@ class NodeTreeTranslator(Translator):
         for socket in node.inputs:
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
-                if linked_node.bl_idname in cycles_nodes.keys():
-                    print("I see a Cycles node")
-                elif isinstance(node, AppleseedOSLNode):
+                if linked_node.bl_idname in cycles_nodes.keys() or isinstance(node, AppleseedOSLNode):
                     self.__traverse_tree(linked_node, tree_list, engine)
-            # else:
-            #     logger.error(f"Node {linked_node.name} is not an appleseed node, stopping traversal")
-            #     engine.report({'ERROR'}, f"Node {linked_node.name} is not an appleseed node, stopping traversal")
+                else:
+                    logger.error(f"Node {linked_node.name} is not a node compatible with appleseed, stopping traversal")
+                    engine.report({'ERROR'}, f"Node {linked_node.name} is not a node compatible with appleseed, stopping traversal")
 
         tree_list.append(node)
         

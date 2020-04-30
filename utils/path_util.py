@@ -86,10 +86,11 @@ def get_osl_search_paths():
 
     return shader_directories_sorted
 
-def get_cycles_shader_paths():
+def get_cycles_shader_path():
     bl_exec = os.path.dirname(bpy.app.binary_path)
 
-    cycles_shader_path = os.path.join(bl_exec, "2.82", "scripts", "addons", "cycles", "shaders")
+    # TODO: This is the Windows solution but is it the same for Linux?
+    cycles_shader_path = os.path.join(bl_exec, "2.82", "scripts", "addons", "cycles", "shader")
 
     return cycles_shader_path
 
