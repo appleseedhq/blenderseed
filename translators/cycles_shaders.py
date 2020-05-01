@@ -29,7 +29,15 @@ import bpy
 import numpy as np
 
 cycles_nodes = {"ShaderNodeRGBCurve": "node_rgb_curves.oso",
-                "ShaderNodeValToRGB": "node_rgb_ramp.osl"}
+                "ShaderNodeValToRGB": "node_rgb_ramp.osl",
+                "ShaderNodeSeparateRGB": "node_separate_rgb.oso"}
+
+cycles_parameter_mapping = {"ShaderNodeSeparateRGB": {"inputs": ["Image"],
+                                                      "outputs": ["R", "G", "B"]},
+                            "ShaderNodeValToRGB": {"inputs": ["Fac"],
+                                                   "outputs": ["Color", "Alpha"]},
+                            "ShaderNodeRGBCurve": {"inputs": ["Fac", "ColorIn"],
+                                                   "outputs": ["ColorOut"]}}
 
 
 def parse_cycles_shader(shader):
@@ -38,11 +46,12 @@ def parse_cycles_shader(shader):
         return parse_ShaderNodeRGBCurve(shader)
     elif shader.bl_idname == "ShaderNodeValToRGB":
         return parse_ShaderNodeValToRGB(shader)
+    elif shader.bl_idname == "ShaderNodeSeparateRGB":
+        return parse_ShaderNodeSeparateRGB()
 
 
 def parse_ShaderNodeRGBCurve(shader):
     params = dict()
-    outputs = ["ColorOut"]
 
     # Curve mapping.
     mapping = shader.mapping
@@ -56,12 +65,11 @@ def parse_ShaderNodeRGBCurve(shader):
     params['ColorIn'] = f"color {color_input[0]} {color_input[1]} {color_input[2]}"
     params['Fac'] = f"float {shader.inputs[0].default_value}"
 
-    return params, outputs
+    return params
 
 
 def parse_ShaderNodeValToRGB(shader):
     params = dict()
-    outputs = ["Color", "Alpha"]
 
     # Interpret color ramp.
     ramp = shader.color_ramp
@@ -78,8 +86,10 @@ def parse_ShaderNodeValToRGB(shader):
     params['interpolate'] = f"int {int(ramp_interpolate)}"
     params['Fac'] = f"float {shader.inputs[0].default_value}"
 
-    return params, outputs
+    return params
 
+def parse_ShaderNodeSeparateRGB():
+    return dict()
 
 def mapping_to_array(mapping):
     curve_resolution = bpy.context.preferences.addons['blenderseed'].preferences.curve_resolution

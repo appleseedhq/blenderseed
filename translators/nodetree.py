@@ -31,7 +31,7 @@ import bpy
 
 import appleseed as asr
 from .assethandlers import AssetType
-from .cycles_shaders import cycles_nodes, parse_cycles_shader
+from .cycles_shaders import cycles_nodes, cycles_parameter_mapping, parse_cycles_shader
 from .translator import Translator
 from ..properties.nodes import AppleseedOSLNode
 from ..logger import get_logger
@@ -156,12 +156,21 @@ class NodeTreeTranslator(Translator):
                     if output.is_linked:
                         for link in output.links:
                             if link.to_node in self.__shader_list:
-                                self.__as_shader_group.add_connection(node.name,
-                                                                      output.socket_osl_id,
-                                                                      link.to_node.name,
-                                                                      link.to_socket.socket_osl_id)
+                                if isinstance(link.to_node, AppleseedOSLNode):  # appleseed to appleseed
+                                    self.__as_shader_group.add_connection(node.name,
+                                                                          output.socket_osl_id,
+                                                                          link.to_node.name,
+                                                                          link.to_socket.socket_osl_id)
+                                else:  # appleseed to Cycles
+                                    for s_index, socket in enumerate(link.to_node.inputs):
+                                        if socket.name == link.to_socket.name:
+                                            to_socket_name = cycles_parameter_mapping[link.to_node.bl_idname]['inputs'][s_index]
+                                    self.__as_shader_group.add_connection(node.name,
+                                                                          output.socket_osl_id,
+                                                                          link.to_node.name,
+                                                                          to_socket_name)
             else:  # Cycles nodes
-                parameters, outputs = parse_cycles_shader(node)
+                parameters = parse_cycles_shader(node)
                 shader_path = os.path.join(self._asset_handler.cycles_osl_path, cycles_nodes[node.bl_idname])
                 shader_file_name = self._asset_handler.process_path(shader_path, AssetType.SHADER_ASSET)
                 logger.debug(f"appleseed: Adding {node.name} Cycles shader to {self.__mat_name} node tree")
@@ -171,11 +180,21 @@ class NodeTreeTranslator(Translator):
                     if output.is_linked:
                         for link in output.links:
                             if link.to_node in self.__shader_list:
-                                self.__as_shader_group.add_connection(node.name,
-                                                                      outputs[index],
-                                                                      link.to_node.name,
-                                                                      link.to_socket.socket_osl_id)
-
+                                # Cycles to appleseed
+                                if isinstance(link.to_node, AppleseedOSLNode):
+                                    self.__as_shader_group.add_connection(node.name,
+                                                                          cycles_parameter_mapping[node.bl_idname]['outputs'][index],
+                                                                          link.to_node.name,
+                                                                          link.to_socket.socket_osl_id)
+                                else:  # Cycles to Cycles
+                                    for s_index, socket in enumerate(link.to_node.inputs):
+                                        if socket.name == link.to_socket.name:
+                                            to_socket_name = cycles_parameter_mapping[
+                                                link.to_node.bl_idname]['inputs'][s_index]
+                                    self.__as_shader_group.add_connection(node.name,
+                                                                          cycles_parameter_mapping[node.bl_idname]['outputs'][index],
+                                                                          link.to_node.name,
+                                                                          to_socket_name)
 
         surface_shader_file = self._asset_handler.process_path(
             surface_shader.file_name, AssetType.SHADER_ASSET)
@@ -186,7 +205,7 @@ class NodeTreeTranslator(Translator):
         for socket in node.inputs:
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
-                if linked_node.bl_idname in cycles_nodes.keys() or isinstance(node, AppleseedOSLNode):
+                if linked_node.bl_idname in cycles_nodes.keys() or isinstance(linked_node, AppleseedOSLNode):
                     self.__traverse_tree(linked_node, tree_list, engine)
                 else:
                     logger.error(f"Node {linked_node.name} is not a node compatible with appleseed, stopping traversal")
