@@ -30,10 +30,13 @@ import numpy as np
 
 cycles_nodes = {"ShaderNodeRGBCurve": "node_rgb_curves.oso",
                 "ShaderNodeValToRGB": "node_rgb_ramp.osl",
-                "ShaderNodeSeparateRGB": "node_separate_rgb.oso"}
+                "ShaderNodeSeparateRGB": "node_separate_rgb.oso",
+                "ShaderNodeCombineRGB": "node_combine_rgb.osl"}
 
 cycles_parameter_mapping = {"ShaderNodeSeparateRGB": {"inputs": ["Image"],
                                                       "outputs": ["R", "G", "B"]},
+                            "ShaderNodeCombineRGB": {"inputs": ["R", "G", "B"],
+                                                     "outputs": ["Image"]},
                             "ShaderNodeValToRGB": {"inputs": ["Fac"],
                                                    "outputs": ["Color", "Alpha"]},
                             "ShaderNodeRGBCurve": {"inputs": ["Fac", "ColorIn"],
@@ -48,6 +51,8 @@ def parse_cycles_shader(shader):
         return parse_ShaderNodeValToRGB(shader)
     elif shader.bl_idname == "ShaderNodeSeparateRGB":
         return parse_ShaderNodeSeparateRGB()
+    elif shader.bl_idname == "ShaderNodeCombineRGB":
+        return parse_ShaderNodeCombineRGB()
 
 
 def parse_ShaderNodeRGBCurve(shader):
@@ -89,6 +94,9 @@ def parse_ShaderNodeValToRGB(shader):
     return params
 
 def parse_ShaderNodeSeparateRGB():
+    return dict()
+
+def parse_ShaderNodeCombineRGB():
     return dict()
 
 def mapping_to_array(mapping):
