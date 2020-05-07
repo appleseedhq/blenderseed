@@ -278,8 +278,8 @@ def node_categories(osl_nodes):
         AppleseedOSLNodeCategory("OSL_Color", "appleseed - Color", items=osl_color),
         AppleseedOSLNodeCategory("OSL_Utilities", "appleseed - Utility", items=osl_utilities),
         AppleseedOSLNodeCategory("OSL_Script", "appleseed - Script", items=[nodeitems_utils.NodeItem("AppleseedOSLScriptBaseNode")]),
-        AppleseedOSLNodeCategory("OSL_Cycles", "Cycles", items=cyc_nodes),
-        AppleseedOSLNodeCategory("OSL_Other", "appleseed - No Category", items=osl_other)]
+        AppleseedOSLNodeCategory("OSL_Other", "appleseed - No Category", items=osl_other),
+        AppleseedOSLNodeCategory("OSL_Cycles", "Cycles - Utility", items=cyc_nodes)]
 
     return appleseed_node_categories
 
