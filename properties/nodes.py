@@ -74,7 +74,8 @@ class AppleseedOSLNode(bpy.types.Node):
                     linked_node.traverse_tree(material_node, engine)
                 else:
                     logger.error(f"Node {linked_node.name} is not an appleseed node, stopping traversal")
-                    engine.report({'ERROR'}, f"Node {linked_node.name} is not an appleseed node, stopping traversal")
+                    if engine is not None:
+                        engine.report({'ERROR'}, f"Node {linked_node.name} is not an appleseed node, stopping traversal")
         material_node.tree.append(self)
 
     def draw_buttons(self, context, layout):

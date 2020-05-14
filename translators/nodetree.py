@@ -53,7 +53,7 @@ class NodeTreeTranslator(Translator):
     def bl_nodes(self):
         return self._bl_obj.nodes
 
-    def create_entities(self, depsgraph, engine):
+    def create_entities(self, depsgraph, engine=None):
         logger.debug(f"appleseed: Creating node tree entitiy for {self.__mat_name} node tree")
 
         tree_name = f"{self.__mat_name}_tree"
@@ -68,7 +68,7 @@ class NodeTreeTranslator(Translator):
         as_assembly.shader_groups().insert(self.__as_shader_group)
         self.__as_shader_group = as_assembly.shader_groups().get_by_name(shader_groupname)
 
-    def update_nodetree(self, bl_scene, engine):
+    def update_nodetree(self, bl_scene, engine=None):
         logger.debug(f"appleseed: Updating node tree entity for {self.__mat_name}")
         self.__create_shadergroup(bl_scene, engine)
 
