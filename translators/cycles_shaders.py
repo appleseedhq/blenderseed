@@ -63,7 +63,7 @@ def parse_ShaderNodeRGBCurve(shader):
     mapping.update()
     rgb_array = mapping_to_array(mapping)
     rgb_string = " ".join(map(str, rgb_array))
-    params['ramp'] = "color[] " + rgb_string
+    params['ramp'] = f"color[] {rgb_string}"
 
     # Additional params.
     color_input = list(shader.inputs[1].default_value)
@@ -82,10 +82,10 @@ def parse_ShaderNodeValToRGB(shader):
     rgb_array, alpha_array = ramp_to_array(ramp)
 
     rgb_string = " ".join(map(str, rgb_array))
-    params['ramp_color'] = "color[] " + rgb_string
+    params['ramp_color'] = f"color[] {rgb_string}"
 
     alpha_string = " ".join(map(str, alpha_array))
-    params['ramp_alpha'] = "float[] " + alpha_string
+    params['ramp_alpha'] = f"float[] {alpha_string}"
 
     # Additional params.
     params['interpolate'] = f"int {int(ramp_interpolate)}"
