@@ -248,9 +248,8 @@ def node_categories(osl_nodes):
     osl_other = []
 
     from ..translators.cycles_shaders import cycles_nodes
-    cyc_nodes = list()
-    for node in cycles_nodes.keys():
-        cyc_nodes.append(nodeitems_utils.NodeItem(node))
+    
+    cyc_nodes = [nodeitems_utils.NodeItem(key) for key in cycles_nodes.keys()]
 
     for node in osl_nodes:
         node_item = nodeitems_utils.NodeItem(node[0])

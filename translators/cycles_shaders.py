@@ -29,9 +29,9 @@ import bpy
 import numpy as np
 
 cycles_nodes = {"ShaderNodeRGBCurve": "node_rgb_curves.oso",
-                "ShaderNodeValToRGB": "node_rgb_ramp.osl",
+                "ShaderNodeValToRGB": "node_rgb_ramp.oso",
                 "ShaderNodeSeparateRGB": "node_separate_rgb.oso",
-                "ShaderNodeCombineRGB": "node_combine_rgb.osl"}
+                "ShaderNodeCombineRGB": "node_combine_rgb.oso"}
 
 cycles_parameter_mapping = {"ShaderNodeSeparateRGB": {"inputs": ["Image"],
                                                       "outputs": ["R", "G", "B"]},
@@ -111,12 +111,9 @@ def mapping_to_array(mapping):
     for i in range(curve_resolution):
         start_index = i * 3
         t = i / (curve_resolution - 1)
-        rgb_floats[start_index] = mapping.evaluate(
-            map_r, mapping.evaluate(map_i, t))
-        rgb_floats[start_index +
-                   1] = mapping.evaluate(map_g, mapping.evaluate(map_i, t))
-        rgb_floats[start_index +
-                   2] = mapping.evaluate(map_b, mapping.evaluate(map_i, t))
+        rgb_floats[start_index] = mapping.evaluate(map_r, mapping.evaluate(map_i, t))
+        rgb_floats[start_index + 1] = mapping.evaluate(map_g, mapping.evaluate(map_i, t))
+        rgb_floats[start_index + 2] = mapping.evaluate(map_b, mapping.evaluate(map_i, t))
 
     return rgb_floats
 
