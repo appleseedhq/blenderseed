@@ -305,7 +305,7 @@ def generate_node(node, node_class):
 
         elif param['type'] == "float":
 
-            kwargs = {'name': param['name'], 'description': helper, 'default': float(default)}
+            kwargs = {'name': param['name'], 'description': helper, 'default': float(default)} if 'default' in keys else {'name': param['name'], 'description': helper}
             if minimum is not None:
                 kwargs['min'] = float(minimum)
             if maximum is not None:
