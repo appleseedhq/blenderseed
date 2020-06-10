@@ -86,6 +86,15 @@ def get_osl_search_paths():
 
     return shader_directories_sorted
 
+def get_cycles_shader_path():
+    bl_exec = os.path.dirname(bpy.app.binary_path)
+    
+    blender_version = bpy.app.version
+    version_number = f"{blender_version[0]}.{blender_version[1]}"
+    cycles_shader_path = os.path.join(bl_exec, version_number, "scripts", "addons", "cycles", "shader")
+
+    return cycles_shader_path
+
 
 def get_stdosl_paths():
     appleseed_parent_dir = get_appleseed_parent_dir_path()

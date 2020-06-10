@@ -39,7 +39,8 @@ from ..properties.nodes import AppleseedOSLScriptNode
 
 logger = get_logger()
 
-image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp', 'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
+image_extensions = ('jpg', 'png', 'tif', 'exr', 'bmp',
+                    'tga', 'hdr', 'dpx', 'psd', 'gif', 'jp2')
 
 
 def safe_register_class(cls):
@@ -88,6 +89,12 @@ def realpath(path):
 
     return path
 
+def appleseed_popup_info(message="", title="appleseed Info", icon='INFO'):
+
+    def draw(self, context):
+        self.layout.label(text=message)
+
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
 
 @persistent
 def update_project(_):

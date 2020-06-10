@@ -31,7 +31,7 @@ from enum import Enum
 
 import bpy
 
-from ..utils.path_util import get_osl_search_paths
+from ..utils.path_util import get_cycles_shader_path, get_osl_search_paths
 
 
 class AssetType(Enum):
@@ -48,13 +48,19 @@ class AssetHandler(object):
 
     def __init__(self, depsgraph):
         self._searchpaths = get_osl_search_paths()
+        self._cycles_osl_path = get_cycles_shader_path()
         self._depsgraph = depsgraph
 
+        self._searchpaths.append(self._cycles_osl_path)
         self._searchpaths.extend(x.name for x in bpy.context.preferences.addons['blenderseed'].preferences.search_paths)
 
     @property
     def searchpaths(self):
         return self._searchpaths
+
+    @property
+    def cycles_osl_path(self):
+        return self._cycles_osl_path
 
     def set_searchpath(self, path):
         self._searchpaths.append(path)
