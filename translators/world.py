@@ -34,7 +34,6 @@ from ..logger import get_logger
 
 logger = get_logger()
 
-
 class WorldTranslator(Translator):
     """
     This class translates a Blender world block into an appleseed environment
@@ -231,3 +230,20 @@ class WorldTranslator(Translator):
 
         return params
 
+def update_sun_pos(self, context):
+    as_world = context.world.appleseed_sky
+    params = dict()
+    params = {'hour': as_world.hour,
+              'minute': as_world.minute,
+              'second': as_world.second,
+              'month': as_world.month,
+              'day': as_world.day,
+              'year' : as_world.day,
+              'timezone' : as_world.timezone,
+              'north' : as_world.north,
+              'latitude': as_world.latitude,
+              'longitude': as_world.longitude}
+    sun_positioner = asr.SunPositioner(params)
+    sun_positioner.compute_sun_position()
+    context.world.appleseed_sky.sun_theta = sun_positioner.get_zenith()
+    context.world.appleseed_sky.sun_phi = sun_positioner.get_azimuth()

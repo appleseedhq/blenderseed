@@ -54,14 +54,35 @@ class ASWORLD_PT_world(bpy.types.Panel):
 
         if asr_sky_props.env_type == "sunsky":
             layout.prop(asr_sky_props, "sun_model", text="Sky Model")
-            layout.prop(asr_sky_props, "sun_theta", text="Sun Theta Angle")
-            layout.prop(asr_sky_props, "sun_phi", text="Sun Phi Angle")
             layout.prop(asr_sky_props, "turbidity", text="Turbidity")
             layout.prop(asr_sky_props, "turbidity_multiplier", text="Turbidity Multiplier")
             layout.prop(asr_sky_props, "luminance_multiplier", text="Luminance Multiplier")
             layout.prop(asr_sky_props, "luminance_gamma", text="Luminance Gamma")
             layout.prop(asr_sky_props, "saturation_multiplier", text="Saturation Multiplier")
             layout.prop(asr_sky_props, "horizon_shift", text="Horizon Shift")
+            layout.prop(asr_sky_props, "sun_pos_sys", text="Sun Positioning System", expand=True)
+
+            if asr_sky_props.sun_pos_sys == "analytical":
+                layout.prop(asr_sky_props, "sun_theta", text="Sun Theta Angle")
+                layout.prop(asr_sky_props, "sun_phi", text="Sun Phi Angle")
+            else:
+                #flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=True)
+                col = layout.column(align=True)
+                col.prop(asr_sky_props, "hour", text="Hour")
+                col.prop(asr_sky_props, "minute", text="Minute")
+                col.prop(asr_sky_props, "second", text="Second")
+                col.prop(asr_sky_props, "timezone", text="Timezone")
+
+                col = layout.column(align=True)
+                col.prop(asr_sky_props, "month", text="Month")
+                col.prop(asr_sky_props, "day", text="Day")
+                col.prop(asr_sky_props, "year", text="Year")
+
+                layout.prop(asr_sky_props, "north", text="North")
+                
+                col = layout.column(align=True)
+                col.prop(asr_sky_props, "latitude", text="Latitude")
+                col.prop(asr_sky_props, "longitude", text="Longitude")
 
             if asr_sky_props.sun_model == "hosek_environment_edf":
                 layout.prop(asr_sky_props, "ground_albedo", text="Ground Albedo")

@@ -28,7 +28,8 @@
 import bpy
 
 from ..utils import util
-
+from datetime import datetime
+from ..translators.world import update_sun_pos
 
 class AppleseedSSSSetsProps(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name="SSS Set Name",
@@ -46,21 +47,93 @@ class AppleseedSSSSets(bpy.types.PropertyGroup):
 
 
 class AppleseedSkySettings(bpy.types.PropertyGroup):
-    env_type: bpy.props.EnumProperty(name="Environment Type",
-                                     items=[("constant", "Constant", "Use constant color for sky", "", 1),
+    env_type:   bpy.props.EnumProperty(name="Environment Type",
+                                       items=[("constant", "Constant", "Use constant color for sky", "", 1),
                                             ("gradient", "Gradient", "Use sky color gradient", "", 2),
                                             ("latlong_map", "HDRI Environment", "Use HDRI map texture", "", 3),
                                             ("mirrorball_map", "Mirror Ball", "Use mirror ball texture", "", 4),
                                             ("none", "None", "", "", 7),
                                             ("sunsky", "Physical Sky", "", "", 5),
                                             ("constant_hemisphere", "Per-Hemisphere Constant", "Use constant color per hemisphere", "", 6)],
-                                     description="Select environment type",
-                                     default="none")
+                                      description="Select environment type",
+                                      default="none")
 
-    sun_model: bpy.props.EnumProperty(name="Sky Model",
-                                      items=[('hosek', "Hosek-Wilkie", "Hosek-Wilkie physical sun/sky model")],
-                                      description="Physical sun/sky model",
-                                      default='hosek')
+    sun_model:   bpy.props.EnumProperty(name="Sky Model",
+                                       items=[('hosek', "Hosek-Wilkie", "Hosek-Wilkie physical sun/sky model")],
+                                       description="Physical sun/sky model",
+                                       default='hosek')
+
+    sun_pos_sys: bpy.props.EnumProperty(name="Sun Positioning System",
+                                        items=[("analytical", "Analytical", "Set value of Elevation and Azimuth directly"),
+                                               ("Sun Positioner", "Time and Location", "Calcule Elevation and Azimuth using Date, time and location")],
+                                      description="Sun Positioning System",
+                                      default="analytical",
+                                      update=update_sun_pos)
+
+    hour:       bpy.props.IntProperty(name="hour",
+                                        min=0, 
+                                        max=24,
+                                        default=12,
+                                        update=update_sun_pos)
+    
+    minute:       bpy.props.IntProperty(name="minute",
+                                        min=0, 
+                                        max=59, 
+                                        default=0,
+                                        update=update_sun_pos)
+
+    second:       bpy.props.IntProperty(name="second",
+                                        min=0, 
+                                        max=59, 
+                                        default=0,
+                                        update=update_sun_pos)
+
+    month:       bpy.props.IntProperty(name="Month",
+                                        min=1, 
+                                        max=12, 
+                                        default=datetime.today().month,
+                                        update=update_sun_pos)
+
+    day:         bpy.props.IntProperty(name="Day",
+                                        min=1, 
+                                        max=31, 
+                                        default=datetime.today().day,
+                                        update=update_sun_pos)
+
+    year:        bpy.props.IntProperty(name="Year",
+                                        min=-2000, 
+                                        max=4000, 
+                                        default=datetime.today().year,
+                                        update=update_sun_pos)
+
+    timezone:    bpy.props.IntProperty(name="timezone",
+                                    min= -18, 
+                                    max= 18, 
+                                    default=0,
+                                    update=update_sun_pos)
+
+
+    north:        bpy.props.FloatProperty(name="North",
+                                        description="Rotate the North direction",
+                                        soft_min=-180, 
+                                        soft_max=180,
+                                        step= 5.0, 
+                                        default=0.0,
+                                        unit="ROTATION")
+   
+    latitude:   bpy.props.FloatProperty(name="Latitude",
+                                        min=-90, 
+                                        max=90,
+                                        step=5.0,
+                                        default=0.0,
+                                        update=update_sun_pos)
+                                           
+    longitude:  bpy.props.FloatProperty(name="Longitude",
+                                        min=-180, 
+                                        max=180, 
+                                        step=5.0,
+                                        default=0.0,
+                                        update=update_sun_pos)
 
     sun_theta: bpy.props.FloatProperty(name="sun_theta",
                                        description="Sun polar (vertical) angle in degrees",
