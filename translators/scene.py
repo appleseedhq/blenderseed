@@ -692,7 +692,7 @@ class SceneTranslator(object):
             elif depsgraph.scene_eval.render.use_border and context.region_data.view_perspective == 'CAMERA':
                 """
                 I can't explain how the following code produces the correct render window.
-                I basically threw every parameter combination I could think of together 
+                I basically threw every parameter combination I could think of together
                 until the result looked right.
                 """
 
@@ -780,25 +780,77 @@ class SceneTranslator(object):
 
         return aovs
 
+    def __get_post_processing_stage_params(self, stage, order):
+        params = {'order': order}
+
+        if stage.model == 'bloom_post_processing_stage':
+            params.update({'iterations': stage.iterations,
+                           'intensity': stage.intensity,
+                           'threshold': stage.threshold,
+                           'soft_knee': stage.soft_knee,
+                           'debug_blur': stage.debug_blur})
+
+        elif stage.model == 'chromatic_aberration_post_processing_stage':
+            params.update({'strength': stage.strength,
+                           'fringe_smoothness': stage.fringe_smoothness})
+
+        elif stage.model == 'color_map_post_processing_stage':
+            params.update({'color_map': stage.color_map,
+                           'auto_range': stage.auto_range,
+                           'range_min': stage.range_min,
+                           'range_max': stage.range_max,
+                           'add_legend_bar': stage.add_legend_bar,
+                           'legend_bar_ticks': stage.legend_bar_ticks,
+                           'render_isolines': stage.render_isolines,
+                           'line_thickness': stage.line_thickness})
+
+            if stage.color_map == 'custom':
+                params.update({'color_map_file_path': stage.color_map_file_path})
+
+        elif stage.model == 'render_stamp_post_processing_stage':
+            params.update({'format_string': stage.render_stamp,  # FIXME shouldn't this be `stage.format_string`?
+                           'scale_factor': stage.scale_factor})
+
+        elif stage.model == 'tone_map_post_processing_stage':
+            params.update({'tone_map_operator': stage.tone_map_operator,
+                           'clamp_colors': stage.clamp_colors})
+
+            # Add tone map operator-specific parameters.
+            operator_params = {'linear': {},
+                               'aces_narkowicz': {'aces_narkowicz_exposure_bias': stage.aces_narkowicz_exposure_bias},
+                               'aces_unreal': {},
+                               'filmic_hejl': {},
+                               'filmic_piecewise': {'filmic_piecewise_toe_strength': stage.filmic_piecewise_toe_strength,
+                                                    'filmic_piecewise_toe_length': stage.filmic_piecewise_toe_length,
+                                                    'filmic_piecewise_shoulder_strength': stage.filmic_piecewise_shoulder_strength,
+                                                    'filmic_piecewise_shoulder_length': stage.filmic_piecewise_shoulder_length,
+                                                    'filmic_piecewise_shoulder_angle': stage.filmic_piecewise_shoulder_angle},
+                               'filmic_uncharted': {'filmic_uncharted_A': stage.filmic_uncharted_A,
+                                                    'filmic_uncharted_B': stage.filmic_uncharted_B,
+                                                    'filmic_uncharted_C': stage.filmic_uncharted_C,
+                                                    'filmic_uncharted_D': stage.filmic_uncharted_D,
+                                                    'filmic_uncharted_E': stage.filmic_uncharted_E,
+                                                    'filmic_uncharted_F': stage.filmic_uncharted_F,
+                                                    'filmic_uncharted_W': stage.filmic_uncharted_W,
+                                                    'filmic_uncharted_exposure_bias': stage.filmic_uncharted_exposure_bias},
+                               'reinhard': {'reinhard_use_luminance': stage.reinhard_use_luminance},
+                               'reinhard_extended': {'reinhard_extended_max_white': stage.reinhard_extended_max_white,
+                                                     'reinhard_extended_use_luminance': stage.reinhard_extended_use_luminance}}
+
+            params.update(operator_params[stage.tone_map_operator])
+
+        else:
+            assert stage.model == 'vignette_post_processing_stage', stage.model
+            params.update({'intensity': stage.intensity,
+                           'anisotropy': stage.anisotropy})
+
+        return params
+
     def __set_post_process(self, depsgraph):
         asr_scene_props = depsgraph.scene_eval.appleseed
 
         for index, stage in enumerate(asr_scene_props.post_processing_stages):
-            if stage.model == 'render_stamp_post_processing_stage':
-                params = {'order': index, 'format_string': stage.render_stamp}
-            else:
-                params = {'order': index,
-                          'color_map': stage.color_map,
-                          'auto_range': stage.auto_range,
-                          'range_min': stage.range_min,
-                          'range_max': stage.range_max,
-                          'add_legend_bar': stage.add_legend_bar,
-                          'legend_bar_ticks': stage.legend_bar_ticks,
-                          'render_isolines': stage.render_isolines,
-                          'line_thickness': stage.line_thickness}
-
-                if stage.color_map == 'custom':
-                    params['color_map_file_path'] = stage.color_map_file_path
+            params = self.__get_post_processing_stage_params(stage, index)
 
             post_process = asr.PostProcessingStage(stage.model, stage.name, params)
 

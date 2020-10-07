@@ -54,6 +54,7 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
 
     model: bpy.props.EnumProperty(name="model",
                                   items=[
+                                      # TODO add new post processing stages
                                       ('render_stamp_post_processing_stage',
                                        "Render Stamp", ""),
                                       ('color_map_post_processing_stage', "Color Map", "")],
@@ -128,6 +129,8 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
                                             default=1.0,
                                             min=0.5,
                                             soft_max=5.0)
+
+    # TODO add new post processing stages
 
 
 class AppleseedTextureConvertProps(bpy.types.PropertyGroup):

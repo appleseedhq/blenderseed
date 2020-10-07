@@ -472,6 +472,7 @@ class ASRENDER_PT_post_process_stages(bpy.types.Panel, ASRENDER_PT_base):
                 row = col.row(align=True)
                 row.enabled = current_stage.render_isolines
                 row.prop(current_stage, "line_thickness", text="Line Thickness")
+            # TODO add new post processing stages
 
 
 class ASRENDER_PT_motion_blur(bpy.types.Panel, ASRENDER_PT_base):
