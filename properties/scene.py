@@ -44,8 +44,13 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
         self.render_stamp += self.render_stamp_patterns
 
     def update_name(self, context):
-        mapping = {'render_stamp_post_processing_stage': "Render Stamp",
+        mapping = {'bloom_post_processing_stage': "Bloom",
+                   'chromatic_aberration_post_processing_stage': "Chromatic Aberration",
                    'color_map_post_processing_stage': "Color Map",
+                   'render_stamp_post_processing_stage': "Render Stamp",
+                   'tone_map_post_processing_stage': "Tone Map",
+                   'vignette_post_processing_stage': "Vignette",
+                   # FIXME there's no other reference of this.. should it still be here?
                    'isolines_post_processing_stage': "Isolines"}
         self.name = mapping[self.model]
 
@@ -54,46 +59,35 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
 
     model: bpy.props.EnumProperty(name="model",
                                   items=[
-                                      # TODO add new post processing stages
+                                      ('bloom_post_processing_stage',
+                                       "Bloom", ""),
+                                      ('chromatic_aberration_post_processing_stage',
+                                       "Chromatic Aberration", ""),
+                                      ('color_map_post_processing_stage',
+                                       "Color Map", ""),
                                       ('render_stamp_post_processing_stage',
                                        "Render Stamp", ""),
-                                      ('color_map_post_processing_stage', "Color Map", "")],
+                                      ('tone_map_post_processing_stage',
+                                       "Tone Map", ""),
+                                      ('vignette_post_processing_stage',
+                                       "Vignette", "")],
                                   default='render_stamp_post_processing_stage',
                                   update=update_name)
 
-    # Render stamp
-    render_stamp: bpy.props.StringProperty(name="render_stamp",
-                                           description="Render stamp text",
-                                           default="appleseed {lib-version} | Time: {render-time}")
+    # Bloom
+    # TODO
 
-    render_stamp_patterns: bpy.props.EnumProperty(name="render_stamp_patterns",
-                                                  description="Variables to insert into the render stamp",
-                                                  items=[
-                                                      ('{lib-version}',
-                                                       "Library Version", ""),
-                                                      ('{lib-name}',
-                                                       "Library Name", ""),
-                                                      ('{lib-variant}',
-                                                       "Library Variant", ""),
-                                                      ('{lib-config}',
-                                                       "Library Configuration", ""),
-                                                      ('{lib-build-date}',
-                                                       "Library Build Date", ""),
-                                                      ('{lib-build-time}',
-                                                       "Library Build Time", ""),
-                                                      ('{render-time}',
-                                                       "Render Time", ""),
-                                                      ('{peak-memory}', "Peak Memory", "")],
-                                                  default="{render-time}",
-                                                  update=update_stamp)
+    # Chromatic Aberration
+    # TODO
 
-    # Color map
+    # Color Map
     color_map: bpy.props.EnumProperty(name="color_map",
                                       items=[('inferno', "Inferno", ""),
                                              ('jet', "Jet", ""),
                                              ('magma', "Magma", ""),
                                              ('plasma', "Plasma", ""),
                                              ('viridis', "Viridis", ""),
+                                             ('turbo', "Turbo", ""),
                                              ('custom', "Custom", "")],
                                       default='inferno')
 
@@ -129,8 +123,40 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
                                             default=1.0,
                                             min=0.5,
                                             soft_max=5.0)
+    # Render Stamp
+    render_stamp: bpy.props.StringProperty(name="render_stamp",  # TODO rename to `format_string`
+                                           description="Render stamp text",
+                                           default="appleseed {lib-version} | Time: {render-time}")
 
-    # TODO add new post processing stages
+    render_stamp_patterns: bpy.props.EnumProperty(name="render_stamp_patterns",
+                                                  description="Variables to insert into the render stamp",
+                                                  items=[
+                                                      ('{lib-name}',
+                                                       "Library Name", ""),
+                                                      ('{lib-version}',
+                                                       "Library Version", ""),
+                                                      ('{lib-variant}',        # NOTE this could probably be deleted as it was updated to
+                                                       "Library Variant", ""), # `{lib-cpu-features}` (see projectfileupdater.cpp#L1962).
+                                                      ('{lib-cpu-features}',
+                                                       "Library CPU Features", ""),
+                                                      ('{lib-config}',
+                                                       "Library Configuration", ""),
+                                                      ('{lib-build-date}',
+                                                       "Library Build Date", ""),
+                                                      ('{lib-build-time}',
+                                                       "Library Build Time", ""),
+                                                      ('{render-time}',
+                                                       "Render Time", ""),
+                                                      ('{peak-memory}',
+                                                       "Peak Memory", "")],
+                                                  default="{render-time}",
+                                                  update=update_stamp)
+
+    # Tone Map
+    # TODO
+
+    # Vignette
+    # TODO
 
 
 class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
