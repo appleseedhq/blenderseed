@@ -75,10 +75,39 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
                                   update=update_name)
 
     # Bloom
-    # TODO
+    iterations: bpy.props.IntProperty(name="iterations",
+                                      default=4,
+                                      min=1,
+                                      soft_max=5)
+
+    intensity: bpy.props.FloatProperty(name="intensity",
+                                       default=0.1,
+                                       min=0.0,
+                                       soft_max=1.0)
+
+    threshold: bpy.props.FloatProperty(name="threshold",
+                                       default=1.0,
+                                       min=0.0,
+                                       soft_max=10.0)
+
+    soft_knee: bpy.props.FloatProperty(name="soft_knee",
+                                       default=0.5,
+                                       min=0.0,
+                                       soft_max=1.0)
+
+    debug_blur: bpy.props.BoolProperty(name="debug_blur",
+                                       default=False)
 
     # Chromatic Aberration
-    # TODO
+    strength: bpy.props.FloatProperty(name="line_thickness",
+                                      default=0.4,
+                                      min=0.0,
+                                      max=1.0)
+
+    fringe_smoothness: bpy.props.IntProperty(name="fringe_smoothness",
+                                             default=6,
+                                             min=1,
+                                             soft_max=20)
 
     # Color Map
     color_map: bpy.props.EnumProperty(name="color_map",
@@ -91,16 +120,12 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
                                              ('custom', "Custom", "")],
                                       default='inferno')
 
+    color_map_file_path: bpy.props.StringProperty(name="color_map_file_path",
+                                                  default="",
+                                                  subtype='FILE_PATH')
+
     auto_range: bpy.props.BoolProperty(name="auto_range",
                                        default=True)
-
-    add_legend_bar: bpy.props.BoolProperty(name="add_legend_bar",
-                                           default=True)
-
-    legend_bar_ticks: bpy.props.IntProperty(name="legend_bar_ticks",
-                                            default=8,
-                                            min=2,
-                                            soft_max=64)
 
     range_min: bpy.props.FloatProperty(name="range_min",
                                        default=0.0,
@@ -112,9 +137,13 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
                                        soft_min=0.0,
                                        soft_max=1.0)
 
-    color_map_file_path: bpy.props.StringProperty(name="color_map_file_path",
-                                                  default="",
-                                                  subtype='FILE_PATH')
+    add_legend_bar: bpy.props.BoolProperty(name="add_legend_bar",
+                                           default=True)
+
+    legend_bar_ticks: bpy.props.IntProperty(name="legend_bar_ticks",
+                                            default=8,
+                                            min=2,
+                                            soft_max=64)
 
     render_isolines: bpy.props.BoolProperty(name="render_isolines",
                                             default=False)
@@ -124,7 +153,7 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
                                             min=0.5,
                                             soft_max=5.0)
     # Render Stamp
-    render_stamp: bpy.props.StringProperty(name="render_stamp",  # TODO rename to `format_string`
+    render_stamp: bpy.props.StringProperty(name="render_stamp",  # TODO rename to `format_string` (?)
                                            description="Render stamp text",
                                            default="appleseed {lib-version} | Time: {render-time}")
 
@@ -152,11 +181,127 @@ class AppleseedPostProcessProps(bpy.types.PropertyGroup):
                                                   default="{render-time}",
                                                   update=update_stamp)
 
+    scale_factor: bpy.props.FloatProperty(name="scale_factor",
+                                          default=1.0,
+                                          min=0.1,
+                                          max=20.0)
+
     # Tone Map
-    # TODO
+    tone_map_operator: bpy.props.EnumProperty(name="tone_map_operator",
+                                              description="Operator that defines the tone mapping curve.",
+                                              items=[
+                                                  ('linear',
+                                                   "Linear", ""),
+                                                  ('aces_narkowicz',
+                                                   "ACES (Narkowicz)", ""),
+                                                  ('aces_unreal',
+                                                   "ACES (Unreal)", ""),
+                                                  ('filmic_hejl',
+                                                   "Filmic (Hejl)", ""),
+                                                  ('filmic_piecewise',
+                                                   "Filmic (Piecewise)", ""),
+                                                  ('filmic_uncharted',
+                                                   "Filmic (Uncharted)", ""),
+                                                  ('reinhard',
+                                                   "Reinhard", ""),
+                                                  ('reinhard_extended',
+                                                   "Reinhard (Extended)", "")],
+                                              default='linear')
+
+    clamp_colors: bpy.props.BoolProperty(name="clamp_colors",
+                                         default=True)
+
+    aces_narkowicz_exposure_bias: bpy.props.FloatProperty(name="aces_narkowicz_exposure_bias",
+                                                          default=0.8,
+                                                          min=0.0,
+                                                          max=10.0)
+
+    filmic_uncharted_A: bpy.props.FloatProperty(name="filmic_uncharted_A",
+                                                default=0.22,
+                                                min=0.0,
+                                                max=1.0)
+
+    filmic_uncharted_B: bpy.props.FloatProperty(name="filmic_uncharted_B",
+                                                default=0.30,
+                                                min=0.0,
+                                                max=1.0)
+
+    filmic_uncharted_C: bpy.props.FloatProperty(name="filmic_uncharted_C",
+                                                default=0.10,
+                                                min=0.0,
+                                                max=1.0)
+
+    filmic_uncharted_D: bpy.props.FloatProperty(name="filmic_uncharted_D",
+                                                default=0.20,
+                                                min=0.0,
+                                                max=1.0)
+
+    filmic_uncharted_E: bpy.props.FloatProperty(name="filmic_uncharted_E",
+                                                default=0.01,
+                                                min=0.0,
+                                                max=1.0)
+
+    filmic_uncharted_F: bpy.props.FloatProperty(name="filmic_uncharted_F",
+                                                default=0.30,
+                                                min=0.0,
+                                                max=1.0)
+
+    filmic_uncharted_W: bpy.props.FloatProperty(name="filmic_uncharted_W",
+                                                default=1.2,
+                                                min=0.0,
+                                                max=1.0)
+
+    filmic_uncharted_exposure_bias: bpy.props.FloatProperty(name="filmic_uncharted_exposure_bias",
+                                                            default=2.0,
+                                                            min=0.0,
+                                                            max=10.0)
+
+    filmic_piecewise_toe_strength: bpy.props.FloatProperty(name="filmic_piecewise_toe_strength",
+                                                            default=0.0,
+                                                            soft_min=0.0,
+                                                            soft_max=1.0)
+
+    filmic_piecewise_toe_length: bpy.props.FloatProperty(name="filmic_piecewise_toe_length",
+                                                         default=0.5,
+                                                         soft_min=0.0,
+                                                         soft_max=1.0)
+
+    filmic_piecewise_shoulder_strength: bpy.props.FloatProperty(name="filmic_piecewise_shoulder_strength",
+                                                                default=0.0,
+                                                                soft_min=0.0,
+                                                                soft_max=1.0)
+
+    filmic_piecewise_shoulder_length: bpy.props.FloatProperty(name="filmic_piecewise_shoulder_length",
+                                                              default=0.5,
+                                                              min=0.0001,
+                                                              soft_max=32.0)
+
+    filmic_piecewise_shoulder_angle: bpy.props.FloatProperty(name="filmic_piecewise_shoulder_angle",
+                                                             default=0.0,
+                                                             soft_min=0.0,
+                                                             soft_max=1.0)
+
+    reinhard_use_luminance: bpy.props.BoolProperty(name="reinhard_use_luminance",
+                                                   default=True)
+
+    reinhard_extended_max_white: bpy.props.FloatProperty(name="reinhard_extended_max_white",
+                                                         default=1.0,
+                                                         min=0.0,
+                                                         soft_max=10000.0)
+
+    reinhard_extended_use_luminance: bpy.props.BoolProperty(name="reinhard_extended_use_luminance",
+                                                            default=True)
 
     # Vignette
-    # TODO
+    intensity: bpy.props.FloatProperty(name="intensity",
+                                       default=0.5,
+                                       min=0.0,
+                                       max=1.0)
+
+    anisotropy: bpy.props.FloatProperty(name="anisotropy",
+                                        default=0.0,
+                                        min=0.0,
+                                        max=1.0)
 
 
 class AppleseedTextureConvertProps(bpy.types.PropertyGroup):
