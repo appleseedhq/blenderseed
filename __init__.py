@@ -52,6 +52,11 @@ else:
     
 
 def register():
+    # Version Check
+    if bpy.app.version[1] > 92:
+        raise Exception("appleseed: This version of blenderseed works with 2.8 to 2.92 only")
+
+
     from .utils import path_util
     path_util.load_appleseed_python_paths()
 
