@@ -29,6 +29,7 @@ import sys
 import threading
 
 import bpy
+import bgl
 
 import appleseed as asr
 from .final_tilecallback import FinalTileCallback
@@ -369,10 +370,14 @@ class RenderAppleseed(bpy.types.RenderEngine):
         """
         Draw rendered image in Blender's viewport.
         """
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBlendFunc(bgl.GL_ONE, bgl.GL_ONE_MINUS_SRC_ALPHA)
 
         self.bind_display_space_shader(depsgraph.scene_eval)
         self.__tile_callback.draw_pixels()
         self.unbind_display_space_shader()
+
+        bgl.glDisable(bgl.GL_BLEND)
 
     def __add_render_passes(self, scene):
         logger.debug("appleseed: Adding render passes")
