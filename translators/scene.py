@@ -423,7 +423,7 @@ class SceneTranslator(object):
 
         return updates
 
-    def update_view_window(self, updates):
+    def update_view_window(self, updates, depsgraph):
         if updates['cam_model']:
             self.__as_camera_translator.update_cam_model(self.as_scene)
             self.__as_camera_translator.add_cam_xform(0.0)
@@ -434,7 +434,7 @@ class SceneTranslator(object):
                 self.__as_camera_translator.add_cam_xform(0.0)
 
         if updates['frame_size']:
-            self.__update_frame_size()
+            self.__update_frame_size(depsgraph)
 
         if updates['crop_window']:
             self.__frame.reset_crop_window()
@@ -853,14 +853,13 @@ class SceneTranslator(object):
 
         self.__project.set_search_paths(paths)
 
-    def __update_frame_size(self):
-        params = self.__frame.get_parameters()
+    def __update_frame_size(self, depsgraph):
+        frame_params = self.__translate_frame(depsgraph)
 
-        width, height = self.__viewport_resolution
+        self.__frame = asr.Frame("beauty", frame_params, asr.AOVContainer())
 
-        params['resolution'] = asr.Vector2i(width, height)
-
-        self.__frame.set_parameters(params)
+        self.__project.set_frame(self.__frame)
+        self.__frame = self.__project.get_frame()
 
     # Static utility methods
     @staticmethod
