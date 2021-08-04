@@ -93,6 +93,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
 
         # Interactive rendering.
         self.__interactive_scene_translator = None
+        self.__updated_scene = False
 
     #
     # Destructor.
@@ -139,14 +140,19 @@ class RenderAppleseed(bpy.types.RenderEngine):
             self.__interactive_scene_translator.update_scene(depsgraph, self)
             self.__restart_interactive_render()
 
-    def view_draw(self, context, depsgraph):
-        # Check if view camera model has changes
-        updates = self.__interactive_scene_translator.check_view_window(depsgraph, context)
+        self.__updated_scene = True
 
-        if True in updates.values():
-            self.__pause_rendering()
-            self.__interactive_scene_translator.update_view_window(updates)
-            self.__restart_interactive_render()
+    def view_draw(self, context, depsgraph):
+        if not self.__updated_scene:
+            # Check if view camera model has changes
+            updates = self.__interactive_scene_translator.check_view_window(depsgraph, context)
+
+            if True in updates.values():
+                self.__pause_rendering()
+                self.__interactive_scene_translator.update_view_window(updates, depsgraph)
+                self.__restart_interactive_render()
+
+        self.__updated_scene = False
 
         self.__draw_pixels(context, depsgraph)
 
