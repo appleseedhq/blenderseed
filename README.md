@@ -4,7 +4,7 @@
 
 ## Overview
 
-blenderseed is an appleseed plugin for [Blender](https://www.blender.org/) 2.79b and 2.8.
+blenderseed is an appleseed plugin for [Blender](https://www.blender.org/) 2.79b and 2.8-2.92 only.  2.93 and up are NOT SUPPORTED.
 
 * [**Download** the latest release](https://github.com/appleseedhq/blenderseed/releases)
 * [**Read** the documentation](https://appleseed-blenderseed.readthedocs.io/)
