@@ -443,10 +443,14 @@ class ASRENDER_PT_post_process_stages(bpy.types.Panel, ASRENDER_PT_base):
         if pp_stages:
             current_stage = pp_stages[asr_scene_props.post_processing_stages_index]
             layout.prop(current_stage, "model", text="Model")
-            if current_stage.model == 'render_stamp_post_processing_stage':
-                layout.prop(current_stage, "render_stamp", text="Stamp")
-                layout.prop(current_stage, "render_stamp_patterns", text="Add Stamp")
-            else:
+
+            if current_stage.model == 'bloom_post_processing_stage':
+                pass  # TODO
+
+            elif current_stage.model == 'chromatic_aberration_post_processing_stage':
+                pass  # TODO
+
+            elif current_stage.model == 'color_map_post_processing_stage':
                 layout.prop(current_stage, "color_map", text="Mode")
                 row = layout.row()
                 row.enabled = current_stage.color_map == 'custom'
@@ -472,6 +476,17 @@ class ASRENDER_PT_post_process_stages(bpy.types.Panel, ASRENDER_PT_base):
                 row = col.row(align=True)
                 row.enabled = current_stage.render_isolines
                 row.prop(current_stage, "line_thickness", text="Line Thickness")
+
+            elif current_stage.model == 'render_stamp_post_processing_stage':
+                layout.prop(current_stage, "render_stamp", text="Stamp")  # TODO sync with properties/scene.py
+                layout.prop(current_stage, "render_stamp_patterns", text="Add Stamp")
+
+            elif current_stage.model == 'tone_map_post_processing_stage':
+                pass  # TODO
+
+            else:
+                assert current_stage.model == 'vignette_post_processing_stage', current_stage.model
+                pass  # TODO
 
 
 class ASRENDER_PT_motion_blur(bpy.types.Panel, ASRENDER_PT_base):
