@@ -785,3 +785,4 @@ def unregister():
 
     for cls in reversed(classes):
         util.safe_unregister_class(cls)
+
