@@ -27,7 +27,7 @@
 # THE SOFTWARE.
 #
 
-from __future__ import print_function
+
 from distutils import archive_util, dir_util
 from xml.etree.ElementTree import ElementTree
 import argparse
@@ -43,7 +43,7 @@ import subprocess
 import sys
 import time
 import traceback
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 
 #--------------------------------------------------------------------------------------------------
@@ -57,30 +57,33 @@ SETTINGS_FILENAME = "blenderseed.package.configuration.xml"
 #--------------------------------------------------------------------------------------------------
 # Utility functions.
 #--------------------------------------------------------------------------------------------------
-
-GREEN_CHECKMARK = u"{0}\u2713{1}".format(colorama.Style.BRIGHT + colorama.Fore.GREEN, colorama.Style.RESET_ALL)
-RED_CROSSMARK = u"{0}\u2717{1}".format(colorama.Style.BRIGHT + colorama.Fore.RED, colorama.Style.RESET_ALL)
+GREEN_CHECKMARK = f"{colorama.Style.BRIGHT}{colorama.Fore.GREEN}\u2713{colorama.Style.RESET_ALL}"
+RED_CROSSMARK = f"{colorama.Style.BRIGHT}{colorama.Fore.RED}\u2717{colorama.Style.RESET_ALL}"
 
 
 def trace(message):
     # encode('utf-8') is required to support output redirection to files or pipes.
-    print(u"  {0}{1}{2}".format(colorama.Style.DIM + colorama.Fore.WHITE, message, colorama.Style.RESET_ALL).encode('utf-8'))
+    print(f"  {colorama.Style.DIM}{colorama.Fore.WHITE}{message}{colorama.Style.RESET_ALL}".encode('utf-8'))
+
 
 
 def info(message):
-    print(u"  {0}".format(message).encode('utf-8'))
+    print(f"  {message}".encode('utf-8'))
+
 
 
 def progress(message):
-    print(u"  {0}...".format(message).encode('utf-8'))
+    print(f"  {message}...".encode('utf-8'))
+
 
 
 def warning(message):
-    print(u"  {0}Warning: {1}.{2}".format(colorama.Style.BRIGHT + colorama.Fore.MAGENTA, message, colorama.Style.RESET_ALL).encode('utf-8'))
+    print(f"  {colorama.Style.BRIGHT}{colorama.Fore.MAGENTA}{message}{colorama.Style.RESET_ALL}Warning: {message}.{colorama.Style.RESET_ALL}".encode('utf-8'))
+
 
 
 def fatal(message):
-    print(u"{0}Fatal: {1}. Aborting.{2}".format(colorama.Style.BRIGHT + colorama.Fore.RED, message, colorama.Style.RESET_ALL).encode('utf-8'))
+    print(f"{colorama.Style.BRIGHT}{colorama.Fore.RED}Fatal: {message}. Aborting.{colorama.Style.RESET_ALL}".encode('utf-8'))
     if sys.exc_info()[0]:
         print(traceback.format_exc())
     sys.exit(1)
@@ -190,7 +193,7 @@ class Settings:
     def __get_required(self, tree, key):
         value = tree.findtext(key)
         if value is None:
-            fatal("Missing value \"{0}\" in configuration file".format(key))
+            fatal(f"Missing value \"{key}\" in configuration file")
         return value
 
 
@@ -291,7 +294,7 @@ class PackageBuilder(object):
         safe_make_directory(settings_dir)
 
         for file in ["appleseed.cli.xml"]:
-            urllib.urlretrieve(
+            urllib.request.urlretrieve(
                 "https://raw.githubusercontent.com/appleseedhq/appleseed/master/sandbox/settings/{0}".format(file),
                 os.path.join(settings_dir, file))
 
@@ -319,17 +322,17 @@ class PackageBuilder(object):
 
     def build_final_zip_file(self):
         progress("Building final zip file from staging directory")
-        package_name = "blenderseed-{0}-{1}-{2}".format(self.package_version, self.settings.platform, self.build_date)
+        package_name = f"blenderseed-{self.package_version}-{self.settings.platform}-{self.build_date}"
         package_path = os.path.join(self.settings.output_dir, package_name)
         archive_util.make_zipfile(package_path, "blenderseed")
-        info("Package path: {0}".format(package_path + ".zip"))
+        info(f"Package path: {package_path}.zip")
 
     def remove_stage(self):
         progress("Deleting staging directory")
         safe_delete_directory("blenderseed")
 
     def run(self, cmdline):
-        trace("Running command line: {0}".format(cmdline))
+        trace(f"Running command line: {cmdline}")
         os.system(cmdline)
 
     def run_subprocess(self, cmdline):
@@ -406,12 +409,12 @@ class MacPackageBuilder(PackageBuilder):
             # Print dependencies.
             trace("    Dependencies:")
             for lib in all_libs:
-                trace("      {0}".format(lib))
+                trace(f"      {lib}")
 
         # Copy needed libs to lib directory.
         for lib in all_libs:
             if True:
-                trace("  Copying {0} to {1}...".format(lib, lib_dir))
+                trace(f"  Copying {lib} to {lib_dir}...")
             shutil.copy(lib, lib_dir)
 
     def post_process_package(self):
@@ -453,7 +456,7 @@ class MacPackageBuilder(PackageBuilder):
 
     # Can be used on executables and dynamic libraries.
     def __change_library_paths_in_binary(self, bin_path):
-        progress("Patching {0}".format(bin_path))
+        progress(f"Patching {bin_path}")
         bin_dir = os.path.dirname(bin_path)
         lib_dir = os.path.join(self.settings.root_dir, "appleseed", "lib")
         path_to_appleseed_lib = os.path.relpath(lib_dir, bin_dir)
@@ -461,15 +464,17 @@ class MacPackageBuilder(PackageBuilder):
         for lib_path in self.__get_dependencies_for_file(bin_path, fix_paths=False):
             lib_name = os.path.basename(lib_path)
             if path_to_appleseed_lib == ".":
-                self.__change_library_path(bin_path, lib_path, "@loader_path/{0}".format(lib_name))
+                self.__change_library_path(bin_path, lib_path, f"@loader_path/{lib_name}")
             else:
-                self.__change_library_path(bin_path, lib_path, "@loader_path/{0}/{1}".format(path_to_appleseed_lib, lib_name))
+                self.__change_library_path(bin_path, lib_path, f"@loader_path/{path_to_appleseed_lib}/{lib_name}")
+
 
     def __set_library_id(self, target, name):
-        self.run('install_name_tool -id "{0}" {1}'.format(name, target))
+        self.run(f'install_name_tool -id "{name}" {target}')
 
     def __change_library_path(self, target, old, new):
-        self.run('install_name_tool -change "{0}" "{1}" {2}'.format(old, new, target))
+        self.run(f'install_name_tool -change "{old}" "{new}" {target}')
+
 
     def __get_dependencies_for_file(self, filepath, fix_paths=True):
         filename = os.path.basename(filepath)
@@ -479,15 +484,17 @@ class MacPackageBuilder(PackageBuilder):
 
         if True:
             trace("Gathering dependencies for file")
-            trace("    {0}".format(filepath))
+            trace(f"    {filepath}")
             trace("with @loader_path set to")
-            trace("    {0}".format(loader_path))
+            trace(f"    {loader_path}")
             trace("and @rpath hardcoded to")
-            trace("    {0}".format(rpath))
+            trace(f"    {rpath}")
+
 
         returncode, out, err = self.run_subprocess(["otool", "-L", filepath])
         if returncode != 0:
-            fatal("Failed to invoke otool(1) to get dependencies for {0}: {1}".format(filepath, err))
+            fatal(f"Failed to invoke otool(1) to get dependencies for {filepath}: {err}")
+
 
         libs = set()
 
@@ -501,7 +508,7 @@ class MacPackageBuilder(PackageBuilder):
             # Parse the line.
             m = re.match(r"(.*) \(compatibility version .*, current version .*\)", line)
             if not m:
-                fatal("Failed to parse line from otool(1) output: " + line)
+                fatal(f"Failed to parse line from otool(1) output: {line}")
             lib = m.group(1)
 
             # Ignore self-references (why do these happen?).
@@ -530,24 +537,25 @@ class MacPackageBuilder(PackageBuilder):
                     if not os.path.exists(candidate):
                         candidate = os.path.join("/usr/local/lib/", lib)
                     if os.path.exists(candidate):
-                        info("Resolved relative dependency {0} as {1}".format(lib, candidate))
+                        info(f"Resolved relative dependency {lib} as {candidate}")
                         lib = candidate
 
             libs.add(lib)
 
         if True:
-            trace("Dependencies for file {0}:".format(filepath))
+            trace(f"Dependencies for file {filepath}:")
             for lib in libs:
                 if os.path.isfile(lib):
-                    trace(u"    {0} {1}".format(GREEN_CHECKMARK, lib))
+                    trace(f"    {GREEN_CHECKMARK} {lib}")
                 else:
-                    trace(u"    {0} {1}".format(RED_CROSSMARK, lib))
+                    trace(f"    {RED_CROSSMARK} {lib}")
+
 
         # Don't check for missing dependencies if we didn't attempt to fix them.
         if fix_paths:
             for lib in libs:
                 if not os.path.isfile(lib):
-                    fatal("Dependency {0} could not be found on disk".format(lib))
+                    fatal(f"Dependency {lib} could not be found on disk")
 
         return libs
 
@@ -652,7 +660,7 @@ class LinuxPackageBuilder(PackageBuilder):
     def __get_dependencies_for_file(self, filepath):
         returncode, out, err = self.run_subprocess(["ldd", filepath])
         if returncode != 0:
-            fatal("Failed to invoke ldd(1) to get dependencies for {0}: {1}".format(filepath, err))
+            fatal(f"Failed to invoke ldd(1) to get dependencies for {filepath}: {err}")
 
         libs = set()
 
