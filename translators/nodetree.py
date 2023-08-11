@@ -113,7 +113,7 @@ class NodeTreeTranslator(Translator):
                 parameters = dict()
                 parameter_types = node.parameter_types
 
-                node_items = node.keys()
+                node_items = list(node.keys())
 
                 for key in node_items:
                     if key in parameter_types:
@@ -205,7 +205,7 @@ class NodeTreeTranslator(Translator):
         for socket in node.inputs:
             if socket.is_linked:
                 linked_node = socket.links[0].from_node
-                if linked_node.bl_idname in cycles_nodes.keys() or isinstance(linked_node, AppleseedOSLNode):
+                if linked_node.bl_idname in list(cycles_nodes.keys()) or isinstance(linked_node, AppleseedOSLNode):
                     self.__traverse_tree(linked_node, tree_list, engine)
                 else:
                     logger.error(f"Node {linked_node.name} is not a node compatible with appleseed, stopping traversal")
@@ -214,3 +214,4 @@ class NodeTreeTranslator(Translator):
         tree_list.append(node)
         
         return tree_list
+
