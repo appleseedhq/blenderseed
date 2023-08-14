@@ -147,7 +147,7 @@ class RenderAppleseed(bpy.types.RenderEngine):
             # Check if view camera model has changes
             updates = self.__interactive_scene_translator.check_view_window(depsgraph, context)
 
-            if True in updates.values():
+            if True in list(updates.values()):
                 self.__pause_rendering()
                 self.__interactive_scene_translator.update_view_window(updates, depsgraph)
                 self.__restart_interactive_render()
@@ -445,3 +445,4 @@ def register():
 
 def unregister():
     safe_unregister_class(RenderAppleseed)
+

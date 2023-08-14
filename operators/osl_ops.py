@@ -51,7 +51,7 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
 
         if node.script is not None:
             # Save existing connections and parameters
-            for key, value in node.items():
+            for key, value in list(node.items()):
                 temp_values[key] = value
             for input_iter in node.inputs:
                 if input_iter.is_linked:
@@ -91,12 +91,12 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
                 setattr(new_node, "node_type", "osl_script")
 
                 # Copy variables to new node
-                for variable, value in temp_values.items():
+                for variable, value in list(temp_values.items()):
                     if variable in dir(new_node):
                         setattr(new_node, variable, value)
 
                 # Recreate node connections
-                for connection, sockets in output_connections.items():
+                for connection, sockets in list(output_connections.items()):
                     for output in new_node.outputs:
                         if output.bl_idname == connection:
                             output_socket_class = output
@@ -104,7 +104,7 @@ class ASMAT_OT_compile_script(bpy.types.Operator):
                         for output_connection in sockets:
                             node_tree.links.new(output_socket_class,
                                                 output_connection)
-                for connection, sockets in input_connections.items():
+                for connection, sockets in list(input_connections.items()):
                     for in_socket in new_node.inputs:
                         if in_socket.bl_idname == connection:
                             input_socket_class = in_socket
@@ -129,3 +129,4 @@ def register():
 
 def unregister():
     util.safe_unregister_class(ASMAT_OT_compile_script)
+

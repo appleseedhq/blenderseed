@@ -75,9 +75,9 @@ class AppleseedOSLNode(bpy.types.Node):
         param_section = ""
         for x in self.input_params:
             if x['type'] != 'pointer':
-                if 'hide_ui' in x.keys() and x['hide_ui'] is True:
+                if 'hide_ui' in list(x.keys()) and x['hide_ui'] is True:
                     continue
-                if 'section' in x.keys():
+                if 'section' in list(x.keys()):
                     if x['section'] != param_section and x['section'] is not None:
                         param_section = x['section']
                         icon = 'DISCLOSURE_TRI_DOWN' if getattr(self, param_section) else 'DISCLOSURE_TRI_RIGHT'
@@ -111,7 +111,7 @@ class AppleseedOSLNode(bpy.types.Node):
     def draw_buttons_ext(self, context, layout):
         for x in self.input_params:
             if x['type'] != 'pointer':
-                if 'hide_ui' in x.keys() and x['hide_ui'] is True:
+                if 'hide_ui' in list(x.keys()) and x['hide_ui'] is True:
                     continue
                 elif x['name'] in self.filepaths:
                     layout.template_ID_preview(self, x['name'], open="image.open")
@@ -153,9 +153,9 @@ class AppleseedOSLScriptNode(AppleseedOSLNode):
         if hasattr(self, "input_params"):
             for x in self.input_params:
                 if x['type'] != 'pointer':
-                    if 'hide_ui' in x.keys() and x['hide_ui'] is True:
+                    if 'hide_ui' in list(x.keys()) and x['hide_ui'] is True:
                         continue
-                    if 'section' in x.keys():
+                    if 'section' in list(x.keys()):
                         if x['section'] != param_section and x['section'] is not None:
                             param_section = x['section']
                             icon = 'DISCLOSURE_TRI_DOWN' if getattr(self, param_section) else 'DISCLOSURE_TRI_RIGHT'
@@ -187,7 +187,7 @@ class AppleseedOSLScriptNode(AppleseedOSLNode):
         if hasattr(self, "input_params"):
             for x in self.input_params:
                 if x['type'] != 'pointer':
-                    if 'hide_ui' in x.keys() and x['hide_ui'] is True:
+                    if 'hide_ui' in list(x.keys()) and x['hide_ui'] is True:
                         continue
                     elif x['name'] in self.filepaths:
                         layout.template_ID_preview(self, x['name'], open="image.open")
@@ -249,7 +249,7 @@ def node_categories(osl_nodes):
 
     from ..translators.cycles_shaders import cycles_nodes
     
-    cyc_nodes = [nodeitems_utils.NodeItem(key) for key in cycles_nodes.keys()]
+    cyc_nodes = [nodeitems_utils.NodeItem(key) for key in list(cycles_nodes.keys())]
 
     for node in osl_nodes:
         node_item = nodeitems_utils.NodeItem(node[0])
@@ -327,7 +327,7 @@ def register():
 
 
 def unregister():
-    for pcoll in preview_collections.values():
+    for pcoll in list(preview_collections.values()):
         bpy.utils.previews.remove(pcoll)
     preview_collections.clear()
     
@@ -337,3 +337,4 @@ def unregister():
 
     for cls in reversed(classes):
         util.safe_unregister_class(cls)
+

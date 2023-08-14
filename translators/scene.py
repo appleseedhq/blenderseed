@@ -222,9 +222,9 @@ class SceneTranslator(object):
         if self.__as_world_translator is not None:
             self.__as_world_translator.create_entities(depsgraph)
 
-        for obj, trans in materials_to_add.items():
+        for obj, trans in list(materials_to_add.items()):
             trans.create_entities(depsgraph, engine)
-        for obj, trans in textures_to_add.items():
+        for obj, trans in list(textures_to_add.items()):
             trans.create_entities(depsgraph)
 
         # Set initial position of all objects and lamps
@@ -236,7 +236,7 @@ class SceneTranslator(object):
                 del objects_to_add[translator]
 
         # Create 3D entities
-        for obj, trans in objects_to_add.items():
+        for obj, trans in list(objects_to_add.items()):
             trans.create_entities(depsgraph, len(self.__deform_times))
 
         # Calculate additional steps for motion blur
@@ -247,19 +247,19 @@ class SceneTranslator(object):
         if self.__as_world_translator is not None:
             self.__as_world_translator.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
 
-        for obj, trans in objects_to_add.items():
+        for obj, trans in list(objects_to_add.items()):
             trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
-        for obj, trans in materials_to_add.items():
+        for obj, trans in list(materials_to_add.items()):
             trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
-        for obj, trans in textures_to_add.items():
+        for obj, trans in list(textures_to_add.items()):
             trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
 
         # Transfer temp translators to main list
-        for bl_obj, translator in objects_to_add.items():
+        for bl_obj, translator in list(objects_to_add.items()):
             self.__as_object_translators[bl_obj] = translator
-        for bl_obj, translator in materials_to_add.items():
+        for bl_obj, translator in list(materials_to_add.items()):
             self.__as_material_translators[bl_obj] = translator
-        for bl_obj, translator in textures_to_add.items():
+        for bl_obj, translator in list(textures_to_add.items()):
             self.__as_texture_translators[bl_obj] = translator
 
         self.__load_searchpaths()
@@ -295,7 +295,7 @@ class SceneTranslator(object):
         for update in depsgraph.updates:
             # This one is easy.
             if isinstance(update.id, bpy.types.Material):
-                if update.id.original in self.__as_material_translators.keys():
+                if update.id.original in list(self.__as_material_translators.keys()):
                     self.__as_material_translators[update.id.original].update_material(depsgraph, engine)
                 else:
                     materials_to_add[update.id.original] = MaterialTranslator(update.id.original,
@@ -303,7 +303,7 @@ class SceneTranslator(object):
             # Now comes agony and mental anguish.
             elif isinstance(update.id, bpy.types.Object):
                 if update.id.type == 'MESH':
-                    if update.id.original in self.__as_object_translators.keys():
+                    if update.id.original in list(self.__as_object_translators.keys()):
                         if update.is_updated_geometry:
                             self.__as_object_translators[update.id.original].update_obj_instance()
                             object_updates.append(update.id.original)
@@ -314,7 +314,7 @@ class SceneTranslator(object):
                                                                             self.__export_mode,
                                                                             self.__asset_handler)
                 elif update.id.type == 'LIGHT':
-                    if update.id.original in self.__as_object_translators.keys():
+                    if update.id.original in list(self.__as_object_translators.keys()):
                         if update.is_updated_geometry:
                             self.__as_object_translators[update.id.original].update_lamp(depsgraph,
                                                                                          self.as_main_assembly,
@@ -330,7 +330,7 @@ class SceneTranslator(object):
                                                                             self.__asset_handler)
 
                 elif update.id.type == 'EMPTY' and update.id.appleseed.object_export == "archive_assembly":
-                    if update.id.original in self.__as_object_translators.keys():
+                    if update.id.original in list(self.__as_object_translators.keys()):
                         if update.is_updated_geometry:
                             self.__as_object_translators[update.id.original].update_archive_ass(depsgraph)
                             object_updates.append(update.id.original)
@@ -373,25 +373,25 @@ class SceneTranslator(object):
                 obj, inst_id = self.__get_instance_data(inst)
                 if obj in recreate_instances:
                     self.__as_object_translators[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
-                elif obj in objects_to_add.keys():
+                elif obj in list(objects_to_add.keys()):
                     objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
 
         # Create new materials.
-        for mat in materials_to_add.values():
+        for mat in list(materials_to_add.values()):
             mat.create_entities(depsgraph, engine)
 
         # Create new objects.
-        for trans in objects_to_add.values():
+        for trans in list(objects_to_add.values()):
             trans.create_entities(depsgraph, 0)
 
         for obj in recreate_instances:
             self.__as_object_translators[obj].flush_instances(self.as_main_assembly)
 
-        for mat_obj, trans in materials_to_add.items():
+        for mat_obj, trans in list(materials_to_add.items()):
             trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
             self.__as_material_translators[mat_obj] = trans
 
-        for bl_obj, trans in objects_to_add.items():
+        for bl_obj, trans in list(objects_to_add.items()):
             trans.flush_entities(self.as_scene, self.as_main_assembly, self.as_project)
             self.__as_object_translators[bl_obj] = trans
 
@@ -814,7 +814,7 @@ class SceneTranslator(object):
         for inst in depsgraph.object_instances:
             if inst.show_self:
                 obj, inst_id = self.__get_instance_data(inst)
-                if obj in objects_to_add.keys():
+                if obj in list(objects_to_add.keys()):
                     objects_to_add[obj].add_instance_step(0.0, inst_id, inst.matrix_world)
 
     def __calc_motion_steps(self, depsgraph, engine, objects_to_add):
@@ -836,11 +836,11 @@ class SceneTranslator(object):
                 for inst in depsgraph.object_instances:
                     if inst.show_self:
                         obj, inst_id = self.__get_instance_data(inst)
-                        if obj in objects_to_add.keys():
+                        if obj in list(objects_to_add.keys()):
                             objects_to_add[obj].add_instance_step(time, inst_id, inst.matrix_world)
 
             if time in self.__deform_times:
-                for translator in objects_to_add.values():
+                for translator in list(objects_to_add.values()):
                     translator.set_deform_key(time, depsgraph, index)
 
         engine.frame_set(self.__current_frame, subframe=0.0)
