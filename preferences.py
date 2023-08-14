@@ -112,7 +112,7 @@ class AppleseedPreferencesPanel(bpy.types.AddonPreferences):
 
         lib_info = asr.get_third_parties_versions()
 
-        for key, item in lib_info.items():
+        for key, item in list(lib_info.items()):
             box.label(text=f"{key} version {item}")
 
 

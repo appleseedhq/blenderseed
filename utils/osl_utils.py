@@ -97,7 +97,7 @@ def generate_node(node, node_class):
     # create output socket classes
     for out_socket in output_sockets:
         socket_name = "Appleseed{0}{1}".format(node['name'], out_socket['name'].capitalize())
-        if 'label' in out_socket.keys():
+        if 'label' in list(out_socket.keys()):
             socket_label = "{0}".format(out_socket['label'])
         else:
             socket_label = "{0}".format(out_socket['name'].strip("out_"))
@@ -132,7 +132,7 @@ def generate_node(node, node_class):
 
     # create input socket classes
     for param in input_params:
-        keys = param.keys()
+        keys = list(param.keys())
 
         hide_ui = False
 
@@ -205,7 +205,7 @@ def generate_node(node, node_class):
     param_section = str()
 
     for param in input_params:
-        keys = param.keys()
+        keys = list(param.keys())
         widget = ""
         minimum = None
         maximum = None
@@ -487,3 +487,4 @@ def compile_osl_bytecode(compiler, script_block):
         code.close()
 
     return compiler.compile_buffer(source_code)
+
